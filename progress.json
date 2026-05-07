@@ -216,8 +216,8 @@
       "description": "manifest.json（图标、启动屏、全屏模式）+ sw.js（分级缓存：HTML Network First、CSS/JS Cache First、API Network Only）+ PWA 图标",
       "phase": 6,
       "dependencies": ["T23"],
-      "passes": false,
-      "files": ["frontend/manifest.json", "frontend/sw.js", "frontend/assets/icons/"]
+      "passes": true,
+      "files": ["frontend/manifest.json", "frontend/sw.js", "frontend/icons/"]
     },
     {
       "id": "T25",

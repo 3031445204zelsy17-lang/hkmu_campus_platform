@@ -229,5 +229,4 @@ node_modules/
 Thumbs.db
 
 # PWA
-frontend/sw.js
 frontend/workbox-*.js
