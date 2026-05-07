@@ -1,0 +1,123 @@
+/* Academic / Planner styles — redesigned after dsai-planner.html reference */
+
+/* Page background */
+[data-page="planner"] {
+  background: #F5F7FA;
+}
+
+/* Animated gradient hero */
+@keyframes planner-gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+[data-page="planner"] .animated-gradient {
+  background: linear-gradient(135deg, #0066CC, #2E7D52, #0066CC);
+  background-size: 200% 200%;
+  animation: planner-gradientShift 8s ease infinite;
+}
+
+/* Floating shapes in hero */
+@keyframes planner-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+[data-page="planner"] .float-shape {
+  animation: planner-float 6s ease-in-out infinite;
+}
+
+/* Tab navigation — underline style */
+[data-page="planner"] .planner-tab {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6B7280;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  background: none;
+  cursor: pointer;
+}
+[data-page="planner"] .planner-tab:hover {
+  color: #0066CC;
+}
+[data-page="planner"] .planner-tab.tab-active {
+  color: #0066CC;
+  font-weight: 600;
+  border-bottom-color: #0066CC;
+}
+
+/* Progress bar */
+[data-page="planner"] .progress-bar-track {
+  height: 1.5rem;
+  background: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+[data-page="planner"] .progress-bar-track-sm {
+  height: 0.5rem;
+}
+[data-page="planner"] .progress-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(to right, #0066CC, #2E7D52);
+  transition: width 1s ease;
+}
+
+/* Course card — shadow-based with hover lift */
+[data-page="planner"] .course-card {
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+[data-page="planner"] .course-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05);
+}
+[data-page="planner"] .course-card:active {
+  transform: translateY(-2px);
+}
+
+/* Feature card */
+[data-page="planner"] .feature-card {
+  background: #F5F7FA;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+[data-page="planner"] .feature-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+  transform: translateY(-4px);
+}
+
+/* Spinner */
+[data-page="planner"] .spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid #e5e7eb;
+  border-top-color: #0066CC;
+  border-radius: 50%;
+  animation: planner-spin 0.6s linear infinite;
+}
+@keyframes planner-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Section card wrapper */
+[data-page="planner"] .section-card {
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* DSAI template tip */
+[data-page="planner"] .template-tip {
+  background: #fff;
+  border-left: 4px solid #0066CC;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}

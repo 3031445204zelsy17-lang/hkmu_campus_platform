@@ -1,0 +1,52 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Verify backend syntax
+        run: |
+          python -m py_compile backend/app/main.py
+          python -m py_compile backend/app/config.py
+          python -m py_compile backend/app/database.py
+          python -m py_compile backend/app/models.py
+          for f in backend/app/routers/*.py; do python -m py_compile "$f"; done
+          for f in backend/app/services/*.py; do python -m py_compile "$f"; done
+
+      - name: Seed and verify DB
+        run: |
+          cp .env.example .env
+          python scripts/seed_courses.py
+
+      - name: Start server health check
+        run: |
+          python -m uvicorn backend.app.main:app --port 8000 &
+          sleep 5
+          curl -f http://localhost:8000/api/health
+          curl -f http://localhost:8000/manifest.json > /dev/null
+          kill %1
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to production
+        run: echo "Add your deployment steps here (e.g., ssh, docker, cloud deploy)"

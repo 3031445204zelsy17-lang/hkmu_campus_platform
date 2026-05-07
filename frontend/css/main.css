@@ -1,1 +1,78 @@
 /* HKMU Campus Platform — Global Styles */
+
+/* Navigation gradient */
+#app-nav {
+  background: linear-gradient(135deg, #0066CC, #2E7D52);
+}
+
+#app-nav a {
+  color: white;
+  text-decoration: none;
+}
+
+#app-nav .text-xl {
+  color: white !important;
+}
+
+#nav-links a,
+#nav-links button {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+#nav-links a:hover,
+#nav-links button:hover {
+  color: white;
+}
+
+/* Page container fade-in */
+#app-content {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Shared card hover */
+[data-page] .card-hover {
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+[data-page] .card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading spinner */
+.spinner {
+  border: 3px solid #e5e7eb;
+  border-top-color: #0066CC;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Animated gradient + float (shared by home & planner heroes) */
+@keyframes planner-gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes planner-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+/* Small screen overflow protection */
+@media (max-width: 480px) {
+  #app-content {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+}
