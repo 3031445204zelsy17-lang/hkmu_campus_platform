@@ -1,0 +1,125 @@
+/* 导航栏样式 */
+.navbar { background-color: #7ab317; color: white; padding: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; width: 100%; }
+.navbar .container { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+
+/* 导航栏在不同屏幕比例下的适配 */
+@media (aspect-ratio: 4/3) or (max-width: 1280px) {
+    .navbar .container {
+        padding: 0 15px;
+    }
+    .nav-links {
+        gap: 10px;
+    }
+    .nav-links a {
+        font-size: 14px;
+        padding: 4px 8px;
+    }
+    .btn-primary {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+}
+
+@media (aspect-ratio: 16/10) or (min-width: 1440px) {
+    .navbar .container {
+        padding: 0 20px;
+    }
+}
+
+@media (aspect-ratio: 16/9) or (min-width: 1920px) {
+    .navbar .container {
+        padding: 0 30px;
+    }
+    .nav-links {
+        gap: 25px;
+    }
+}
+.navbar-brand { display: flex; align-items: center; gap: 15px; }
+.hamburger-btn { 
+    background: transparent; 
+    border: none; 
+    color: white; 
+    font-size: 20px; 
+    cursor: pointer; 
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+.hamburger-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+.brand-logo { 
+    height: 36px; 
+    object-fit: contain; 
+    background: white; 
+    padding: 4px 8px; 
+    border-radius: 8px; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.brand-text {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0;
+    color: white;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.nav-links { display: flex; align-items: center; gap: 15px; }
+.nav-links a { 
+    color: white; 
+    text-decoration: none; 
+    font-size: 15px; 
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+    padding: 8px 16px; 
+    border-radius: 12px; 
+    background: transparent;
+    border: 1px solid transparent;
+}
+.nav-links a:hover { 
+    background: rgba(255, 255, 255, 0.15); 
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+}
+.nav-links a.active { 
+    background: linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1));
+    border: 1px solid rgba(255,255,255,0.4);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    font-weight: 600;
+}
+
+/* 语言下拉菜单样式 (Apple Liquid Glass) */
+.lang-btn { 
+    margin-left: 10px; 
+    background: rgba(255,255,255,0.15); 
+    border: 1px solid rgba(255,255,255,0.3); 
+    color: white; 
+    position: relative; 
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+.lang-btn:hover { 
+    background: rgba(255,255,255,0.25); 
+    color: white; 
+    border-color: rgba(255,255,255,0.5);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+.lang-dropdown { position: relative; display: inline-block; }
+.lang-dropdown-content { display: none; position: absolute; background-color: white; min-width: 120px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); z-index: 1000; right: 0; border-radius: 4px; overflow: hidden; }
+.lang-dropdown-content a { color: #333; padding: 10px 12px; text-decoration: none; display: block; font-size: 14px; transition: background-color 0.3s ease; }
+.lang-dropdown-content a:hover { background-color: #f0f0f0; }
+.lang-dropdown:hover .lang-dropdown-content { display: block; }
+
+/* 导航栏响应式 */
+@media (max-width: 768px) {
+    .nav-links { gap: 10px; }
+    .nav-links a { font-size: 14px; }
+}

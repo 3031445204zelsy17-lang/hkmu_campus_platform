@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUwall - 香港都会大学校园论坛</title>
+    <link rel="stylesheet" href="css/main.css?v=6">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <button id="sidebar-toggle" class="hamburger-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <a href="https://www.hkmu.edu.hk/" target="_blank" title="香港都会大学官网">
+                    <img src="icon/HKMU.png" alt="HKMU Logo" class="brand-logo"
+                        onerror="this.src='https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=university%20logo%20clean%20green%20and%20blue&image_size=square'">
+                </a>
+                <h1 class="brand-text">MUwall</h1>
+            </div>
+
+            <div class="navbar-menu nav-links">
+                <a href="#" class="active" data-i18n="nav_home">首页</a>
+                <a href="#categories" data-i18n="nav_categories">分类</a>
+                <a href="#search" data-i18n="nav_search">搜索</a>
+                <a href="#profile" data-i18n="nav_profile">个人中心</a>
+            </div>
+
+            <div class="navbar-actions nav-links">
+                <button class="glass-btn primary pill" id="login-btn" data-i18n="nav_login">登录/注册</button>
+                <div class="lang-dropdown">
+                    <button class="glass-btn pill lang-btn" id="lang-toggle" data-i18n="toggle_btn">简体中文</button>
+                    <div class="lang-dropdown-content" id="lang-dropdown">
+                        <a href="#" data-lang="zh-cn">简体中文</a>
+                        <a href="#" data-lang="zh">繁体中文</a>
+                        <a href="#" data-lang="en">English</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="modal" id="login-modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-tabs">
+                <button class="tab-btn active" data-tab="login" data-i18n="modal_login">登录</button>
+                <button class="tab-btn" data-tab="register" data-i18n="modal_register">注册</button>
+            </div>
+            <div class="tab-content" id="login-tab">
+                <h3 data-i18n="login_title">用户登录</h3>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label data-i18n="form_email">邮箱 (Email)</label>
+                        <input type="email" id="login-email" placeholder="请输入邮箱地址" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="form_password">密码</label>
+                        <input type="password" id="login-password" placeholder="请输入密码" required>
+                    </div>
+                    <button type="submit" class="glass-btn primary pill" data-i18n="login" style="width: 100%;">登录</button>
+                    <div class="auth-divider" style="text-align: center; margin: 15px 0; font-size: 0.9em; color: var(--text-color);">或 / OR</div>
+                    <button type="button" id="google-login-btn" class="glass-btn outline pill" style="width: 100%;"><i class="fab fa-google" style="margin-right: 8px;"></i> Google 登录</button>
+                </form>
+            </div>
+            <div class="tab-content" id="register-tab" style="display: none;">
+                <h3 data-i18n="register_title">用户注册</h3>
+                <form id="register-form">
+                    <div class="form-group">
+                        <label data-i18n="form_username">昵称</label>
+                        <input type="text" id="reg-username" placeholder="请输入昵称" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="form_email">邮箱 (Email)</label>
+                        <input type="email" id="reg-email" placeholder="请输入邮箱地址" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="form_password">密码</label>
+                        <input type="password" id="reg-password" placeholder="请输入密码 (至少6位)" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="form_confirm_password">确认密码</label>
+                        <input type="password" id="reg-confirm-password" placeholder="请确认密码" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="form_identity">身份</label>
+                        <select id="reg-identity">
+                            <option value="student" data-i18n="form_student">学生</option>
+                            <option value="teacher" data-i18n="form_teacher">教师</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="glass-btn primary pill" data-i18n="register" style="width: 100%;">注册</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="create-post-btn">
+        <button id="create-post" class="glass-btn primary circle" style="width: 56px; height: 56px; font-size: 24px;">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+
+    <div class="modal" id="post-modal">
+        <div class="modal-content post-modal-content">
+            <span class="close">&times;</span>
+            <h3 data-i18n="btn_create_post">发布帖子</h3>
+            <form id="post-form">
+                <div class="form-group">
+                    <label data-i18n="post_title">帖子标题</label>
+                    <input type="text" placeholder="请输入帖子标题">
+                </div>
+                <div class="form-group">
+                    <label data-i18n="post_category">帖子分类</label>
+                    <select>
+                        <option value="campus-share" data-i18n="cat_share">校园分享</option>
+                        <option value="study-help" data-i18n="cat_help">学习求助</option>
+                        <option value="daily-life" data-i18n="cat_life">生活日常</option>
+                        <option value="campus-news" data-i18n="cat_news">校园资讯</option>
+                        <option value="qna" data-i18n="cat_qna">提问解答</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="post_content">帖子内容</label>
+                    <textarea placeholder="请输入帖子内容"></textarea>
+                </div>
+                <button type="submit" class="glass-btn primary pill" data-i18n="post_publish">发布</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="edit-profile-modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3 data-i18n="profile_edit">编辑资料</h3>
+            <form id="edit-profile-form">
+                <div class="form-group">
+                    <label>头像 URL (Avatar URL)</label>
+                    <input type="text" id="edit-avatar-url" placeholder="请输入图片URL">
+                </div>
+                <div class="form-group">
+                    <label>专业/头衔 (Title/Major)</label>
+                    <input type="text" id="edit-major" placeholder="例如: Data Science major at HKMU">
+                </div>
+                <div class="form-group">
+                    <label>个人简介 (Bio)</label>
+                    <textarea id="edit-bio" placeholder="请输入个人简介..."></textarea>
+                </div>
+                <button type="submit" class="glass-btn primary pill">保存修改 / Save</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <div class="main-container">
+        <aside class="fixed-sidebar drawer-sidebar" id="drawer-sidebar">
+            <div class="sidebar-section">
+                <h3 data-i18n="side_categories">分类导航</h3>
+                <ul>
+                    <li><a href="#" class="active"><i class="fas fa-home"></i> <span data-i18n="cat_all">全部</span></a>
+                    </li>
+                    <li><a href="#"><i class="fas fa-book"></i> <span data-i18n="cat_share">校园分享</span></a></li>
+                    <li><a href="#"><i class="fas fa-question-circle"></i> <span data-i18n="cat_help">学习求助</span></a>
+                    </li>
+                    <li><a href="#"><i class="fas fa-coffee"></i> <span data-i18n="cat_life">生活日常</span></a></li>
+                    <li><a href="#"><i class="fas fa-bullhorn"></i> <span data-i18n="cat_news">校园资讯</span></a></li>
+                    <li><a href="#"><i class="fas fa-comments"></i> <span data-i18n="cat_qna">提问解答</span></a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="content-container">
+            <div class="carousel-viewport">
+                <div class="carousel-container">
+
+                    <section class="content" id="home-view">
+                        <div class="filter-bar">
+                            <div class="filter-tabs">
+                                <button class="filter-btn active glass-btn rounded"
+                                    data-i18n="filter_latest">最新</button>
+                                <button class="filter-btn glass-btn rounded" data-i18n="filter_hot">热门</button>
+                            </div>
+                            <div class="filter-search search-box">
+                                <input type="text" placeholder="搜索帖子..." data-i18n="search_placeholder">
+                                <button><i class="fas fa-search"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="post-list">
+                            <div class="post">
+                                <div class="post-header">
+                                    <div class="user-info">
+                                        <img src="icon/1.jpeg" alt="用户头像">
+                                        <div>
+                                            <h4>Chan Tai Man</h4>
+                                            <span>2小时前 · 校园分享</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="post-content">
+                                    <h3>期末考试复习资料分享</h3>
+                                    <p>刚整理了一份期末考试的复习资料，希望对大家有所帮助。</p>
+                                </div>
+                                <div class="post-actions">
+                                    <button class="action-btn glass-btn rounded small"><i class="fas fa-thumbs-up"></i>
+                                        <span>42</span></button>
+                                    <button class="action-btn glass-btn rounded small"><i class="fas fa-comment"></i>
+                                        <span>0</span></button>
+                                </div>
+                                <div class="post-comments" style="display: none;">
+                                    <div class="comment-input">
+                                        <input type="text" placeholder="写下你的评论...">
+                                        <button>发送</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="content" id="categories-view">
+                        <div class="categories-container">
+                            <h2 data-i18n="category_title">分类</h2>
+                            <div class="category-tabs">
+                                <button class="category-tab active" data-category="all"><span
+                                        class="text-container"><span class="text"
+                                            data-i18n="cat_all">全部</span></span></button>
+                                <button class="category-tab" data-category="校园分享"><span class="text-container"><span
+                                            class="text" data-i18n="cat_share">校园分享</span></span></button>
+                                <button class="category-tab" data-category="学习求助"><span class="text-container"><span
+                                            class="text" data-i18n="cat_help">学习求助</span></span></button>
+                                <button class="category-tab" data-category="生活日常"><span class="text-container"><span
+                                            class="text" data-i18n="cat_life">生活日常</span></span></button>
+                                <button class="category-tab" data-category="校园资讯"><span class="text-container"><span
+                                            class="text" data-i18n="cat_news">校园资讯</span></span></button>
+                                <button class="category-tab" data-category="提问解答"><span class="text-container"><span
+                                            class="text" data-i18n="cat_qna">提问解答</span></span></button>
+                            </div>
+                            <div class="post-list" id="category-posts">
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="content" id="search-view">
+                        <div class="search-container">
+                            <h2 data-i18n="search_results">搜索结果</h2>
+                            <div class="search-box">
+                                <input type="text" id="search-input" placeholder="搜索帖子..."
+                                    data-i18n="search_placeholder">
+                                <button id="search-btn"><i class="fas fa-search"></i></button>
+                            </div>
+                            <div class="post-list" id="search-results">
+                                <div class="no-posts" data-i18n="search_input_placeholder">请输入关键词搜索</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="content profile-section" id="profile-view">
+                        <div class="profile-header">
+                            <div class="profile-cover">
+                                <img src="icon/DEFAULT2.png" alt="Cover">
+                            </div>
+                            <div class="profile-avatar-container">
+                                <img src="icon/default.png" class="profile-avatar" id="profile-page-avatar"
+                                    alt="Avatar">
+                                <button class="glass-btn pill edit-profile-btn" id="open-edit-profile-btn"
+                                    data-i18n="profile_edit">编辑资料</button>
+                            </div>
+                            <div class="profile-info">
+                                <h2 id="profile-page-name">Chan Tai Man</h2>
+                                <p id="profile-page-major">Student · Data Science & Artificial Intelligence major at
+                                    HKMU</p>
+                                <p id="profile-page-bio">Introduction: Passionate about programming and data analysis,
+                                    enjoys sharing learning experiences.</p>
+                            </div>
+                        </div>
+                        <div class="profile-content">
+                            <div class="profile-tabs">
+                                <button class="profile-tab active" data-tab="posts" data-i18n="profile_my_posts">My
+                                    Posts</button>
+                                <button class="profile-tab" data-tab="comments" data-i18n="profile_my_comments">My
+                                    Comments</button>
+                            </div>
+                            <div class="profile-tab-content">
+                                <div class="tab-panel active" id="posts-tab">
+                                    <div class="post-list" id="profile-post-list">
+                                    </div>
+                                </div>
+                                <div class="tab-panel" id="comments-tab">
+                                    <div class="comment-list" id="profile-comment-list">
+                                        <div class="no-comments" data-i18n="profile_no_comments">暂无评论</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="profile-actions">
+                                <button class="glass-btn primary rounded"
+                                    onclick="if (typeof showView === 'function') showView('home-view')"
+                                    data-i18n="profile_back_home">Back to Home</button>
+                                <button id="profile-logout-btn" class="glass-btn danger rounded"
+                                    data-i18n="profile_logout" style="display: none;">Logout</button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <aside class="sidebar right-sidebar">
+                <div class="sidebar-section">
+                    <h3 data-i18n="user_info">User Info</h3>
+                    <div class="user-card">
+                        <img src="icon/default.png" alt="用户头像">
+                        <h4>未登录</h4>
+                        <p data-i18n="user_not_logged_in">Login to view personal information</p>
+                        <button class="glass-btn primary pill" id="sidebar-login-btn" data-i18n="user_login">Login</button>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2026 MUwall. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    onerror="this.onerror=null; this.src='https://unpkg.com/@supabase/supabase-js@2'"></script>
+    
+    <script src="js/dataLibrary.js?v=5"></script>
+    <script src="js/router.js?v=5"></script>
+    <script src="js/modals.js?v=5"></script>
+    <script src="js/posts.js?v=6"></script>
+    <script src="js/main.js?v=6"></script>
+</body>
+
+
+</html>

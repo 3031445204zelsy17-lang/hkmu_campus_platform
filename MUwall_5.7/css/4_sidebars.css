@@ -1,0 +1,258 @@
+/* ====== 侧边栏基础样式与毛玻璃效果 (保留你原本的高级质感) ====== */
+.sidebar {
+    width: 250px;
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.right-sidebar {
+    width: 280px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
+}
+
+/* 固定侧边栏美化被移除，转由全局 drawer-sidebar 控制 */
+
+.sidebar-section {
+    margin-bottom: 30px;
+}
+
+.sidebar-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #1e293b;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 10px;
+    position: relative;
+}
+
+.sidebar-section h3::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 50px;
+    height: 2px;
+    background-color: #1e40af;
+    border-radius: 2px;
+}
+
+/* ====== 苹果风 Liquid Glass 分类导航 (流光拟态/毛玻璃) ====== */
+.fixed-sidebar ul, .sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.fixed-sidebar ul li, .sidebar ul li {
+    margin-bottom: 8px;
+}
+
+.fixed-sidebar ul li a, .sidebar ul li a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    text-decoration: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #475569;
+    background: transparent;
+    border: 1px solid transparent;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.fixed-sidebar ul li a i, .sidebar ul li a i {
+    font-size: 18px;
+    width: 24px;
+    display: flex;
+    justify-content: center;
+    color: #94a3b8;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* 悬浮状态: 极微弱的半透明白背/毛玻璃感 */
+.fixed-sidebar ul li a:hover, .sidebar ul li a:hover {
+    background: rgba(255, 255, 255, 0.6);
+    color: #1e293b;
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    transform: translateX(4px);
+}
+
+.fixed-sidebar ul li a:hover i, .sidebar ul li a:hover i {
+    color: #3b82f6; 
+    transform: scale(1.1);
+}
+
+/* 激活状态: Apple 蓝/白渐变微闪 Liquid Glass */
+.fixed-sidebar ul li a.active, .sidebar ul li a.active {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.05));
+    color: #2563eb;
+    font-weight: 600;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1), inset 0 0 0 1px rgba(255,255,255,0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.fixed-sidebar ul li a.active i, .sidebar ul li a.active i {
+    color: #2563eb;
+    transform: scale(1.15);
+    filter: drop-shadow(0 2px 4px rgba(37, 99, 235, 0.3));
+}
+
+
+/* ====== 用户卡片与活跃用户 (保留原样) ====== */
+.user-card {
+    text-align: center;
+    padding: 24px 20px;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 12px;
+}
+
+.user-card img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+    object-fit: cover;
+}
+
+.user-card h4 {
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.user-card p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.active-users li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.active-users li img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.active-users li span {
+    font-size: 14px;
+    color: #666;
+}
+
+
+/* ====== 侧边栏响应式 (保留你的精细化适配逻辑) ====== */
+@media (max-width: 1200px) {
+    .right-sidebar {
+        width: 100%;
+    }
+}
+
+/* 右侧边栏在不同屏幕比例下的适配 */
+@media (aspect-ratio: 4/3) or (max-width: 1280px) {
+    .right-sidebar {
+        width: 220px;
+        padding: 16px;
+    }
+
+    .sidebar-section {
+        margin-bottom: 20px;
+    }
+
+    .sidebar-section h3 {
+        font-size: 14px;
+        margin-bottom: 12px;
+        padding-bottom: 6px;
+    }
+
+    /* 在小屏幕下覆盖按钮的间距和字体，防止撑爆容器 */
+    .fixed-sidebar ul li a, .sidebar ul li a {
+        font-size: 13px;
+        padding: 8px 12px;
+    }
+
+    .user-card {
+        padding: 16px;
+    }
+
+    .user-card img {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 8px;
+    }
+
+    .user-card h4 {
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+
+    .user-card p {
+        font-size: 12px;
+        margin-bottom: 12px;
+    }
+}
+
+@media (aspect-ratio: 16/10) or (min-width: 1440px) {
+    .right-sidebar {
+        width: 300px;
+        padding: 20px;
+    }
+}
+
+@media (aspect-ratio: 16/9) or (min-width: 1920px) {
+    .right-sidebar {
+        width: 320px;
+        padding: 24px;
+    }
+
+    .sidebar-section h3 {
+        font-size: 18px;
+        margin-bottom: 18px;
+        padding-bottom: 10px;
+    }
+
+    .fixed-sidebar ul li a, .sidebar ul li a {
+        font-size: 15px;
+        padding: 12px 16px;
+    }
+
+    .user-card {
+        padding: 24px;
+    }
+
+    .user-card img {
+        width: 90px;
+        height: 90px;
+        margin-bottom: 12px;
+    }
+
+    .user-card h4 {
+        font-size: 16px;
+        margin-bottom: 6px;
+    }
+
+    .user-card p {
+        font-size: 14px;
+        margin-bottom: 18px;
+    }
+}
