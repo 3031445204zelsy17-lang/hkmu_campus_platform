@@ -216,3 +216,18 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# SQLite database
+*.db
+*.db-journal
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PWA
+frontend/sw.js
+frontend/workbox-*.js
