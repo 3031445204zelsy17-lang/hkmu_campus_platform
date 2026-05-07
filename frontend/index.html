@@ -4,17 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HKMU Campus Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config={theme:{extend:{colors:{'hkmu-blue':'#0066CC','hkmu-green':'#2E7D52','hkmu-light-blue':'#E3F2FD','hkmu-light-green':'#E8F5E9','page-bg':'#F5F7FA','text-primary':'#1A1A2E','text-secondary':'#6B7280'}}}}</script>
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/nav.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/community.css">
+    <link rel="stylesheet" href="css/academic.css">
+    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/news.css">
+    <link rel="stylesheet" href="css/lostfound.css">
+    <link rel="stylesheet" href="css/messages.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <nav id="app-nav" class="sticky top-0 z-50 bg-white shadow-sm">
+    <nav id="app-nav" class="sticky top-0 z-50 shadow-sm">
         <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-            <a href="#/" class="text-xl font-bold text-blue-700">HKMU Campus</a>
-            <div id="nav-links" class="flex gap-4 text-sm"></div>
+            <div class="flex items-center gap-3">
+                <button id="sidebar-toggle" class="hamburger-btn">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+                <a href="https://www.hkmu.edu.hk/" target="_blank" class="brand-logo-link">
+                    <img src="icons/HKMU.png" alt="HKMU" class="brand-logo">
+                </a>
+                <a href="#/" class="text-xl font-bold">HKMU Campus</a>
+            </div>
+            <div id="nav-links" class="flex gap-4 text-sm items-center"></div>
         </div>
     </nav>
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+    <aside id="drawer-sidebar" class="drawer-sidebar">
+        <div class="sidebar-section">
+            <h3>Categories</h3>
+            <ul id="sidebar-categories"></ul>
+        </div>
+    </aside>
     <main id="app-content" class="max-w-6xl mx-auto px-4 py-6"></main>
-    <script src="js/app.js" type="module"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="js/app.js?v=phase4" type="module"></script>
 </body>
 </html>

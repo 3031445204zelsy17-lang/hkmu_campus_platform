@@ -1,13 +1,14 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.responses import Response
 import os
 
 from .database import init_db, close_db
 from .config import API_PREFIX, SECRET_KEY
-from .routers import auth, posts, courses, users, news, lostfound
+from .routers import auth, posts, courses, users, news, lostfound, messages
 
 
 @asynccontextmanager
@@ -30,12 +31,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def no_cache_dev(request: Request, call_next):
+    response: Response = await call_next(request)
+    if request.url.path.startswith(("/js/", "/css/")):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
+
 app.include_router(auth.router, prefix=API_PREFIX)
 app.include_router(posts.router, prefix=API_PREFIX)
 app.include_router(courses.router, prefix=API_PREFIX)
 app.include_router(users.router, prefix=API_PREFIX)
 app.include_router(news.router, prefix=API_PREFIX)
 app.include_router(lostfound.router, prefix=API_PREFIX)
+app.include_router(messages.router, prefix=API_PREFIX)
 
 
 @app.get("/api/health")

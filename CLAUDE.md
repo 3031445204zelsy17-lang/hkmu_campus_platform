@@ -34,6 +34,7 @@ hkmu-campus-platform/
 │   │   │   └── lostfound.py
 │   │   └── services/
 │   │       ├── auth_service.py
+│   │       ├── sanitizer.py
 │   │       └── websocket_manager.py
 │   ├── .env
 │   └── requirements.txt
@@ -57,9 +58,12 @@ hkmu-campus-platform/
 ## 启动命令
 
 ```bash
-# 开发服务器
+# 开发服务器（必须用 python -m，避免环境不一致）
 cd /Users/yifanshi/Desktop/hkmu-campus-platform
-uvicorn backend.app.main:app --reload --port 8000
+python -m uvicorn backend.app.main:app --reload --port 8000
+
+# 或使用 dev 脚本
+python scripts/dev.py
 
 # Swagger UI
 # http://localhost:8000/docs

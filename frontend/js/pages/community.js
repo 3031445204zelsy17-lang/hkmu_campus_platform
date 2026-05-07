@@ -11,8 +11,16 @@ let _state = {
   pageSize: 20,
   sort: "newest",
   category: null,
+  search: null,
   loading: false,
 };
+
+let _fabContainer = null;
+
+// Clean up FAB when navigating away from community
+window.addEventListener("hashchange", () => {
+  if (location.hash !== "#/community") _cleanupFab();
+});
 
 const CATEGORIES = [
   { value: null, label: "All" },
@@ -23,38 +31,103 @@ const CATEGORIES = [
   { value: "other", label: "Other" },
 ];
 
+// ── Helper: Avatar Fallbacks ────────────────────────────────────────────────
+
+function _avatarFallback(post) {
+  const el = document.createElement("div");
+  el.className = "user-avatar-fallback";
+  el.textContent = (post.author_nickname || "?")[0].toUpperCase();
+  return el;
+}
+
+function _commentAvatarFallback(c) {
+  const el = document.createElement("div");
+  el.className = "comment-avatar-fallback";
+  el.textContent = (c.author_nickname || "?")[0].toUpperCase();
+  return el;
+}
+
+function _cleanupFab() {
+  if (_fabContainer) {
+    _fabContainer.remove();
+    _fabContainer = null;
+  }
+}
+
+// ── SVG Icon Helpers ─────────────────────────────────────────────────────────
+
+function _heartIcon(filled) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", "w-4 h-4");
+  svg.setAttribute("fill", filled ? "currentColor" : "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("stroke-linecap", "round");
+  path.setAttribute("stroke-linejoin", "round");
+  path.setAttribute("stroke-width", "2");
+  path.setAttribute("d", "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z");
+  svg.appendChild(path);
+  return svg;
+}
+
+function _commentIcon() {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", "w-4 h-4");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("stroke-linecap", "round");
+  path.setAttribute("stroke-linejoin", "round");
+  path.setAttribute("stroke-width", "2");
+  path.setAttribute("d", "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z");
+  svg.appendChild(path);
+  return svg;
+}
+
 // ── Functional UI Components ─────────────────────────────────────────────────
 
 function PostHeader(post) {
   const el = document.createElement("div");
-  el.className = "flex items-center gap-3 mb-3";
+  el.className = "post-header";
 
-  const avatar = document.createElement("div");
-  avatar.className = "w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-semibold text-sm";
-  avatar.textContent = (post.author_nickname || "?")[0].toUpperCase();
+  const userInfo = document.createElement("div");
+  userInfo.className = "user-info";
 
-  const info = document.createElement("div");
-  info.className = "flex-1 min-w-0";
+  // Avatar: use API field if available, else gradient fallback
+  if (post.author_avatar) {
+    const img = document.createElement("img");
+    img.className = "user-avatar";
+    img.src = post.author_avatar;
+    img.alt = (post.author_nickname || "User")[0].toUpperCase();
+    img.onerror = () => { img.replaceWith(_avatarFallback(post)); };
+    userInfo.appendChild(img);
+  } else {
+    userInfo.appendChild(_avatarFallback(post));
+  }
+
+  const nameTimeWrap = document.createElement("div");
 
   const name = document.createElement("div");
-  name.className = "font-medium text-gray-800 text-sm truncate";
+  name.className = "user-name";
   name.textContent = post.author_nickname || "Anonymous";
 
-  const meta = document.createElement("div");
-  meta.className = "text-xs text-gray-400";
-  meta.textContent = _timeAgo(post.created_at);
+  const time = document.createElement("div");
+  time.className = "user-time";
+  time.textContent = _timeAgo(post.created_at);
 
-  info.appendChild(name);
-  info.appendChild(meta);
-  el.appendChild(avatar);
-  el.appendChild(info);
+  nameTimeWrap.appendChild(name);
+  nameTimeWrap.appendChild(time);
+  userInfo.appendChild(nameTimeWrap);
+  el.appendChild(userInfo);
 
-  // Author actions
+  // Author actions (edit/delete)
   if (isLoggedIn()) {
     const currentUserId = _getCurrentUserId();
     if (currentUserId && post.author_id === currentUserId) {
       const actions = document.createElement("div");
-      actions.className = "flex gap-1";
+      actions.className = "flex gap-1 ml-auto";
 
       const editBtn = document.createElement("button");
       editBtn.className = "text-gray-400 hover:text-blue-500 text-xs px-2 py-1";
@@ -77,7 +150,6 @@ function PostHeader(post) {
 
 function CategoryBadge(category) {
   const el = document.createElement("span");
-  el.className = "category-badge";
   const colors = {
     discussion: "bg-blue-100 text-blue-700",
     question: "bg-amber-100 text-amber-700",
@@ -85,27 +157,24 @@ function CategoryBadge(category) {
     news: "bg-purple-100 text-purple-700",
     other: "bg-gray-100 text-gray-600",
   };
-  el.className += " " + (colors[category] || colors.other);
+  el.className = "category-badge " + (colors[category] || colors.other);
   el.textContent = category;
   return el;
 }
 
 function PostBody(post) {
   const el = document.createElement("div");
-
-  const title = document.createElement("h3");
-  title.className = "text-lg font-semibold text-gray-800 mb-2";
-  title.textContent = post.title;
-
-  const badge = CategoryBadge(post.category);
+  el.className = "post-content";
 
   const headerRow = document.createElement("div");
   headerRow.className = "flex items-center gap-2 mb-2";
-  headerRow.appendChild(badge);
+  headerRow.appendChild(CategoryBadge(post.category));
+
+  const title = document.createElement("h3");
+  title.textContent = post.title;
   headerRow.appendChild(title);
 
   const content = document.createElement("p");
-  content.className = "text-gray-600 text-sm leading-relaxed mb-3";
   const maxLen = 300;
   if (post.content.length > maxLen) {
     content.textContent = post.content.slice(0, maxLen) + "...";
@@ -129,14 +198,12 @@ function PostBody(post) {
 
 function PostActions(post) {
   const el = document.createElement("div");
-  el.className = "flex items-center gap-4 pt-2 border-t border-gray-100";
+  el.className = "post-actions";
 
   // Like button
   const likeBtn = document.createElement("button");
-  likeBtn.className = `flex items-center gap-1 text-sm transition-colors ${
-    post.is_liked ? "text-red-500" : "text-gray-400 hover:text-red-400"
-  }`;
-  likeBtn.innerHTML = `<svg class="w-4 h-4" fill="${post.is_liked ? "currentColor" : "none"}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>`;
+  likeBtn.className = "action-btn" + (post.is_liked ? " liked" : "");
+  likeBtn.appendChild(_heartIcon(post.is_liked));
   const likeCount = document.createElement("span");
   likeCount.textContent = post.likes_count || 0;
   likeBtn.appendChild(likeCount);
@@ -144,8 +211,8 @@ function PostActions(post) {
 
   // Comment button
   const commentBtn = document.createElement("button");
-  commentBtn.className = "flex items-center gap-1 text-sm text-gray-400 hover:text-blue-400 transition-colors";
-  commentBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>`;
+  commentBtn.className = "action-btn";
+  commentBtn.appendChild(_commentIcon());
   const commentCount = document.createElement("span");
   commentCount.textContent = post.comments_count || 0;
   commentBtn.appendChild(commentCount);
@@ -166,7 +233,7 @@ function PostCard(post) {
 
   // Comments container (hidden)
   const commentsContainer = document.createElement("div");
-  commentsContainer.className = "comments-section hidden mt-3 pt-3 border-t border-gray-100";
+  commentsContainer.className = "comments-section hidden";
   commentsContainer.id = `comments-${post.id}`;
   card.appendChild(commentsContainer);
 
@@ -204,15 +271,14 @@ function LoadingSpinner() {
 
 // ── Toolbar Components ───────────────────────────────────────────────────────
 
-function SortTabs() {
-  const el = document.createElement("div");
-  el.className = "flex gap-1 bg-gray-100 rounded-lg p-1";
+function FilterBar() {
+  const bar = document.createElement("div");
+  bar.className = "filter-bar";
 
+  // Sort buttons
   ["newest", "hot"].forEach((s) => {
     const btn = document.createElement("button");
-    btn.className = `sort-tab px-3 py-1 rounded-md text-sm transition-colors ${
-      _state.sort === s ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"
-    }`;
+    btn.className = "filter-btn" + (_state.sort === s ? " active" : "");
     btn.dataset.sort = s;
     btn.textContent = s === "newest" ? "Newest" : "Hot";
     btn.addEventListener("click", () => {
@@ -220,24 +286,56 @@ function SortTabs() {
       _state.page = 1;
       _loadPosts();
     });
-    el.appendChild(btn);
+    bar.appendChild(btn);
   });
-  return el;
+
+  // Search box
+  const searchBox = document.createElement("div");
+  searchBox.className = "search-box";
+  const searchInput = document.createElement("input");
+  searchInput.type = "text";
+  searchInput.placeholder = "Search posts...";
+  searchInput.setAttribute("aria-label", "Search posts");
+  if (_state.search) searchInput.value = _state.search;
+  const searchBtn = document.createElement("button");
+  searchBtn.textContent = "Search";
+
+  const doSearch = () => {
+    _state.search = searchInput.value.trim() || null;
+    _state.page = 1;
+    _loadPosts();
+  };
+  searchBtn.addEventListener("click", doSearch);
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") doSearch();
+  });
+
+  searchBox.appendChild(searchInput);
+  searchBox.appendChild(searchBtn);
+  bar.appendChild(searchBox);
+
+  return bar;
 }
 
 function CategoryFilter() {
   const el = document.createElement("div");
-  el.className = "flex gap-2 flex-wrap";
+  el.className = "category-tabs";
 
   CATEGORIES.forEach((c) => {
     const btn = document.createElement("button");
-    btn.className = `cat-filter text-xs px-3 py-1 rounded-full border transition-colors ${
-      _state.category === c.value
-        ? "bg-blue-600 text-white border-blue-600"
-        : "bg-white text-gray-500 border-gray-200 hover:border-blue-300"
-    }`;
+    btn.className = "category-tab" + (_state.category === c.value ? " active" : "");
     btn.dataset.category = c.value || "";
-    btn.textContent = c.label;
+    btn.setAttribute("aria-label", c.label);
+
+    // Liquid animation requires nested spans
+    const textContainer = document.createElement("span");
+    textContainer.className = "text-container";
+    const text = document.createElement("span");
+    text.className = "text";
+    text.textContent = c.label;
+    textContainer.appendChild(text);
+    btn.appendChild(textContainer);
+
     btn.addEventListener("click", () => {
       _state.category = c.value;
       _state.page = 1;
@@ -245,55 +343,68 @@ function CategoryFilter() {
     });
     el.appendChild(btn);
   });
+
   return el;
 }
 
 // ── Main Render ──────────────────────────────────────────────────────────────
 
 export function renderCommunity() {
+  _cleanupFab();
+
+  // Read category/search from URL hash query params
+  const hashQuery = window.location.hash.split("?")[1] || "";
+  const urlParams = new URLSearchParams(hashQuery);
+  const urlCategory = urlParams.get("category");
+  const urlSearch = urlParams.get("search");
+  if (urlCategory !== null || urlSearch !== null) {
+    _state.category = urlCategory || null;
+    _state.search = urlSearch || null;
+    _state.page = 1;
+  }
+
   const app = document.getElementById("app-content");
   app.setAttribute("data-page", "community");
 
   const container = document.createElement("div");
-  container.className = "max-w-2xl mx-auto px-4 py-6 space-y-4";
+  container.className = "max-w-2xl mx-auto px-4 py-6";
 
-  // Header row
+  // Page title
   const header = document.createElement("div");
-  header.className = "flex items-center justify-between";
-
+  header.className = "mb-4";
   const title = document.createElement("h2");
   title.className = "text-2xl font-bold text-gray-800";
   title.textContent = "Community";
-
   header.appendChild(title);
-
-  if (isLoggedIn()) {
-    const newBtn = document.createElement("button");
-    newBtn.id = "new-post-btn";
-    newBtn.className = "bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium";
-    newBtn.textContent = "+ New Post";
-    newBtn.addEventListener("click", () => _showPostEditor());
-    header.appendChild(newBtn);
-  }
-
   container.appendChild(header);
 
-  // Toolbar
-  const toolbar = document.createElement("div");
-  toolbar.className = "flex items-center justify-between gap-3";
-  toolbar.appendChild(SortTabs());
-  toolbar.appendChild(CategoryFilter());
-  container.appendChild(toolbar);
+  // Filter bar (sort + search)
+  container.appendChild(FilterBar());
+
+  // Category tabs
+  container.appendChild(CategoryFilter());
 
   // Posts feed
   const feed = document.createElement("div");
   feed.id = "posts-feed";
-  feed.className = "space-y-4";
+  feed.className = "post-list";
   feed.appendChild(LoadingSpinner());
   container.appendChild(feed);
 
   app.innerHTML = "";
   app.appendChild(container);
+
+  // FAB (floating action button)
+  if (isLoggedIn()) {
+    _fabContainer = document.createElement("div");
+    _fabContainer.className = "fab-container";
+    const fabBtn = document.createElement("button");
+    fabBtn.className = "fab-btn";
+    fabBtn.textContent = "+ New Post";
+    fabBtn.addEventListener("click", () => _showPostEditor());
+    _fabContainer.appendChild(fabBtn);
+    document.body.appendChild(_fabContainer);
+  }
 
   _loadPosts();
 }
@@ -308,22 +419,15 @@ async function _loadPosts() {
   feed.innerHTML = "";
   feed.appendChild(LoadingSpinner());
 
-  // Update toolbar active states
-  document.querySelectorAll(".sort-tab").forEach((btn) => {
-    btn.className = btn.className.replace(/bg-white text-gray-800 shadow-sm/g, "").replace(/text-gray-500 hover:text-gray-700/g, "");
-    if (btn.dataset.sort === _state.sort) {
-      btn.className += " bg-white text-gray-800 shadow-sm";
-    } else {
-      btn.className += " text-gray-500 hover:text-gray-700";
-    }
+  // Update filter-btn active states
+  document.querySelectorAll("[data-page='community'] .filter-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.sort === _state.sort);
   });
 
-  document.querySelectorAll(".cat-filter").forEach((btn) => {
+  // Update category-tab active states
+  document.querySelectorAll("[data-page='community'] .category-tab").forEach((btn) => {
     const v = btn.dataset.category || null;
-    const isActive = _state.category === v;
-    btn.className = `cat-filter text-xs px-3 py-1 rounded-full border transition-colors ${
-      isActive ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-500 border-gray-200 hover:border-blue-300"
-    }`;
+    btn.classList.toggle("active", _state.category === v);
   });
 
   try {
@@ -333,6 +437,7 @@ async function _loadPosts() {
       sort: _state.sort,
     });
     if (_state.category) params.set("category", _state.category);
+    if (_state.search) params.set("search", _state.search);
 
     const data = await api.get(`/posts?${params}`);
     _state.posts = data.items;
@@ -381,12 +486,10 @@ async function _toggleLike(post, btnEl, countEl) {
     post.is_liked = updated.is_liked;
     post.likes_count = updated.likes_count;
 
-    // Update UI in-place
+    // Update SVG fill
     const svg = btnEl.querySelector("svg");
     svg.setAttribute("fill", post.is_liked ? "currentColor" : "none");
-    btnEl.className = `flex items-center gap-1 text-sm transition-colors ${
-      post.is_liked ? "text-red-500" : "text-gray-400 hover:text-red-400"
-    }`;
+    btnEl.className = "action-btn" + (post.is_liked ? " liked" : "");
     countEl.textContent = post.likes_count;
   } catch (err) {
     showToast(err.message, "error");
@@ -415,33 +518,41 @@ async function _loadComments(postId) {
 
     section.innerHTML = "";
 
-    // Comment list
     data.items.forEach((c) => {
       const row = document.createElement("div");
-      row.className = "flex gap-2 mb-3";
+      row.className = "comment";
 
-      const avatar = document.createElement("div");
-      avatar.className = "w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500 flex-shrink-0";
-      avatar.textContent = (c.author_nickname || "?")[0].toUpperCase();
+      // Avatar
+      if (c.author_avatar) {
+        const img = document.createElement("img");
+        img.className = "comment-avatar";
+        img.src = c.author_avatar;
+        img.alt = (c.author_nickname || "?")[0].toUpperCase();
+        img.onerror = () => img.replaceWith(_commentAvatarFallback(c));
+        row.appendChild(img);
+      } else {
+        row.appendChild(_commentAvatarFallback(c));
+      }
 
       const body = document.createElement("div");
-      body.className = "flex-1";
+      body.className = "comment-content";
 
       const meta = document.createElement("div");
-      meta.className = "text-xs text-gray-500 mb-0.5";
       const nameSpan = document.createElement("span");
-      nameSpan.className = "font-medium text-gray-700";
+      nameSpan.className = "comment-author";
       nameSpan.textContent = c.author_nickname;
       meta.appendChild(nameSpan);
-      meta.appendChild(document.createTextNode(" · " + _timeAgo(c.created_at)));
+
+      const timeSpan = document.createElement("span");
+      timeSpan.className = "comment-time";
+      timeSpan.textContent = _timeAgo(c.created_at);
+      meta.appendChild(timeSpan);
+      body.appendChild(meta);
 
       const text = document.createElement("p");
-      text.className = "text-sm text-gray-600";
       text.textContent = c.content;
-
-      body.appendChild(meta);
       body.appendChild(text);
-      row.appendChild(avatar);
+
       row.appendChild(body);
       section.appendChild(row);
     });
@@ -453,26 +564,27 @@ async function _loadComments(postId) {
       section.appendChild(empty);
     }
 
-    // Comment input
     if (isLoggedIn()) {
       _renderCommentInput(section, postId);
     }
   } catch (err) {
-    section.innerHTML = `<p class="text-xs text-red-400 text-center">Failed to load comments</p>`;
+    section.innerHTML = "";
+    const errorEl = document.createElement("p");
+    errorEl.className = "text-xs text-red-400 text-center";
+    errorEl.textContent = "Failed to load comments";
+    section.appendChild(errorEl);
   }
 }
 
 function _renderCommentInput(section, postId) {
   const form = document.createElement("div");
-  form.className = "flex gap-2 mt-2";
+  form.className = "comment-input";
 
   const input = document.createElement("input");
   input.type = "text";
   input.placeholder = "Write a comment...";
-  input.className = "flex-1 text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-400";
 
   const btn = document.createElement("button");
-  btn.className = "bg-blue-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-600 transition-colors disabled:opacity-50";
   btn.textContent = "Send";
   btn.disabled = true;
 
@@ -490,13 +602,11 @@ function _renderCommentInput(section, postId) {
       await api.post(`/posts/${postId}/comments`, { content });
       input.value = "";
       showToast("Comment posted!", "success");
-      // Update state count
       const post = _state.posts.find((p) => p.id === postId);
       if (post) post.comments_count++;
-      // Update DOM count on the post card
       const card = document.querySelector(`[data-post-id="${postId}"]`);
       if (card) {
-        const commentBtn = card.querySelectorAll("button")[1];
+        const commentBtn = card.querySelectorAll(".action-btn")[1];
         const countSpan = commentBtn?.querySelector("span");
         if (countSpan) countSpan.textContent = post.comments_count;
       }
@@ -631,16 +741,6 @@ function _timeAgo(isoStr) {
   const days = Math.floor(hours / 24);
   if (days < 30) return `${days}d ago`;
   return new Date(isoStr).toLocaleDateString();
-}
-
-function _escapeHtml(s) {
-  const d = document.createElement("div");
-  d.textContent = s;
-  return d.innerHTML;
-}
-
-function _escapeAttr(s) {
-  return s.replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 function _getCurrentUserId() {
