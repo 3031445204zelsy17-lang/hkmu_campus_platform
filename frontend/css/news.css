@@ -141,3 +141,14 @@
     height: 140px;
   }
 }
+
+@media (max-width: 480px) {
+  [data-page="news"] .news-card-body {
+    padding: 10px 12px;
+  }
+  [data-page="news"] .news-delete-btn {
+    width: 32px;
+    height: 32px;
+    opacity: 1;
+  }
+}

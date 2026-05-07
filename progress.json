@@ -225,7 +225,7 @@
       "description": "375px~1440px 响应式测试、iOS Safari + Android Chrome 添加到主屏幕测试、全功能回归测试、bug 修复",
       "phase": 6,
       "dependencies": ["T24"],
-      "passes": false,
+      "passes": true,
       "files": []
     },
     {

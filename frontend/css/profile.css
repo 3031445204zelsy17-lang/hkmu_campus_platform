@@ -239,3 +239,17 @@
     font-size: 15px;
   }
 }
+
+@media (max-width: 480px) {
+  [data-page="profile"] .profile-header {
+    padding: 16px;
+  }
+  [data-page="profile"] .profile-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  [data-page="profile"] .profile-tab {
+    padding: 10px 14px;
+    white-space: nowrap;
+  }
+}

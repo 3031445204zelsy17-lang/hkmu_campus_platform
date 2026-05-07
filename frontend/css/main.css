@@ -68,3 +68,11 @@
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-20px); }
 }
+
+/* Small screen overflow protection */
+@media (max-width: 480px) {
+  #app-content {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+}

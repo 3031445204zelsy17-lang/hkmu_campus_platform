@@ -411,3 +411,29 @@
     max-width: 85%;
   }
 }
+
+@media (max-width: 480px) {
+  [data-page="messages"] .msg-send-btn {
+    width: 44px;
+    height: 44px;
+  }
+  [data-page="messages"] .msg-input {
+    padding: 12px 14px;
+  }
+  [data-page="messages"] .conv-item {
+    padding: 12px;
+  }
+  [data-page="messages"] .msg-messages {
+    padding: 12px;
+  }
+  [data-page="messages"] .msg-input-area {
+    padding: 10px 12px;
+  }
+  [data-page="messages"] .msg-sidebar-header {
+    padding: 12px;
+  }
+  [data-page="messages"] .msg-search-item {
+    padding: 12px;
+    min-height: 44px;
+  }
+}

@@ -630,3 +630,44 @@
     font-size: 14px;
   }
 }
+
+@media (max-width: 480px) {
+  [data-page="community"] .post-card {
+    padding: 14px;
+  }
+  [data-page="community"] .user-avatar,
+  [data-page="community"] .user-avatar-fallback {
+    width: 40px;
+    height: 40px;
+  }
+  [data-page="community"] .post-actions {
+    gap: 8px;
+  }
+  [data-page="community"] .action-btn {
+    padding: 8px 12px;
+    min-height: 44px;
+  }
+  [data-page="community"] .comment-input {
+    flex-direction: column;
+  }
+  [data-page="community"] .comment-input button {
+    width: 100%;
+    padding: 10px;
+    min-height: 44px;
+  }
+  [data-page="community"] .comment-avatar,
+  [data-page="community"] .comment-avatar-fallback {
+    width: 36px;
+    height: 36px;
+  }
+  .fab-btn {
+    padding: 12px;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    font-size: 20px;
+  }
+  .fab-btn span.fab-label {
+    display: none;
+  }
+}

@@ -174,3 +174,14 @@
     font-size: 14px;
   }
 }
+
+@media (max-width: 480px) {
+  .hamburger-btn {
+    padding: 10px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .brand-logo {
+    height: 30px;
+  }
+}

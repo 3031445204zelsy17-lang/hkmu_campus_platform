@@ -201,3 +201,17 @@
     align-items: stretch;
   }
 }
+
+@media (max-width: 480px) {
+  [data-page="lostfound"] .lf-card {
+    padding: 14px;
+  }
+  [data-page="lostfound"] .lf-action-btn {
+    padding: 8px 14px;
+    min-height: 44px;
+  }
+  [data-page="lostfound"] .lf-type-tab {
+    padding: 8px 14px;
+    min-height: 36px;
+  }
+}
