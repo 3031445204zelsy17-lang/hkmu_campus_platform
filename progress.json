@@ -234,7 +234,7 @@
       "description": "README.md 完善（启动方式、API 文档、技术栈）、GitHub Actions 部署配置、.env.example 确认完整",
       "phase": 6,
       "dependencies": ["T25"],
-      "passes": false,
+      "passes": true,
       "files": ["README.md", ".github/workflows/deploy.yml"]
     }
   ]
