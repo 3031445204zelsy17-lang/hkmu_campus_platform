@@ -23,9 +23,19 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="HKMU Campus Platform", version="0.1.0", lifespan=lifespan)
 
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:8000,http://localhost:3000")
+allowed_origins = [o.strip() for o in cors_origins.split(",") if o.strip()]
+# Auto-detect cloud platform URLs
+for env_var in ["RENDER_EXTERNAL_URL", "RAILWAY_STATIC_URL", "RAILWAY_PUBLIC_DOMAIN"]:
+    val = os.getenv(env_var)
+    if val:
+        if not val.startswith("http"):
+            val = f"https://{val}"
+        allowed_origins.append(val)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:8000,http://localhost:3000").split(","),
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

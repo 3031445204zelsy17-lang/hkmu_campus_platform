@@ -1,0 +1,14 @@
+__pycache__
+*.pyc
+.git
+.github
+.env
+*.db
+*.db-shm
+*.db-wal
+node_modules
+.claude
+memory
+CLAUDE.md
+*.md
+!frontend/**/*.md
