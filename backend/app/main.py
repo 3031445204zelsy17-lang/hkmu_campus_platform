@@ -23,9 +23,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="HKMU Campus Platform", version="0.1.0", lifespan=lifespan)
 
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:8000,http://localhost:3000")
+allowed_origins = [o.strip() for o in cors_origins.split(",") if o.strip()]
+if os.getenv("RENDER_EXTERNAL_URL"):
+    allowed_origins.append(os.getenv("RENDER_EXTERNAL_URL"))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:8000,http://localhost:3000").split(","),
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

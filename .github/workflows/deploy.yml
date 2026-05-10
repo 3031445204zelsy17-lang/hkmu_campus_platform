@@ -41,12 +41,10 @@ jobs:
           curl -f http://localhost:8000/manifest.json > /dev/null
           kill %1
 
-  deploy:
-    needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy to production
-        run: echo "Add your deployment steps here (e.g., ssh, docker, cloud deploy)"
+      - name: Verify Docker build
+        run: |
+          docker build -t hkmu-campus .
+          docker run -d --name test-container -p 8001:8000 hkmu-campus
+          sleep 5
+          curl -f http://localhost:8001/api/health
+          docker stop test-container
