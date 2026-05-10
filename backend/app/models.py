@@ -17,6 +17,22 @@ class UserLogin(BaseModel):
     password: str
 
 
+class GoogleLogin(BaseModel):
+    id_token: str
+
+
+class EmailRegister(BaseModel):
+    email: str = Field(pattern=r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+    password: str = Field(min_length=6)
+    nickname: str = Field(min_length=1, max_length=30)
+    student_id: Optional[str] = None
+
+
+class EmailLogin(BaseModel):
+    email: str
+    password: str
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -33,6 +49,8 @@ class UserOut(BaseModel):
     bio: str = ""
     identity: str = "student"
     created_at: Optional[str] = None
+    email: Optional[str] = None
+    oauth_provider: Optional[str] = None
 
 
 class UserUpdate(BaseModel):

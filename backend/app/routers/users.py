@@ -31,6 +31,8 @@ async def get_me(user: dict = Depends(get_current_user)):
         bio=row["bio"] or "",
         identity=row["identity"],
         created_at=row["created_at"],
+        email=row["email"],
+        oauth_provider=row["oauth_provider"],
     )
 
 
@@ -71,6 +73,8 @@ async def update_me(
         bio=row["bio"] or "",
         identity=row["identity"],
         created_at=row["created_at"],
+        email=row["email"],
+        oauth_provider=row["oauth_provider"],
     )
 
 
@@ -114,6 +118,8 @@ async def upload_avatar(
         bio=row["bio"] or "",
         identity=row["identity"],
         created_at=row["created_at"],
+        email=row["email"],
+        oauth_provider=row["oauth_provider"],
     )
 
 
@@ -160,4 +166,6 @@ async def get_user(user_id: int):
         bio=row["bio"] or "",
         identity=row["identity"],
         created_at=row["created_at"],
+        email=row["email"],
+        oauth_provider=row["oauth_provider"],
     )
