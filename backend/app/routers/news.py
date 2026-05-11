@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from ..database import get_db
 from ..models import NewsCreate, NewsOut, PaginatedResponse
 from ..services.auth_service import get_current_user
+from ..services.rate_limiter import check_rate_limit
 from ..services.sanitizer import sanitize
 
 router = APIRouter(prefix="/news", tags=["news"])
@@ -40,6 +41,7 @@ async def list_news(
     items = [
         NewsOut(
             id=r["id"],
+            author_id=r["author_id"],
             title=r["title"],
             summary=r["summary"],
             image_url=r["image_url"],
@@ -61,13 +63,14 @@ async def create_news(
     body: NewsCreate,
     user: dict = Depends(get_current_user),
 ):
+    check_rate_limit(f"news:{user['id']}", max_requests=10, window_seconds=60)
     db = await get_db()
     now = datetime.now(timezone.utc).isoformat()
 
     cur = await db.execute(
-        """INSERT INTO news (title, summary, image_url, category, source_url, published_at)
-           VALUES (?, ?, ?, ?, ?, ?)""",
-        (sanitize(body.title), body.summary, body.image_url, body.category,
+        """INSERT INTO news (author_id, title, summary, image_url, category, source_url, published_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+        (user["id"], sanitize(body.title), body.summary, body.image_url, body.category,
          sanitize(body.source_url), now),
     )
     await db.commit()
@@ -76,7 +79,7 @@ async def create_news(
     cur = await db.execute("SELECT * FROM news WHERE id = ?", (news_id,))
     r = await cur.fetchone()
     return NewsOut(
-        id=r["id"], title=r["title"], summary=r["summary"],
+        id=r["id"], author_id=r["author_id"], title=r["title"], summary=r["summary"],
         image_url=r["image_url"], category=r["category"],
         source_url=r["source_url"], published_at=r["published_at"],
     )
@@ -88,9 +91,12 @@ async def delete_news(
     user: dict = Depends(get_current_user),
 ):
     db = await get_db()
-    cur = await db.execute("SELECT id FROM news WHERE id = ?", (news_id,))
-    if not await cur.fetchone():
+    cur = await db.execute("SELECT author_id FROM news WHERE id = ?", (news_id,))
+    row = await cur.fetchone()
+    if not row:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "News not found")
+    if row["author_id"] != user["id"]:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your news")
 
     await db.execute("DELETE FROM news WHERE id = ?", (news_id,))
     await db.commit()

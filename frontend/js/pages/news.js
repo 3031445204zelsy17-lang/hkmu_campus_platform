@@ -152,8 +152,9 @@ function _NewsCard(item) {
   body.appendChild(meta);
   card.appendChild(body);
 
-  // Delete button for author (any logged-in user can delete for now)
-  if (isLoggedIn()) {
+  // Delete button — only for author
+  const currentUserId = _getCurrentUserId();
+  if (currentUserId && item.author_id === currentUserId) {
     const delBtn = document.createElement("button");
     delBtn.className = "news-delete-btn";
     delBtn.textContent = "×";
@@ -337,6 +338,17 @@ async function _deleteNews(newsId) {
 }
 
 // ── Utilities ────────────────────────────────────────────────────────────────
+
+function _getCurrentUserId() {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return null;
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return parseInt(payload.sub);
+  } catch {
+    return null;
+  }
+}
 
 function _timeAgo(isoStr) {
   if (!isoStr) return "";

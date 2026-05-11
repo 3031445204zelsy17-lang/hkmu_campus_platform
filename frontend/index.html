@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>HKMU Campus Platform</title>
     <meta name="theme-color" content="#0066CC">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,6 +12,8 @@
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180x180.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config={theme:{extend:{colors:{'hkmu-blue':'#0066CC','hkmu-green':'#2E7D52','hkmu-light-blue':'#E3F2FD','hkmu-light-green':'#E8F5E9','page-bg':'#F5F7FA','text-primary':'#1A1A2E','text-secondary':'#6B7280'}}}}</script>
@@ -57,6 +59,19 @@
           navigator.serviceWorker.register('/sw.js').catch(() => {});
         });
       }
+      // PWA install prompt
+      window._deferredInstallPrompt = null;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        window._deferredInstallPrompt = e;
+      });
+      // Network status indicator
+      window.addEventListener('offline', () => {
+        document.body.setAttribute('data-offline', 'true');
+      });
+      window.addEventListener('online', () => {
+        document.body.removeAttribute('data-offline');
+      });
     </script>
 </body>
 </html>

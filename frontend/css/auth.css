@@ -70,3 +70,30 @@
   background: #f9fafb;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
+
+/* ── Mobile responsive ── */
+
+@media (max-width: 480px) {
+  #auth-form input {
+    min-height: 44px;
+    font-size: 16px; /* prevents iOS zoom */
+  }
+  .google-signin-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+  .auth-tab {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+@media (max-width: 375px) {
+  .auth-modal-body,
+  [id^="auth-modal"] .p-6 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}

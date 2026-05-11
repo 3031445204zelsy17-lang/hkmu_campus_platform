@@ -99,6 +99,7 @@ async def init_db():
 
         CREATE TABLE IF NOT EXISTS news (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            author_id INTEGER REFERENCES users(id),
             title TEXT NOT NULL,
             summary TEXT,
             image_url TEXT,
@@ -153,5 +154,11 @@ async def init_db():
     await db.execute(
         "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_oauth ON users(oauth_provider, oauth_id) WHERE oauth_provider IS NOT NULL"
     )
+
+    # Migration: add author_id to news table
+    cur = await db.execute("PRAGMA table_info(news)")
+    news_cols = {row[1] for row in await cur.fetchall()}
+    if "author_id" not in news_cols:
+        await db.execute("ALTER TABLE news ADD COLUMN author_id INTEGER REFERENCES users(id)")
 
     await db.commit()

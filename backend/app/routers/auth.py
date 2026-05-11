@@ -1,4 +1,3 @@
-import time
 import re
 import secrets
 from datetime import datetime, timezone
@@ -14,30 +13,14 @@ from ..services.auth_service import (
     OAUTH_NO_PASSWORD, is_oauth_only,
 )
 from ..services.sanitizer import sanitize_dict, sanitize
+from ..services.rate_limiter import check_rate_limit
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-# Simple in-memory rate limiter: {username: [timestamps]}
-_login_attempts: dict[str, list[float]] = {}
-_RATE_LIMIT = 5  # max attempts
-_RATE_WINDOW = 60  # seconds
-
-
-def _check_rate_limit(username: str):
-    now = time.time()
-    attempts = _login_attempts.get(username, [])
-    attempts = [t for t in attempts if now - t < _RATE_WINDOW]
-    _login_attempts[username] = attempts
-    if len(attempts) >= _RATE_LIMIT:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many login attempts. Try again later.",
-        )
-    attempts.append(now)
 
 
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 async def register(body: UserRegister):
+    check_rate_limit(f"register:{body.username}", max_requests=5, window_seconds=60)
     db = await get_db()
 
     cur = await db.execute("SELECT id FROM users WHERE username = ?", (body.username,))
@@ -82,7 +65,7 @@ async def register(body: UserRegister):
 
 @router.post("/login", response_model=Token)
 async def login(body: UserLogin):
-    _check_rate_limit(body.username)
+    check_rate_limit(f"login:{body.username}", max_requests=5, window_seconds=60)
 
     db = await get_db()
     cur = await db.execute(
@@ -188,6 +171,7 @@ async def google_login(body: GoogleLogin):
 
 @router.post("/email/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 async def email_register(body: EmailRegister):
+    check_rate_limit(f"register:{body.email}", max_requests=5, window_seconds=60)
     db = await get_db()
 
     cur = await db.execute("SELECT id FROM users WHERE email = ?", (body.email,))
@@ -221,6 +205,7 @@ async def email_register(body: EmailRegister):
 
 @router.post("/email/login", response_model=Token)
 async def email_login(body: EmailLogin):
+    check_rate_limit(f"login:{body.email}", max_requests=5, window_seconds=60)
     db = await get_db()
     cur = await db.execute(
         "SELECT id, username, password_hash FROM users WHERE email = ?",

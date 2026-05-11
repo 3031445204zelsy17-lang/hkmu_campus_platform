@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hkmu-campus-v1';
+const CACHE_NAME = 'hkmu-campus-v2';
 const STATIC_CACHE = `${CACHE_NAME}-static`;
 const DYNAMIC_CACHE = `${CACHE_NAME}-dynamic`;
 
@@ -33,6 +33,7 @@ const STATIC_ASSETS = [
   '/js/utils/time.js',
   '/icons/HKMU.png',
   '/manifest.json',
+  '/offline.html',
 ];
 
 self.addEventListener('install', (event) => {
@@ -81,7 +82,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // HTML pages: Network First
+  // HTML pages: Network First with offline fallback
   if (request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
       fetch(request)
@@ -90,7 +91,9 @@ self.addEventListener('fetch', (event) => {
           caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, clone));
           return response;
         })
-        .catch(() => caches.match(request))
+        .catch(() =>
+          caches.match(request).then((cached) => cached || caches.match('/offline.html'))
+        )
     );
     return;
   }

@@ -714,7 +714,7 @@ function _renderPlan(container) {
   tabsWrap.appendChild(tabsLabel);
 
   const tabs = document.createElement("div");
-  tabs.className = "flex gap-2 flex-wrap";
+  tabs.className = "flex gap-2 flex-wrap planner-sem-tabs";
 
   semesters.forEach((sem) => {
     const isActive = _selectedSem.year === sem.year && _selectedSem.semester === sem.semester;
@@ -865,7 +865,7 @@ export async function renderPlanner() {
 
   // View tabs — underline style
   const tabBar = document.createElement("div");
-  tabBar.className = "flex border-b border-gray-200 mb-6";
+  tabBar.className = "flex border-b border-gray-200 mb-6 planner-tabs-wrap";
   tabBar.appendChild(ViewTab("Overview", "overview", "layout-dashboard"));
   tabBar.appendChild(ViewTab("My Progress", "progress", "bar-chart-2"));
   tabBar.appendChild(ViewTab("Browse", "browse", "book-open"));

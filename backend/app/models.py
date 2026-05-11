@@ -158,6 +158,7 @@ class NewsCreate(BaseModel):
 
 class NewsOut(BaseModel):
     id: int
+    author_id: Optional[int] = None
     title: str
     summary: Optional[str] = None
     image_url: Optional[str] = None
