@@ -32,3 +32,68 @@
   color: #0066CC;
   border-bottom-color: #0066CC;
 }
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 1rem 0;
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.auth-divider span {
+  padding: 0 0.75rem;
+}
+
+.google-signin-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.google-signin-btn:hover {
+  background: #f9fafb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Mobile responsive ── */
+
+@media (max-width: 480px) {
+  #auth-form input {
+    min-height: 44px;
+    font-size: 16px; /* prevents iOS zoom */
+  }
+  .google-signin-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+  .auth-tab {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+@media (max-width: 375px) {
+  .auth-modal-body,
+  [id^="auth-modal"] .p-6 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}

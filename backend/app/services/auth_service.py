@@ -7,6 +7,12 @@ from fastapi.security import OAuth2PasswordBearer
 from ..config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+OAUTH_NO_PASSWORD = "!oauth_no_password"
+
+
+def is_oauth_only(password_hash: str) -> bool:
+    return password_hash == OAUTH_NO_PASSWORD
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 

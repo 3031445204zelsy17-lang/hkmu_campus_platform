@@ -8,6 +8,7 @@ from ..models import (
     PaginatedResponse,
 )
 from ..services.auth_service import get_current_user
+from ..services.rate_limiter import check_rate_limit
 from ..services.sanitizer import sanitize_dict
 
 router = APIRouter(prefix="/posts", tags=["posts"])
@@ -115,6 +116,7 @@ async def get_post(post_id: int):
 
 @router.post("", response_model=PostOut, status_code=status.HTTP_201_CREATED)
 async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
+    check_rate_limit(f"post:{user['id']}", max_requests=10, window_seconds=60)
     db = await get_db()
     safe = sanitize_dict(
         {"title": body.title, "content": body.content, "category": body.category},
@@ -304,6 +306,7 @@ async def create_comment(
     body: CommentCreate,
     user: dict = Depends(get_current_user),
 ):
+    check_rate_limit(f"comment:{user['id']}", max_requests=15, window_seconds=60)
     db = await get_db()
     cur = await db.execute("SELECT id FROM posts WHERE id = ?", (post_id,))
     if not await cur.fetchone():

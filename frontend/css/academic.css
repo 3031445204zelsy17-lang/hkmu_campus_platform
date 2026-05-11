@@ -121,3 +121,70 @@
   padding: 1.25rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
+
+/* ── Mobile responsive ── */
+
+@media (max-width: 768px) {
+  [data-page="planner"] .planner-tabs-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  [data-page="planner"] .planner-tabs-wrap::-webkit-scrollbar {
+    display: none;
+  }
+  [data-page="planner"] .course-card {
+    padding: 1rem;
+  }
+  [data-page="planner"] .feature-card {
+    padding: 1.25rem;
+  }
+  [data-page="planner"] .section-card {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  [data-page="planner"] .template-tip {
+    border-left: none;
+    border-top: 4px solid #0066CC;
+  }
+}
+
+@media (max-width: 480px) {
+  [data-page="planner"] .planner-tab {
+    font-size: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+  [data-page="planner"] .planner-sem-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap !important;
+  }
+  [data-page="planner"] .planner-sem-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  [data-page="planner"] .float-shape {
+    display: none;
+  }
+  [data-page="planner"] .course-card {
+    padding: 0.875rem;
+  }
+  [data-page="planner"] .section-card {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 375px) {
+  [data-page="planner"] .section-card {
+    padding: 0.75rem;
+  }
+  [data-page="planner"] .feature-card {
+    padding: 1rem;
+  }
+}

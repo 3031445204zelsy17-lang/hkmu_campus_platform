@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisco
 from ..database import get_db
 from ..models import MessageCreate, MessageOut, ConversationOut
 from ..services.auth_service import get_current_user, decode_access_token
+from ..services.rate_limiter import check_rate_limit
 from ..services.websocket_manager import manager
 
 router = APIRouter(prefix="/messages", tags=["messages"])
@@ -111,6 +112,7 @@ async def send_message(
     body: MessageCreate,
     user: dict = Depends(get_current_user),
 ):
+    check_rate_limit(f"msg:{user['id']}", max_requests=30, window_seconds=60)
     db = await get_db()
 
     # Verify partner exists

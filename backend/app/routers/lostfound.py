@@ -6,6 +6,7 @@ from ..models import (
     LostFoundCreate, LostFoundUpdate, LostFoundOut, PaginatedResponse,
 )
 from ..services.auth_service import get_current_user
+from ..services.rate_limiter import check_rate_limit
 from ..services.sanitizer import sanitize
 
 router = APIRouter(prefix="/lostfound", tags=["lostfound"])
@@ -101,6 +102,7 @@ async def create_item(
     body: LostFoundCreate,
     user: dict = Depends(get_current_user),
 ):
+    check_rate_limit(f"lostfound:{user['id']}", max_requests=10, window_seconds=60)
     db = await get_db()
     now = datetime.now(timezone.utc).isoformat()
 

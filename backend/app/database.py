@@ -99,6 +99,7 @@ async def init_db():
 
         CREATE TABLE IF NOT EXISTS news (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            author_id INTEGER REFERENCES users(id),
             title TEXT NOT NULL,
             summary TEXT,
             image_url TEXT,
@@ -137,5 +138,27 @@ async def init_db():
         CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(created_at DESC);
         CREATE INDEX IF NOT EXISTS idx_lostfound_status ON lostfound(status);
     """)
+
+    # Migration: add OAuth / email columns if missing
+    cur = await db.execute("PRAGMA table_info(users)")
+    existing_cols = {row[1] for row in await cur.fetchall()}
+    if "email" not in existing_cols:
+        await db.execute("ALTER TABLE users ADD COLUMN email TEXT")
+    if "oauth_provider" not in existing_cols:
+        await db.execute("ALTER TABLE users ADD COLUMN oauth_provider TEXT")
+    if "oauth_id" not in existing_cols:
+        await db.execute("ALTER TABLE users ADD COLUMN oauth_id TEXT")
+    await db.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL"
+    )
+    await db.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_oauth ON users(oauth_provider, oauth_id) WHERE oauth_provider IS NOT NULL"
+    )
+
+    # Migration: add author_id to news table
+    cur = await db.execute("PRAGMA table_info(news)")
+    news_cols = {row[1] for row in await cur.fetchall()}
+    if "author_id" not in news_cols:
+        await db.execute("ALTER TABLE news ADD COLUMN author_id INTEGER REFERENCES users(id)")
 
     await db.commit()
