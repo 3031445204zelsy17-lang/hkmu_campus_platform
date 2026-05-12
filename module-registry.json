@@ -1,0 +1,81 @@
+{
+  "version": "1.0",
+  "description": "HKMU Campus Platform 模块所有权注册表 — 唯一数据源，其他文件从此读取",
+  "members": [
+    {
+      "name": "[待分配]",
+      "github": "[待分配]"
+    }
+  ],
+  "modules": {
+    "auth": {
+      "label": "认证系统",
+      "backend": ["routers/auth.py", "services/auth_service.py"],
+      "frontend": ["js/auth.js", "js/pages/auth.js"],
+      "owner": "[待分配]",
+      "github": "[待分配]"
+    },
+    "community": {
+      "label": "社区论坛",
+      "backend": ["routers/posts.py"],
+      "frontend": ["js/pages/community.js"],
+      "owner": "[待分配]",
+      "github": "[待分配]"
+    },
+    "academic": {
+      "label": "学术规划",
+      "backend": ["routers/courses.py"],
+      "frontend": ["js/pages/academic.js"],
+      "owner": "[待分配]",
+      "github": "[待分配]"
+    },
+    "messaging": {
+      "label": "私信系统",
+      "backend": ["routers/messages.py", "services/websocket_manager.py"],
+      "frontend": ["js/pages/messaging.js"],
+      "owner": "[待分配]",
+      "github": "[待分配]"
+    },
+    "news": {
+      "label": "校园新闻",
+      "backend": ["routers/news.py"],
+      "frontend": ["js/pages/news.js"],
+      "owner": "[待分配]",
+      "github": "[待分配]"
+    },
+    "lostfound": {
+      "label": "失物招领",
+      "backend": ["routers/lostfound.py"],
+      "frontend": ["js/pages/lostfound.js"],
+      "owner": "[待分配]",
+      "github": "[待分配]"
+    },
+    "users": {
+      "label": "用户管理",
+      "backend": ["routers/users.py"],
+      "frontend": ["js/pages/profile.js"],
+      "owner": "[待分配]",
+      "github": "[待分配]"
+    },
+    "i18n": {
+      "label": "国际化",
+      "backend": [],
+      "frontend": ["js/utils/i18n.js"],
+      "owner": "[待分配]",
+      "github": "[待分配]"
+    }
+  },
+  "shared": {
+    "backend": ["main.py", "database.py", "models.py", "config.py"],
+    "frontend": ["app.js", "router.js", "api.js", "components/"]
+  },
+  "rules": {
+    "先拉后改": "每次开发前执行 `git pull origin main`",
+    "只改自己模块": "只修改自己负责的模块文件，不得修改他人模块",
+    "共享文件通知": "修改共享基础文件前必须在群内通知所有人",
+    "先读再改": "Agent 修改任何文件前必须先读取该文件完整内容",
+    "小步提交": "每完成一个功能点就 commit，不要积累大量改动",
+    "分支命名": "`feature/<模块名>-<功能描述>`",
+    "Commit 格式": "`[模块名] feat/fix/refactor: 描述`"
+  }
+}

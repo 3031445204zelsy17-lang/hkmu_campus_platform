@@ -1,0 +1,113 @@
+#!/bin/bash
+#
+# pre-commit hook: 检查暂存文件是否越权修改他人模块
+# 数据源: module-registry.json（动态读取）
+#
+# 安装方式: bash scripts/setup-hooks.sh
+#
+
+set -e
+
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+REGISTRY="$REPO_ROOT/module-registry.json"
+
+if [ ! -f "$REGISTRY" ]; then
+    exit 0
+fi
+
+if ! command -v jq &>/dev/null; then
+    exit 0
+fi
+
+CURRENT_DEV=$(git config user.name)
+if [ -z "$CURRENT_DEV" ]; then
+    echo -e "${YELLOW}⚠️  未设置 git user.name，跳过归属检查${NC}"
+    exit 0
+fi
+
+STAGED=$(git diff --cached --name-only)
+if [ -z "$STAGED" ]; then
+    exit 0
+fi
+
+echo ""
+echo -e "🔍 检查文件归属 (开发者: $CURRENT_DEV)"
+echo "─────────────────────────────────────"
+
+WARNINGS=0
+PASS=0
+
+# 查找文件所属模块
+find_module() {
+    local filepath="$1"
+    for module in $(jq -r '.modules | keys[]' "$REGISTRY" 2>/dev/null); do
+        for mfile in $(jq -r ".modules[\"$module\"].backend[]?, .modules[\"$module\"].frontend[]?" "$REGISTRY" 2>/dev/null); do
+            if [[ "$filepath" == *"$mfile"* ]]; then
+                echo "$module"
+                return
+            fi
+        done
+    done
+    echo ""
+}
+
+# 检查是否为共享文件
+is_shared() {
+    local filepath="$1"
+    for shared_file in $(jq -r '.shared.backend[], .shared.frontend[]' "$REGISTRY" 2>/dev/null); do
+        if [[ "$filepath" == *"$shared_file"* ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+for file in $STAGED; do
+    if is_shared "$file"; then
+        echo -e "  ${YELLOW}⚠️  共享文件: $file${NC}"
+        echo -e "     → 修改前请确保已通知所有团队成员"
+        ((WARNINGS++))
+        continue
+    fi
+
+    module=$(find_module "$file")
+
+    if [ -z "$module" ]; then
+        echo -e "  ${GREEN}✓ $file${NC} (非模块文件)"
+        ((PASS++))
+        continue
+    fi
+
+    owner=$(jq -r ".modules[\"$module\"].owner" "$REGISTRY")
+    label=$(jq -r ".modules[\"$module\"].label" "$REGISTRY")
+
+    if echo "$owner" | grep -q "待分配"; then
+        echo -e "  ${GREEN}✓ $file${NC} → $label (未分配)"
+        ((PASS++))
+        continue
+    fi
+
+    if echo "$owner" | grep -q "$CURRENT_DEV"; then
+        echo -e "  ${GREEN}✓ $file${NC} → $label (你负责)"
+        ((PASS++))
+        continue
+    fi
+
+    # 属于他人模块 — 警告（不阻止提交，但提示）
+    echo -e "  ${RED}⚠️  $file${NC} → $label (负责人: $owner)"
+    ((WARNINGS++))
+done
+
+echo "─────────────────────────────────────"
+if [ $WARNINGS -gt 0 ]; then
+    echo -e "${YELLOW}⚠️  $WARNINGS 个文件需要注意${NC}"
+fi
+echo -e "${GREEN}✓ $PASS 个文件通过检查${NC}"
+echo ""
+
+exit 0

@@ -1,0 +1,49 @@
+# HKMU Campus Platform — 模块所有权
+# 由 scripts/sync-ownership.sh 从 module-registry.json 自动生成
+
+# 学术规划
+/backend/app/routers/courses.py @[待分配]
+/frontend/js/pages/academic.js @[待分配]
+
+# 认证系统
+/backend/app/routers/auth.py @[待分配]
+/backend/app/services/auth_service.py @[待分配]
+/frontend/js/auth.js @[待分配]
+/frontend/js/pages/auth.js @[待分配]
+
+# 社区论坛
+/backend/app/routers/posts.py @[待分配]
+/frontend/js/pages/community.js @[待分配]
+
+# 国际化
+/frontend/js/utils/i18n.js @[待分配]
+
+# 失物招领
+/backend/app/routers/lostfound.py @[待分配]
+/frontend/js/pages/lostfound.js @[待分配]
+
+# 私信系统
+/backend/app/routers/messages.py @[待分配]
+/backend/app/services/websocket_manager.py @[待分配]
+/frontend/js/pages/messaging.js @[待分配]
+
+# 校园新闻
+/backend/app/routers/news.py @[待分配]
+/frontend/js/pages/news.js @[待分配]
+
+# 用户管理
+/backend/app/routers/users.py @[待分配]
+/frontend/js/pages/profile.js @[待分配]
+
+# 共享基础 — 需要全员 review
+/backend/app/main.py @[待分配]
+/backend/app/database.py @[待分配]
+/backend/app/models.py @[待分配]
+/backend/app/config.py @[待分配]
+/frontend/app.js @[待分配]
+/frontend/router.js @[待分配]
+/frontend/api.js @[待分配]
+/frontend/components/ @[待分配]
+
+# 默认
+* @[待分配]
