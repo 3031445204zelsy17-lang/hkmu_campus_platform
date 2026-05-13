@@ -1,5 +1,7 @@
 import { api, isLoggedIn } from "../api.js";
 import { showToast } from "../components/toast.js";
+import { t } from "../utils/i18n.js";
+import { skeletonCard, errorState } from "../components/skeleton.js";
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -24,9 +26,9 @@ const DSAI_TEMPLATE = {
 };
 
 const STATUS_LABELS = {
-  not_started: "Not Started",
-  in_progress: "In Progress",
-  completed: "Completed",
+  not_started: () => t("planner.status_not_started"),
+  in_progress: () => t("planner.status_in_progress"),
+  completed: () => t("planner.status_completed"),
 };
 
 const STATUS_COLORS = {
@@ -44,12 +46,12 @@ const STATUS_ICONS = {
 const SEMESTER_ORDER = { autumn: 0, spring: 1, summer: 2 };
 
 const CATEGORY_LABELS = {
-  core: "Core",
-  elective: "Elective",
-  "general-ed": "General Ed",
-  english: "English",
-  "university-core": "University Core",
-  project: "Project",
+  core: () => t("planner.cat_core"),
+  elective: () => t("planner.cat_elective"),
+  "general-ed": () => t("planner.cat_general"),
+  english: () => t("planner.cat_english"),
+  "university-core": () => t("planner.cat_university"),
+  project: () => t("planner.cat_project"),
 };
 
 const CATEGORY_COLORS = {
@@ -156,7 +158,7 @@ function CourseCard(course, showStatus = false) {
 
   const catBadge = document.createElement("span");
   catBadge.className = `text-xs px-2 py-1 rounded-full ${CATEGORY_COLORS[course.category] || "bg-gray-100 text-gray-600"}`;
-  catBadge.textContent = CATEGORY_LABELS[course.category] || course.category;
+  catBadge.textContent = CATEGORY_LABELS[course.category] ? CATEGORY_LABELS[course.category]() : course.category;
   badges.appendChild(catBadge);
 
   const credits = document.createElement("span");
@@ -172,8 +174,8 @@ function CourseCard(course, showStatus = false) {
     const prereqRow = document.createElement("div");
     prereqRow.className = `text-xs ${met ? "text-green-600 font-medium" : "text-gray-500"}`;
     prereqRow.textContent = met
-      ? "Prerequisites met"
-      : `Pre: ${prereqs.map((id) => _getCourseName(id)).join(", ")}`;
+      ? t("planner.prereq_met")
+      : `${t("planner.prereq_prefix")}${prereqs.map((id) => _getCourseName(id)).join(", ")}`;
     card.appendChild(prereqRow);
   }
 
@@ -187,7 +189,7 @@ function SemesterGroup(year, semester, courses) {
 
   const title = document.createElement("h3");
   title.className = "text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 pb-1 border-b border-gray-100";
-  title.textContent = `Year ${year} — ${semester.charAt(0).toUpperCase() + semester.slice(1)}`;
+  title.textContent = `${t("planner.year", {n: year})} — ${semester.charAt(0).toUpperCase() + semester.slice(1)}`;
   group.appendChild(title);
 
   const grid = document.createElement("div");
@@ -248,7 +250,7 @@ function StatusDropdown(courseId, currentStatus) {
   ["not_started", "in_progress", "completed"].forEach((s) => {
     const opt = document.createElement("option");
     opt.value = s;
-    opt.textContent = STATUS_LABELS[s];
+    opt.textContent = STATUS_LABELS[s]();
     if (s === currentStatus) opt.selected = true;
     select.appendChild(opt);
   });
@@ -294,20 +296,20 @@ function _renderOverview(container) {
   pill.className = "inline-flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full text-white text-sm font-medium mb-6";
   pill.appendChild(LucideIcon("sparkles", "w-4 h-4"));
   const pillText = document.createElement("span");
-  pillText.textContent = "HKMU Data Science & AI Program";
+  pillText.textContent = t("planner.program_title");
   pill.appendChild(pillText);
   inner.appendChild(pill);
 
   // Title
   const h1 = document.createElement("h1");
   h1.className = "text-4xl sm:text-5xl font-bold text-white mb-6";
-  h1.textContent = "DSAI Course Planner";
+  h1.textContent = t("planner.page_title");
   inner.appendChild(h1);
 
   // Description
   const desc = document.createElement("p");
   desc.className = "text-xl text-white/90 mb-8";
-  desc.textContent = "Your comprehensive companion for navigating the Data Science and AI programme at HKMU.";
+  desc.textContent = t("planner.page_desc");
   inner.appendChild(desc);
 
   // CTA buttons
@@ -319,7 +321,7 @@ function _renderOverview(container) {
   btn1.style.color = "#0066CC";
   btn1.appendChild(LucideIcon("bar-chart-2", "w-5 h-5"));
   const btn1Text = document.createElement("span");
-  btn1Text.textContent = "View Progress";
+  btn1Text.textContent = t("planner.view_progress");
   btn1.appendChild(btn1Text);
   btn1.addEventListener("click", () => { _view = "progress"; _render(); });
   ctaRow.appendChild(btn1);
@@ -328,7 +330,7 @@ function _renderOverview(container) {
   btn2.className = "bg-white/20 text-white border-2 border-white/50 px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-white/30 transition-colors";
   btn2.appendChild(LucideIcon("book-open", "w-5 h-5"));
   const btn2Text = document.createElement("span");
-  btn2Text.textContent = "Browse Courses";
+  btn2Text.textContent = t("planner.browse_courses");
   btn2.appendChild(btn2Text);
   btn2.addEventListener("click", () => { _view = "browse"; _render(); });
   ctaRow.appendChild(btn2);
@@ -370,15 +372,15 @@ function _renderOverview(container) {
   featureSection.className = "py-8";
   const featureTitle = document.createElement("h2");
   featureTitle.className = "text-3xl font-bold text-center mb-12";
-  featureTitle.textContent = "Everything You Need";
+  featureTitle.textContent = t("planner.features_title");
   featureSection.appendChild(featureTitle);
 
   const featureGrid = document.createElement("div");
   featureGrid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6";
-  featureGrid.appendChild(FeatureCard("bar-chart-2", "Track Progress", "Monitor your degree completion with visual progress indicators.", "from-blue-500", "to-blue-600", () => { _view = "progress"; _render(); }));
-  featureGrid.appendChild(FeatureCard("book-open", "Browse Courses", "Explore the full DSAI curriculum with search and filters.", "from-orange-500", "to-orange-600", () => { _view = "browse"; _render(); }));
-  featureGrid.appendChild(FeatureCard("git-branch", "Prerequisites", "Check course requirements and plan your academic path.", "from-purple-600", "to-purple-700", () => { _view = "plan"; _render(); }));
-  featureGrid.appendChild(FeatureCard("calendar", "Study Plan", "Organize courses by semester and track your schedule.", "from-green-500", "to-green-600", () => { _view = "plan"; _render(); }));
+  featureGrid.appendChild(FeatureCard("bar-chart-2", t("planner.feat_progress"), t("planner.feat_progress_desc"), "from-blue-500", "to-blue-600", () => { _view = "progress"; _render(); }));
+  featureGrid.appendChild(FeatureCard("book-open", t("planner.feat_browse"), t("planner.feat_browse_desc"), "from-orange-500", "to-orange-600", () => { _view = "browse"; _render(); }));
+  featureGrid.appendChild(FeatureCard("git-branch", t("planner.feat_prereq"), t("planner.feat_prereq_desc"), "from-purple-600", "to-purple-700", () => { _view = "plan"; _render(); }));
+  featureGrid.appendChild(FeatureCard("calendar", t("planner.feat_plan"), t("planner.feat_plan_desc"), "from-green-500", "to-green-600", () => { _view = "plan"; _render(); }));
   featureSection.appendChild(featureGrid);
   container.appendChild(featureSection);
 
@@ -388,7 +390,7 @@ function _renderOverview(container) {
 
   const yearTitle = document.createElement("h2");
   yearTitle.className = "text-2xl font-bold mb-6";
-  yearTitle.textContent = "Year-by-Year Progress";
+  yearTitle.textContent = t("planner.yearly_progress");
   yearSection.appendChild(yearTitle);
 
   [1, 2, 3, 4].forEach((y) => {
@@ -409,15 +411,15 @@ function _renderOverview(container) {
     yearHeader.className = "flex justify-between items-center mb-4";
     const yearLabel = document.createElement("h3");
     yearLabel.className = "text-lg font-bold";
-    yearLabel.textContent = `Year ${y}`;
+    yearLabel.textContent = t("planner.year", {n: y});
     const yearCreditsLabel = document.createElement("span");
     yearCreditsLabel.className = "text-sm text-gray-500";
-    yearCreditsLabel.textContent = `${completedYearCredits}/${yearCredits} credits`;
+    yearCreditsLabel.textContent = t("planner.credits_progress", {done: completedYearCredits, total: yearCredits});
     yearHeader.appendChild(yearLabel);
     yearHeader.appendChild(yearCreditsLabel);
     yearCard.appendChild(yearHeader);
 
-    yearCard.appendChild(ProgressBar(yearPct, `${yearCompleted}/${yearCourses.length} courses`));
+    yearCard.appendChild(ProgressBar(yearPct, t("planner.courses_progress", {done: yearCompleted, total: yearCourses.length})));
     yearSection.appendChild(yearCard);
   });
   container.appendChild(yearSection);
@@ -432,20 +434,20 @@ function _renderOverview(container) {
     tipHeader.appendChild(LucideIcon("info", "w-5 h-5 text-blue-500"));
     const tipTitle = document.createElement("span");
     tipTitle.className = "font-semibold text-gray-800";
-    tipTitle.textContent = "New here?";
+    tipTitle.textContent = t("planner.new_here");
     tipHeader.appendChild(tipTitle);
     tip.appendChild(tipHeader);
 
     const tipText = document.createElement("p");
     tipText.className = "text-sm text-gray-600 mb-4 ml-8";
-    tipText.textContent = "Load the DSAI standard template to get started with course tracking.";
+    tipText.textContent = t("planner.new_here_desc");
     tip.appendChild(tipText);
 
     const loadBtn = document.createElement("button");
     loadBtn.className = "ml-8 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-colors text-sm font-semibold flex items-center gap-2";
     loadBtn.appendChild(LucideIcon("download", "w-4 h-4"));
     const loadBtnText = document.createElement("span");
-    loadBtnText.textContent = "Load DSAI Template";
+    loadBtnText.textContent = t("planner.load_template");
     loadBtn.appendChild(loadBtnText);
     loadBtn.addEventListener("click", _loadDSAITemplate);
     tip.appendChild(loadBtn);
@@ -467,11 +469,11 @@ function _renderProgress(container) {
   heading.className = "mb-6";
   const h1 = document.createElement("h1");
   h1.className = "text-3xl font-bold mb-2";
-  h1.textContent = "My Progress";
+  h1.textContent = t("planner.my_progress");
   heading.appendChild(h1);
   const subtitle = document.createElement("p");
   subtitle.className = "text-gray-500";
-  subtitle.textContent = "Track your progress through the DSAI programme year by year.";
+  subtitle.textContent = t("planner.progress_desc");
   heading.appendChild(subtitle);
   container.appendChild(heading);
 
@@ -514,11 +516,11 @@ function _renderBrowse(container) {
   const searchGroup = document.createElement("div");
   const searchLabel = document.createElement("label");
   searchLabel.className = "block text-sm font-medium text-gray-500 mb-2";
-  searchLabel.textContent = "Search";
+  searchLabel.textContent = t("planner.search");
   searchGroup.appendChild(searchLabel);
   const search = document.createElement("input");
   search.type = "text";
-  search.placeholder = "Search courses...";
+  search.placeholder = t("planner.search_placeholder");
   search.className = "w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
   search.id = "course-search";
   searchGroup.appendChild(search);
@@ -528,11 +530,11 @@ function _renderBrowse(container) {
   const yearGroup = document.createElement("div");
   const yearLabel = document.createElement("label");
   yearLabel.className = "block text-sm font-medium text-gray-500 mb-2";
-  yearLabel.textContent = "Year";
+  yearLabel.textContent = t("planner.filter_year");
   yearGroup.appendChild(yearLabel);
   const yearFilter = document.createElement("select");
   yearFilter.className = "w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
-  yearFilter.innerHTML = '<option value="">All Years</option><option value="1">Year 1</option><option value="2">Year 2</option><option value="3">Year 3</option><option value="4">Year 4</option>';
+  yearFilter.innerHTML = `<option value="">All Years</option><option value="1">${t("planner.year", {n: 1})}</option><option value="2">${t("planner.year", {n: 2})}</option><option value="3">${t("planner.year", {n: 3})}</option><option value="4">${t("planner.year", {n: 4})}</option>`;
   yearFilter.id = "course-year-filter";
   yearGroup.appendChild(yearFilter);
   filterGrid.appendChild(yearGroup);
@@ -541,12 +543,12 @@ function _renderBrowse(container) {
   const catGroup = document.createElement("div");
   const catLabel = document.createElement("label");
   catLabel.className = "block text-sm font-medium text-gray-500 mb-2";
-  catLabel.textContent = "Category";
+  catLabel.textContent = t("planner.filter_category");
   catGroup.appendChild(catLabel);
   const catFilter = document.createElement("select");
   catFilter.className = "w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
   catFilter.innerHTML = '<option value="">All Categories</option>' +
-    Object.entries(CATEGORY_LABELS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("");
+    Object.entries(CATEGORY_LABELS).map(([k, v]) => `<option value="${k}">${v()}</option>`).join("");
   catFilter.id = "course-cat-filter";
   catGroup.appendChild(catFilter);
   filterGrid.appendChild(catGroup);
@@ -574,7 +576,7 @@ function _renderBrowse(container) {
     if (filtered.length === 0) {
       const empty = document.createElement("p");
       empty.className = "text-gray-400 text-center py-8 col-span-full";
-      empty.textContent = "No courses match your filters.";
+      empty.textContent = t("planner.no_courses");
       grid.appendChild(empty);
     } else {
       filtered.forEach((c) => grid.appendChild(CourseCard(c, true)));
@@ -600,19 +602,19 @@ function _renderPlan(container) {
 
     const loginTitle = document.createElement("h3");
     loginTitle.className = "text-xl font-bold text-gray-800 mb-2";
-    loginTitle.textContent = "Login Required";
+    loginTitle.textContent = t("planner.login_required");
     msg.appendChild(loginTitle);
 
     const loginMsg = document.createElement("p");
     loginMsg.className = "text-gray-500 mb-6";
-    loginMsg.textContent = "Sign in to create your personalized study plan and track course progress.";
+    loginMsg.textContent = t("planner.login_required_desc");
     msg.appendChild(loginMsg);
 
     const loginBtn = document.createElement("button");
     loginBtn.className = "bg-gradient-to-r from-blue-600 to-green-600 text-white px-8 py-3 rounded-xl hover:opacity-90 transition-opacity font-semibold flex items-center gap-2 mx-auto shadow-md";
     loginBtn.appendChild(LucideIcon("log-in", "w-5 h-5"));
     const loginBtnText = document.createElement("span");
-    loginBtnText.textContent = "Sign In";
+    loginBtnText.textContent = t("planner.sign_in");
     loginBtn.appendChild(loginBtnText);
     loginBtn.addEventListener("click", () => window.dispatchEvent(new CustomEvent("auth:show-login")));
     msg.appendChild(loginBtn);
@@ -626,11 +628,11 @@ function _renderPlan(container) {
   heading.className = "mb-6";
   const h1 = document.createElement("h1");
   h1.className = "text-3xl font-bold mb-2";
-  h1.textContent = "Study Plan";
+  h1.textContent = t("planner.study_plan");
   heading.appendChild(h1);
   const subtitle = document.createElement("p");
   subtitle.className = "text-gray-500";
-  subtitle.textContent = "Organize your courses by semester and plan your academic path.";
+  subtitle.textContent = t("planner.study_plan_desc");
   heading.appendChild(subtitle);
   container.appendChild(heading);
 
@@ -653,7 +655,7 @@ function _renderPlan(container) {
   sumDoneText.appendChild(sumDoneVal);
   const sumDoneLbl = document.createElement("div");
   sumDoneLbl.className = "text-xs text-gray-500";
-  sumDoneLbl.textContent = "Completed";
+  sumDoneLbl.textContent = t("planner.completed");
   sumDoneText.appendChild(sumDoneLbl);
   sumDone.appendChild(sumDoneText);
   summaryBar.appendChild(sumDone);
@@ -671,7 +673,7 @@ function _renderPlan(container) {
   sumProgText.appendChild(sumProgVal);
   const sumProgLbl = document.createElement("div");
   sumProgLbl.className = "text-xs text-gray-500";
-  sumProgLbl.textContent = "In Progress";
+  sumProgLbl.textContent = t("planner.in_progress");
   sumProgText.appendChild(sumProgLbl);
   sumProg.appendChild(sumProgText);
   summaryBar.appendChild(sumProg);
@@ -689,7 +691,7 @@ function _renderPlan(container) {
   sumLeftText.appendChild(sumLeftVal);
   const sumLeftLbl = document.createElement("div");
   sumLeftLbl.className = "text-xs text-gray-500";
-  sumLeftLbl.textContent = "Remaining";
+  sumLeftLbl.textContent = t("planner.remaining");
   sumLeftText.appendChild(sumLeftLbl);
   sumLeft.appendChild(sumLeftText);
   summaryBar.appendChild(sumLeft);
@@ -709,7 +711,7 @@ function _renderPlan(container) {
   tabsLabel.className = "text-sm font-medium text-gray-500 mb-3 flex items-center gap-2";
   tabsLabel.appendChild(LucideIcon("calendar", "w-4 h-4"));
   const tabsLabelText = document.createElement("span");
-  tabsLabelText.textContent = "Select Semester";
+  tabsLabelText.textContent = t("planner.select_semester");
   tabsLabel.appendChild(tabsLabelText);
   tabsWrap.appendChild(tabsLabel);
 
@@ -802,17 +804,17 @@ function _renderPlan(container) {
     semLabel.appendChild(LucideIcon("layers", "w-5 h-5 text-blue-500"));
     const semTitle = document.createElement("span");
     semTitle.className = "font-semibold text-gray-800";
-    semTitle.textContent = `Year ${_selectedSem.year} ${_selectedSem.semester.charAt(0).toUpperCase() + _selectedSem.semester.slice(1)}`;
+    semTitle.textContent = `${t("planner.year", {n: _selectedSem.year})} ${_selectedSem.semester.charAt(0).toUpperCase() + _selectedSem.semester.slice(1)}`;
     semLabel.appendChild(semTitle);
     const courseCount = document.createElement("span");
     courseCount.className = "text-sm text-gray-500";
-    courseCount.textContent = `${courses.length} courses`;
+    courseCount.textContent = t("planner.courses_progress", {done: courses.length, total: courses.length});
     semLabel.appendChild(courseCount);
     semInfo.appendChild(semLabel);
 
     const creditBadge = document.createElement("span");
     creditBadge.className = "text-sm font-medium px-3 py-1 rounded-full bg-blue-50 text-blue-700";
-    creditBadge.textContent = `${doneCredits}/${semCredits} credits`;
+    creditBadge.textContent = t("planner.credits_progress", {done: doneCredits, total: semCredits});
     semInfo.appendChild(creditBadge);
     semHeader.appendChild(semInfo);
 
@@ -829,12 +831,12 @@ function _renderPlan(container) {
 
       const emptyTitle = document.createElement("h3");
       emptyTitle.className = "text-lg font-semibold text-gray-700 mb-2";
-      emptyTitle.textContent = "No courses this semester";
+      emptyTitle.textContent = t("planner.no_courses_semester");
       empty.appendChild(emptyTitle);
 
       const emptyText = document.createElement("p");
       emptyText.className = "text-gray-400";
-      emptyText.textContent = "This semester has no scheduled courses in the current plan.";
+      emptyText.textContent = t("planner.no_courses_semester_desc");
       empty.appendChild(emptyText);
       semGrid.appendChild(empty);
     } else {
@@ -872,10 +874,13 @@ export async function renderPlanner() {
   tabBar.appendChild(ViewTab("Plan", "plan", "git-branch"));
   container.appendChild(tabBar);
 
-  // Content area
+  // Content area — show skeleton loading while fetching
   const content = document.createElement("div");
   content.id = "planner-content";
-  content.appendChild(LoadingSpinner());
+  const skeletonGrid = document.createElement("div");
+  skeletonGrid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
+  skeletonGrid.innerHTML = skeletonCard(6);
+  content.appendChild(skeletonGrid);
   container.appendChild(content);
 
   app.appendChild(container);
@@ -924,7 +929,11 @@ async function _loadData() {
       _progress = [];
     }
   } catch (err) {
-    showToast("Failed to load courses: " + err.message, "error");
+    showToast(t("planner.courses_failed") + " " + err.message, "error");
+    const content = document.getElementById("planner-content");
+    if (content) {
+      content.innerHTML = errorState(t("planner.courses_failed"), err.message);
+    }
   }
 }
 
@@ -942,7 +951,7 @@ async function _updateProgress(courseId, status) {
     } else {
       _progress.push({ course_id: courseId, status, updated_at: new Date().toISOString() });
     }
-    showToast("Progress updated!", "success");
+    showToast(t("planner.progress_updated"), "success");
   } catch (err) {
     showToast(err.message, "error");
   }
@@ -982,10 +991,10 @@ async function _loadDSAITemplate() {
 
   try {
     _progress = await api.post("/courses/progress/batch", { items });
-    showToast("DSAI template loaded! Track your progress now.", "success");
+    showToast(t("planner.template_loaded"), "success");
     _render();
   } catch (err) {
-    showToast("Failed to load template: " + err.message, "error");
+    showToast(t("planner.template_failed") + " " + err.message, "error");
   }
 }
 

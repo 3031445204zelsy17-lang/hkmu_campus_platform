@@ -1,6 +1,7 @@
 import { api, isLoggedIn } from "../api.js";
 import { showToast } from "../components/toast.js";
 import { openModal, closeModal } from "../components/modal.js";
+import { t } from "../utils/i18n.js";
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -20,7 +21,7 @@ export async function renderProfile(userId) {
     app.innerHTML = "";
     const msg = document.createElement("p");
     msg.className = "text-gray-500 text-center py-8";
-    msg.textContent = "Please log in to view profiles.";
+    msg.textContent = t("profile.login_required");
     app.appendChild(msg);
     return;
   }
@@ -42,7 +43,7 @@ export async function renderProfile(userId) {
     app.innerHTML = "";
     const errorEl = document.createElement("p");
     errorEl.className = "text-red-400 text-center py-8";
-    errorEl.textContent = "Failed to load profile: " + err.message;
+    errorEl.textContent = t("error.load_failed") + ": " + err.message;
     app.appendChild(errorEl);
   }
 }
@@ -95,7 +96,7 @@ function _ProfileHeader(user) {
   if (user.student_id) {
     const sid = document.createElement("p");
     sid.className = "profile-subtitle";
-    sid.textContent = `Student ID: ${user.student_id}`;
+    sid.textContent = t("profile.student_id", { id: user.student_id });
     info.appendChild(sid);
   }
 
@@ -117,7 +118,7 @@ function _ProfileHeader(user) {
   if (_isOwnProfile()) {
     const editBtn = document.createElement("button");
     editBtn.className = "edit-profile-btn";
-    editBtn.textContent = "Edit";
+    editBtn.textContent = t("profile.edit");
     editBtn.addEventListener("click", _showEditModal);
     el.appendChild(editBtn);
   }
@@ -130,9 +131,9 @@ function _StatsBar(user) {
   el.className = "stats-bar";
 
   const stats = [
-    { label: "Posts", value: _posts.length },
-    { label: "Identity", value: user.identity || "student" },
-    { label: "Joined", value: _formatDate(user.created_at) },
+    { label: t("profile.tab_posts"), value: _posts.length },
+    { label: t("profile.tab_identity"), value: user.identity || "student" },
+    { label: t("profile.tab_joined"), value: _formatDate(user.created_at) },
   ];
 
   stats.forEach((s) => {
@@ -176,13 +177,13 @@ function _TabContent() {
 
   if (_activeTab === "posts") {
     if (_posts.length === 0) {
-      el.appendChild(_emptyState("No posts yet"));
+      el.appendChild(_emptyState(t("profile.no_posts")));
     } else {
       _posts.forEach((post) => el.appendChild(_PostCard(post)));
       if (_postsHasMore) {
         const moreBtn = document.createElement("button");
         moreBtn.className = "load-more-btn";
-        moreBtn.textContent = "Load more...";
+        moreBtn.textContent = t("profile.load_more");
         moreBtn.addEventListener("click", async () => {
           _postsPage++;
           await _loadUserPosts();
@@ -237,7 +238,7 @@ function _showEditModal() {
   const nicknameInput = document.createElement("input");
   nicknameInput.type = "text";
   nicknameInput.name = "nickname";
-  nicknameInput.placeholder = "Nickname";
+  nicknameInput.placeholder = t("profile.field_nickname");
   nicknameInput.maxLength = 30;
   nicknameInput.required = true;
   nicknameInput.value = _profileUser.nickname || "";
@@ -245,7 +246,7 @@ function _showEditModal() {
 
   const bioInput = document.createElement("textarea");
   bioInput.name = "bio";
-  bioInput.placeholder = "Bio (max 300 chars)";
+  bioInput.placeholder = t("profile.field_bio");
   bioInput.maxLength = 300;
   bioInput.rows = 3;
   bioInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 resize-none";
@@ -256,7 +257,7 @@ function _showEditModal() {
 
   const avatarLabel = document.createElement("label");
   avatarLabel.className = "block text-sm font-medium text-gray-700";
-  avatarLabel.textContent = "Avatar";
+  avatarLabel.textContent = t("profile.field_avatar");
 
   const avatarInput = document.createElement("input");
   avatarInput.type = "file";
@@ -274,7 +275,7 @@ function _showEditModal() {
   const submitBtn = document.createElement("button");
   submitBtn.type = "submit";
   submitBtn.className = "w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium";
-  submitBtn.textContent = "Save Changes";
+  submitBtn.textContent = t("profile.save_changes");
 
   form.appendChild(nicknameInput);
   form.appendChild(bioInput);
@@ -282,7 +283,7 @@ function _showEditModal() {
   form.appendChild(errDiv);
   form.appendChild(submitBtn);
 
-  openModal("Edit Profile", form);
+  openModal(t("profile.edit_modal"), form);
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -316,7 +317,7 @@ function _showEditModal() {
       }
 
       _profileUser = await api.get("/users/me");
-      showToast("Profile updated!", "success");
+      showToast(t("profile.updated"), "success");
       closeModal();
       _renderPage(document.getElementById("app-content"));
     } catch (err) {
@@ -337,9 +338,10 @@ async function _loadUserPosts() {
       _posts = _posts.concat(data.items.filter((p) => p.author_id === _profileUser.id));
     }
     _postsHasMore = data.has_next;
-  } catch {
+  } catch (err) {
     _posts = [];
     _postsHasMore = false;
+    showToast(t("error.load_failed"), "error");
   }
 }
 
@@ -384,17 +386,17 @@ function _timeAgo(isoStr) {
   if (!isoStr) return "";
   const diff = Date.now() - new Date(isoStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t("time.just_now");
+  if (mins < 60) return t("time.minutes_ago", {n: mins});
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return t("time.hours_ago", {n: hours});
   const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
+  if (days < 30) return t("time.days_ago", {n: days});
   return new Date(isoStr).toLocaleDateString();
 }
 
 function _formatDate(isoStr) {
-  if (!isoStr) return "N/A";
+  if (!isoStr) return t("profile.not_available");
   return new Date(isoStr).toLocaleDateString();
 }
 

@@ -1,6 +1,8 @@
 import { api, isLoggedIn } from "../api.js";
 import { showToast } from "../components/toast.js";
 import { openModal, closeModal } from "../components/modal.js";
+import { t } from "../utils/i18n.js";
+import { skeletonCard, errorState } from "../components/skeleton.js";
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -14,12 +16,12 @@ let _state = {
 };
 
 const CATEGORIES = [
-  { value: null, label: "All" },
-  { value: "announcement", label: "Announcements" },
-  { value: "event", label: "Events" },
-  { value: "academic", label: "Academic" },
-  { value: "career", label: "Career" },
-  { value: "other", label: "Other" },
+  { value: null, i18n: "news.cat_all" },
+  { value: "announcement", i18n: "news.cat_announcements" },
+  { value: "event", i18n: "news.cat_events" },
+  { value: "academic", i18n: "news.cat_academic" },
+  { value: "career", i18n: "news.cat_career" },
+  { value: "other", i18n: "news.cat_other" },
 ];
 
 let _fabContainer = null;
@@ -50,7 +52,7 @@ export function renderNews() {
   header.className = "mb-4";
   const title = document.createElement("h2");
   title.className = "text-2xl font-bold text-gray-800";
-  title.textContent = "Campus News";
+  title.textContent = t("news.title");
   header.appendChild(title);
   container.appendChild(header);
 
@@ -59,7 +61,7 @@ export function renderNews() {
   const feed = document.createElement("div");
   feed.id = "news-feed";
   feed.className = "news-list";
-  feed.appendChild(_loadingSpinner());
+  feed.innerHTML = skeletonCard(3);
   container.appendChild(feed);
 
   app.innerHTML = "";
@@ -70,7 +72,7 @@ export function renderNews() {
     _fabContainer.className = "fab-container";
     const fabBtn = document.createElement("button");
     fabBtn.className = "fab-btn";
-    fabBtn.textContent = "+ Add Link";
+    fabBtn.textContent = t("news.add_link");
     fabBtn.addEventListener("click", _showCreateModal);
     _fabContainer.appendChild(fabBtn);
     document.body.appendChild(_fabContainer);
@@ -88,7 +90,7 @@ function _CategoryFilter() {
   CATEGORIES.forEach((c) => {
     const btn = document.createElement("button");
     btn.className = "news-tab" + (_state.category === c.value ? " active" : "");
-    btn.textContent = c.label;
+    btn.textContent = t(c.i18n);
     btn.addEventListener("click", () => {
       _state.category = c.value;
       _state.page = 1;
@@ -158,7 +160,7 @@ function _NewsCard(item) {
     const delBtn = document.createElement("button");
     delBtn.className = "news-delete-btn";
     delBtn.textContent = "×";
-    delBtn.title = "Delete";
+    delBtn.title = t("community.delete");
     delBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -178,16 +180,9 @@ function _EmptyState() {
   icon.textContent = "\u{1F4F0}";
   const p = document.createElement("p");
   p.className = "text-gray-400 text-lg";
-  p.textContent = "No news yet";
+  p.textContent = t("news.empty_title");
   el.appendChild(icon);
   el.appendChild(p);
-  return el;
-}
-
-function _loadingSpinner() {
-  const el = document.createElement("div");
-  el.className = "flex justify-center py-8";
-  el.innerHTML = '<div class="spinner"></div>';
   return el;
 }
 
@@ -198,8 +193,7 @@ async function _loadNews() {
   if (!feed) return;
 
   _state.loading = true;
-  feed.innerHTML = "";
-  feed.appendChild(_loadingSpinner());
+  feed.innerHTML = skeletonCard(3);
 
   try {
     const params = new URLSearchParams({
@@ -223,7 +217,7 @@ async function _loadNews() {
     if (data.has_next) {
       const moreBtn = document.createElement("button");
       moreBtn.className = "w-full py-2 text-sm text-blue-500 hover:text-blue-700 transition-colors";
-      moreBtn.textContent = "Load more...";
+      moreBtn.textContent = t("news.load_more");
       moreBtn.addEventListener("click", () => {
         _state.page++;
         _loadNews();
@@ -232,10 +226,8 @@ async function _loadNews() {
     }
   } catch (err) {
     feed.innerHTML = "";
-    const errorEl = document.createElement("p");
-    errorEl.className = "text-red-400 text-center py-8";
-    errorEl.textContent = "Failed to load news: " + err.message;
-    feed.appendChild(errorEl);
+    feed.appendChild(errorState(t("news.news_failed"), err.message));
+    showToast(t("news.news_failed"), "error");
   } finally {
     _state.loading = false;
   }
@@ -251,7 +243,7 @@ function _showCreateModal() {
   const titleInput = document.createElement("input");
   titleInput.type = "text";
   titleInput.name = "title";
-  titleInput.placeholder = "Title";
+  titleInput.placeholder = t("news.field_title");
   titleInput.required = true;
   titleInput.maxLength = 200;
   titleInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
@@ -259,13 +251,13 @@ function _showCreateModal() {
   const urlInput = document.createElement("input");
   urlInput.type = "url";
   urlInput.name = "source_url";
-  urlInput.placeholder = "Link URL (https://...)";
+  urlInput.placeholder = t("news.field_url");
   urlInput.required = true;
   urlInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
 
   const summaryInput = document.createElement("textarea");
   summaryInput.name = "summary";
-  summaryInput.placeholder = "Brief summary (optional)";
+  summaryInput.placeholder = t("news.field_summary");
   summaryInput.rows = 2;
   summaryInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 resize-none";
 
@@ -274,12 +266,12 @@ function _showCreateModal() {
   categorySelect.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
   const placeholderOpt = document.createElement("option");
   placeholderOpt.value = "";
-  placeholderOpt.textContent = "Category (optional)";
+  placeholderOpt.textContent = t("news.field_category");
   categorySelect.appendChild(placeholderOpt);
   CATEGORIES.filter((c) => c.value).forEach((c) => {
     const opt = document.createElement("option");
     opt.value = c.value;
-    opt.textContent = c.label;
+    opt.textContent = t(c.i18n);
     categorySelect.appendChild(opt);
   });
 
@@ -290,7 +282,7 @@ function _showCreateModal() {
   const submitBtn = document.createElement("button");
   submitBtn.type = "submit";
   submitBtn.className = "w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium";
-  submitBtn.textContent = "Add Link";
+  submitBtn.textContent = t("news.add_link_btn");
 
   form.appendChild(titleInput);
   form.appendChild(urlInput);
@@ -299,7 +291,7 @@ function _showCreateModal() {
   form.appendChild(errDiv);
   form.appendChild(submitBtn);
 
-  openModal("Add News Link", form);
+  openModal(t("news.add_link_modal"), form);
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -314,7 +306,7 @@ function _showCreateModal() {
         summary: fd.get("summary") || null,
         category: fd.get("category") || null,
       });
-      showToast("Link added!", "success");
+      showToast(t("news.link_added"), "success");
       closeModal();
       _loadNews();
     } catch (err) {
@@ -327,10 +319,10 @@ function _showCreateModal() {
 // ── Delete ───────────────────────────────────────────────────────────────────
 
 async function _deleteNews(newsId) {
-  if (!confirm("Delete this news item?")) return;
+  if (!confirm(t("news.confirm_delete"))) return;
   try {
     await api.del(`/news/${newsId}`);
-    showToast("News deleted", "info");
+    showToast(t("news.news_deleted"), "info");
     _loadNews();
   } catch (err) {
     showToast(err.message, "error");
@@ -354,11 +346,11 @@ function _timeAgo(isoStr) {
   if (!isoStr) return "";
   const diff = Date.now() - new Date(isoStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t("time.just_now");
+  if (mins < 60) return t("time.minutes_ago", { n: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return t("time.hours_ago", { n: hours });
   const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
+  if (days < 30) return t("time.days_ago", { n: days });
   return new Date(isoStr).toLocaleDateString();
 }

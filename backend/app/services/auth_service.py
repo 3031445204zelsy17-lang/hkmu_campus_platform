@@ -5,6 +5,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 from ..config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from ..database import get_db
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -51,4 +52,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
         )
-    return {"id": int(user_id), "username": payload.get("username")}
+    uid = int(user_id)
+    db = await get_db()
+    cur = await db.execute("SELECT id, username FROM users WHERE id = ?", (uid,))
+    row = await cur.fetchone()
+    if not row:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User no longer exists",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return {"id": row["id"], "username": row["username"]}
