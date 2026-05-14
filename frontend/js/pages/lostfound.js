@@ -1,6 +1,8 @@
 import { api, isLoggedIn } from "../api.js";
+import { t } from "../utils/i18n.js";
 import { showToast } from "../components/toast.js";
 import { openModal, closeModal } from "../components/modal.js";
+import { skeletonCard, errorState } from "../components/skeleton.js";
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -15,15 +17,15 @@ let _state = {
 };
 
 const ITEM_TYPES = [
-  { value: null, label: "All" },
-  { value: "lost", label: "Lost" },
-  { value: "found", label: "Found" },
+  { value: null, labelKey: "lostfound.type_all" },
+  { value: "lost", labelKey: "lostfound.type_lost" },
+  { value: "found", labelKey: "lostfound.type_found" },
 ];
 
 const STATUS_OPTIONS = [
-  { value: null, label: "All Status" },
-  { value: "active", label: "Active" },
-  { value: "resolved", label: "Resolved" },
+  { value: null, labelKey: "lostfound.status_all" },
+  { value: "active", labelKey: "lostfound.status_active" },
+  { value: "resolved", labelKey: "lostfound.status_resolved" },
 ];
 
 let _fabContainer = null;
@@ -54,7 +56,7 @@ export function renderLostFound() {
   header.className = "mb-4";
   const title = document.createElement("h2");
   title.className = "text-2xl font-bold text-gray-800";
-  title.textContent = "Lost & Found";
+  title.textContent = t("lostfound.title");
   header.appendChild(title);
   container.appendChild(header);
 
@@ -63,7 +65,7 @@ export function renderLostFound() {
   const feed = document.createElement("div");
   feed.id = "lf-feed";
   feed.className = "lf-list";
-  feed.appendChild(_loadingSpinner());
+  feed.innerHTML = skeletonCard(3);
   container.appendChild(feed);
 
   app.innerHTML = "";
@@ -74,7 +76,7 @@ export function renderLostFound() {
     _fabContainer.className = "fab-container";
     const fabBtn = document.createElement("button");
     fabBtn.className = "fab-btn";
-    fabBtn.textContent = "+ Report Item";
+    fabBtn.textContent = t("lostfound.report_item");
     fabBtn.addEventListener("click", _showCreateModal);
     _fabContainer.appendChild(fabBtn);
     document.body.appendChild(_fabContainer);
@@ -93,14 +95,14 @@ function _FilterBar() {
   const typeWrap = document.createElement("div");
   typeWrap.className = "lf-type-tabs";
 
-  ITEM_TYPES.forEach((t) => {
+  ITEM_TYPES.forEach((itemType) => {
     const btn = document.createElement("button");
-    btn.className = "lf-type-tab" + (_state.itemType === t.value ? " active" : "");
-    btn.textContent = t.label;
-    if (t.value === "lost") btn.classList.add("lost");
-    if (t.value === "found") btn.classList.add("found");
+    btn.className = "lf-type-tab" + (_state.itemType === itemType.value ? " active" : "");
+    btn.textContent = t(itemType.labelKey);
+    if (itemType.value === "lost") btn.classList.add("lost");
+    if (itemType.value === "found") btn.classList.add("found");
     btn.addEventListener("click", () => {
-      _state.itemType = t.value;
+      _state.itemType = itemType.value;
       _state.page = 1;
       _loadItems();
       typeWrap.querySelectorAll(".lf-type-tab").forEach((b) => b.classList.remove("active"));
@@ -117,7 +119,7 @@ function _FilterBar() {
   STATUS_OPTIONS.forEach((s) => {
     const opt = document.createElement("option");
     opt.value = s.value || "";
-    opt.textContent = s.label;
+    opt.textContent = t(s.labelKey);
     if (_state.statusFilter === s.value) opt.selected = true;
     statusSelect.appendChild(opt);
   });
@@ -138,14 +140,14 @@ function _ItemCard(item) {
   // Type badge
   const typeBadge = document.createElement("span");
   typeBadge.className = "lf-type-badge " + item.item_type;
-  typeBadge.textContent = item.item_type === "lost" ? "LOST" : "FOUND";
+  typeBadge.textContent = item.item_type === "lost" ? t("lostfound.lost_label") : t("lostfound.found_label");
   card.appendChild(typeBadge);
 
   // Status badge
   if (item.status === "resolved") {
     const statusBadge = document.createElement("span");
     statusBadge.className = "lf-status-badge resolved";
-    statusBadge.textContent = "Resolved";
+    statusBadge.textContent = t("lostfound.resolved_label");
     card.appendChild(statusBadge);
   }
 
@@ -174,7 +176,7 @@ function _ItemCard(item) {
   meta.className = "lf-card-meta";
 
   const author = document.createElement("span");
-  author.textContent = item.author_nickname || "Anonymous";
+  author.textContent = item.author_nickname || t("community.anonymous");
 
   const time = document.createElement("span");
   time.textContent = _timeAgo(item.created_at);
@@ -193,14 +195,14 @@ function _ItemCard(item) {
     if (item.status === "active") {
       const resolveBtn = document.createElement("button");
       resolveBtn.className = "lf-action-btn resolve";
-      resolveBtn.textContent = "Mark Resolved";
+      resolveBtn.textContent = t("lostfound.resolved_label");
       resolveBtn.addEventListener("click", () => _resolveItem(item.id));
       actions.appendChild(resolveBtn);
     }
 
     const delBtn = document.createElement("button");
     delBtn.className = "lf-action-btn delete";
-    delBtn.textContent = "Delete";
+    delBtn.textContent = t("community.delete");
     delBtn.addEventListener("click", () => _deleteItem(item.id));
     actions.appendChild(delBtn);
 
@@ -218,16 +220,9 @@ function _EmptyState() {
   icon.textContent = "\u{1F50D}";
   const p = document.createElement("p");
   p.className = "text-gray-400 text-lg";
-  p.textContent = "No items reported yet";
+  p.textContent = t("lostfound.empty_title");
   el.appendChild(icon);
   el.appendChild(p);
-  return el;
-}
-
-function _loadingSpinner() {
-  const el = document.createElement("div");
-  el.className = "flex justify-center py-8";
-  el.innerHTML = '<div class="spinner"></div>';
   return el;
 }
 
@@ -238,8 +233,7 @@ async function _loadItems() {
   if (!feed) return;
 
   _state.loading = true;
-  feed.innerHTML = "";
-  feed.appendChild(_loadingSpinner());
+  feed.innerHTML = skeletonCard(3);
 
   try {
     const params = new URLSearchParams({
@@ -264,7 +258,7 @@ async function _loadItems() {
     if (data.has_next) {
       const moreBtn = document.createElement("button");
       moreBtn.className = "w-full py-2 text-sm text-blue-500 hover:text-blue-700 transition-colors";
-      moreBtn.textContent = "Load more...";
+      moreBtn.textContent = t("lostfound.load_more");
       moreBtn.addEventListener("click", () => {
         _state.page++;
         _loadItems();
@@ -273,10 +267,8 @@ async function _loadItems() {
     }
   } catch (err) {
     feed.innerHTML = "";
-    const errorEl = document.createElement("p");
-    errorEl.className = "text-red-400 text-center py-8";
-    errorEl.textContent = "Failed to load items: " + err.message;
-    feed.appendChild(errorEl);
+    feed.appendChild(errorState(t("lostfound.load_failed")));
+    showToast(t("lostfound.load_failed"), "error");
   } finally {
     _state.loading = false;
   }
@@ -301,7 +293,7 @@ function _showCreateModal() {
   lostRadio.required = true;
   lostRadio.checked = true;
   lostLabel.appendChild(lostRadio);
-  lostLabel.appendChild(document.createTextNode(" I lost something"));
+  lostLabel.appendChild(document.createTextNode(" " + t("lostfound.i_lost")));
 
   const foundLabel = document.createElement("label");
   foundLabel.className = "lf-radio-label";
@@ -311,7 +303,7 @@ function _showCreateModal() {
   foundRadio.value = "found";
   foundRadio.checked = false;
   foundLabel.appendChild(foundRadio);
-  foundLabel.appendChild(document.createTextNode(" I found something"));
+  foundLabel.appendChild(document.createTextNode(" " + t("lostfound.i_found")));
 
   typeGroup.appendChild(lostLabel);
   typeGroup.appendChild(foundLabel);
@@ -319,25 +311,28 @@ function _showCreateModal() {
   const titleInput = document.createElement("input");
   titleInput.type = "text";
   titleInput.name = "title";
-  titleInput.placeholder = "What item?";
+  titleInput.placeholder = t("lostfound.field_title");
   titleInput.required = true;
   titleInput.maxLength = 200;
   titleInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
+  titleInput.setAttribute("aria-label", t("lostfound.field_title"));
 
   const locationInput = document.createElement("input");
   locationInput.type = "text";
   locationInput.name = "location";
-  locationInput.placeholder = "Where? (e.g. Room A123)";
+  locationInput.placeholder = t("lostfound.field_location");
   locationInput.maxLength = 200;
   locationInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
+  locationInput.setAttribute("aria-label", t("lostfound.field_location"));
 
   const descInput = document.createElement("textarea");
   descInput.name = "description";
-  descInput.placeholder = "Description (color, brand, distinguishing features...)";
+  descInput.placeholder = t("lostfound.field_desc");
   descInput.required = true;
   descInput.maxLength = 2000;
   descInput.rows = 4;
   descInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 resize-none";
+  descInput.setAttribute("aria-label", t("lostfound.field_desc"));
 
   const errDiv = document.createElement("div");
   errDiv.id = "lf-create-error";
@@ -346,7 +341,7 @@ function _showCreateModal() {
   const submitBtn = document.createElement("button");
   submitBtn.type = "submit";
   submitBtn.className = "w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium";
-  submitBtn.textContent = "Submit Report";
+  submitBtn.textContent = t("lostfound.submit_report");
 
   form.appendChild(typeGroup);
   form.appendChild(titleInput);
@@ -355,7 +350,7 @@ function _showCreateModal() {
   form.appendChild(errDiv);
   form.appendChild(submitBtn);
 
-  openModal("Report Item", form);
+  openModal(t("lostfound.report_modal"), form);
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -370,7 +365,7 @@ function _showCreateModal() {
         item_type: fd.get("item_type"),
         location: fd.get("location") || null,
       });
-      showToast("Report submitted!", "success");
+      showToast(t("lostfound.report_submitted"), "success");
       closeModal();
       _loadItems();
     } catch (err) {
@@ -383,10 +378,10 @@ function _showCreateModal() {
 // ── Actions ──────────────────────────────────────────────────────────────────
 
 async function _resolveItem(itemId) {
-  if (!confirm("Mark this item as resolved?")) return;
+  if (!confirm(t("lostfound.confirm_resolve"))) return;
   try {
     await api.put(`/lostfound/${itemId}`, { status: "resolved" });
-    showToast("Marked as resolved", "success");
+    showToast(t("lostfound.marked_resolved"), "success");
     _loadItems();
   } catch (err) {
     showToast(err.message, "error");
@@ -394,10 +389,10 @@ async function _resolveItem(itemId) {
 }
 
 async function _deleteItem(itemId) {
-  if (!confirm("Delete this report?")) return;
+  if (!confirm(t("lostfound.confirm_delete"))) return;
   try {
     await api.del(`/lostfound/${itemId}`);
-    showToast("Report deleted", "info");
+    showToast(t("lostfound.report_deleted"), "info");
     _loadItems();
   } catch (err) {
     showToast(err.message, "error");
@@ -421,11 +416,11 @@ function _timeAgo(isoStr) {
   if (!isoStr) return "";
   const diff = Date.now() - new Date(isoStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t("time.just_now");
+  if (mins < 60) return t("time.minutes_ago", { n: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return t("time.hours_ago", { n: hours });
   const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
+  if (days < 30) return t("time.days_ago", { n: days });
   return new Date(isoStr).toLocaleDateString();
 }

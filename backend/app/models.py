@@ -33,8 +33,22 @@ class EmailLogin(BaseModel):
     password: str
 
 
+class ForgotPassword(BaseModel):
+    email: str = Field(pattern=r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
+
+class ResetPassword(BaseModel):
+    token: str = Field(min_length=1)
+    new_password: str = Field(min_length=6)
+
+
+class VerifyEmail(BaseModel):
+    token: str = Field(min_length=1)
+
+
 class Token(BaseModel):
     access_token: str
+    refresh_token: str | None = None
     token_type: str = "bearer"
 
 

@@ -1,6 +1,8 @@
 import { api, getToken, isLoggedIn } from "../api.js";
 import { showToast } from "../components/toast.js";
 import { openModal, closeModal } from "../components/modal.js";
+import { t } from "../utils/i18n.js";
+import { errorState } from "../components/skeleton.js";
 
 let _ws = null;
 let _wsReconnectDelay = 5000;
@@ -119,10 +121,10 @@ function escapeHtml(str) {
 function timeAgo(iso) {
   if (!iso) return "";
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-  return `${Math.floor(diff / 86400)}d`;
+  if (diff < 60) return t("time.just_now");
+  if (diff < 3600) return t("time.minutes_ago", {n: Math.floor(diff / 60)});
+  if (diff < 86400) return t("time.hours_ago", {n: Math.floor(diff / 3600)});
+  return t("time.days_ago", {n: Math.floor(diff / 86400)});
 }
 
 function formatTime(iso) {
@@ -143,7 +145,7 @@ function avatarHtml(nickname, avatarUrl) {
 
 function renderConversationList(conversations, activeId, onSelect) {
   if (!conversations.length) {
-    return `<div class="msg-empty">No conversations yet</div>`;
+    return `<div class="msg-empty">${t("messages.no_conversations")}</div>`;
   }
 
   return conversations
@@ -192,7 +194,7 @@ export function renderMessages() {
   app.setAttribute("data-page", "messages");
 
   if (!isLoggedIn()) {
-    app.innerHTML = `<p class="text-gray-500 text-center py-8">Please log in to use messaging.</p>`;
+    app.innerHTML = `<p class="text-gray-500 text-center py-8">${t("messages.login_required")}</p>`;
     return;
   }
 
@@ -203,28 +205,28 @@ export function renderMessages() {
     <div class="msg-layout" id="msg-layout">
       <div class="msg-sidebar" id="msg-sidebar">
         <div class="msg-sidebar-header">
-          <h3>Messages</h3>
-          <button class="msg-new-btn" id="msg-new-conv-btn">New</button>
+          <h3>${t("messages.title")}</h3>
+          <button class="msg-new-btn" id="msg-new-conv-btn">${t("messages.new_btn")}</button>
         </div>
         <div class="conv-list" id="conv-list">
-          <div class="msg-loading">Loading...</div>
+          <div class="msg-loading">${t("messages.loading")}</div>
         </div>
       </div>
       <div class="msg-chat" id="msg-chat">
         <div class="disconnect-banner" id="disconnect-banner" style="display:none">
-          Connection lost — using polling fallback
+          ${t("messages.connection_lost")}
         </div>
         <div class="msg-empty-chat" id="msg-empty-chat">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
           </svg>
-          <span>Select a conversation to start chatting</span>
+          <span>${t("messages.select_conversation")}</span>
         </div>
         <div id="msg-chat-active" style="display:none">
           <div class="msg-chat-header" id="msg-chat-header"></div>
           <div class="msg-messages" id="msg-messages-area"></div>
           <div class="msg-input-area">
-            <textarea class="msg-input" id="msg-input" placeholder="Type a message..." rows="1"></textarea>
+            <textarea class="msg-input" id="msg-input" placeholder="${t("messages.type_placeholder")}" aria-label="${t("messages.type_placeholder")}" rows="1"></textarea>
             <button class="msg-send-btn" id="msg-send-btn">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
@@ -294,7 +296,10 @@ async function loadConversations() {
   try {
     _state.conversations = await api.get("/messages/conversations");
     renderConvList();
-  } catch {}
+  } catch {
+    const list = document.getElementById("conv-list");
+    if (list) list.innerHTML = errorState(t("error.load_failed"));
+  }
 }
 
 function renderConvList() {
@@ -374,7 +379,7 @@ async function loadMessages() {
     renderMessagesArea();
     scrollToBottom();
   } catch {
-    showToast("Failed to load messages", "error");
+    showToast(t("error.load_failed"), "error");
   } finally {
     _state.loading = false;
   }
@@ -442,7 +447,7 @@ async function sendMessage() {
       scrollToBottom();
       loadConversations();
     } catch {
-      showToast("Failed to send", "error");
+      showToast(t("messages.send_failed"), "error");
     }
   }
 }
@@ -482,9 +487,9 @@ function showNewConvModal() {
   let searchTimeout;
 
   const html = `
-    <input type="text" class="msg-search-input" id="msg-search-input" placeholder="Search by username or nickname...">
+    <input type="text" class="msg-search-input" id="msg-search-input" placeholder="${t("messages.search_placeholder")}" aria-label="${t("messages.search_placeholder")}">
     <div class="msg-search-results" id="msg-search-results">
-      <p style="color:#9ca3af;text-align:center;padding:20px 0;font-size:0.9rem;">Type to search users</p>
+      <p style="color:#9ca3af;text-align:center;padding:20px 0;font-size:0.9rem;">${t("messages.type_to_search")}</p>
     </div>
   `;
 
@@ -497,14 +502,14 @@ function showNewConvModal() {
     clearTimeout(searchTimeout);
     const q = searchInput.value.trim();
     if (!q) {
-      resultsEl.innerHTML = `<p style="color:#9ca3af;text-align:center;padding:20px 0;font-size:0.9rem;">Type to search users</p>`;
+      resultsEl.innerHTML = `<p style="color:#9ca3af;text-align:center;padding:20px 0;font-size:0.9rem;">${t("messages.type_to_search")}</p>`;
       return;
     }
     searchTimeout = setTimeout(async () => {
       try {
         const users = await api.get(`/users/search?q=${encodeURIComponent(q)}`);
         if (!users.length) {
-          resultsEl.innerHTML = `<p style="color:#9ca3af;text-align:center;padding:20px 0;font-size:0.9rem;">No users found</p>`;
+          resultsEl.innerHTML = `<p style="color:#9ca3af;text-align:center;padding:20px 0;font-size:0.9rem;">${t("messages.no_users")}</p>`;
           return;
         }
         resultsEl.innerHTML = users
@@ -529,7 +534,7 @@ function showNewConvModal() {
           });
         });
       } catch {
-        resultsEl.innerHTML = `<p style="color:#ef4444;text-align:center;padding:20px 0;font-size:0.9rem;">Search failed</p>`;
+        resultsEl.innerHTML = `<p style="color:#ef4444;text-align:center;padding:20px 0;font-size:0.9rem;">${t("messages.search_failed")}</p>`;
       }
     }, 300);
   });

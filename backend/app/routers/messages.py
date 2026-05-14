@@ -20,30 +20,37 @@ PING_INTERVAL = 30
 @router.get("/conversations", response_model=list[ConversationOut])
 async def list_conversations(user: dict = Depends(get_current_user)):
     db = await get_db()
+    uid = user["id"]
     cur = await db.execute(
         """
+        WITH latest AS (
+            SELECT
+                CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END AS partner_id,
+                MAX(id) AS max_id
+            FROM messages
+            WHERE sender_id = ? OR receiver_id = ?
+            GROUP BY partner_id
+        ),
+        unread AS (
+            SELECT sender_id AS partner_id, COUNT(*) AS cnt
+            FROM messages
+            WHERE receiver_id = ? AND is_read = 0
+            GROUP BY sender_id
+        )
         SELECT
-            CASE WHEN m.sender_id = ? THEN m.receiver_id ELSE m.sender_id END AS partner_id,
+            l.partner_id,
             u.nickname AS partner_nickname,
             u.avatar_url AS partner_avatar,
             m.content AS last_message,
             m.created_at AS last_time,
-            (
-                SELECT COUNT(*) FROM messages m2
-                WHERE m2.sender_id = (
-                    CASE WHEN m.sender_id = ? THEN m.receiver_id ELSE m.sender_id END
-                ) AND m2.receiver_id = ? AND m2.is_read = 0
-            ) AS unread_count
-        FROM messages m
-        JOIN users u ON u.id = CASE WHEN m.sender_id = ? THEN m.receiver_id ELSE m.sender_id END
-        WHERE m.id = (
-            SELECT MAX(m3.id) FROM messages m3
-            WHERE (m3.sender_id = ? AND m3.receiver_id = u.id)
-               OR (m3.sender_id = u.id AND m3.receiver_id = ?)
-        )
+            COALESCE(ud.cnt, 0) AS unread_count
+        FROM latest l
+        JOIN users u ON u.id = l.partner_id
+        JOIN messages m ON m.id = l.max_id
+        LEFT JOIN unread ud ON ud.partner_id = l.partner_id
         ORDER BY m.created_at DESC
         """,
-        (user["id"], user["id"], user["id"], user["id"], user["id"], user["id"]),
+        (uid, uid, uid, uid),
     )
     rows = await cur.fetchall()
     return [

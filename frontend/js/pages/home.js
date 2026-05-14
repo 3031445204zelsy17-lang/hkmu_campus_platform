@@ -1,4 +1,7 @@
 import { api } from "../api.js";
+import { t } from "../utils/i18n.js";
+import { showToast } from "../components/toast.js";
+import { skeletonCard, errorState } from "../components/skeleton.js";
 
 // ── Reusable components ──────────────────────────────────────────────────────
 
@@ -139,18 +142,18 @@ export async function renderHome() {
   pillIcon.className = "w-4 h-4";
   pill.appendChild(pillIcon);
   const pillText = document.createElement("span");
-  pillText.textContent = "HKMU Campus Platform";
+  pillText.textContent = t("home.hero_title");
   pill.appendChild(pillText);
   inner.appendChild(pill);
 
   const h1 = document.createElement("h1");
   h1.className = "text-4xl sm:text-5xl font-bold text-white mb-4";
-  h1.textContent = "Welcome to HKMU Campus";
+  h1.textContent = t("home.hero_subtitle");
   inner.appendChild(h1);
 
   const desc = document.createElement("p");
   desc.className = "text-lg text-white/80 mb-8 max-w-2xl mx-auto";
-  desc.textContent = "Your all-in-one platform for community discussion, course planning, and campus life at HKMU.";
+  desc.textContent = t("home.hero_desc");
   inner.appendChild(desc);
 
   // CTA buttons
@@ -161,14 +164,14 @@ export async function renderHome() {
   btn1.className = "bg-white px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity";
   btn1.style.color = "#0066CC";
   btn1.appendChild(_lucide("message-circle", "w-5 h-5"));
-  btn1.appendChild(_text("Join Community"));
+  btn1.appendChild(_text(t("home.join_community")));
   btn1.addEventListener("click", () => { location.hash = "#/community"; });
   ctaRow.appendChild(btn1);
 
   const btn2 = document.createElement("button");
   btn2.className = "bg-white/20 text-white border-2 border-white/50 px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-white/30 transition-colors";
   btn2.appendChild(_lucide("book-open", "w-5 h-5"));
-  btn2.appendChild(_text("Plan Your Courses"));
+  btn2.appendChild(_text(t("home.plan_courses")));
   btn2.addEventListener("click", () => { location.hash = "#/planner"; });
   ctaRow.appendChild(btn2);
 
@@ -198,34 +201,45 @@ export async function renderHome() {
   const statsGrid = document.createElement("div");
   statsGrid.className = "grid grid-cols-2 lg:grid-cols-4 gap-6";
 
+  // Show skeleton while loading
+  const main = document.getElementById("app-content");
+  main.appendChild(wrap);
+  statsSection.innerHTML = skeletonCard(4);
+
   // Fetch course stats
   let courseCount = 43;
   try {
     const data = await api.get("/courses?page_size=1");
     if (data.total !== undefined) courseCount = data.total;
     else if (data.items) courseCount = data.items.length;
-  } catch { /* use fallback */ }
+  } catch (err) {
+    statsSection.innerHTML = errorState(t("error.load_failed"), err.message);
+    showToast(err.message, "error");
+  }
 
-  const totalCredits = courseCount * 3; // approximate
-  statsGrid.appendChild(_statCard("book-open", courseCount, "Total Courses", "text-blue-600"));
-  statsGrid.appendChild(_statCard("award", totalCredits, "Total Credits", "text-green-600"));
-  statsGrid.appendChild(_statCard("layers", "6", "Categories", "text-purple-600"));
-  statsGrid.appendChild(_statCard("calendar", "4", "Academic Years", "text-orange-500"));
-  statsSection.appendChild(statsGrid);
+  if (!statsSection.querySelector(".flex.flex-col")) {
+    statsSection.innerHTML = "";
+    const totalCredits = courseCount * 3; // approximate
+    statsGrid.appendChild(_statCard("book-open", courseCount, t("home.stat_courses"), "text-blue-600"));
+    statsGrid.appendChild(_statCard("award", totalCredits, t("home.stat_credits"), "text-green-600"));
+    statsGrid.appendChild(_statCard("layers", "6", t("home.stat_categories"), "text-purple-600"));
+    statsGrid.appendChild(_statCard("calendar", "4", t("home.stat_years"), "text-orange-500"));
+    statsSection.appendChild(statsGrid);
+  }
   wrap.appendChild(statsSection);
 
   // ── 3. Feature cards ─────────────────────────────────────────────────────
   const featureSection = document.createElement("section");
   const featureTitle = document.createElement("h2");
   featureTitle.className = "text-2xl font-bold mb-6";
-  featureTitle.textContent = "Explore";
+  featureTitle.textContent = t("home.explore");
   featureSection.appendChild(featureTitle);
 
   const featureGrid = document.createElement("div");
   featureGrid.className = "grid grid-cols-1 md:grid-cols-3 gap-6";
-  featureGrid.appendChild(_homeCard("message-circle", "Community", "Share and discuss with fellow students", "from-blue-500", "to-blue-600", "#/community"));
-  featureGrid.appendChild(_homeCard("book-open", "Course Planner", "Plan your DSAI programme courses and track progress", "from-green-500", "to-green-600", "#/planner"));
-  featureGrid.appendChild(_homeCard("newspaper", "Campus News", "Stay updated with campus events and announcements", "from-orange-500", "to-orange-600", "#/news"));
+  featureGrid.appendChild(_homeCard("message-circle", t("home.feat_community"), t("home.feat_community_desc"), "from-blue-500", "to-blue-600", "#/community"));
+  featureGrid.appendChild(_homeCard("book-open", t("home.feat_planner"), t("home.feat_planner_desc"), "from-green-500", "to-green-600", "#/planner"));
+  featureGrid.appendChild(_homeCard("newspaper", t("home.feat_news"), t("home.feat_news_desc"), "from-orange-500", "to-orange-600", "#/news"));
   featureSection.appendChild(featureGrid);
   wrap.appendChild(featureSection);
 
@@ -233,7 +247,7 @@ export async function renderHome() {
   const linksSection = document.createElement("section");
   const linksTitle = document.createElement("h2");
   linksTitle.className = "text-2xl font-bold mb-6";
-  linksTitle.textContent = "Quick Links";
+  linksTitle.textContent = t("home.quick_links");
   linksSection.appendChild(linksTitle);
 
   const linksGrid = document.createElement("div");
@@ -247,7 +261,7 @@ export async function renderHome() {
   yearHeader.appendChild(_lucide("graduation-cap", "w-5 h-5 text-blue-600"));
   const yearTitle = document.createElement("h3");
   yearTitle.className = "text-lg font-bold";
-  yearTitle.textContent = "Browse by Year";
+  yearTitle.textContent = t("home.browse_year");
   yearHeader.appendChild(yearTitle);
   yearCard.appendChild(yearHeader);
 
@@ -267,19 +281,19 @@ export async function renderHome() {
   catHeader.appendChild(_lucide("layers", "w-5 h-5 text-green-600"));
   const catTitle = document.createElement("h3");
   catTitle.className = "text-lg font-bold";
-  catTitle.textContent = "Browse by Category";
+  catTitle.textContent = t("home.browse_category");
   catHeader.appendChild(catTitle);
   catCard.appendChild(catHeader);
 
   const catList = document.createElement("div");
   catList.className = "space-y-2";
   const categories = [
-    { color: "bg-blue-500", name: "Core Courses", credits: "84 cr" },
-    { color: "bg-purple-500", name: "Elective Courses", credits: "12 cr" },
-    { color: "bg-amber-500", name: "Project Courses", credits: "6 cr" },
-    { color: "bg-emerald-500", name: "English Enhancement", credits: "6 cr" },
-    { color: "bg-pink-500", name: "General Education", credits: "6 cr" },
-    { color: "bg-indigo-500", name: "University Core", credits: "9 cr" },
+    { color: "bg-blue-500", name: t("home.cat_core"), credits: "84 cr" },
+    { color: "bg-purple-500", name: t("home.cat_elective"), credits: "12 cr" },
+    { color: "bg-amber-500", name: t("home.cat_project"), credits: "6 cr" },
+    { color: "bg-emerald-500", name: t("home.cat_english"), credits: "6 cr" },
+    { color: "bg-pink-500", name: t("home.cat_general"), credits: "6 cr" },
+    { color: "bg-indigo-500", name: t("home.cat_university"), credits: "9 cr" },
   ];
   categories.forEach((cat) => {
     catList.appendChild(_quickLinkItem(cat.color, cat.name, cat.credits, "#/planner"));
@@ -290,7 +304,6 @@ export async function renderHome() {
   linksSection.appendChild(linksGrid);
   wrap.appendChild(linksSection);
 
-  app.appendChild(wrap);
   if (window.lucide) window.lucide.createIcons();
 }
 

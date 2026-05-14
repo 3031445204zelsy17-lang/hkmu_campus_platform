@@ -2,7 +2,7 @@
 #auth-form input {
   width: 100%;
   padding: 0.625rem 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-color);
   border-radius: 0.5rem;
   font-size: 0.875rem;
   transition: border-color 0.15s;
@@ -10,12 +10,12 @@
 
 #auth-form input:focus {
   outline: none;
-  border-color: #0066CC;
-  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--bg-hover);
 }
 
 #auth-form .field-error {
-  color: #ef4444;
+  color: var(--color-error);
   font-size: 0.75rem;
   margin-top: 0.25rem;
 }
@@ -24,20 +24,20 @@
   padding: 0.5rem 1rem;
   border-bottom: 2px solid transparent;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--text-muted);
   transition: color 0.15s, border-color 0.15s;
 }
 
 .auth-tab.active {
-  color: #0066CC;
-  border-bottom-color: #0066CC;
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }
 
 .auth-divider {
   display: flex;
   align-items: center;
   margin: 1rem 0;
-  color: #9ca3af;
+  color: var(--text-faint);
   font-size: 0.8rem;
 }
 
@@ -45,7 +45,7 @@
 .auth-divider::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .auth-divider span {
@@ -57,9 +57,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1.25rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-color);
   border-radius: 0.5rem;
-  background: #fff;
+  background: var(--bg-card);
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 500;
@@ -67,8 +67,32 @@
 }
 
 .google-signin-btn:hover {
-  background: #f9fafb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: var(--bg-card-alt);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Standalone auth pages (reset password, verify email) */
+[data-page="auth-form"] input {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: border-color 0.15s;
+}
+
+[data-page="auth-form"] input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--bg-hover);
+}
+
+[data-page="auth-form"] .field-error {
+  color: var(--color-error);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
 }
 
 /* ── Mobile responsive ── */

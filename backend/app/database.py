@@ -130,6 +130,14 @@ async def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
+        CREATE TABLE IF NOT EXISTS refresh_tokens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            token_hash TEXT UNIQUE NOT NULL,
+            expires_at TIMESTAMP NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author_id);
         CREATE INDEX IF NOT EXISTS idx_posts_category ON posts(category);
         CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at DESC);
@@ -137,6 +145,22 @@ async def init_db():
         CREATE INDEX IF NOT EXISTS idx_messages_participants ON messages(sender_id, receiver_id);
         CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(created_at DESC);
         CREATE INDEX IF NOT EXISTS idx_lostfound_status ON lostfound(status);
+        CREATE INDEX IF NOT EXISTS idx_messages_receiver_read ON messages(receiver_id, is_read);
+        CREATE INDEX IF NOT EXISTS idx_posts_search_fts ON posts(title);
+        CREATE INDEX IF NOT EXISTS idx_comments_author ON comments(author_id);
+        CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
+
+        CREATE TABLE IF NOT EXISTS email_tokens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            token_hash TEXT UNIQUE NOT NULL,
+            token_type TEXT NOT NULL CHECK(token_type IN ('password_reset', 'email_verify')),
+            expires_at TIMESTAMP NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_email_tokens_user ON email_tokens(user_id);
+        CREATE INDEX IF NOT EXISTS idx_email_tokens_hash ON email_tokens(token_hash);
     """)
 
     # Migration: add OAuth / email columns if missing
@@ -148,6 +172,8 @@ async def init_db():
         await db.execute("ALTER TABLE users ADD COLUMN oauth_provider TEXT")
     if "oauth_id" not in existing_cols:
         await db.execute("ALTER TABLE users ADD COLUMN oauth_id TEXT")
+    if "email_verified" not in existing_cols:
+        await db.execute("ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 1")
     await db.execute(
         "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL"
     )

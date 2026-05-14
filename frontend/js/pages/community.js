@@ -1,6 +1,8 @@
 import { api, isLoggedIn } from "../api.js";
 import { showToast } from "../components/toast.js";
 import { openModal, closeModal } from "../components/modal.js";
+import { t } from "../utils/i18n.js";
+import { skeletonCard, errorState } from "../components/skeleton.js";
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -23,12 +25,12 @@ window.addEventListener("hashchange", () => {
 });
 
 const CATEGORIES = [
-  { value: null, label: "All" },
-  { value: "discussion", label: "Discussion" },
-  { value: "question", label: "Q&A" },
-  { value: "sharing", label: "Sharing" },
-  { value: "news", label: "Campus News" },
-  { value: "other", label: "Other" },
+  { value: null, labelKey: "community.cat_all" },
+  { value: "discussion", labelKey: "community.cat_discussion" },
+  { value: "question", labelKey: "community.cat_question" },
+  { value: "sharing", labelKey: "community.cat_sharing" },
+  { value: "news", labelKey: "community.cat_news" },
+  { value: "other", labelKey: "community.cat_other" },
 ];
 
 // ── Helper: Avatar Fallbacks ────────────────────────────────────────────────
@@ -111,7 +113,7 @@ function PostHeader(post) {
 
   const name = document.createElement("div");
   name.className = "user-name";
-  name.textContent = post.author_nickname || "Anonymous";
+  name.textContent = post.author_nickname || t("community.anonymous");
 
   const time = document.createElement("div");
   time.className = "user-time";
@@ -131,12 +133,12 @@ function PostHeader(post) {
 
       const editBtn = document.createElement("button");
       editBtn.className = "text-gray-400 hover:text-blue-500 text-xs px-2 py-1";
-      editBtn.textContent = "Edit";
+      editBtn.textContent = t("community.edit");
       editBtn.addEventListener("click", () => _showPostEditor(post));
 
       const delBtn = document.createElement("button");
       delBtn.className = "text-gray-400 hover:text-red-500 text-xs px-2 py-1";
-      delBtn.textContent = "Delete";
+      delBtn.textContent = t("community.delete");
       delBtn.addEventListener("click", () => _deletePost(post.id));
 
       actions.appendChild(editBtn);
@@ -181,7 +183,7 @@ function PostBody(post) {
 
     const more = document.createElement("button");
     more.className = "text-blue-500 text-xs hover:underline ml-1";
-    more.textContent = "Read more";
+    more.textContent = t("community.read_more");
     more.addEventListener("click", () => {
       content.textContent = post.content;
       more.remove();
@@ -250,11 +252,11 @@ function EmptyState() {
 
   const p1 = document.createElement("p");
   p1.className = "text-gray-400 text-lg";
-  p1.textContent = "No posts yet";
+  p1.textContent = t("community.empty_title");
 
   const p2 = document.createElement("p");
   p2.className = "text-gray-300 text-sm mt-1";
-  p2.textContent = "Be the first to share something!";
+  p2.textContent = t("community.empty_desc");
 
   el.appendChild(icon);
   el.appendChild(p1);
@@ -280,7 +282,7 @@ function FilterBar() {
     const btn = document.createElement("button");
     btn.className = "filter-btn" + (_state.sort === s ? " active" : "");
     btn.dataset.sort = s;
-    btn.textContent = s === "newest" ? "Newest" : "Hot";
+    btn.textContent = s === "newest" ? t("community.sort_newest") : t("community.sort_hot");
     btn.addEventListener("click", () => {
       _state.sort = s;
       _state.page = 1;
@@ -294,11 +296,11 @@ function FilterBar() {
   searchBox.className = "search-box";
   const searchInput = document.createElement("input");
   searchInput.type = "text";
-  searchInput.placeholder = "Search posts...";
-  searchInput.setAttribute("aria-label", "Search posts");
+  searchInput.placeholder = t("community.search_placeholder");
+  searchInput.setAttribute("aria-label", t("community.search"));
   if (_state.search) searchInput.value = _state.search;
   const searchBtn = document.createElement("button");
-  searchBtn.textContent = "Search";
+  searchBtn.textContent = t("community.search");
 
   const doSearch = () => {
     _state.search = searchInput.value.trim() || null;
@@ -320,25 +322,30 @@ function FilterBar() {
 function CategoryFilter() {
   const el = document.createElement("div");
   el.className = "category-tabs";
+  el.setAttribute("role", "tablist");
 
   CATEGORIES.forEach((c) => {
     const btn = document.createElement("button");
     btn.className = "category-tab" + (_state.category === c.value ? " active" : "");
     btn.dataset.category = c.value || "";
-    btn.setAttribute("aria-label", c.label);
+    btn.setAttribute("role", "tab");
+    btn.setAttribute("aria-selected", String(_state.category === c.value));
+    btn.setAttribute("aria-label", t(c.labelKey));
 
     // Liquid animation requires nested spans
     const textContainer = document.createElement("span");
     textContainer.className = "text-container";
     const text = document.createElement("span");
     text.className = "text";
-    text.textContent = c.label;
+    text.textContent = t(c.labelKey);
     textContainer.appendChild(text);
     btn.appendChild(textContainer);
 
     btn.addEventListener("click", () => {
       _state.category = c.value;
       _state.page = 1;
+      el.querySelectorAll("[role='tab']").forEach((t) => t.setAttribute("aria-selected", "false"));
+      btn.setAttribute("aria-selected", "true");
       _loadPosts();
     });
     el.appendChild(btn);
@@ -374,7 +381,7 @@ export function renderCommunity() {
   header.className = "mb-4";
   const title = document.createElement("h2");
   title.className = "text-2xl font-bold text-gray-800";
-  title.textContent = "Community";
+  title.textContent = t("community.title");
   header.appendChild(title);
   container.appendChild(header);
 
@@ -388,7 +395,7 @@ export function renderCommunity() {
   const feed = document.createElement("div");
   feed.id = "posts-feed";
   feed.className = "post-list";
-  feed.appendChild(LoadingSpinner());
+  feed.innerHTML = skeletonCard(3);
   container.appendChild(feed);
 
   app.innerHTML = "";
@@ -400,7 +407,7 @@ export function renderCommunity() {
     _fabContainer.className = "fab-container";
     const fabBtn = document.createElement("button");
     fabBtn.className = "fab-btn";
-    fabBtn.textContent = "+ New Post";
+    fabBtn.textContent = t("community.new_post");
     fabBtn.addEventListener("click", () => _showPostEditor());
     _fabContainer.appendChild(fabBtn);
     document.body.appendChild(_fabContainer);
@@ -416,8 +423,7 @@ async function _loadPosts() {
   if (!feed) return;
 
   _state.loading = true;
-  feed.innerHTML = "";
-  feed.appendChild(LoadingSpinner());
+  feed.innerHTML = skeletonCard(3);
 
   // Update filter-btn active states
   document.querySelectorAll("[data-page='community'] .filter-btn").forEach((btn) => {
@@ -455,7 +461,7 @@ async function _loadPosts() {
     if (data.has_next) {
       const moreBtn = document.createElement("button");
       moreBtn.className = "w-full py-2 text-sm text-blue-500 hover:text-blue-700 transition-colors";
-      moreBtn.textContent = "Load more...";
+      moreBtn.textContent = t("community.load_more");
       moreBtn.addEventListener("click", () => {
         _state.page++;
         _loadPosts();
@@ -463,11 +469,8 @@ async function _loadPosts() {
       feed.appendChild(moreBtn);
     }
   } catch (err) {
-    feed.innerHTML = "";
-    const errorEl = document.createElement("p");
-    errorEl.className = "text-red-400 text-center py-8";
-    errorEl.textContent = "Failed to load posts. " + err.message;
-    feed.appendChild(errorEl);
+    feed.innerHTML = errorState(t("error.load_failed"), err.message);
+    showToast(err.message, "error");
   } finally {
     _state.loading = false;
   }
@@ -560,7 +563,7 @@ async function _loadComments(postId) {
     if (data.items.length === 0) {
       const empty = document.createElement("p");
       empty.className = "text-xs text-gray-400 text-center py-2";
-      empty.textContent = "No comments yet";
+      empty.textContent = t("community.no_comments");
       section.appendChild(empty);
     }
 
@@ -571,8 +574,9 @@ async function _loadComments(postId) {
     section.innerHTML = "";
     const errorEl = document.createElement("p");
     errorEl.className = "text-xs text-red-400 text-center";
-    errorEl.textContent = "Failed to load comments";
+    errorEl.textContent = t("error.load_failed");
     section.appendChild(errorEl);
+    showToast(err.message, "error");
   }
 }
 
@@ -582,10 +586,11 @@ function _renderCommentInput(section, postId) {
 
   const input = document.createElement("input");
   input.type = "text";
-  input.placeholder = "Write a comment...";
+  input.placeholder = t("community.write_comment");
+  input.setAttribute("aria-label", t("community.write_comment"));
 
   const btn = document.createElement("button");
-  btn.textContent = "Send";
+  btn.textContent = t("community.send");
   btn.disabled = true;
 
   input.addEventListener("input", () => {
@@ -601,7 +606,7 @@ function _renderCommentInput(section, postId) {
     try {
       await api.post(`/posts/${postId}/comments`, { content });
       input.value = "";
-      showToast("Comment posted!", "success");
+      showToast(t("community.comment_posted"), "success");
       const post = _state.posts.find((p) => p.id === postId);
       if (post) post.comments_count++;
       const card = document.querySelector(`[data-post-id="${postId}"]`);
@@ -615,7 +620,7 @@ function _renderCommentInput(section, postId) {
       showToast(err.message, "error");
     } finally {
       btn.disabled = false;
-      btn.textContent = "Send";
+      btn.textContent = t("community.send");
     }
   });
 
@@ -636,39 +641,42 @@ function _showPostEditor(post = null) {
   const titleInput = document.createElement("input");
   titleInput.type = "text";
   titleInput.name = "title";
-  titleInput.placeholder = "Title";
+  titleInput.placeholder = t("community.field_title");
   titleInput.required = true;
   titleInput.maxLength = 200;
   titleInput.value = isEdit ? post.title : "";
   titleInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
+  titleInput.setAttribute("aria-label", t("community.field_title"));
 
   const select = document.createElement("select");
   select.name = "category";
   select.required = true;
   select.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
+  select.setAttribute("aria-label", t("community.field_category"));
 
   const placeholderOpt = document.createElement("option");
   placeholderOpt.value = "";
   placeholderOpt.disabled = true;
   placeholderOpt.selected = !isEdit;
-  placeholderOpt.textContent = "Select category";
+  placeholderOpt.textContent = t("community.field_category");
   select.appendChild(placeholderOpt);
 
   CATEGORIES.filter((c) => c.value).forEach((c) => {
     const opt = document.createElement("option");
     opt.value = c.value;
-    opt.textContent = c.label;
+    opt.textContent = t(c.labelKey);
     if (isEdit && post.category === c.value) opt.selected = true;
     select.appendChild(opt);
   });
 
   const textarea = document.createElement("textarea");
   textarea.name = "content";
-  textarea.placeholder = "What's on your mind?";
+  textarea.placeholder = t("community.field_content");
   textarea.required = true;
   textarea.maxLength = 10000;
   textarea.rows = 5;
   textarea.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 resize-none";
+  textarea.setAttribute("aria-label", t("community.field_content"));
   textarea.value = isEdit ? post.content : "";
 
   const errDiv = document.createElement("div");
@@ -678,7 +686,7 @@ function _showPostEditor(post = null) {
   const submitBtn = document.createElement("button");
   submitBtn.type = "submit";
   submitBtn.className = "w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium";
-  submitBtn.textContent = isEdit ? "Update Post" : "Publish Post";
+  submitBtn.textContent = isEdit ? t("community.update") : t("community.publish");
 
   form.appendChild(titleInput);
   form.appendChild(select);
@@ -686,7 +694,7 @@ function _showPostEditor(post = null) {
   form.appendChild(errDiv);
   form.appendChild(submitBtn);
 
-  openModal(isEdit ? "Edit Post" : "New Post", form);
+  openModal(isEdit ? t("community.modal_edit") : t("community.modal_new"), form);
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -702,10 +710,10 @@ function _showPostEditor(post = null) {
       errEl.classList.add("hidden");
       if (isEdit) {
         await api.put(`/posts/${post.id}`, body);
-        showToast("Post updated!", "success");
+        showToast(t("community.post_updated"), "success");
       } else {
         await api.post("/posts", body);
-        showToast("Post published!", "success");
+        showToast(t("community.post_published"), "success");
       }
       closeModal();
       _loadPosts();
@@ -717,11 +725,11 @@ function _showPostEditor(post = null) {
 }
 
 async function _deletePost(postId) {
-  if (!confirm("Delete this post?")) return;
+  if (!confirm(t("community.confirm_delete"))) return;
 
   try {
     await api.del(`/posts/${postId}`);
-    showToast("Post deleted", "info");
+    showToast(t("community.post_deleted"), "info");
     _loadPosts();
   } catch (err) {
     showToast(err.message, "error");
@@ -734,12 +742,12 @@ function _timeAgo(isoStr) {
   if (!isoStr) return "";
   const diff = Date.now() - new Date(isoStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t("time.just_now");
+  if (mins < 60) return t("time.minutes_ago", { n: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return t("time.hours_ago", { n: hours });
   const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
+  if (days < 30) return t("time.days_ago", { n: days });
   return new Date(isoStr).toLocaleDateString();
 }
 
