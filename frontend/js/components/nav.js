@@ -1,5 +1,6 @@
 import { isLoggedIn } from "../api.js";
 import { t, currentLang, setLang, supportedLangs } from "../utils/i18n.js";
+import { toggleTheme, currentTheme } from "../utils/theme.js";
 
 const NAV_ITEMS = [
   { path: "/", labelKey: "nav.home", icon: "home" },
@@ -86,20 +87,45 @@ export function renderNav() {
     container.appendChild(loginBtn);
   }
 
+  // Theme toggle
+  const themeBtn = document.createElement("button");
+  themeBtn.className = "text-gray-500 hover:text-gray-700 text-sm flex items-center gap-1 px-2 py-1 rounded border border-gray-200 transition-colors";
+  themeBtn.title = t("nav.toggle_theme");
+  themeBtn.setAttribute("aria-label", t("nav.toggle_theme"));
+  const themeIcon = document.createElement("i");
+  themeIcon.setAttribute("data-lucide", currentTheme() === "dark" ? "sun" : "moon");
+  themeIcon.className = "w-4 h-4";
+  themeBtn.appendChild(themeIcon);
+  themeBtn.addEventListener("click", () => {
+    const next = toggleTheme();
+    themeIcon.setAttribute("data-lucide", next === "dark" ? "sun" : "moon");
+    if (window.lucide) window.lucide.createIcons();
+  });
+  container.appendChild(themeBtn);
+
   // Language switcher
   const langWrap = document.createElement("div");
   langWrap.className = "relative ml-2";
   const langBtn = document.createElement("button");
   langBtn.className = "text-gray-500 hover:text-gray-700 text-sm flex items-center gap-1 px-2 py-1 rounded border border-gray-200";
+  langBtn.setAttribute("aria-haspopup", "listbox");
+  langBtn.setAttribute("aria-expanded", "false");
   const currentCode = currentLang();
   langBtn.textContent = { en: "EN", "zh-CN": "中", "zh-TW": "繁" }[currentCode] || "EN";
   langWrap.appendChild(langBtn);
 
   const langMenu = document.createElement("div");
-  langMenu.className = "hidden absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 min-w-[120px]";
+  langMenu.className = "hidden absolute right-0 top-full mt-1 rounded-lg shadow-lg border py-1 z-50 min-w-[120px]";
+  langMenu.setAttribute("role", "listbox");
+  langMenu.setAttribute("aria-label", "Language");
+  langMenu.style.background = "var(--bg-card)";
+  langMenu.style.borderColor = "var(--border-color)";
   for (const lang of supportedLangs()) {
     const opt = document.createElement("button");
-    opt.className = `block w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 ${lang.code === currentCode ? "text-blue-600 font-semibold" : "text-gray-700"}`;
+    opt.className = `block w-full text-left px-3 py-1.5 text-sm ${lang.code === currentCode ? "font-semibold" : ""}`;
+    opt.style.color = lang.code === currentCode ? "var(--color-primary)" : "var(--text-secondary)";
+    opt.addEventListener("mouseenter", () => { opt.style.background = "var(--bg-hover)"; });
+    opt.addEventListener("mouseleave", () => { opt.style.background = ""; });
     opt.textContent = lang.label;
     opt.addEventListener("click", () => {
       setLang(lang.code);
@@ -111,8 +137,12 @@ export function renderNav() {
   langBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     langMenu.classList.toggle("hidden");
+    langBtn.setAttribute("aria-expanded", !langMenu.classList.contains("hidden"));
   });
-  document.addEventListener("click", () => langMenu.classList.add("hidden"));
+  document.addEventListener("click", () => {
+    langMenu.classList.add("hidden");
+    langBtn.setAttribute("aria-expanded", "false");
+  });
   container.appendChild(langWrap);
 
   renderSidebar();
@@ -166,13 +196,19 @@ export function initSidebar() {
   const overlay = document.getElementById("sidebar-overlay");
   if (!toggle || !drawer || !overlay) return;
 
+  toggle.setAttribute("aria-controls", "drawer-sidebar");
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.setAttribute("aria-label", "Toggle sidebar menu");
+
   toggle.addEventListener("click", () => {
-    drawer.classList.toggle("open");
+    const isOpen = drawer.classList.toggle("open");
     overlay.classList.toggle("show");
+    toggle.setAttribute("aria-expanded", String(isOpen));
   });
 
   overlay.addEventListener("click", () => {
     drawer.classList.remove("open");
     overlay.classList.remove("show");
+    toggle.setAttribute("aria-expanded", "false");
   });
 }

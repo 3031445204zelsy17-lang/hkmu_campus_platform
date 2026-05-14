@@ -4,6 +4,9 @@ function _ensureContainer() {
   if (!_container) {
     _container = document.createElement("div");
     _container.id = "toast-container";
+    _container.setAttribute("role", "status");
+    _container.setAttribute("aria-live", "polite");
+    _container.setAttribute("aria-atomic", "true");
     _container.style.cssText = "position:fixed;top:1rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem;";
     document.body.appendChild(_container);
   }

@@ -1,8 +1,10 @@
 from contextlib import asynccontextmanager
+import secrets
 
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from starlette.responses import Response
 import os
 
@@ -49,6 +51,42 @@ async def no_cache_dev(request: Request, call_next):
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
+
+# CSRF double-submit cookie
+CSRF_COOKIE = "csrf_token"
+CSRF_HEADER = "X-CSRF-Token"
+SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
+
+
+@app.middleware("http")
+async def csrf_protect(request: Request, call_next):
+    # Set CSRF cookie on every response if not present
+    response: Response = await call_next(request)
+
+    if request.method in SAFE_METHODS:
+        cookie_val = request.cookies.get(CSRF_COOKIE)
+        if not cookie_val:
+            response.set_cookie(
+                CSRF_COOKIE,
+                secrets.token_hex(32),
+                httponly=False,
+                samesite="lax",
+                path="/",
+            )
+        return response
+
+    # Mutating requests: validate header matches cookie
+    cookie_val = request.cookies.get(CSRF_COOKIE)
+    header_val = request.headers.get(CSRF_HEADER)
+    if not cookie_val or not header_val or not secrets.compare_digest(cookie_val, header_val):
+        return JSONResponse({"detail": "CSRF token missing or invalid"}, status_code=403)
+
     return response
 
 

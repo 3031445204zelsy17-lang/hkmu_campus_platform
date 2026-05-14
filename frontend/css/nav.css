@@ -8,7 +8,7 @@
 .hamburger-btn {
   background: transparent;
   border: none;
-  color: white;
+  color: var(--text-on-primary);
   cursor: pointer;
   padding: 6px;
   display: flex;
@@ -30,10 +30,10 @@
 .brand-logo {
   height: 36px;
   object-fit: contain;
-  background: white;
+  background: var(--bg-card);
   padding: 4px 8px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 /* ── Sidebar Overlay ──────────────────────────────────────────────────── */
@@ -44,7 +44,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--bg-overlay);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 998;
@@ -61,12 +61,12 @@
 
 .drawer-sidebar {
   width: 280px;
-  background-color: rgba(255, 255, 255, 0.85);
+  background-color: var(--bg-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(255, 255, 255, 0.6);
+  border-right: 1px solid var(--border-light);
   padding: 20px;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-lg);
   position: fixed;
   top: 56px;
   left: -300px;
@@ -85,8 +85,8 @@
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 15px;
-  color: #1e293b;
-  border-bottom: 2px solid #e2e8f0;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-color);
   padding-bottom: 10px;
   position: relative;
 }
@@ -97,7 +97,7 @@
   left: 0;
   width: 50px;
   height: 2px;
-  background-color: #1e40af;
+  background-color: var(--color-primary-dark);
   border-radius: 2px;
 }
 
@@ -119,21 +119,21 @@
   border-radius: 12px;
   font-size: 15px;
   font-weight: 500;
-  color: #475569;
+  color: var(--text-secondary);
   background: transparent;
   border: 1px solid transparent;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 .drawer-sidebar ul li a:hover {
-  background: rgba(255, 255, 255, 0.6);
-  color: #1e293b;
-  border-color: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-light);
+  box-shadow: var(--shadow-sm);
   transform: translateX(4px);
 }
 .drawer-sidebar ul li a.active {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.05));
-  color: #2563eb;
+  color: var(--color-primary);
   font-weight: 600;
   border: 1px solid rgba(59, 130, 246, 0.2);
   box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1),
@@ -146,15 +146,15 @@
 .drawer-sidebar ul li a svg {
   width: 20px;
   height: 20px;
-  color: #94a3b8;
+  color: var(--text-faint);
   transition: all 0.3s ease;
 }
 .drawer-sidebar ul li a:hover svg {
-  color: #3b82f6;
+  color: var(--color-primary-light);
   transform: scale(1.1);
 }
 .drawer-sidebar ul li a.active svg {
-  color: #2563eb;
+  color: var(--color-primary);
   transform: scale(1.15);
   filter: drop-shadow(0 2px 4px rgba(37, 99, 235, 0.3));
 }

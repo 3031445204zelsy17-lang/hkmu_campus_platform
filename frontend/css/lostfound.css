@@ -1,11 +1,11 @@
 /* Lost & Found page styles */
 
 [data-page="lostfound"] .lf-filter-bar {
-  background: white;
+  background: var(--bg-card);
   border-radius: 8px;
   padding: 14px 16px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-sm);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -20,9 +20,9 @@
 [data-page="lostfound"] .lf-type-tab {
   padding: 6px 16px;
   border-radius: 9999px;
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid var(--border-color);
   background: transparent;
-  color: #475569;
+  color: var(--text-secondary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -30,44 +30,44 @@
 }
 
 [data-page="lostfound"] .lf-type-tab.active.lost {
-  background: #ef4444;
-  color: white;
-  border-color: #ef4444;
+  background: var(--color-error);
+  color: var(--text-on-primary);
+  border-color: var(--color-error);
 }
 
 [data-page="lostfound"] .lf-type-tab.active.found {
-  background: #22c55e;
-  color: white;
-  border-color: #22c55e;
+  background: var(--color-success);
+  color: var(--text-on-primary);
+  border-color: var(--color-success);
 }
 
 [data-page="lostfound"] .lf-type-tab.active:not(.lost):not(.found) {
-  background: #1e40af;
-  color: white;
-  border-color: #1e40af;
+  background: var(--color-primary-dark);
+  color: var(--text-on-primary);
+  border-color: var(--color-primary-dark);
 }
 
 [data-page="lostfound"] .lf-type-tab:hover:not(.active) {
-  background: #f1f5f9;
+  background: var(--bg-card-alt);
 }
 
 [data-page="lostfound"] .lf-status-select {
   padding: 6px 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 13px;
-  background: white;
-  color: #374151;
+  background: var(--bg-card);
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
 /* Item card */
 
 [data-page="lostfound"] .lf-card {
-  background: white;
+  background: var(--bg-card);
   border-radius: 10px;
   padding: 16px 18px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 14px;
   position: relative;
   transition: transform 0.15s, box-shadow 0.15s;
@@ -75,7 +75,7 @@
 
 [data-page="lostfound"] .lf-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-md);
 }
 
 [data-page="lostfound"] .lf-type-badge {
@@ -89,13 +89,13 @@
 }
 
 [data-page="lostfound"] .lf-type-badge.lost {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 [data-page="lostfound"] .lf-type-badge.found {
-  background: #f0fdf4;
-  color: #16a34a;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 [data-page="lostfound"] .lf-status-badge {
@@ -108,8 +108,8 @@
 }
 
 [data-page="lostfound"] .lf-status-badge.resolved {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: var(--color-info-bg);
+  color: var(--color-info);
 }
 
 [data-page="lostfound"] .lf-card-body {
@@ -119,19 +119,19 @@
 [data-page="lostfound"] .lf-card-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 [data-page="lostfound"] .lf-card-location {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--text-muted);
   margin-bottom: 6px;
 }
 
 [data-page="lostfound"] .lf-card-desc {
   font-size: 14px;
-  color: #4b5563;
+  color: var(--text-secondary);
   line-height: 1.5;
   margin-bottom: 8px;
 }
@@ -140,7 +140,7 @@
   display: flex;
   gap: 12px;
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--text-faint);
 }
 
 [data-page="lostfound"] .lf-card-actions {
@@ -148,7 +148,7 @@
   gap: 8px;
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-light);
 }
 
 [data-page="lostfound"] .lf-action-btn {
@@ -161,21 +161,21 @@
 }
 
 [data-page="lostfound"] .lf-action-btn.resolve {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: var(--color-info-bg);
+  color: var(--color-info);
 }
 
 [data-page="lostfound"] .lf-action-btn.resolve:hover {
-  background: #bae6fd;
+  opacity: 0.8;
 }
 
 [data-page="lostfound"] .lf-action-btn.delete {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 [data-page="lostfound"] .lf-action-btn.delete:hover {
-  background: #fecaca;
+  opacity: 0.8;
 }
 
 /* Create form radio label */
@@ -185,12 +185,12 @@
   align-items: center;
   gap: 6px;
   font-size: 14px;
-  color: #374151;
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
 [data-page="lostfound"] .lf-radio-label input[type="radio"] {
-  accent-color: #1e40af;
+  accent-color: var(--color-primary-dark);
 }
 
 /* Responsive */

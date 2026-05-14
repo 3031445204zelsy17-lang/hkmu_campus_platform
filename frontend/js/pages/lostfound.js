@@ -315,6 +315,7 @@ function _showCreateModal() {
   titleInput.required = true;
   titleInput.maxLength = 200;
   titleInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
+  titleInput.setAttribute("aria-label", t("lostfound.field_title"));
 
   const locationInput = document.createElement("input");
   locationInput.type = "text";
@@ -322,6 +323,7 @@ function _showCreateModal() {
   locationInput.placeholder = t("lostfound.field_location");
   locationInput.maxLength = 200;
   locationInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
+  locationInput.setAttribute("aria-label", t("lostfound.field_location"));
 
   const descInput = document.createElement("textarea");
   descInput.name = "description";
@@ -330,6 +332,7 @@ function _showCreateModal() {
   descInput.maxLength = 2000;
   descInput.rows = 4;
   descInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 resize-none";
+  descInput.setAttribute("aria-label", t("lostfound.field_desc"));
 
   const errDiv = document.createElement("div");
   errDiv.id = "lf-create-error";

@@ -226,7 +226,7 @@ export function renderMessages() {
           <div class="msg-chat-header" id="msg-chat-header"></div>
           <div class="msg-messages" id="msg-messages-area"></div>
           <div class="msg-input-area">
-            <textarea class="msg-input" id="msg-input" placeholder="${t("messages.type_placeholder")}" rows="1"></textarea>
+            <textarea class="msg-input" id="msg-input" placeholder="${t("messages.type_placeholder")}" aria-label="${t("messages.type_placeholder")}" rows="1"></textarea>
             <button class="msg-send-btn" id="msg-send-btn">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
@@ -487,7 +487,7 @@ function showNewConvModal() {
   let searchTimeout;
 
   const html = `
-    <input type="text" class="msg-search-input" id="msg-search-input" placeholder="${t("messages.search_placeholder")}">
+    <input type="text" class="msg-search-input" id="msg-search-input" placeholder="${t("messages.search_placeholder")}" aria-label="${t("messages.search_placeholder")}">
     <div class="msg-search-results" id="msg-search-results">
       <p style="color:#9ca3af;text-align:center;padding:20px 0;font-size:0.9rem;">${t("messages.type_to_search")}</p>
     </div>

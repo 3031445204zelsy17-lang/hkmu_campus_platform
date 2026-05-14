@@ -247,6 +247,7 @@ function _showCreateModal() {
   titleInput.required = true;
   titleInput.maxLength = 200;
   titleInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
+  titleInput.setAttribute("aria-label", t("news.field_title"));
 
   const urlInput = document.createElement("input");
   urlInput.type = "url";
@@ -254,16 +255,19 @@ function _showCreateModal() {
   urlInput.placeholder = t("news.field_url");
   urlInput.required = true;
   urlInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
+  urlInput.setAttribute("aria-label", t("news.field_url"));
 
   const summaryInput = document.createElement("textarea");
   summaryInput.name = "summary";
   summaryInput.placeholder = t("news.field_summary");
   summaryInput.rows = 2;
   summaryInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 resize-none";
+  summaryInput.setAttribute("aria-label", t("news.field_summary"));
 
   const categorySelect = document.createElement("select");
   categorySelect.name = "category";
   categorySelect.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
+  categorySelect.setAttribute("aria-label", t("news.field_category"));
   const placeholderOpt = document.createElement("option");
   placeholderOpt.value = "";
   placeholderOpt.textContent = t("news.field_category");

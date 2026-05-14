@@ -243,6 +243,7 @@ function _showEditModal() {
   nicknameInput.required = true;
   nicknameInput.value = _profileUser.nickname || "";
   nicknameInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
+  nicknameInput.setAttribute("aria-label", t("profile.field_nickname"));
 
   const bioInput = document.createElement("textarea");
   bioInput.name = "bio";
@@ -250,6 +251,7 @@ function _showEditModal() {
   bioInput.maxLength = 300;
   bioInput.rows = 3;
   bioInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 resize-none";
+  bioInput.setAttribute("aria-label", t("profile.field_bio"));
   bioInput.value = _profileUser.bio || "";
 
   const avatarSection = document.createElement("div");
@@ -258,6 +260,8 @@ function _showEditModal() {
   const avatarLabel = document.createElement("label");
   avatarLabel.className = "block text-sm font-medium text-gray-700";
   avatarLabel.textContent = t("profile.field_avatar");
+  avatarInput.id = "avatar-upload";
+  avatarLabel.setAttribute("for", "avatar-upload");
 
   const avatarInput = document.createElement("input");
   avatarInput.type = "file";

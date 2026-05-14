@@ -322,11 +322,14 @@ function FilterBar() {
 function CategoryFilter() {
   const el = document.createElement("div");
   el.className = "category-tabs";
+  el.setAttribute("role", "tablist");
 
   CATEGORIES.forEach((c) => {
     const btn = document.createElement("button");
     btn.className = "category-tab" + (_state.category === c.value ? " active" : "");
     btn.dataset.category = c.value || "";
+    btn.setAttribute("role", "tab");
+    btn.setAttribute("aria-selected", String(_state.category === c.value));
     btn.setAttribute("aria-label", t(c.labelKey));
 
     // Liquid animation requires nested spans
@@ -341,6 +344,8 @@ function CategoryFilter() {
     btn.addEventListener("click", () => {
       _state.category = c.value;
       _state.page = 1;
+      el.querySelectorAll("[role='tab']").forEach((t) => t.setAttribute("aria-selected", "false"));
+      btn.setAttribute("aria-selected", "true");
       _loadPosts();
     });
     el.appendChild(btn);
@@ -582,6 +587,7 @@ function _renderCommentInput(section, postId) {
   const input = document.createElement("input");
   input.type = "text";
   input.placeholder = t("community.write_comment");
+  input.setAttribute("aria-label", t("community.write_comment"));
 
   const btn = document.createElement("button");
   btn.textContent = t("community.send");
@@ -640,11 +646,13 @@ function _showPostEditor(post = null) {
   titleInput.maxLength = 200;
   titleInput.value = isEdit ? post.title : "";
   titleInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
+  titleInput.setAttribute("aria-label", t("community.field_title"));
 
   const select = document.createElement("select");
   select.name = "category";
   select.required = true;
   select.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
+  select.setAttribute("aria-label", t("community.field_category"));
 
   const placeholderOpt = document.createElement("option");
   placeholderOpt.value = "";
@@ -668,6 +676,7 @@ function _showPostEditor(post = null) {
   textarea.maxLength = 10000;
   textarea.rows = 5;
   textarea.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 resize-none";
+  textarea.setAttribute("aria-label", t("community.field_content"));
   textarea.value = isEdit ? post.content : "";
 
   const errDiv = document.createElement("div");

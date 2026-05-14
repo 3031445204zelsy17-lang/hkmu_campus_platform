@@ -1,27 +1,131 @@
 /* HKMU Campus Platform — Global Styles */
 
+/* ── CSS Variables ── */
+:root {
+  /* Brand */
+  --color-primary: #0066CC;
+  --color-primary-light: #3b82f6;
+  --color-primary-dark: #1e40af;
+  --color-secondary: #2E7D52;
+  --color-secondary-light: #22c55e;
+
+  /* Backgrounds */
+  --bg-body: #F5F7FA;
+  --bg-card: #ffffff;
+  --bg-card-alt: #f9fafb;
+  --bg-input: #ffffff;
+  --bg-hover: #f0f7ff;
+  --bg-nav: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  --bg-overlay: rgba(0, 0, 0, 0.3);
+  --bg-glass: rgba(255, 255, 255, 0.85);
+
+  /* Text */
+  --text-primary: #1f2937;
+  --text-secondary: #475569;
+  --text-muted: #6b7280;
+  --text-faint: #9ca3af;
+  --text-on-primary: #ffffff;
+  --text-nav: rgba(255, 255, 255, 0.85);
+  --text-nav-hover: #ffffff;
+
+  /* Borders */
+  --border-color: #e5e7eb;
+  --border-light: #f0f0f0;
+  --border-focus: var(--color-primary);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  /* Status */
+  --color-error: #ef4444;
+  --color-error-bg: #fef2f2;
+  --color-success: #22c55e;
+  --color-success-bg: #f0fdf4;
+  --color-warning: #f59e0b;
+  --color-info: #0369a1;
+  --color-info-bg: #e0f2fe;
+
+  /* Spinner */
+  --spinner-track: #e5e7eb;
+  --spinner-accent: var(--color-primary);
+
+  /* Tags / badges */
+  --badge-bg: #e0e7ff;
+  --badge-text: #1e40af;
+}
+
+/* ── Dark Theme ── */
+[data-theme="dark"] {
+  --color-primary: #4d9aff;
+  --color-primary-light: #60a5fa;
+  --color-primary-dark: #3b82f6;
+  --color-secondary: #34d399;
+  --color-secondary-light: #6ee7b7;
+
+  --bg-body: #0f1117;
+  --bg-card: #1a1d2e;
+  --bg-card-alt: #1e2235;
+  --bg-input: #252840;
+  --bg-hover: #252840;
+  --bg-nav: linear-gradient(135deg, #1e40af, #065f46);
+  --bg-overlay: rgba(0, 0, 0, 0.6);
+  --bg-glass: rgba(26, 29, 46, 0.9);
+
+  --text-primary: #e5e7eb;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --text-faint: #4b5563;
+  --text-on-primary: #ffffff;
+  --text-nav: rgba(255, 255, 255, 0.85);
+  --text-nav-hover: #ffffff;
+
+  --border-color: #2d3148;
+  --border-light: #252840;
+  --border-focus: var(--color-primary);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  --color-error: #f87171;
+  --color-error-bg: #451a1a;
+  --color-success: #4ade80;
+  --color-success-bg: #14332a;
+  --color-warning: #fbbf24;
+  --color-info: #60a5fa;
+  --color-info-bg: #172554;
+
+  --spinner-track: #374151;
+  --spinner-accent: var(--color-primary);
+
+  --badge-bg: #1e3a5f;
+  --badge-text: #93c5fd;
+}
+
 /* Navigation gradient */
 #app-nav {
-  background: linear-gradient(135deg, #0066CC, #2E7D52);
+  background: var(--bg-nav);
 }
 
 #app-nav a {
-  color: white;
+  color: var(--text-on-primary);
   text-decoration: none;
 }
 
 #app-nav .text-xl {
-  color: white !important;
+  color: var(--text-on-primary) !important;
 }
 
 #nav-links a,
 #nav-links button {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-nav);
 }
 
 #nav-links a:hover,
 #nav-links button:hover {
-  color: white;
+  color: var(--text-nav-hover);
 }
 
 /* Page container fade-in */
@@ -41,13 +145,13 @@
 
 [data-page] .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 /* Loading spinner */
 .spinner {
-  border: 3px solid #e5e7eb;
-  border-top-color: #0066CC;
+  border: 3px solid var(--spinner-track);
+  border-top-color: var(--spinner-accent);
   border-radius: 50%;
   width: 24px;
   height: 24px;
@@ -98,5 +202,68 @@
   a.nav-link,
   .auth-tab {
     min-height: 44px;
+  }
+}
+
+/* ── Dark mode body bg ── */
+[data-theme="dark"] body,
+[data-theme="dark"] .bg-gray-50 {
+  background-color: var(--bg-body) !important;
+}
+
+/* ── Skip Link ── */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  background: var(--color-primary);
+  color: var(--text-on-primary);
+  padding: 8px 16px;
+  z-index: 10000;
+  font-weight: 600;
+  border-radius: 0 0 8px 0;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* ── Focus Visible ── */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  #app-content {
+    animation: none;
+  }
+
+  .spinner {
+    animation: none;
+    border-style: dotted;
   }
 }

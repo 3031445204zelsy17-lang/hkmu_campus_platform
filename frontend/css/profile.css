@@ -4,10 +4,10 @@
   display: flex;
   align-items: flex-start;
   gap: 20px;
-  background: white;
+  background: var(--bg-card);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 16px;
 }
 
@@ -20,7 +20,7 @@
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #e5e7eb;
+  border: 3px solid var(--border-color);
 }
 
 [data-page="profile"] .avatar-fallback {
@@ -32,9 +32,9 @@
   justify-content: center;
   font-weight: 600;
   font-size: 28px;
-  color: white;
-  background: linear-gradient(135deg, #3b82f6, #2E7D52);
-  border: 3px solid #e5e7eb;
+  color: var(--text-on-primary);
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-secondary));
+  border: 3px solid var(--border-color);
 }
 
 [data-page="profile"] .profile-info {
@@ -45,13 +45,13 @@
 [data-page="profile"] .profile-name {
   font-size: 22px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 [data-page="profile"] .profile-subtitle {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--text-muted);
   margin-bottom: 6px;
 }
 
@@ -61,15 +61,15 @@
   border-radius: 9999px;
   font-size: 0.7rem;
   font-weight: 500;
-  background: #e0f2fe;
-  color: #0369a1;
+  background: var(--color-info-bg);
+  color: var(--color-info);
   text-transform: capitalize;
   margin-bottom: 6px;
 }
 
 [data-page="profile"] .profile-bio {
   font-size: 14px;
-  color: #4b5563;
+  color: var(--text-secondary);
   line-height: 1.5;
   margin-top: 8px;
 }
@@ -77,18 +77,18 @@
 [data-page="profile"] .edit-profile-btn {
   flex-shrink: 0;
   padding: 6px 16px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  background: white;
-  color: #374151;
+  background: var(--bg-card);
+  color: var(--text-secondary);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 [data-page="profile"] .edit-profile-btn:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
+  background: var(--bg-card-alt);
+  border-color: var(--text-faint);
 }
 
 /* Stats bar */
@@ -103,28 +103,28 @@
 [data-page="profile"] .stat-card {
   text-align: center;
   padding: 16px 12px;
-  background: #f9fafb;
+  background: var(--bg-card-alt);
   border-radius: 12px;
 }
 
 [data-page="profile"] .stat-value {
   font-size: 18px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
   margin-bottom: 2px;
   text-transform: capitalize;
 }
 
 [data-page="profile"] .stat-label {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--text-faint);
 }
 
 /* Tabs */
 
 [data-page="profile"] .profile-tabs {
   display: flex;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid var(--border-color);
   margin-bottom: 16px;
 }
 
@@ -134,7 +134,7 @@
   background: none;
   font-size: 14px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--text-muted);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
@@ -142,34 +142,34 @@
 }
 
 [data-page="profile"] .profile-tab.active {
-  color: #1e40af;
-  border-bottom-color: #1e40af;
+  color: var(--color-primary-dark);
+  border-bottom-color: var(--color-primary-dark);
 }
 
 [data-page="profile"] .profile-tab:hover:not(.active) {
-  color: #374151;
+  color: var(--text-secondary);
 }
 
 /* Post cards in profile */
 
 [data-page="profile"] .profile-post-card {
-  background: white;
+  background: var(--bg-card);
   border-radius: 8px;
   padding: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 12px;
   transition: transform 0.15s, box-shadow 0.15s;
 }
 
 [data-page="profile"] .profile-post-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-md);
 }
 
 [data-page="profile"] .profile-post-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
   margin-bottom: 6px;
 }
 
@@ -190,12 +190,12 @@
 
 [data-page="profile"] .profile-post-meta span {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--text-faint);
 }
 
 [data-page="profile"] .profile-post-content {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--text-muted);
   line-height: 1.5;
 }
 
@@ -203,14 +203,14 @@
   width: 100%;
   padding: 8px;
   font-size: 13px;
-  color: #3b82f6;
+  color: var(--color-primary-light);
   background: none;
   border: none;
   cursor: pointer;
 }
 
 [data-page="profile"] .load-more-btn:hover {
-  color: #1e40af;
+  color: var(--color-primary-dark);
 }
 
 /* Responsive */

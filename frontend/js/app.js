@@ -1,9 +1,10 @@
 import { register, start, navigate, forceResolve } from "./router.js";
-import { setToken, isLoggedIn } from "./api.js";
+import { setToken, setRefreshToken, isLoggedIn } from "./api.js";
 import { renderNav, initSidebar } from "./components/nav.js";
 import { showToast } from "./components/toast.js";
 import { openModal, closeModal } from "./components/modal.js";
 import { initLang, t, currentLang, setLang, supportedLangs } from "./utils/i18n.js";
+import { initTheme, toggleTheme, currentTheme } from "./utils/theme.js";
 
 // Pages
 import { renderHome } from "./pages/home.js";
@@ -13,6 +14,10 @@ import { renderNews } from "./pages/news.js";
 import { renderLostFound } from "./pages/lostfound.js";
 import { renderProfile } from "./pages/profile.js";
 import { renderMessages } from "./pages/messages.js";
+import { api } from "./api.js";
+
+// Cached auth config
+let _googleClientId = "";
 
 // --- Route registration ---
 register("/", renderHome);
@@ -23,12 +28,14 @@ register("/lostfound", renderLostFound);
 register("/profile", renderProfile, { auth: true });
 register("/profile/:id", renderProfile, { auth: true });
 register("/messages", renderMessages, { auth: true });
+register("/reset-password", renderResetPassword);
+register("/verify-email", renderVerifyEmail);
 
 // --- Auth modal ---
 function showAuthModal(mode = "login") {
   const isLogin = mode === "login";
 
-  const googleClientId = document.querySelector('meta[name="google-client-id"]')?.content || "";
+  const googleClientId = _googleClientId;
 
   let formHtml = `
     <div class="flex gap-2 mb-4 border-b">
@@ -40,8 +47,8 @@ function showAuthModal(mode = "login") {
   if (isLogin) {
     formHtml += `
       <form id="auth-form" class="space-y-3">
-        <input type="text" name="username" placeholder="${t("auth.username")}" required>
-        <input type="password" name="password" placeholder="${t("auth.password")}" required>
+        <input type="text" name="username" placeholder="${t("auth.username")}" aria-label="${t("auth.username")}" required>
+        <input type="password" name="password" placeholder="${t("auth.password")}" aria-label="${t("auth.password")}" required>
         <div id="auth-error" class="field-error hidden"></div>
         <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
           ${t("auth.login")}
@@ -67,21 +74,24 @@ function showAuthModal(mode = "login") {
     }
     formHtml += `
       <form id="email-login-form" class="space-y-3">
-        <input type="email" name="email" placeholder="${t("auth.email_placeholder")}" required>
-        <input type="password" name="password" placeholder="${t("auth.password")}" required>
+        <input type="email" name="email" placeholder="${t("auth.email_placeholder")}" aria-label="${t("auth.email")}" required>
+        <input type="password" name="password" placeholder="${t("auth.password")}" aria-label="${t("auth.password")}" required>
         <div id="email-auth-error" class="field-error hidden"></div>
         <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors">
           ${t("auth.login_email")}
         </button>
       </form>
+      <div class="text-center mt-3">
+        <a href="#/reset-password" class="text-sm text-blue-600 hover:underline" id="forgot-password-link">${t("auth.forgot_password")}</a>
+      </div>
     `;
   } else {
     formHtml += `
       <form id="auth-form" class="space-y-3">
-        <input type="email" name="email" placeholder="${t("auth.email")}" required>
-        <input type="text" name="nickname" placeholder="${t("auth.nickname")}" required>
-        <input type="password" name="password" placeholder="${t("auth.password")}" required>
-        <input type="text" name="student_id" placeholder="${t("auth.student_id")}">
+        <input type="email" name="email" placeholder="${t("auth.email")}" aria-label="${t("auth.email")}" required>
+        <input type="text" name="nickname" placeholder="${t("auth.nickname")}" aria-label="${t("auth.nickname")}" required>
+        <input type="password" name="password" placeholder="${t("auth.password")}" aria-label="${t("auth.password")}" required>
+        <input type="text" name="student_id" placeholder="${t("auth.student_id")}" aria-label="${t("auth.student_id")}">
         <div id="auth-error" class="field-error hidden"></div>
         <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
           ${t("auth.register_email")}
@@ -167,6 +177,7 @@ function showAuthModal(mode = "login") {
 
         if (isLoginMode) {
           setToken(result.access_token);
+          if (result.refresh_token) setRefreshToken(result.refresh_token);
           closeModal();
           showToast(t("auth.logged_in"), "success");
           _onAuthChange();
@@ -206,15 +217,20 @@ function showAuthModal(mode = "login") {
 
         const result = await res.json();
         setToken(result.access_token);
+        if (result.refresh_token) setRefreshToken(result.refresh_token);
         closeModal();
-        showToast(t("auth.logged_in"), "success");
-        _onAuthChange();
       } catch (err) {
         const el = document.getElementById("email-auth-error");
         el.textContent = err.message;
         el.classList.remove("hidden");
       }
     });
+  }
+
+  // Forgot password link → close modal and navigate
+  const forgotLink = document.getElementById("forgot-password-link");
+  if (forgotLink) {
+    forgotLink.addEventListener("click", () => closeModal());
   }
 }
 
@@ -234,6 +250,7 @@ window.handleGoogleSignIn = async (response) => {
 
     const result = await res.json();
     setToken(result.access_token);
+    if (result.refresh_token) setRefreshToken(result.refresh_token);
     closeModal();
     showToast(t("auth.logged_in"), "success");
     _onAuthChange();
@@ -251,6 +268,7 @@ window.addEventListener("auth:show-login", () => showAuthModal("login"));
 
 window.addEventListener("auth:logout", () => {
   setToken(null);
+  setRefreshToken(null);
   showToast(t("auth.logged_out"), "info");
   _onAuthChange();
   navigate("/");
@@ -262,10 +280,123 @@ window.addEventListener("lang:change", () => {
   forceResolve();
 });
 
+// --- Reset Password Page ---
+function renderResetPassword() {
+  const params = new URLSearchParams(window.location.hash.split("?")[1] || "");
+  const token = params.get("token");
+
+  const container = document.getElementById("app-content");
+
+  if (token) {
+    // Show new password form
+    container.innerHTML = `
+      <div class="max-w-md mx-auto mt-16 p-6 bg-white rounded-2xl shadow-lg" data-page="auth-form">
+        <h2 class="text-xl font-bold mb-4 text-gray-800">${t("auth.reset_password")}</h2>
+        <form id="reset-form" class="space-y-3">
+          <input type="password" name="new_password" placeholder="${t("auth.new_password")}" aria-label="${t("auth.new_password")}" required minlength="6">
+          <input type="password" name="confirm" placeholder="${t("auth.confirm_password")}" aria-label="${t("auth.confirm_password")}" required minlength="6">
+          <div id="reset-error" class="field-error hidden"></div>
+          <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            ${t("auth.reset_password")}
+          </button>
+        </form>
+      </div>
+    `;
+    document.getElementById("reset-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const pw = fd.get("new_password");
+      const confirm = fd.get("confirm");
+      if (pw !== confirm) {
+        const el = document.getElementById("reset-error");
+        el.textContent = t("auth.password_mismatch");
+        el.classList.remove("hidden");
+        return;
+      }
+      try {
+        await api.post("/auth/reset-password", { token, new_password: pw });
+        showToast(t("auth.password_reset_ok"), "success");
+        navigate("/");
+        window.dispatchEvent(new CustomEvent("auth:show-login"));
+      } catch (err) {
+        const el = document.getElementById("reset-error");
+        el.textContent = err.message || t("auth.invalid_token");
+        el.classList.remove("hidden");
+      }
+    });
+  } else {
+    // Show "enter email" form
+    container.innerHTML = `
+      <div class="max-w-md mx-auto mt-16 p-6 bg-white rounded-2xl shadow-lg" data-page="auth-form">
+        <h2 class="text-xl font-bold mb-2 text-gray-800">${t("auth.reset_password")}</h2>
+        <p class="text-sm text-gray-500 mb-4">${t("auth.reset_password_desc")}</p>
+        <form id="forgot-form" class="space-y-3">
+          <input type="email" name="email" placeholder="${t("auth.email_placeholder")}" aria-label="${t("auth.email")}" required>
+          <div id="forgot-error" class="field-error hidden"></div>
+          <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            ${t("auth.send_reset_link")}
+          </button>
+        </form>
+      </div>
+    `;
+    document.getElementById("forgot-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      try {
+        await api.post("/auth/forgot-password", { email: fd.get("email") });
+        showToast(t("auth.reset_sent"), "success");
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+  }
+}
+
+// --- Verify Email Page ---
+function renderVerifyEmail() {
+  const params = new URLSearchParams(window.location.hash.split("?")[1] || "");
+  const token = params.get("token");
+  const container = document.getElementById("app-content");
+
+  if (!token) {
+    container.innerHTML = `
+      <div class="max-w-md mx-auto mt-16 p-6 bg-white rounded-2xl shadow-lg text-center" data-page="auth-form">
+        <h2 class="text-xl font-bold mb-2 text-gray-800">${t("auth.verify_failed")}</h2>
+        <p class="text-gray-500">${t("auth.invalid_token")}</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="max-w-md mx-auto mt-16 p-6 bg-white rounded-2xl shadow-lg text-center" data-page="auth-form">
+      <h2 class="text-xl font-bold mb-2 text-gray-800">${t("auth.verify_email")}</h2>
+      <p class="text-gray-500" id="verify-status">${t("auth.verifying")}</p>
+    </div>
+  `;
+
+  api.post("/auth/verify-email", { token }).then(() => {
+    document.getElementById("verify-status").textContent = t("auth.verified");
+    showToast(t("auth.verified"), "success");
+  }).catch(() => {
+    document.getElementById("verify-status").textContent = t("auth.verify_failed");
+    showToast(t("auth.verify_failed"), "error");
+  });
+}
+
 // --- Init ---
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  initTheme();
   initLang();
   initSidebar();
+  // Fetch Google Client ID from API (no longer in HTML meta)
+  try {
+    const res = await fetch("/api/v1/auth/config");
+    if (res.ok) {
+      const cfg = await res.json();
+      _googleClientId = cfg.google_client_id || "";
+    }
+  } catch { /* non-critical */ }
   renderNav();
   start();
 });

@@ -3,17 +3,17 @@
 /* ── Post Card ────────────────────────────────────────────────────── */
 
 [data-page="community"] .post-card {
-  background-color: white;
+  background-color: var(--bg-card);
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 20px;
   transition: transform 0.15s, box-shadow 0.15s;
 }
 
 [data-page="community"] .post-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-lg);
 }
 
 /* ── Post Header / User Info ──────────────────────────────────────── */
@@ -49,21 +49,21 @@
   justify-content: center;
   font-weight: 600;
   font-size: 18px;
-  color: white;
-  background: linear-gradient(135deg, #3b82f6, #2E7D52);
+  color: var(--text-on-primary);
+  background: linear-gradient(135deg, var(--color-primary-light), #2E7D52);
   flex-shrink: 0;
 }
 
 [data-page="community"] .user-name {
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 2px;
 }
 
 [data-page="community"] .user-time {
   font-size: 12px;
-  color: #999;
+  color: var(--text-faint);
 }
 
 /* ── Post Content ─────────────────────────────────────────────────── */
@@ -75,12 +75,12 @@
 [data-page="community"] .post-content h3 {
   font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 10px;
 }
 
 [data-page="community"] .post-content p {
-  color: #666;
+  color: var(--text-muted);
   line-height: 1.6;
   margin-bottom: 0;
 }
@@ -101,8 +101,8 @@
   display: flex;
   gap: 20px;
   padding: 10px 0;
-  border-top: 1px solid #f0f0f0;
-  border-bottom: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-light);
   margin-bottom: 15px;
 }
 
@@ -112,7 +112,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  color: #666;
+  color: var(--text-muted);
   font-size: 14px;
   cursor: pointer;
   padding: 5px 10px;
@@ -121,23 +121,23 @@
 }
 
 [data-page="community"] .action-btn:hover {
-  color: #1e40af;
-  background-color: #f0f7ff;
+  color: var(--color-primary-dark);
+  background-color: var(--bg-hover);
 }
 
 [data-page="community"] .action-btn.liked {
-  color: #1e40af;
-  background-color: #f0f7ff;
+  color: var(--color-primary-dark);
+  background-color: var(--bg-hover);
 }
 
 /* ── Filter Bar ───────────────────────────────────────────────────── */
 
 [data-page="community"] .filter-bar {
-  background-color: white;
+  background-color: var(--bg-card);
   border-radius: 8px;
   padding: 15px 20px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-sm);
   display: flex;
   align-items: center;
   gap: 15px;
@@ -152,14 +152,14 @@
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #666;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
 [data-page="community"] .filter-btn.active {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.85), rgba(30, 64, 175, 0.75));
-  color: white;
-  box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: var(--text-on-primary);
+  box-shadow: var(--shadow-md);
 }
 
 /* ── Search Box ───────────────────────────────────────────────────── */
@@ -175,17 +175,17 @@
 [data-page="community"] .search-box input {
   flex: 1;
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 20px 0 0 20px;
   font-size: 14px;
   min-width: 0;
-  background: white;
+  background: var(--bg-card);
 }
 
 [data-page="community"] .search-box button {
-  background-color: #1e40af;
-  color: white;
-  border: 1px solid #1e40af;
+  background-color: var(--color-primary-dark);
+  color: var(--text-on-primary);
+  border: 1px solid var(--color-primary-dark);
   padding: 8px 15px;
   border-radius: 0 20px 20px 0;
   cursor: pointer;
@@ -194,7 +194,7 @@
 }
 
 [data-page="community"] .search-box button:hover {
-  background-color: #1e3a8a;
+  background-color: var(--color-primary-dark);
 }
 
 /* ── Category Tabs (Liquid Glass Animation) ───────────────────────── */
@@ -220,17 +220,17 @@
   -webkit-tap-highlight-color: transparent;
   -webkit-appearance: button;
   appearance: button;
-  background-color: #000;
+  background-color: var(--text-primary);
   background-image: none;
-  color: #fff;
+  color: var(--text-on-primary);
   cursor: pointer;
   font-family: inherit;
   font-size: 14px;
   font-weight: 500;
   line-height: 1.5;
   margin: 0;
-  -webkit-mask-image: -webkit-radial-gradient(#000, #fff);
-  mask-image: radial-gradient(#000, #fff);
+  -webkit-mask-image: -webkit-radial-gradient(var(--text-primary), var(--text-on-primary));
+  mask-image: radial-gradient(var(--text-primary), var(--text-on-primary));
   padding: 8px 20px;
   text-transform: uppercase;
   border-radius: 99rem;
@@ -268,7 +268,7 @@
 [data-page="community"] .category-tab:after,
 [data-page="community"] .category-tab:before {
   --skew: 0.2;
-  background: #fff;
+  background: var(--bg-card);
   content: "";
   display: block;
   height: 102%;
@@ -300,14 +300,14 @@
 
 /* Active state */
 [data-page="community"] .category-tab.active {
-  background-color: #1e40af;
+  background-color: var(--color-primary-dark);
 }
 
 /* Inactive state */
 [data-page="community"] .category-tab:not(.active) {
   background-color: transparent;
-  border: 1px solid rgba(0,0,0,0.1);
-  color: #475569;
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
 }
 
 [data-page="community"] .category-tab:not(.active) .text-container {
@@ -315,7 +315,7 @@
 }
 
 [data-page="community"] .category-tab:not(.active):hover .text-container {
-  color: white;
+  color: var(--text-on-primary);
 }
 
 /* ── Comment Section ──────────────────────────────────────────────── */
@@ -329,7 +329,7 @@
   gap: 10px;
   margin-bottom: 15px;
   padding: 10px;
-  background-color: #f9f9f9;
+  background-color: var(--bg-card-alt);
   border-radius: 8px;
 }
 
@@ -350,8 +350,8 @@
   justify-content: center;
   font-size: 14px;
   font-weight: 600;
-  color: white;
-  background: #94a3b8;
+  color: var(--text-on-primary);
+  background: var(--text-faint);
   flex-shrink: 0;
 }
 
@@ -363,21 +363,21 @@
 [data-page="community"] .comment-author {
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 2px;
   display: inline;
 }
 
 [data-page="community"] .comment-time {
   font-size: 12px;
-  color: #999;
+  color: var(--text-faint);
   margin-left: 10px;
   display: inline;
 }
 
 [data-page="community"] .comment-content p {
   font-size: 14px;
-  color: #666;
+  color: var(--text-muted);
   line-height: 1.5;
 }
 
@@ -390,20 +390,20 @@
 [data-page="community"] .comment-input input {
   flex: 1;
   padding: 10px 15px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 20px;
   font-size: 14px;
-  background: white;
+  background: var(--bg-card);
 }
 
 [data-page="community"] .comment-input input:focus {
   outline: none;
-  border-color: #1e40af;
+  border-color: var(--border-focus);
 }
 
 [data-page="community"] .comment-input button {
-  background-color: #1e40af;
-  color: white;
+  background-color: var(--color-primary-dark);
+  color: var(--text-on-primary);
   border: none;
   padding: 0 20px;
   border-radius: 20px;
@@ -413,7 +413,7 @@
 }
 
 [data-page="community"] .comment-input button:hover {
-  background-color: #1e3a8a;
+  background-color: var(--color-primary-dark);
 }
 
 [data-page="community"] .comment-input button:disabled {
@@ -440,11 +440,11 @@
   background: linear-gradient(135deg, rgba(255,255,255,0.45), rgba(255,255,255,0.05));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.4);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05),
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm),
               inset 0 1px 1px rgba(255,255,255,0.8),
               inset 0 -1px 1px rgba(0,0,0,0.05);
-  color: #334155;
+  color: var(--text-secondary);
 }
 
 [data-page="community"] .glass-btn::before {
@@ -464,7 +464,7 @@
 
 [data-page="community"] .glass-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.08),
+  box-shadow: var(--shadow-md),
               inset 0 1px 1px rgba(255,255,255,0.9),
               inset 0 -1px 1px rgba(0,0,0,0.05);
   background: linear-gradient(135deg, rgba(255,255,255,0.6), rgba(255,255,255,0.1));
@@ -477,7 +477,7 @@
 
 [data-page="community"] .glass-btn:active {
   transform: translateY(1px) scale(0.97);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05),
+  box-shadow: var(--shadow-sm),
               inset 0 3px 6px rgba(0,0,0,0.05),
               inset 0 1px 1px rgba(255,255,255,0.3);
 }
@@ -510,20 +510,20 @@
 
 /* Glass button primary variant */
 [data-page="community"] .glass-btn.primary {
-  background: linear-gradient(135deg, rgba(37,99,235,0.85), rgba(30,64,175,0.75));
-  border-color: rgba(96,165,250,0.6);
-  color: white;
-  box-shadow: 0 4px 15px rgba(30,64,175,0.3),
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border-color: var(--color-primary-light);
+  color: var(--text-on-primary);
+  box-shadow: var(--shadow-md),
               inset 0 1px 1px rgba(255,255,255,0.5),
               inset 0 -1px 2px rgba(30,64,175,0.4);
   text-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
 
 [data-page="community"] .glass-btn.primary:hover {
-  background: linear-gradient(135deg, rgba(59,130,246,0.9), rgba(37,99,235,0.8));
-  border-color: rgba(147,197,253,0.8);
-  color: white;
-  box-shadow: 0 8px 25px rgba(30,64,175,0.4),
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+  border-color: var(--color-primary-light);
+  color: var(--text-on-primary);
+  box-shadow: var(--shadow-lg),
               inset 0 1px 2px rgba(255,255,255,0.6),
               inset 0 -1px 1px rgba(30,64,175,0.3);
 }
@@ -539,14 +539,14 @@
 }
 
 .fab-btn {
-  background-color: #1e40af;
-  color: white;
+  background-color: var(--color-primary-dark);
+  color: var(--text-on-primary);
   border: none;
   padding: 12px 24px;
   border-radius: 25px;
   font-size: 16px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+  box-shadow: var(--shadow-md);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -554,9 +554,9 @@
 }
 
 .fab-btn:hover {
-  background-color: #1e3a8a;
+  background-color: var(--color-primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+  box-shadow: var(--shadow-lg);
 }
 
 /* ── Post List ────────────────────────────────────────────────────── */

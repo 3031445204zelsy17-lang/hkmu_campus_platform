@@ -517,12 +517,14 @@ function _renderBrowse(container) {
   const searchLabel = document.createElement("label");
   searchLabel.className = "block text-sm font-medium text-gray-500 mb-2";
   searchLabel.textContent = t("planner.search");
+  searchLabel.setAttribute("for", "course-search");
   searchGroup.appendChild(searchLabel);
   const search = document.createElement("input");
   search.type = "text";
   search.placeholder = t("planner.search_placeholder");
   search.className = "w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
   search.id = "course-search";
+  search.setAttribute("aria-label", t("planner.search"));
   searchGroup.appendChild(search);
   filterGrid.appendChild(searchGroup);
 
@@ -531,6 +533,7 @@ function _renderBrowse(container) {
   const yearLabel = document.createElement("label");
   yearLabel.className = "block text-sm font-medium text-gray-500 mb-2";
   yearLabel.textContent = t("planner.filter_year");
+  yearLabel.setAttribute("for", "course-year-filter");
   yearGroup.appendChild(yearLabel);
   const yearFilter = document.createElement("select");
   yearFilter.className = "w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
@@ -544,6 +547,7 @@ function _renderBrowse(container) {
   const catLabel = document.createElement("label");
   catLabel.className = "block text-sm font-medium text-gray-500 mb-2";
   catLabel.textContent = t("planner.filter_category");
+  catLabel.setAttribute("for", "course-cat-filter");
   catGroup.appendChild(catLabel);
   const catFilter = document.createElement("select");
   catFilter.className = "w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";

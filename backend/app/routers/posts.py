@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.security import OAuth2PasswordBearer
 
 from ..database import get_db
 from ..models import (
@@ -7,7 +8,7 @@ from ..models import (
     CommentCreate, CommentOut,
     PaginatedResponse,
 )
-from ..services.auth_service import get_current_user
+from ..services.auth_service import get_current_user, oauth2_scheme
 from ..services.rate_limiter import check_rate_limit
 from ..services.sanitizer import sanitize_dict
 
@@ -16,16 +17,19 @@ router = APIRouter(prefix="/posts", tags=["posts"])
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
-async def _post_row_to_out(row, user_id: int | None = None) -> PostOut:
-    is_liked = False
-    if user_id:
-        db = await get_db()
-        cur = await db.execute(
-            "SELECT 1 FROM post_likes WHERE user_id = ? AND post_id = ?",
-            (user_id, row["id"]),
-        )
-        is_liked = await cur.fetchone() is not None
+async def _batch_liked_set(post_ids: list[int], user_id: int) -> set[int]:
+    if not post_ids:
+        return set()
+    db = await get_db()
+    placeholders = ",".join("?" * len(post_ids))
+    cur = await db.execute(
+        f"SELECT post_id FROM post_likes WHERE user_id = ? AND post_id IN ({placeholders})",
+        [user_id] + post_ids,
+    )
+    return {r["post_id"] for r in await cur.fetchall()}
 
+
+def _post_row_to_out(row, liked_set: set[int] | None = None) -> PostOut:
     return PostOut(
         id=row["id"],
         author_id=row["author_id"],
@@ -38,11 +42,20 @@ async def _post_row_to_out(row, user_id: int | None = None) -> PostOut:
         updated_at=row["updated_at"],
         author_nickname=row["author_nickname"],
         author_avatar=row["avatar_url"],
-        is_liked=is_liked,
+        is_liked=row["id"] in liked_set if liked_set else False,
     )
 
 
 # ── Posts CRUD ───────────────────────────────────────────────────────────────
+
+async def _get_optional_user(token: str | None = Depends(oauth2_scheme)) -> dict | None:
+    if not token:
+        return None
+    try:
+        return await get_current_user(token)
+    except HTTPException:
+        return None
+
 
 @router.get("", response_model=PaginatedResponse)
 async def list_posts(
@@ -51,6 +64,7 @@ async def list_posts(
     sort: str = Query("newest", pattern=r"^(newest|hot)$"),
     category: str | None = None,
     search: str | None = None,
+    user: dict | None = Depends(_get_optional_user),
 ):
     db = await get_db()
     offset = (page - 1) * page_size
@@ -87,10 +101,13 @@ async def list_posts(
         params + [page_size, offset],
     )
     rows = await cur.fetchall()
-    items = []
-    for r in rows:
-        out = await _post_row_to_out(r)
-        items.append(out.model_dump())
+
+    # batch like check (1 query instead of N)
+    liked_set: set[int] = set()
+    if user and rows:
+        liked_set = await _batch_liked_set([r["id"] for r in rows], user["id"])
+
+    items = [_post_row_to_out(r, liked_set).model_dump() for r in rows]
 
     return PaginatedResponse(
         items=items, total=total, page=page,
@@ -111,7 +128,7 @@ async def get_post(post_id: int):
     row = await cur.fetchone()
     if not row:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Post not found")
-    return await _post_row_to_out(row)
+    return await _post_row_to_out(row, set())
 
 
 @router.post("", response_model=PostOut, status_code=status.HTTP_201_CREATED)
@@ -139,7 +156,7 @@ async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
         (post_id,),
     )
     row = await cur.fetchone()
-    return await _post_row_to_out(row, user["id"])
+    return await _post_row_to_out(row, {post_id})
 
 
 @router.put("/{post_id}", response_model=PostOut)
@@ -181,7 +198,7 @@ async def update_post(
         (post_id,),
     )
     row = await cur.fetchone()
-    return await _post_row_to_out(row, user["id"])
+    return await _post_row_to_out(row, {post_id})
 
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -242,7 +259,8 @@ async def toggle_like(post_id: int, user: dict = Depends(get_current_user)):
         (post_id,),
     )
     row = await cur.fetchone()
-    return await _post_row_to_out(row, user["id"])
+    now_liked = not already_liked
+    return await _post_row_to_out(row, {post_id} if now_liked else set())
 
 
 # ── Comments ─────────────────────────────────────────────────────────────────
