@@ -1,5 +1,5 @@
 import { register, start, navigate, forceResolve } from "./router.js";
-import { setToken, setRefreshToken, isLoggedIn } from "./api.js";
+import { setToken, setRefreshToken, isLoggedIn, request } from "./api.js";
 import { renderNav, initSidebar } from "./components/nav.js";
 import { showToast } from "./components/toast.js";
 import { openModal, closeModal } from "./components/modal.js";
@@ -142,18 +142,11 @@ function showAuthModal(mode = "login") {
           };
         }
 
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
+        const result = await request("POST", url.replace("/api/v1", ""), body);
 
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.detail || "Request failed");
+        if (result === null || result === undefined) {
+          throw new Error("Request failed");
         }
-
-        const result = await res.json();
 
         if (isLoginMode) {
           setToken(result.access_token);
@@ -184,18 +177,11 @@ function showAuthModal(mode = "login") {
       try {
         document.getElementById("email-auth-error").classList.add("hidden");
 
-        const res = await fetch("/api/v1/auth/email/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: data.email, password: data.password }),
+        const result = await request("POST", "/auth/email/login", {
+          email: data.email,
+          password: data.password,
         });
 
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.detail || "Request failed");
-        }
-
-        const result = await res.json();
         setToken(result.access_token);
         if (result.refresh_token) setRefreshToken(result.refresh_token);
         closeModal();
@@ -217,18 +203,10 @@ function showAuthModal(mode = "login") {
 // Google Sign-In callback (must be on window for GIS SDK)
 window.handleGoogleSignIn = async (response) => {
   try {
-    const res = await fetch("/api/v1/auth/google", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id_token: response.credential }),
+    const result = await request("POST", "/auth/google", {
+      id_token: response.credential,
     });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Google login failed");
-    }
-
-    const result = await res.json();
     setToken(result.access_token);
     if (result.refresh_token) setRefreshToken(result.refresh_token);
     closeModal();

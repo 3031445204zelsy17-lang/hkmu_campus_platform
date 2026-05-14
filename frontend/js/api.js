@@ -58,7 +58,7 @@ async function _tryRefresh() {
   }
 }
 
-async function request(method, path, body = null, attempt = 0) {
+export async function request(method, path, body = null, attempt = 0) {
   const headers = { "Content-Type": "application/json" };
   if (_token) {
     headers["Authorization"] = `Bearer ${_token}`;
