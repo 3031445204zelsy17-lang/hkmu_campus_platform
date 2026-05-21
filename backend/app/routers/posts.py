@@ -131,7 +131,7 @@ async def get_post(post_id: int):
     row = await cur.fetchone()
     if not row:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Post not found")
-    return await _post_row_to_out(row, set())
+    return _post_row_to_out(row, set())
 
 
 @router.post("", response_model=PostOut, status_code=status.HTTP_201_CREATED)
@@ -159,7 +159,7 @@ async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
         (post_id,),
     )
     row = await cur.fetchone()
-    return await _post_row_to_out(row, {post_id})
+    return _post_row_to_out(row, {post_id})
 
 
 @router.put("/{post_id}", response_model=PostOut)
@@ -201,7 +201,7 @@ async def update_post(
         (post_id,),
     )
     row = await cur.fetchone()
-    return await _post_row_to_out(row, {post_id})
+    return _post_row_to_out(row, {post_id})
 
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -263,7 +263,7 @@ async def toggle_like(post_id: int, user: dict = Depends(get_current_user)):
     )
     row = await cur.fetchone()
     now_liked = not already_liked
-    return await _post_row_to_out(row, {post_id} if now_liked else set())
+    return _post_row_to_out(row, {post_id} if now_liked else set())
 
 
 # ── Comments ─────────────────────────────────────────────────────────────────
