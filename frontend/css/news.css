@@ -33,12 +33,12 @@
 
 [data-page="news"] .news-card {
   display: flex;
+  flex-direction: column;
   background: var(--bg-card);
   border-radius: 10px;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   margin-bottom: 16px;
-  text-decoration: none;
   color: inherit;
   transition: transform 0.15s, box-shadow 0.15s;
   position: relative;
@@ -47,6 +47,12 @@
 [data-page="news"] .news-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+[data-page="news"] .news-card-link {
+  display: flex;
+  text-decoration: none;
+  color: inherit;
 }
 
 [data-page="news"] .news-card-image {
@@ -129,10 +135,47 @@
   color: var(--color-error);
 }
 
+/* News card actions */
+
+[data-page="news"] .news-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+[data-page="news"] .news-card-actions .action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+[data-page="news"] .news-card-actions .action-btn:hover {
+  background: var(--bg-card-alt);
+  color: var(--color-primary);
+}
+
+/* News comments reuse community comment styles */
+[data-page="news"] .comments-section {
+  border-top: 1px solid var(--border-color);
+  padding: 12px 16px;
+  background: var(--bg-card-alt);
+}
+
 /* Responsive */
 
 @media (max-width: 640px) {
-  [data-page="news"] .news-card {
+  [data-page="news"] .news-card,
+  [data-page="news"] .news-card-link {
     flex-direction: column;
   }
 

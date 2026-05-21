@@ -57,7 +57,7 @@
       "description": "后端已支持 optional auth，需确认前端游客体验是否完整：游客可浏览公开内容，操作时引导登录",
       "module": "auth",
       "dependencies": [],
-      "passes": false,
+      "passes": true,
       "files": ["frontend/js/router.js", "frontend/js/app.js"]
     },
     {
@@ -67,7 +67,7 @@
       "description": "社区评论系统已完善，需为新闻添加独立评论功能，可参考社区评论实现",
       "module": "news",
       "dependencies": [],
-      "passes": false,
+      "passes": true,
       "files": ["frontend/js/pages/news.js", "backend/app/routers/news.py"]
     },
     {

@@ -105,7 +105,16 @@ async def init_db():
             image_url TEXT,
             category TEXT,
             source_url TEXT NOT NULL,
-            published_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            published_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            comments_count INTEGER DEFAULT 0
+        );
+
+        CREATE TABLE IF NOT EXISTS news_comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            news_id INTEGER NOT NULL REFERENCES news(id),
+            author_id INTEGER NOT NULL REFERENCES users(id),
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS lostfound (
@@ -149,6 +158,8 @@ async def init_db():
         CREATE INDEX IF NOT EXISTS idx_posts_search_fts ON posts(title);
         CREATE INDEX IF NOT EXISTS idx_comments_author ON comments(author_id);
         CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
+        CREATE INDEX IF NOT EXISTS idx_news_comments_news ON news_comments(news_id);
+        CREATE INDEX IF NOT EXISTS idx_news_comments_author ON news_comments(author_id);
 
         CREATE TABLE IF NOT EXISTS email_tokens (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -186,5 +197,7 @@ async def init_db():
     news_cols = {row[1] for row in await cur.fetchall()}
     if "author_id" not in news_cols:
         await db.execute("ALTER TABLE news ADD COLUMN author_id INTEGER REFERENCES users(id)")
+    if "comments_count" not in news_cols:
+        await db.execute("ALTER TABLE news ADD COLUMN comments_count INTEGER DEFAULT 0")
 
     await db.commit()

@@ -88,6 +88,7 @@ const translations = {
     "community.search_placeholder": "Search posts...",
     "community.search": "Search",
     "community.anonymous": "Anonymous",
+    "community.login_to_comment": "Login to comment",
 
     // Planner
     "planner.status_not_started": "Not Started",
@@ -166,6 +167,11 @@ const translations = {
     "news.confirm_delete": "Delete this news item?",
     "news.news_deleted": "News deleted",
     "news.news_failed": "Failed to load news.",
+    "news.write_comment": "Write a comment...",
+    "news.send": "Send",
+    "news.comment_posted": "Comment posted!",
+    "news.no_comments": "No comments yet",
+    "news.login_to_comment": "Login to comment",
 
     // Lost & Found
     "lostfound.title": "Lost & Found",
@@ -356,6 +362,7 @@ const translations = {
     "community.search_placeholder": "搜索帖子...",
     "community.search": "搜索",
     "community.anonymous": "匿名",
+    "community.login_to_comment": "登录后评论",
 
     // Planner
     "planner.status_not_started": "未开始",
@@ -434,6 +441,11 @@ const translations = {
     "news.confirm_delete": "确定删除这条新闻？",
     "news.news_deleted": "新闻已删除",
     "news.news_failed": "加载新闻失败。",
+    "news.write_comment": "写评论...",
+    "news.send": "发送",
+    "news.comment_posted": "评论成功！",
+    "news.no_comments": "暂无评论",
+    "news.login_to_comment": "登录后评论",
 
     // Lost & Found
     "lostfound.title": "失物招领",
@@ -622,6 +634,7 @@ const translations = {
     "community.search_placeholder": "搜尋貼文...",
     "community.search": "搜尋",
     "community.anonymous": "匿名",
+    "community.login_to_comment": "登入後留言",
 
     // Planner
     "planner.status_not_started": "未開始",
@@ -700,6 +713,11 @@ const translations = {
     "news.confirm_delete": "確定刪除這則新聞？",
     "news.news_deleted": "新聞已刪除",
     "news.news_failed": "載入新聞失敗。",
+    "news.write_comment": "寫留言...",
+    "news.send": "傳送",
+    "news.comment_posted": "留言成功！",
+    "news.no_comments": "暫無留言",
+    "news.login_to_comment": "登入後留言",
 
     // Lost & Found
     "lostfound.title": "失物招領",

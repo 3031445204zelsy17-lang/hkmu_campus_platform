@@ -179,6 +179,21 @@ class NewsOut(BaseModel):
     category: Optional[str] = None
     source_url: str
     published_at: Optional[str] = None
+    comments_count: int = 0
+
+
+class NewsCommentCreate(BaseModel):
+    content: str = Field(min_length=1, max_length=2000)
+
+
+class NewsCommentOut(BaseModel):
+    id: int
+    news_id: int
+    author_id: int
+    content: str
+    created_at: Optional[str] = None
+    author_nickname: Optional[str] = None
+    author_avatar: Optional[str] = None
 
 
 # --- Lost & Found ---

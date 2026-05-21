@@ -578,6 +578,15 @@ async function _loadComments(postId) {
 
     if (isLoggedIn()) {
       _renderCommentInput(section, postId);
+    } else {
+      const loginPrompt = document.createElement("div");
+      loginPrompt.className = "text-center py-2";
+      const loginBtn = document.createElement("button");
+      loginBtn.className = "text-sm text-blue-500 hover:underline";
+      loginBtn.textContent = t("community.login_to_comment");
+      loginBtn.addEventListener("click", () => window.dispatchEvent(new CustomEvent("auth:show-login")));
+      loginPrompt.appendChild(loginBtn);
+      section.appendChild(loginPrompt);
     }
   } catch (err) {
     section.innerHTML = "";
