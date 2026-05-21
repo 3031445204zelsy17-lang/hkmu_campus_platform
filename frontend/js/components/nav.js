@@ -2,15 +2,14 @@ import { isLoggedIn } from "../api.js";
 import { t, currentLang, setLang, supportedLangs } from "../utils/i18n.js";
 import { toggleTheme, currentTheme } from "../utils/theme.js";
 
-const NAV_ITEMS = [
+const SIDEBAR_NAV = [
   { path: "/", labelKey: "nav.home", icon: "home" },
-  { path: "/community", labelKey: "nav.community", icon: "message-circle" },
+  { path: "/community", labelKey: "nav.community", icon: "message-circle", hasSubmenu: true },
   { path: "/planner", labelKey: "nav.planner", icon: "book-open" },
   { path: "/news", labelKey: "nav.news", icon: "newspaper" },
-  { path: "/lostfound", labelKey: "nav.lostfound", icon: "search" },
 ];
 
-const NAV_ITEMS_AUTH = [
+const SIDEBAR_NAV_AUTH = [
   { path: "/messages", labelKey: "nav.messages", icon: "mail" },
   { path: "/profile", labelKey: "nav.profile", icon: "user" },
 ];
@@ -21,80 +20,63 @@ export const SIDEBAR_CATEGORIES = [
   { value: "question",   icon: "help-circle",      labelKey: "community.cat_question" },
   { value: "sharing",    icon: "share-2",          labelKey: "community.cat_sharing" },
   { value: "news",       icon: "newspaper",         labelKey: "community.cat_news" },
+  { value: "lostfound",  icon: "search",            labelKey: "community.cat_lostfound" },
   { value: "other",      icon: "more-horizontal",   labelKey: "community.cat_other" },
 ];
 
-function _createIconLink(item, active) {
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function _getCurrentPath() {
+  const hash = window.location.hash || "#/";
+  return hash.slice(1).split("?")[0];
+}
+
+function _createNavLi(item, active) {
+  const li = document.createElement("li");
   const a = document.createElement("a");
   a.href = `#${item.path}`;
-  a.className = `${active} transition-colors flex items-center gap-1.5`;
-  const i = document.createElement("i");
-  i.setAttribute("data-lucide", item.icon);
-  i.className = "w-4 h-4";
-  a.appendChild(i);
+  if (active) a.classList.add("active");
+
+  const icon = document.createElement("i");
+  icon.setAttribute("data-lucide", item.icon);
+  a.appendChild(icon);
+
   const span = document.createElement("span");
   span.textContent = t(item.labelKey);
   a.appendChild(span);
-  return a;
+
+  if (item.hasSubmenu && active) {
+    const chevron = document.createElement("i");
+    chevron.setAttribute("data-lucide", "chevron-down");
+    chevron.className = "ml-auto";
+    chevron.style.width = "14px";
+    chevron.style.height = "14px";
+    a.appendChild(chevron);
+  }
+
+  a.addEventListener("click", () => {
+    if (window.innerWidth < 768) _closeSidebar();
+  });
+
+  li.appendChild(a);
+  return li;
 }
 
-export function renderNav() {
-  const container = document.getElementById("nav-links");
+// ── Render Top Bar Utilities ──────────────────────────────────────────────────
+
+function _renderTopBar() {
+  const container = document.getElementById("nav-utilities");
   if (!container) return;
-
-  const hash = window.location.hash || "#/";
-  const current = hash.slice(1).split("?")[0];
-
   container.innerHTML = "";
-
-  for (const item of NAV_ITEMS) {
-    const isActive = current === item.path || (item.path !== "/" && current.startsWith(item.path));
-    const active = isActive ? "text-blue-600 font-semibold" : "text-gray-600 hover:text-blue-600";
-    container.appendChild(_createIconLink(item, active));
-  }
-
-  if (isLoggedIn()) {
-    for (const item of NAV_ITEMS_AUTH) {
-      const isActive = current === item.path;
-      const active = isActive ? "text-blue-600 font-semibold" : "text-gray-600 hover:text-blue-600";
-      container.appendChild(_createIconLink(item, active));
-    }
-
-    const logoutBtn = document.createElement("button");
-    logoutBtn.id = "nav-logout-btn";
-    logoutBtn.className = "text-gray-600 hover:text-red-500 transition-colors flex items-center gap-1.5";
-    const logoutIcon = document.createElement("i");
-    logoutIcon.setAttribute("data-lucide", "log-out");
-    logoutIcon.className = "w-4 h-4";
-    logoutBtn.appendChild(logoutIcon);
-    const logoutText = document.createElement("span");
-    logoutText.textContent = t("nav.logout");
-    logoutBtn.appendChild(logoutText);
-    logoutBtn.addEventListener("click", () => window.dispatchEvent(new CustomEvent("auth:logout")));
-    container.appendChild(logoutBtn);
-  } else {
-    const loginBtn = document.createElement("button");
-    loginBtn.id = "nav-login-btn";
-    loginBtn.className = "text-blue-600 font-semibold hover:text-blue-800 transition-colors flex items-center gap-1.5";
-    const loginIcon = document.createElement("i");
-    loginIcon.setAttribute("data-lucide", "log-in");
-    loginIcon.className = "w-4 h-4";
-    loginBtn.appendChild(loginIcon);
-    const loginText = document.createElement("span");
-    loginText.textContent = t("nav.login");
-    loginBtn.appendChild(loginText);
-    loginBtn.addEventListener("click", () => window.dispatchEvent(new CustomEvent("auth:show-login")));
-    container.appendChild(loginBtn);
-  }
 
   // Theme toggle
   const themeBtn = document.createElement("button");
-  themeBtn.className = "text-gray-500 hover:text-gray-700 text-sm flex items-center gap-1 px-2 py-1 rounded border border-gray-200 transition-colors";
   themeBtn.title = t("nav.toggle_theme");
   themeBtn.setAttribute("aria-label", t("nav.toggle_theme"));
   const themeIcon = document.createElement("i");
   themeIcon.setAttribute("data-lucide", currentTheme() === "dark" ? "sun" : "moon");
-  themeIcon.className = "w-4 h-4";
+  themeIcon.style.width = "16px";
+  themeIcon.style.height = "16px";
   themeBtn.appendChild(themeIcon);
   themeBtn.addEventListener("click", () => {
     const next = toggleTheme();
@@ -105,35 +87,32 @@ export function renderNav() {
 
   // Language switcher
   const langWrap = document.createElement("div");
-  langWrap.className = "relative ml-2";
+  langWrap.className = "lang-wrap";
   const langBtn = document.createElement("button");
-  langBtn.className = "text-gray-500 hover:text-gray-700 text-sm flex items-center gap-1 px-2 py-1 rounded border border-gray-200";
+  langBtn.className = "lang-btn";
   langBtn.setAttribute("aria-haspopup", "listbox");
   langBtn.setAttribute("aria-expanded", "false");
   const currentCode = currentLang();
   langBtn.textContent = { en: "EN", "zh-CN": "中", "zh-TW": "繁" }[currentCode] || "EN";
-  langWrap.appendChild(langBtn);
 
   const langMenu = document.createElement("div");
-  langMenu.className = "hidden absolute right-0 top-full mt-1 rounded-lg shadow-lg border py-1 z-50 min-w-[120px]";
+  langMenu.className = "lang-menu hidden";
   langMenu.setAttribute("role", "listbox");
   langMenu.setAttribute("aria-label", "Language");
-  langMenu.style.background = "var(--bg-card)";
-  langMenu.style.borderColor = "var(--border-color)";
   for (const lang of supportedLangs()) {
     const opt = document.createElement("button");
-    opt.className = `block w-full text-left px-3 py-1.5 text-sm ${lang.code === currentCode ? "font-semibold" : ""}`;
-    opt.style.color = lang.code === currentCode ? "var(--color-primary)" : "var(--text-secondary)";
-    opt.addEventListener("mouseenter", () => { opt.style.background = "var(--bg-hover)"; });
-    opt.addEventListener("mouseleave", () => { opt.style.background = ""; });
     opt.textContent = lang.label;
+    if (lang.code === currentCode) {
+      opt.style.color = "var(--color-primary)";
+      opt.style.fontWeight = "600";
+    }
     opt.addEventListener("click", () => {
       setLang(lang.code);
       langMenu.classList.add("hidden");
     });
     langMenu.appendChild(opt);
   }
-  langWrap.appendChild(langMenu);
+
   langBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     langMenu.classList.toggle("hidden");
@@ -143,30 +122,122 @@ export function renderNav() {
     langMenu.classList.add("hidden");
     langBtn.setAttribute("aria-expanded", "false");
   });
+
+  langWrap.appendChild(langBtn);
+  langWrap.appendChild(langMenu);
   container.appendChild(langWrap);
 
-  renderSidebar();
-
-  if (window.lucide) window.lucide.createIcons();
+  // Auth button
+  if (isLoggedIn()) {
+    const userBtn = document.createElement("button");
+    const userIcon = document.createElement("i");
+    userIcon.setAttribute("data-lucide", "user");
+    userIcon.style.width = "16px";
+    userIcon.style.height = "16px";
+    userBtn.appendChild(userIcon);
+    userBtn.addEventListener("click", () => {
+      window.location.hash = "#/profile";
+    });
+    container.appendChild(userBtn);
+  } else {
+    const loginBtn = document.createElement("button");
+    const loginIcon = document.createElement("i");
+    loginIcon.setAttribute("data-lucide", "log-in");
+    loginIcon.style.width = "16px";
+    loginIcon.style.height = "16px";
+    loginBtn.appendChild(loginIcon);
+    loginBtn.addEventListener("click", () => {
+      window.dispatchEvent(new CustomEvent("auth:show-login"));
+    });
+    container.appendChild(loginBtn);
+  }
 }
 
-export function renderSidebar() {
-  const ul = document.getElementById("sidebar-categories");
-  if (!ul) return;
+// ── Render Sidebar Main Nav ──────────────────────────────────────────────────
 
-  const hash = window.location.hash || "#/";
-  const hashQuery = hash.split("?")[1] || "";
-  const urlParams = new URLSearchParams(hashQuery);
-  const activeCategory = urlParams.get("category") || null;
+function _renderSidebarNav(current) {
+  const ul = document.getElementById("sidebar-main-nav");
+  if (!ul) return;
+  ul.innerHTML = "";
+
+  for (const item of SIDEBAR_NAV) {
+    const isActive = current === item.path ||
+      (item.path !== "/" && current.startsWith(item.path));
+    ul.appendChild(_createNavLi(item, isActive));
+  }
+
+  if (isLoggedIn()) {
+    for (const item of SIDEBAR_NAV_AUTH) {
+      const isActive = current === item.path;
+      ul.appendChild(_createNavLi(item, isActive));
+    }
+  }
+
+  // Divider
+  const divider = document.createElement("li");
+  divider.className = "sidebar-divider";
+  divider.setAttribute("role", "separator");
+  ul.appendChild(divider);
+
+  // Auth item at bottom
+  const authLi = document.createElement("li");
+  authLi.className = "sidebar-auth-item";
+  if (isLoggedIn()) {
+    const btn = document.createElement("button");
+    const icon = document.createElement("i");
+    icon.setAttribute("data-lucide", "log-out");
+    btn.appendChild(icon);
+    const span = document.createElement("span");
+    span.textContent = t("nav.logout");
+    btn.appendChild(span);
+    btn.addEventListener("click", () => {
+      window.dispatchEvent(new CustomEvent("auth:logout"));
+    });
+    authLi.appendChild(btn);
+  } else {
+    const a = document.createElement("a");
+    a.href = "#";
+    const icon = document.createElement("i");
+    icon.setAttribute("data-lucide", "log-in");
+    a.appendChild(icon);
+    const span = document.createElement("span");
+    span.textContent = t("nav.login");
+    a.appendChild(span);
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent("auth:show-login"));
+    });
+    authLi.appendChild(a);
+  }
+  ul.appendChild(authLi);
+}
+
+// ── Render Sidebar Community Categories ───────────────────────────────────────
+
+function _renderSidebarCategories(current) {
+  const ul = document.getElementById("sidebar-community-cats");
+  const section = document.getElementById("sidebar-community-section");
+  if (!ul || !section) return;
+
+  // Show/hide accordion based on current path
+  if (current === "/community") {
+    section.classList.remove("hidden");
+  } else {
+    section.classList.add("hidden");
+  }
 
   ul.innerHTML = "";
+
+  const hashQuery = window.location.hash.split("?")[1] || "";
+  const urlParams = new URLSearchParams(hashQuery);
+  const activeCategory = urlParams.get("category") || null;
 
   for (const cat of SIDEBAR_CATEGORIES) {
     const li = document.createElement("li");
     const a = document.createElement("a");
     a.href = cat.value ? `#/community?category=${cat.value}` : "#/community";
 
-    if (activeCategory === cat.value) {
+    if (activeCategory === cat.value || (!activeCategory && !cat.value)) {
       a.classList.add("active");
     }
 
@@ -179,10 +250,7 @@ export function renderSidebar() {
     a.appendChild(text);
 
     a.addEventListener("click", () => {
-      const drawer = document.getElementById("drawer-sidebar");
-      const overlay = document.getElementById("sidebar-overlay");
-      if (drawer) drawer.classList.remove("open");
-      if (overlay) overlay.classList.remove("show");
+      if (window.innerWidth < 768) _closeSidebar();
     });
 
     li.appendChild(a);
@@ -190,25 +258,45 @@ export function renderSidebar() {
   }
 }
 
+// ── Main Export ───────────────────────────────────────────────────────────────
+
+export function renderNav() {
+  const current = _getCurrentPath();
+  _renderTopBar();
+  _renderSidebarNav(current);
+  _renderSidebarCategories(current);
+  if (window.lucide) window.lucide.createIcons();
+}
+
+// ── Sidebar Init ──────────────────────────────────────────────────────────────
+
+function _closeSidebar() {
+  const sidebar = document.getElementById("app-sidebar");
+  const overlay = document.getElementById("sidebar-overlay");
+  const toggle = document.getElementById("sidebar-toggle");
+  if (sidebar) sidebar.classList.remove("open");
+  if (overlay) overlay.classList.remove("show");
+  if (toggle) toggle.setAttribute("aria-expanded", "false");
+}
+
 export function initSidebar() {
   const toggle = document.getElementById("sidebar-toggle");
-  const drawer = document.getElementById("drawer-sidebar");
+  const sidebar = document.getElementById("app-sidebar");
   const overlay = document.getElementById("sidebar-overlay");
-  if (!toggle || !drawer || !overlay) return;
+  if (!toggle || !sidebar || !overlay) return;
 
-  toggle.setAttribute("aria-controls", "drawer-sidebar");
+  toggle.setAttribute("aria-controls", "app-sidebar");
   toggle.setAttribute("aria-expanded", "false");
-  toggle.setAttribute("aria-label", "Toggle sidebar menu");
 
   toggle.addEventListener("click", () => {
-    const isOpen = drawer.classList.toggle("open");
+    const isOpen = sidebar.classList.toggle("open");
     overlay.classList.toggle("show");
     toggle.setAttribute("aria-expanded", String(isOpen));
   });
 
-  overlay.addEventListener("click", () => {
-    drawer.classList.remove("open");
-    overlay.classList.remove("show");
-    toggle.setAttribute("aria-expanded", "false");
+  overlay.addEventListener("click", _closeSidebar);
+
+  sidebar.addEventListener("click", (e) => {
+    if (e.target.closest("a") && window.innerWidth < 768) _closeSidebar();
   });
 }

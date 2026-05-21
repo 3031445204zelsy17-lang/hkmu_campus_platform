@@ -1,10 +1,11 @@
 import { isLoggedIn } from "./api.js";
 import { t } from "./utils/i18n.js";
 import { showToast } from "./components/toast.js";
+import { renderNav } from "./components/nav.js";
 
 const routes = {};
 const routeOptions = {};
-let _currentPath = null;
+let _currentHash = null;
 
 export function register(path, handler, options = {}) {
   routes[path] = handler;
@@ -21,7 +22,7 @@ export function start() {
 }
 
 export function forceResolve() {
-  _currentPath = null;
+  _currentHash = null;
   _resolve();
 }
 
@@ -29,8 +30,10 @@ function _resolve() {
   const hash = window.location.hash || "#/";
   const path = hash.slice(1).split("?")[0];
 
-  if (path === _currentPath) return;
-  _currentPath = path;
+  if (hash === _currentHash) return;
+  _currentHash = hash;
+
+  renderNav();
 
   // exact match first
   if (routes[path]) {
@@ -66,7 +69,7 @@ function _guard(pattern) {
   const opts = routeOptions[pattern];
   if (opts?.auth && !isLoggedIn()) {
     showToast(t("auth.login_required"), "warning");
-    _currentPath = null;
+    _currentHash = null;
     navigate("/");
     return false;
   }

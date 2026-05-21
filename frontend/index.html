@@ -29,9 +29,9 @@
 <body class="bg-gray-50 min-h-screen">
     <a href="#app-content" class="skip-link">Skip to main content</a>
     <nav id="app-nav" class="sticky top-0 z-50 shadow-sm" aria-label="Main navigation">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <button id="sidebar-toggle" class="hamburger-btn">
+                <button id="sidebar-toggle" class="hamburger-btn md:hidden" aria-label="Toggle sidebar menu">
                     <i data-lucide="menu" class="w-5 h-5"></i>
                 </button>
                 <a href="https://www.hkmu.edu.hk/" target="_blank" class="brand-logo-link">
@@ -39,17 +39,21 @@
                 </a>
                 <a href="#/" class="text-xl font-bold">HKMU Campus</a>
             </div>
-            <div id="nav-links" class="flex gap-4 text-sm items-center"></div>
+            <div id="nav-utilities" class="flex items-center gap-2"></div>
         </div>
     </nav>
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
-    <aside id="drawer-sidebar" class="drawer-sidebar" aria-label="Sidebar navigation">
-        <div class="sidebar-section">
-            <h3>Categories</h3>
-            <ul id="sidebar-categories"></ul>
-        </div>
-    </aside>
-    <main id="app-content" class="max-w-6xl mx-auto px-4 py-6"></main>
+    <div id="app-layout">
+        <aside id="app-sidebar" class="app-sidebar" aria-label="Sidebar navigation">
+            <nav>
+                <ul id="sidebar-main-nav"></ul>
+            </nav>
+            <div id="sidebar-community-section" class="sidebar-subsection hidden">
+                <ul id="sidebar-community-cats"></ul>
+            </div>
+        </aside>
+        <main id="app-content" class="app-main"></main>
+    </div>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="js/app.js?v=phase5" type="module"></script>

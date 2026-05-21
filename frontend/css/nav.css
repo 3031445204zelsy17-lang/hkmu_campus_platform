@@ -1,8 +1,3 @@
-/* Shared component styles — Toast, Skeleton, Modal overrides */
-#toast-container > div {
-  max-width: 320px;
-}
-
 /* ── Hamburger Button ─────────────────────────────────────────────────── */
 
 .hamburger-btn {
@@ -57,81 +52,57 @@
   pointer-events: auto;
 }
 
-/* ── Drawer Sidebar ───────────────────────────────────────────────────── */
+/* ── App Sidebar (persistent sidebar) ─────────────────────────────────── */
 
-.drawer-sidebar {
-  width: 280px;
+.app-sidebar {
+  width: 240px;
+  min-width: 240px;
+  flex-shrink: 0;
   background-color: var(--bg-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-right: 1px solid var(--border-light);
-  padding: 20px;
-  box-shadow: var(--shadow-lg);
-  position: fixed;
-  top: 56px;
-  left: -300px;
-  height: calc(100vh - 56px);
-  z-index: 999;
-  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-  border-radius: 0 16px 16px 0;
+  padding: 20px 16px;
   overflow-y: auto;
 }
-.drawer-sidebar.open {
-  transform: translateX(300px);
-}
 
-/* Section title */
-.drawer-sidebar .sidebar-section h3 {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 15px;
-  color: var(--text-primary);
-  border-bottom: 2px solid var(--border-color);
-  padding-bottom: 10px;
-  position: relative;
-}
-.drawer-sidebar .sidebar-section h3::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 50px;
-  height: 2px;
-  background-color: var(--color-primary-dark);
-  border-radius: 2px;
-}
-
-/* Category list */
-.drawer-sidebar ul {
+/* Nav link common styles */
+.app-sidebar ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-.drawer-sidebar ul li {
-  margin-bottom: 6px;
+.app-sidebar ul li {
+  margin-bottom: 4px;
 }
-.drawer-sidebar ul li a {
+.app-sidebar ul li a,
+.app-sidebar ul li button {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   text-decoration: none;
-  border-radius: 12px;
-  font-size: 15px;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--text-secondary);
   background: transparent;
   border: 1px solid transparent;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
-.drawer-sidebar ul li a:hover {
+.app-sidebar ul li a:hover,
+.app-sidebar ul li button:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
   border-color: var(--border-light);
-  box-shadow: var(--shadow-sm);
-  transform: translateX(4px);
+  transform: translateX(3px);
 }
-.drawer-sidebar ul li a.active {
+
+/* Active nav item (gradient + glass effect) */
+.app-sidebar ul li a.active,
+.app-sidebar ul li button.active {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.05));
   color: var(--color-primary);
   font-weight: 600;
@@ -142,36 +113,144 @@
   -webkit-backdrop-filter: blur(8px);
 }
 
-/* Sidebar icon styles (Lucide SVGs) */
-.drawer-sidebar ul li a svg {
-  width: 20px;
-  height: 20px;
+/* SVG icon styles */
+.app-sidebar ul li a svg,
+.app-sidebar ul li button svg {
+  width: 18px;
+  height: 18px;
   color: var(--text-faint);
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
-.drawer-sidebar ul li a:hover svg {
+.app-sidebar ul li a:hover svg,
+.app-sidebar ul li button:hover svg {
   color: var(--color-primary-light);
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
-.drawer-sidebar ul li a.active svg {
+.app-sidebar ul li a.active svg,
+.app-sidebar ul li button.active svg {
   color: var(--color-primary);
-  transform: scale(1.15);
+  transform: scale(1.1);
   filter: drop-shadow(0 2px 4px rgba(37, 99, 235, 0.3));
 }
 
-/* ── Responsive ───────────────────────────────────────────────────────── */
+/* Sidebar divider */
+.sidebar-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 12px 0;
+}
 
-@media (max-width: 768px) {
-  .drawer-sidebar {
-    width: 260px;
-    left: -280px;
+/* Sidebar auth section */
+.sidebar-auth-item {
+  margin-top: 4px;
+}
+
+/* ── Accordion Submenu (community categories) ──────────────────────────── */
+
+.sidebar-subsection {
+  margin-top: 4px;
+  padding-left: 12px;
+  border-left: 2px solid var(--border-light);
+  margin-left: 16px;
+}
+.sidebar-subsection.hidden {
+  display: none;
+}
+.sidebar-subsection ul li a {
+  padding: 8px 12px;
+  font-size: 13px;
+  gap: 8px;
+}
+.sidebar-subsection ul li a svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Top Nav Utilities ─────────────────────────────────────────────────── */
+
+#nav-utilities button,
+#nav-utilities .lang-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-on-primary);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.2s;
+}
+#nav-utilities button:hover,
+#nav-utilities .lang-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Language dropdown in top bar */
+#nav-utilities .lang-wrap {
+  position: relative;
+}
+#nav-utilities .lang-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  padding: 4px 0;
+  z-index: 50;
+  min-width: 120px;
+  background: var(--bg-card);
+}
+#nav-utilities .lang-menu.hidden {
+  display: none;
+}
+#nav-utilities .lang-menu button {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  text-align: left;
+  width: 100%;
+  font-size: 13px;
+  cursor: pointer;
+}
+#nav-utilities .lang-menu button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ── Desktop: persistent sidebar ───────────────────────────────────────── */
+
+@media (min-width: 768px) {
+  .app-sidebar {
+    position: sticky;
+    top: 56px;
+    height: calc(100vh - 56px);
   }
-  .drawer-sidebar.open {
-    transform: translateX(280px);
+  .hamburger-btn.md\:hidden {
+    display: none !important;
   }
-  .drawer-sidebar ul li a {
-    padding: 10px 12px;
-    font-size: 14px;
+}
+
+/* ── Mobile: drawer mode ───────────────────────────────────────────────── */
+
+@media (max-width: 767px) {
+  .app-sidebar {
+    position: fixed;
+    top: 56px;
+    left: -260px;
+    width: 240px;
+    height: calc(100vh - 56px);
+    z-index: 999;
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border-radius: 0 16px 16px 0;
+    box-shadow: var(--shadow-lg);
+  }
+  .app-sidebar.open {
+    transform: translateX(260px);
   }
 }
 

@@ -7,14 +7,18 @@
 
 | 模块 | 后端文件 | 前端文件 | 负责人 |
 |------|----------|----------|--------|
-| 学术规划 | `routers/courses.py` | `js/pages/academic.js` | [待分配] |
-| 认证系统 | `routers/auth.py`, `services/auth_service.py` | `js/auth.js`, `js/pages/auth.js` | [待分配] |
-| 社区论坛 | `routers/posts.py` | `js/pages/community.js` | [待分配] |
-| 国际化 | — | `js/utils/i18n.js` | [待分配] |
-| 失物招领 | `routers/lostfound.py` | `js/pages/lostfound.js` | [待分配] |
-| 私信系统 | `routers/messages.py`, `services/websocket_manager.py` | `js/pages/messaging.js` | [待分配] |
-| 校园新闻 | `routers/news.py` | `js/pages/news.js` | [待分配] |
-| 用户管理 | `routers/users.py` | `js/pages/profile.js` | [待分配] |
+| 学术规划 | `routers/courses.py` | `js/pages/academic.js` | SYF |
+| 认证系统 | `routers/auth.py`, `services/auth_service.py` | `js/auth.js`, `js/pages/auth.js` | SYF |
+| 社区论坛 | `routers/posts.py` | `js/pages/community.js` | SYF |
+| 部署与运维 | — | — | 司徒 |
+| 首页设计 | — | `js/pages/home.js` | 司徒 |
+| 国际化 | — | `js/utils/i18n.js` | SYF |
+| 失物招领 | `routers/lostfound.py` | `js/pages/lostfound.js` | SYF |
+| 私信系统 | `routers/messages.py`, `services/websocket_manager.py` | `js/pages/messaging.js` | SYF |
+| 校园新闻 | `routers/news.py` | `js/pages/news.js` | SYF |
+| 宣传网站 | — | — | 司徒 |
+| 测试 | — | — | 司徒 |
+| 用户管理 | `routers/users.py` | `js/pages/profile.js` | SYF |
 | 共享基础 | `main.py`, `database.py`, `models.py`, `config.py` | `app.js`, `router.js`, `api.js`, `components/` | 所有人（改前通知） |
 
 ## 协作规则（必须遵守）
@@ -25,7 +29,12 @@
 - **先读再改**：Agent 修改任何文件前必须先读取该文件完整内容
 - **小步提交**：每完成一个功能点就 commit，不要积累大量改动
 - **分支命名**：`feature/<模块名>-<功能描述>`
-- **Commit 格式**：`[模块名] feat/fix/refactor: 描述`
+- **commit格式**：`[模块名] feat/fix/refactor: 描述`
+- **vibe-coding原则**：人负责拆任务+审代码，AI负责写代码，一个prompt只做一件事
+- **prompt模板**：任务 → 模块 → 文件 → 约束 → 验收标准
+- **分支保护**：禁止直推 main，必须走 feature 分支
+- **跨模块改动**：涉及他人模块或共享文件 → 开 PR，对方 review
+- **每日同步**：结束时群内同步：做了什么 + 遇到什么问题
 
 ## 技术栈
 

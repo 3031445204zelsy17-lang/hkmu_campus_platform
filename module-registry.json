@@ -1,10 +1,30 @@
 {
-  "version": "1.0",
+  "version": "2.0",
   "description": "HKMU Campus Platform 模块所有权注册表 — 唯一数据源，其他文件从此读取",
   "members": [
     {
-      "name": "[待分配]",
-      "github": "[待分配]"
+      "name": "SYF",
+      "github": "3031445204zelsy17-lang",
+      "role": "Leader",
+      "tags": ["统筹", "技术", "后端", "核心前端"]
+    },
+    {
+      "name": "司徒",
+      "github": "ryanST888",
+      "role": "Developer",
+      "tags": ["设计", "前端UI", "部署", "宣传"]
+    },
+    {
+      "name": "霍梓涵",
+      "github": "BKPNC",
+      "role": "Researcher",
+      "tags": ["调研", "合规", "问卷"]
+    },
+    {
+      "name": "潘",
+      "github": "panbaian8-svg",
+      "role": "Operator",
+      "tags": ["运营", "内容"]
     }
   ],
   "modules": {
@@ -12,57 +32,152 @@
       "label": "认证系统",
       "backend": ["routers/auth.py", "services/auth_service.py"],
       "frontend": ["js/auth.js", "js/pages/auth.js"],
-      "owner": "[待分配]",
-      "github": "[待分配]"
+      "owner": "SYF",
+      "github": "3031445204zelsy17-lang",
+      "tasks": [
+        {"id": "A1", "desc": "前端登录/注册页面", "priority": "P0"},
+        {"id": "A2", "desc": "游客模式", "priority": "P1"},
+        {"id": "A3", "desc": "前端 Google 登录按钮", "priority": "P1"},
+        {"id": "A4", "desc": "邮箱验证流程", "priority": "P2"}
+      ]
     },
     "community": {
       "label": "社区论坛",
       "backend": ["routers/posts.py"],
       "frontend": ["js/pages/community.js"],
-      "owner": "[待分配]",
-      "github": "[待分配]"
+      "owner": "SYF",
+      "co_owner": "司徒",
+      "github": "3031445204zelsy17-lang",
+      "tasks": [
+        {"id": "B3", "desc": "热门话题排序算法", "priority": "P1", "owner": "SYF"},
+        {"id": "B4", "desc": "搜索框 + 标签搜索", "priority": "P1", "owner": "SYF"},
+        {"id": "B5", "desc": "帖子分享功能", "priority": "P2", "owner": "SYF"},
+        {"id": "B6", "desc": "匿名发帖 + 树洞板块", "priority": "P2", "owner": "SYF"},
+        {"id": "S2.2", "desc": "深色模式首页社交元素", "priority": "P0", "owner": "司徒"},
+        {"id": "S3.1", "desc": "交互按钮动画优化", "priority": "P1", "owner": "司徒"}
+      ]
     },
     "academic": {
       "label": "学术规划",
       "backend": ["routers/courses.py"],
       "frontend": ["js/pages/academic.js"],
-      "owner": "[待分配]",
-      "github": "[待分配]"
+      "owner": "SYF",
+      "github": "3031445204zelsy17-lang",
+      "tasks": [
+        {"id": "C1", "desc": "前端课程页面", "priority": "P0"},
+        {"id": "C2", "desc": "课程预览（未登录）", "priority": "P1"},
+        {"id": "C3", "desc": "选课规划工具", "priority": "P2"},
+        {"id": "C4", "desc": "课程评分（下个版本）", "priority": "P3"}
+      ]
     },
     "messaging": {
       "label": "私信系统",
       "backend": ["routers/messages.py", "services/websocket_manager.py"],
       "frontend": ["js/pages/messaging.js"],
-      "owner": "[待分配]",
-      "github": "[待分配]"
+      "owner": "SYF",
+      "github": "3031445204zelsy17-lang",
+      "tasks": [
+        {"id": "D1", "desc": "前端私信页面", "priority": "P0"},
+        {"id": "D2", "desc": "消息提醒功能", "priority": "P1"},
+        {"id": "D3", "desc": "WebSocket 前端对接", "priority": "P1"}
+      ]
     },
     "news": {
       "label": "校园新闻",
       "backend": ["routers/news.py"],
       "frontend": ["js/pages/news.js"],
-      "owner": "[待分配]",
-      "github": "[待分配]"
+      "owner": "SYF",
+      "github": "3031445204zelsy17-lang",
+      "tasks": [
+        {"id": "E1", "desc": "新闻独立模块化", "priority": "P0"},
+        {"id": "E2", "desc": "新闻评论区", "priority": "P1"},
+        {"id": "E3", "desc": "新闻分类筛选", "priority": "P1"}
+      ]
     },
     "lostfound": {
       "label": "失物招领",
       "backend": ["routers/lostfound.py"],
       "frontend": ["js/pages/lostfound.js"],
-      "owner": "[待分配]",
-      "github": "[待分配]"
+      "owner": "SYF",
+      "github": "3031445204zelsy17-lang",
+      "tasks": [
+        {"id": "F1", "desc": "恢复独立页面或保持合入", "priority": "P1"},
+        {"id": "F2", "desc": "图片上传 + 预览", "priority": "P2"}
+      ]
     },
     "users": {
       "label": "用户管理",
       "backend": ["routers/users.py"],
       "frontend": ["js/pages/profile.js"],
-      "owner": "[待分配]",
-      "github": "[待分配]"
+      "owner": "SYF",
+      "co_owner": "司徒",
+      "github": "3031445204zelsy17-lang",
+      "tasks": [
+        {"id": "G2", "desc": "用户设置页面完善", "priority": "P2", "owner": "SYF"},
+        {"id": "S3.3", "desc": "个人页面 UI 优化", "priority": "P2", "owner": "司徒"}
+      ]
     },
     "i18n": {
       "label": "国际化",
       "backend": [],
       "frontend": ["js/utils/i18n.js"],
-      "owner": "[待分配]",
-      "github": "[待分配]"
+      "owner": "SYF",
+      "github": "3031445204zelsy17-lang",
+      "tasks": [
+        {"id": "H1", "desc": "新模块翻译补充", "priority": "P1"},
+        {"id": "H2", "desc": "现有翻译校对", "priority": "P2"}
+      ]
+    },
+    "deployment": {
+      "label": "部署与运维",
+      "backend": [],
+      "frontend": [],
+      "owner": "司徒",
+      "github": "ryanST888",
+      "tasks": [
+        {"id": "S1.1", "desc": "研究 Railway 部署配置", "priority": "P1"},
+        {"id": "S1.2", "desc": "研究自定义域名绑定", "priority": "P1"},
+        {"id": "S1.3", "desc": "研究 GitHub Actions CI/CD", "priority": "P1"},
+        {"id": "S1.4", "desc": "研究 HTTPS/安全配置", "priority": "P1"},
+        {"id": "S1.5", "desc": "研究生产环境监控", "priority": "P2"}
+      ]
+    },
+    "homepage": {
+      "label": "首页设计",
+      "backend": [],
+      "frontend": ["js/pages/home.js"],
+      "owner": "司徒",
+      "github": "ryanST888",
+      "tasks": [
+        {"id": "S2.1", "desc": "首页整体布局设计", "priority": "P0"},
+        {"id": "S2.3", "desc": "首页'0'数据替换", "priority": "P0"},
+        {"id": "S2.4", "desc": "空状态引导组件", "priority": "P1"}
+      ]
+    },
+    "promo-site": {
+      "label": "宣传网站",
+      "backend": [],
+      "frontend": [],
+      "owner": "司徒",
+      "github": "ryanST888",
+      "tasks": [
+        {"id": "S4.1", "desc": "宣传网站需求分析", "priority": "P1"},
+        {"id": "S4.2", "desc": "宣传网站页面设计与开发", "priority": "P2"},
+        {"id": "S4.3", "desc": "品牌视觉元素（Logo/配色/字体）", "priority": "P1"},
+        {"id": "S4.4", "desc": "SEO + OG 标签优化", "priority": "P2"}
+      ]
+    },
+    "testing": {
+      "label": "测试",
+      "backend": [],
+      "frontend": [],
+      "owner": "司徒",
+      "github": "ryanST888",
+      "tasks": [
+        {"id": "S5.1", "desc": "功能测试（逐模块验证）", "priority": "P1"},
+        {"id": "S5.2", "desc": "浏览器 + 移动端兼容性测试", "priority": "P1"},
+        {"id": "S5.3", "desc": "深色模式 + 三语言切换测试", "priority": "P1"}
+      ]
     }
   },
   "shared": {
@@ -76,6 +191,11 @@
     "先读再改": "Agent 修改任何文件前必须先读取该文件完整内容",
     "小步提交": "每完成一个功能点就 commit，不要积累大量改动",
     "分支命名": "`feature/<模块名>-<功能描述>`",
-    "Commit 格式": "`[模块名] feat/fix/refactor: 描述`"
+    "commit格式": "`[模块名] feat/fix/refactor: 描述`",
+    "vibe-coding原则": "人负责拆任务+审代码，AI负责写代码，一个prompt只做一件事",
+    "prompt模板": "任务 → 模块 → 文件 → 约束 → 验收标准",
+    "分支保护": "禁止直推 main，必须走 feature 分支",
+    "跨模块改动": "涉及他人模块或共享文件 → 开 PR，对方 review",
+    "每日同步": "结束时群内同步：做了什么 + 遇到什么问题"
   }
 }

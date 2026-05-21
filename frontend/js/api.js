@@ -83,16 +83,18 @@ export async function request(method, path, body = null, attempt = 0) {
     const res = await fetch(`${API_BASE}${path}`, opts);
 
     if (res.status === 401) {
-      // Try refresh token once
-      if (attempt === 0 && _refreshToken) {
-        const refreshed = await _tryRefresh();
-        if (refreshed) {
-          return request(method, path, body, attempt + 1);
+      // Only attempt refresh / logout if user was logged in
+      if (_token) {
+        if (attempt === 0 && _refreshToken) {
+          const refreshed = await _tryRefresh();
+          if (refreshed) {
+            return request(method, path, body, attempt + 1);
+          }
         }
+        setToken(null);
+        setRefreshToken(null);
+        window.dispatchEvent(new CustomEvent("auth:logout"));
       }
-      setToken(null);
-      setRefreshToken(null);
-      window.dispatchEvent(new CustomEvent("auth:logout"));
       throw new Error("Unauthorized");
     }
 

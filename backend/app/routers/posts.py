@@ -9,6 +9,9 @@ from ..models import (
     PaginatedResponse,
 )
 from ..services.auth_service import get_current_user, oauth2_scheme
+from fastapi.security import OAuth2PasswordBearer
+
+_optional_oauth2 = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 from ..services.rate_limiter import check_rate_limit
 from ..services.sanitizer import sanitize_dict
 
@@ -48,7 +51,7 @@ def _post_row_to_out(row, liked_set: set[int] | None = None) -> PostOut:
 
 # ── Posts CRUD ───────────────────────────────────────────────────────────────
 
-async def _get_optional_user(token: str | None = Depends(oauth2_scheme)) -> dict | None:
+async def _get_optional_user(token: str | None = Depends(_optional_oauth2)) -> dict | None:
     if not token:
         return None
     try:
