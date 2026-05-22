@@ -306,3 +306,9 @@ class PaginatedResponse(BaseModel):
     page: int
     page_size: int
     has_next: bool
+
+
+# --- Push Notifications ---
+
+class PushSubscriptionIn(BaseModel):
+    subscription: dict

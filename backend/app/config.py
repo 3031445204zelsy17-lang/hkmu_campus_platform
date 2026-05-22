@@ -20,6 +20,11 @@ SMTP_PASS = os.getenv("SMTP_PASS", "")
 SMTP_FROM = os.getenv("SMTP_FROM", "noreply@hkmu-campus.example.com")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:8000")
 
+# VAPID keys for Web Push
+VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")
+VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "")
+VAPID_CLAIMS = {"sub": f"mailto:{os.getenv('VAPID_EMAIL', 'noreply@hkmu-campus.example.com')}"}
+
 # Hot sort algorithm tuning
 HOT_GRAVITY = float(os.getenv("HOT_GRAVITY", "48"))   # hours per 1-point decay
 HOT_SEED = float(os.getenv("HOT_SEED", "1.0"))         # baseline score for new posts

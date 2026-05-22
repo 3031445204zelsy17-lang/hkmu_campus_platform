@@ -159,6 +159,21 @@ async def init_db():
         CREATE INDEX IF NOT EXISTS idx_posts_search_fts ON posts(title);
         CREATE INDEX IF NOT EXISTS idx_comments_author ON comments(author_id);
         CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
+
+        CREATE TABLE IF NOT EXISTS push_subscriptions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            endpoint TEXT NOT NULL,
+            p256dh_key TEXT NOT NULL,
+            auth_key TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_push_sub_endpoint
+            ON push_subscriptions(endpoint);
+        CREATE INDEX IF NOT EXISTS idx_push_sub_user
+            ON push_subscriptions(user_id);
         CREATE INDEX IF NOT EXISTS idx_news_comments_news ON news_comments(news_id);
         CREATE INDEX IF NOT EXISTS idx_news_comments_author ON news_comments(author_id);
 

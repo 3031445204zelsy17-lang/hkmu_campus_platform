@@ -6,6 +6,7 @@ import { openModal, closeModal } from "./components/modal.js";
 import { initLang, t, currentLang, setLang, supportedLangs } from "./utils/i18n.js";
 import { initTheme, toggleTheme, currentTheme } from "./utils/theme.js";
 import { initAnalytics, identify, track, resetIdentity } from "./utils/analytics.js";
+import { subscribePush, unsubscribePush } from "./utils/push.js";
 
 // Pages
 import { renderHome } from "./pages/home.js";
@@ -242,6 +243,7 @@ window.handleGoogleSignIn = async (response) => {
 
 function _onAuthChange() {
   renderNav();
+  if (isLoggedIn()) subscribePush();
 }
 
 // --- Event listeners ---
@@ -251,6 +253,7 @@ window.addEventListener("auth:logout", () => {
   setToken(null);
   setRefreshToken(null);
   resetIdentity();
+  unsubscribePush();
   showToast(t("auth.logged_out"), "info");
   _onAuthChange();
   navigate("/");
