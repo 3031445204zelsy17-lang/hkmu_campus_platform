@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordBearer
 from ..database import get_db
 from ..config import HOT_GRAVITY, HOT_SEED
 from ..models import (
-    PostCreate, PostUpdate, PostOut,
+    PostCreate, PostUpdate, PostOut, QuotedPostOut,
     CommentCreate, CommentOut,
     PaginatedResponse,
 )
@@ -34,6 +34,15 @@ async def _batch_liked_set(post_ids: list[int], user_id: int) -> set[int]:
 
 
 def _post_row_to_out(row, liked_set: set[int] | None = None) -> PostOut:
+    quoted = None
+    if row["parent_post_id"]:
+        quoted = QuotedPostOut(
+            id=row["parent_id"],
+            author_nickname=row.get("parent_author"),
+            title=row["parent_title"],
+            content_preview=(row["parent_content"] or "")[:150],
+            created_at=row.get("parent_created"),
+        )
     return PostOut(
         id=row["id"],
         author_id=row["author_id"],
@@ -47,6 +56,8 @@ def _post_row_to_out(row, liked_set: set[int] | None = None) -> PostOut:
         author_nickname=row["author_nickname"],
         author_avatar=row["avatar_url"],
         is_liked=row["id"] in liked_set if liked_set else False,
+        parent_post_id=row["parent_post_id"],
+        quoted_post=quoted,
     )
 
 
@@ -102,9 +113,14 @@ async def list_posts(
 
     # data
     cur = await db.execute(
-        f"""SELECT p.*, u.nickname AS author_nickname, u.avatar_url
+        f"""SELECT p.*, u.nickname AS author_nickname, u.avatar_url,
+               pp.id AS parent_id, pp.title AS parent_title,
+               pp.content AS parent_content, pp.created_at AS parent_created,
+               pu.nickname AS parent_author
             FROM posts p
             JOIN users u ON u.id = p.author_id
+            LEFT JOIN posts pp ON pp.id = p.parent_post_id
+            LEFT JOIN users pu ON pu.id = pp.author_id
             {where}
             ORDER BY {order}
             LIMIT ? OFFSET ?""",
@@ -129,9 +145,14 @@ async def list_posts(
 async def get_post(post_id: int):
     db = await get_db()
     cur = await db.execute(
-        """SELECT p.*, u.nickname AS author_nickname, u.avatar_url
+        """SELECT p.*, u.nickname AS author_nickname, u.avatar_url,
+               pp.id AS parent_id, pp.title AS parent_title,
+               pp.content AS parent_content, pp.created_at AS parent_created,
+               pu.nickname AS parent_author
            FROM posts p
            JOIN users u ON u.id = p.author_id
+           LEFT JOIN posts pp ON pp.id = p.parent_post_id
+           LEFT JOIN users pu ON pu.id = pp.author_id
            WHERE p.id = ?""",
         (post_id,),
     )
@@ -145,6 +166,12 @@ async def get_post(post_id: int):
 async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
     check_rate_limit(f"post:{user['id']}", max_requests=10, window_seconds=60)
     db = await get_db()
+
+    if body.parent_post_id:
+        cur = await db.execute("SELECT id FROM posts WHERE id = ?", (body.parent_post_id,))
+        if not await cur.fetchone():
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Original post not found")
+
     safe = sanitize_dict(
         {"title": body.title, "content": body.content, "category": body.category},
         "title", "content", "category",
@@ -152,16 +179,22 @@ async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
     now = datetime.now(timezone.utc).isoformat()
 
     cur = await db.execute(
-        """INSERT INTO posts (author_id, title, content, category, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?)""",
-        (user["id"], safe["title"], safe["content"], safe["category"], now, now),
+        """INSERT INTO posts (author_id, title, content, category, parent_post_id, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+        (user["id"], safe["title"], safe["content"], safe["category"], body.parent_post_id, now, now),
     )
     await db.commit()
 
     post_id = cur.lastrowid
     cur = await db.execute(
-        """SELECT p.*, u.nickname AS author_nickname, u.avatar_url
-           FROM posts p JOIN users u ON u.id = p.author_id
+        """SELECT p.*, u.nickname AS author_nickname, u.avatar_url,
+               pp.id AS parent_id, pp.title AS parent_title,
+               pp.content AS parent_content, pp.created_at AS parent_created,
+               pu.nickname AS parent_author
+           FROM posts p
+           JOIN users u ON u.id = p.author_id
+           LEFT JOIN posts pp ON pp.id = p.parent_post_id
+           LEFT JOIN users pu ON pu.id = pp.author_id
            WHERE p.id = ?""",
         (post_id,),
     )
@@ -202,8 +235,13 @@ async def update_post(
     await db.commit()
 
     cur = await db.execute(
-        """SELECT p.*, u.nickname AS author_nickname, u.avatar_url
+        """SELECT p.*, u.nickname AS author_nickname, u.avatar_url,
+               pp.id AS parent_id, pp.title AS parent_title,
+               pp.content AS parent_content, pp.created_at AS parent_created,
+               pu.nickname AS parent_author
            FROM posts p JOIN users u ON u.id = p.author_id
+           LEFT JOIN posts pp ON pp.id = p.parent_post_id
+           LEFT JOIN users pu ON pu.id = pp.author_id
            WHERE p.id = ?""",
         (post_id,),
     )
@@ -263,8 +301,13 @@ async def toggle_like(post_id: int, user: dict = Depends(get_current_user)):
     await db.commit()
 
     cur = await db.execute(
-        """SELECT p.*, u.nickname AS author_nickname, u.avatar_url
+        """SELECT p.*, u.nickname AS author_nickname, u.avatar_url,
+               pp.id AS parent_id, pp.title AS parent_title,
+               pp.content AS parent_content, pp.created_at AS parent_created,
+               pu.nickname AS parent_author
            FROM posts p JOIN users u ON u.id = p.author_id
+           LEFT JOIN posts pp ON pp.id = p.parent_post_id
+           LEFT JOIN users pu ON pu.id = pp.author_id
            WHERE p.id = ?""",
         (post_id,),
     )

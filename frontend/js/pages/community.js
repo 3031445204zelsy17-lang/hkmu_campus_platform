@@ -15,6 +15,7 @@ let _state = {
   category: null,
   search: null,
   loading: false,
+  highlightPostId: null,
   lfItemType: null,
   lfStatusFilter: null,
 };
@@ -87,6 +88,21 @@ function _commentIcon() {
   path.setAttribute("stroke-linejoin", "round");
   path.setAttribute("stroke-width", "2");
   path.setAttribute("d", "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z");
+  svg.appendChild(path);
+  return svg;
+}
+
+function _shareIcon() {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", "w-4 h-4");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("stroke-linecap", "round");
+  path.setAttribute("stroke-linejoin", "round");
+  path.setAttribute("stroke-width", "2");
+  path.setAttribute("d", "M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z");
   svg.appendChild(path);
   return svg;
 }
@@ -198,6 +214,32 @@ function PostBody(post) {
 
   el.appendChild(headerRow);
   el.appendChild(content);
+
+  if (post.quoted_post) {
+    const qCard = document.createElement("div");
+    qCard.className = "quoted-post-card";
+    qCard.addEventListener("click", () => {
+      window.location.hash = `#/community?post=${post.quoted_post.id}`;
+    });
+
+    const qAuthor = document.createElement("div");
+    qAuthor.className = "quoted-author";
+    qAuthor.textContent = `@${post.quoted_post.author_nickname || "?"}`;
+
+    const qTitle = document.createElement("div");
+    qTitle.className = "quoted-title";
+    qTitle.textContent = post.quoted_post.title;
+
+    const qPreview = document.createElement("div");
+    qPreview.className = "quoted-preview";
+    qPreview.textContent = post.quoted_post.content_preview;
+
+    qCard.appendChild(qAuthor);
+    qCard.appendChild(qTitle);
+    qCard.appendChild(qPreview);
+    el.appendChild(qCard);
+  }
+
   return el;
 }
 
@@ -225,6 +267,26 @@ function PostActions(post) {
 
   el.appendChild(likeBtn);
   el.appendChild(commentBtn);
+
+  // Share button
+  const shareWrapper = document.createElement("div");
+  shareWrapper.style.position = "relative";
+
+  const shareBtn = document.createElement("button");
+  shareBtn.className = "action-btn";
+  shareBtn.appendChild(_shareIcon());
+  const shareLabel = document.createElement("span");
+  shareLabel.textContent = t("community.share");
+  shareBtn.appendChild(shareLabel);
+
+  shareBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    _toggleShareMenu(shareWrapper, post);
+  });
+
+  shareWrapper.appendChild(shareBtn);
+  el.appendChild(shareWrapper);
+
   return el;
 }
 
@@ -364,6 +426,7 @@ export function renderCommunity() {
   const urlParams = new URLSearchParams(hashQuery);
   _state.category = urlParams.get("category") || null;
   _state.search = urlParams.get("search") || null;
+  _state.highlightPostId = urlParams.get("post") || null;
   _state.page = 1;
 
   const app = document.getElementById("app-content");
@@ -466,6 +529,19 @@ async function _loadPosts() {
       _state.posts.forEach((post) => feed.appendChild(PostCard(post)));
     }
 
+    // Highlight shared post if ?post={id} is present
+    if (_state.highlightPostId) {
+      const targetCard = feed.querySelector(`[data-post-id="${_state.highlightPostId}"]`);
+      if (targetCard) {
+        setTimeout(() => {
+          targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+          targetCard.classList.add("post-highlight");
+          setTimeout(() => targetCard.classList.remove("post-highlight"), 3000);
+        }, 100);
+      }
+      _state.highlightPostId = null;
+    }
+
     // Load more button
     if (data.has_next) {
       const moreBtn = document.createElement("button");
@@ -486,6 +562,227 @@ async function _loadPosts() {
 }
 
 // ── Interactions ─────────────────────────────────────────────────────────────
+
+let _activeShareMenu = null;
+
+function _closeShareMenu() {
+  if (_activeShareMenu) {
+    _activeShareMenu.remove();
+    _activeShareMenu = null;
+  }
+}
+
+function _toggleShareMenu(wrapper, post) {
+  _closeShareMenu();
+
+  const menu = document.createElement("div");
+  menu.className = "share-menu";
+
+  // Copy link
+  const copyItem = document.createElement("button");
+  copyItem.className = "share-menu-item";
+  copyItem.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>`;
+  const copyText = document.createElement("span");
+  copyText.textContent = t("community.share_copy_link");
+  copyItem.appendChild(copyText);
+  copyItem.addEventListener("click", (e) => { e.stopPropagation(); _shareExternal(post); });
+
+  // DM forward
+  const dmItem = document.createElement("button");
+  dmItem.className = "share-menu-item";
+  dmItem.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>`;
+  const dmText = document.createElement("span");
+  dmText.textContent = t("community.share_dm");
+  dmItem.appendChild(dmText);
+  dmItem.addEventListener("click", (e) => { e.stopPropagation(); _closeShareMenu(); _shareViaDM(post); });
+
+  // Repost
+  const repostItem = document.createElement("button");
+  repostItem.className = "share-menu-item";
+  repostItem.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>`;
+  const repostText = document.createElement("span");
+  repostText.textContent = t("community.share_repost");
+  repostItem.appendChild(repostText);
+  repostItem.addEventListener("click", (e) => { e.stopPropagation(); _closeShareMenu(); _shareAsRepost(post); });
+
+  menu.appendChild(copyItem);
+  menu.appendChild(dmItem);
+  menu.appendChild(repostItem);
+  wrapper.appendChild(menu);
+  _activeShareMenu = menu;
+
+  // Close on outside click
+  setTimeout(() => {
+    const closer = (evt) => {
+      if (!menu.contains(evt.target)) {
+        _closeShareMenu();
+        document.removeEventListener("click", closer, true);
+      }
+    };
+    document.addEventListener("click", closer, true);
+  }, 0);
+}
+
+async function _shareExternal(post) {
+  _closeShareMenu();
+  const baseUrl = window.location.origin + window.location.pathname;
+  const shareUrl = `${baseUrl}#/community?post=${post.id}`;
+  const shareTitle = post.title || "HKMU Community Post";
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: shareTitle, text: post.content.slice(0, 100), url: shareUrl });
+      return;
+    } catch (err) {
+      if (err.name === "AbortError") return;
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = shareUrl;
+    ta.style.cssText = "position:fixed;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+  }
+  showToast(t("community.link_copied"), "success");
+}
+
+function _shareViaDM(post) {
+  if (!isLoggedIn()) { showToast(t("community.share_login_required"), "warning"); return; }
+
+  const wrapper = document.createElement("div");
+
+  const searchInput = document.createElement("input");
+  searchInput.type = "text";
+  searchInput.placeholder = t("community.share_search_user");
+  searchInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 mb-3";
+
+  const resultsDiv = document.createElement("div");
+  resultsDiv.className = "max-h-60 overflow-y-auto";
+  resultsDiv.textContent = "";
+
+  let searchTimer = null;
+  searchInput.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    const q = searchInput.value.trim();
+    if (!q) { resultsDiv.innerHTML = ""; return; }
+    searchTimer = setTimeout(async () => {
+      try {
+        const users = await api.get(`/users/search?q=${encodeURIComponent(q)}`);
+        resultsDiv.innerHTML = "";
+        if (!users.length) {
+          resultsDiv.textContent = t("messages.no_users");
+          return;
+        }
+        users.forEach((u) => {
+          const row = document.createElement("button");
+          row.type = "button";
+          row.className = "flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-50 transition-colors text-left";
+          row.innerHTML = `<span class="font-medium text-sm">${u.nickname || u.username}</span>`;
+          row.addEventListener("click", async () => {
+            try {
+              const msgContent = `[${t("community.quoted_post")}] ${post.title}\n${post.content.slice(0, 100)}${post.content.length > 100 ? "..." : ""}\n${window.location.origin}${window.location.pathname}#/community?post=${post.id}`;
+              await api.post(`/messages/${u.id}`, { content: msgContent });
+              showToast(t("community.share_sent"), "success");
+              closeModal();
+            } catch (err) {
+              showToast(err.message, "error");
+            }
+          });
+          resultsDiv.appendChild(row);
+        });
+      } catch {
+        resultsDiv.textContent = t("messages.search_failed");
+      }
+    }, 300);
+  });
+
+  wrapper.appendChild(searchInput);
+  wrapper.appendChild(resultsDiv);
+  openModal(t("community.share_dm"), wrapper);
+  setTimeout(() => searchInput.focus(), 100);
+}
+
+function _shareAsRepost(post) {
+  if (!isLoggedIn()) { showToast(t("community.share_login_required"), "warning"); return; }
+
+  const form = document.createElement("form");
+  form.id = "post-editor-form";
+  form.className = "space-y-3";
+
+  // Quoted post preview
+  const quotePreview = document.createElement("div");
+  quotePreview.className = "repost-quote-preview";
+  const qAuthor = document.createElement("div");
+  qAuthor.className = "rq-author";
+  qAuthor.textContent = `@${post.author_nickname || "?"}`;
+  const qTitle = document.createElement("div");
+  qTitle.className = "rq-title";
+  qTitle.textContent = post.title;
+  quotePreview.appendChild(qAuthor);
+  quotePreview.appendChild(qTitle);
+
+  const titleInput = document.createElement("input");
+  titleInput.type = "hidden";
+  titleInput.name = "title";
+  titleInput.value = `${t("community.repost_label")}: ${post.title}`;
+
+  const categoryInput = document.createElement("input");
+  categoryInput.type = "hidden";
+  categoryInput.name = "category";
+  categoryInput.value = post.category;
+
+  const textarea = document.createElement("textarea");
+  textarea.name = "content";
+  textarea.placeholder = t("community.field_content");
+  textarea.maxLength = 10000;
+  textarea.rows = 3;
+  textarea.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 resize-none";
+
+  const errDiv = document.createElement("div");
+  errDiv.className = "text-red-500 text-xs hidden";
+
+  const submitBtn = document.createElement("button");
+  submitBtn.type = "submit";
+  submitBtn.className = "w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium";
+  submitBtn.textContent = t("community.publish");
+
+  form.appendChild(quotePreview);
+  form.appendChild(titleInput);
+  form.appendChild(categoryInput);
+  form.appendChild(textarea);
+  form.appendChild(errDiv);
+  form.appendChild(submitBtn);
+
+  openModal(t("community.share_repost"), form);
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const userContent = fd.get("content") || "";
+    const body = {
+      title: fd.get("title"),
+      content: userContent || fd.get("title"),
+      category: fd.get("category"),
+      parent_post_id: post.id,
+    };
+
+    try {
+      await api.post("/posts", body);
+      showToast(t("community.post_published"), "success");
+      closeModal();
+      _loadPosts();
+    } catch (err) {
+      errDiv.textContent = err.message;
+      errDiv.classList.remove("hidden");
+    }
+  });
+}
 
 async function _toggleLike(post, btnEl, countEl) {
   if (!isLoggedIn()) {

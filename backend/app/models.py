@@ -79,12 +79,21 @@ class PostCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     content: str = Field(min_length=1, max_length=10000)
     category: str = Field(min_length=1, max_length=30)
+    parent_post_id: Optional[int] = None
 
 
 class PostUpdate(BaseModel):
     title: Optional[str] = Field(None, max_length=200)
     content: Optional[str] = Field(None, max_length=10000)
     category: Optional[str] = Field(None, max_length=30)
+
+
+class QuotedPostOut(BaseModel):
+    id: int
+    author_nickname: Optional[str] = None
+    title: str
+    content_preview: str
+    created_at: Optional[str] = None
 
 
 class PostOut(BaseModel):
@@ -100,6 +109,8 @@ class PostOut(BaseModel):
     author_nickname: Optional[str] = None
     author_avatar: Optional[str] = None
     is_liked: bool = False
+    parent_post_id: Optional[int] = None
+    quoted_post: Optional[QuotedPostOut] = None
 
 
 # --- Comments ---

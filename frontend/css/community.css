@@ -130,6 +130,120 @@
   background-color: var(--bg-hover);
 }
 
+/* ── Share Menu ──────────────────────────────────────────────────────── */
+
+[data-page="community"] .share-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  min-width: 160px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+[data-page="community"] .share-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+[data-page="community"] .share-menu-item:hover {
+  background-color: var(--bg-hover);
+  color: var(--color-primary-dark);
+}
+
+/* ── Quoted Post Card ────────────────────────────────────────────────── */
+
+[data-page="community"] .quoted-post-card {
+  border-left: 3px solid var(--color-primary);
+  background: var(--bg-card-alt);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+[data-page="community"] .quoted-post-card:hover {
+  background: var(--bg-hover);
+}
+
+[data-page="community"] .quoted-post-card .quoted-author {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+[data-page="community"] .quoted-post-card .quoted-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+}
+
+[data-page="community"] .quoted-post-card .quoted-preview {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Post Highlight (shared link target) ─────────────────────────────── */
+
+[data-page="community"] .post-highlight {
+  animation: highlight-pulse 3s ease-out;
+  outline: 2px solid var(--color-primary);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+@keyframes highlight-pulse {
+  0%   { background-color: rgba(46, 125, 82, 0.15); }
+  30%  { background-color: rgba(46, 125, 82, 0.08); }
+  100% { background-color: transparent; }
+}
+
+/* ── Repost Editor Quote Preview ─────────────────────────────────────── */
+
+[data-page="community"] .repost-quote-preview {
+  border-left: 3px solid var(--color-primary);
+  background: var(--bg-card-alt);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  pointer-events: none;
+}
+
+[data-page="community"] .repost-quote-preview .rq-author {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+[data-page="community"] .repost-quote-preview .rq-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
 /* ── Filter Bar ───────────────────────────────────────────────────── */
 
 [data-page="community"] .filter-bar {

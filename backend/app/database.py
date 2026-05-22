@@ -48,7 +48,8 @@ async def init_db():
             likes_count INTEGER DEFAULT 0,
             comments_count INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            parent_post_id INTEGER REFERENCES posts(id) ON DELETE SET NULL
         );
 
         CREATE TABLE IF NOT EXISTS post_likes (
@@ -199,5 +200,13 @@ async def init_db():
         await db.execute("ALTER TABLE news ADD COLUMN author_id INTEGER REFERENCES users(id)")
     if "comments_count" not in news_cols:
         await db.execute("ALTER TABLE news ADD COLUMN comments_count INTEGER DEFAULT 0")
+
+    # Migration: add parent_post_id to posts for repost/quote support
+    cur = await db.execute("PRAGMA table_info(posts)")
+    posts_cols = {row[1] for row in await cur.fetchall()}
+    if "parent_post_id" not in posts_cols:
+        await db.execute(
+            "ALTER TABLE posts ADD COLUMN parent_post_id INTEGER REFERENCES posts(id) ON DELETE SET NULL"
+        )
 
     await db.commit()
