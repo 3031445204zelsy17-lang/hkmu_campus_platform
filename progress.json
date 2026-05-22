@@ -147,7 +147,7 @@
       "description": "实现浏览器推送通知（私信提醒、帖子回复通知等），基于 Service Worker + Push API",
       "module": "shared",
       "dependencies": [],
-      "passes": false,
+      "passes": true,
       "files": ["frontend/sw.js", "backend/app/main.py"]
     }
   ]
