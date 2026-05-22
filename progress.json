@@ -47,7 +47,7 @@
       "description": "后端已有 hot 排序端点，需确认是否使用了时间衰减算法，还是简单按点赞数排序。如需要，实现 Hacker News 风格的时间衰减排序",
       "module": "community",
       "dependencies": [],
-      "passes": false,
+      "passes": true,
       "files": ["backend/app/routers/posts.py", "frontend/js/pages/community.js"]
     },
     {
