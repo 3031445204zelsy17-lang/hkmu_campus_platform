@@ -507,7 +507,7 @@ function _renderProgress(container) {
   if (_courses.length === 0) {
     const empty = document.createElement("p");
     empty.className = "text-gray-400 text-center py-8";
-    empty.textContent = "No courses loaded.";
+    empty.textContent = t("planner.no_courses_loaded");
     container.appendChild(empty);
     return;
   }
@@ -544,11 +544,11 @@ function _renderBrowse(container) {
   heading.className = "mb-6";
   const h1 = document.createElement("h1");
   h1.className = "text-3xl font-bold mb-2";
-  h1.textContent = "All Courses";
+  h1.textContent = t("planner.all_courses");
   heading.appendChild(h1);
   const subtitle = document.createElement("p");
   subtitle.className = "text-gray-500";
-  subtitle.textContent = "Browse the complete DSAI curriculum.";
+  subtitle.textContent = t("planner.browse_desc");
   heading.appendChild(subtitle);
   container.appendChild(heading);
 

@@ -493,7 +493,7 @@ function showNewConvModal() {
     </div>
   `;
 
-  openModal("New Conversation", html);
+  openModal(t("messages.new_conversation"), html);
 
   const searchInput = document.getElementById("msg-search-input");
   const resultsEl = document.getElementById("msg-search-results");
