@@ -97,7 +97,7 @@
       "description": "支持匿名发布帖子，增加树洞板块分类。决策：伪匿名 — 普通用户看不到作者，管理员可见。数据库加 is_anonymous 字段",
       "module": "community",
       "dependencies": [],
-      "passes": false,
+      "passes": true,
       "files": ["frontend/js/pages/community.js", "backend/app/routers/posts.py"]
     },
     {
