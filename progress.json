@@ -87,8 +87,8 @@
       "description": "支持将帖子分享到社交平台或复制链接",
       "module": "community",
       "dependencies": [],
-      "passes": false,
-      "files": ["frontend/js/pages/community.js"]
+      "passes": true,
+      "files": ["frontend/js/pages/community.js", "backend/app/routers/posts.py"]
     },
     {
       "id": "B6",
