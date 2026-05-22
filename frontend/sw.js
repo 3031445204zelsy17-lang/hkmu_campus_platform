@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hkmu-campus-v4';
+const CACHE_NAME = 'hkmu-campus-v5';
 const STATIC_CACHE = `${CACHE_NAME}-static`;
 const DYNAMIC_CACHE = `${CACHE_NAME}-dynamic`;
 
@@ -29,6 +29,7 @@ const STATIC_ASSETS = [
   '/js/components/modal.js',
   '/js/components/nav.js',
   '/js/utils/i18n.js',
+  '/js/utils/analytics.js',
   '/js/utils/storage.js',
   '/js/utils/time.js',
   '/icons/HKMU.png',

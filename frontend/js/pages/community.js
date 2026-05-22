@@ -3,6 +3,7 @@ import { showToast } from "../components/toast.js";
 import { openModal, closeModal } from "../components/modal.js";
 import { t } from "../utils/i18n.js";
 import { skeletonCard, errorState } from "../components/skeleton.js";
+import { track } from "../utils/analytics.js";
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -634,6 +635,7 @@ async function _shareExternal(post) {
   if (navigator.share) {
     try {
       await navigator.share({ title: shareTitle, text: post.content.slice(0, 100), url: shareUrl });
+      track("post_shared", { method: "native" });
       return;
     } catch (err) {
       if (err.name === "AbortError") return;
@@ -642,6 +644,7 @@ async function _shareExternal(post) {
 
   try {
     await navigator.clipboard.writeText(shareUrl);
+    track("post_shared", { method: "copy_link" });
   } catch {
     const ta = document.createElement("textarea");
     ta.value = shareUrl;
@@ -691,6 +694,7 @@ function _shareViaDM(post) {
               const msgContent = `[${t("community.quoted_post")}] ${post.title}\n${post.content.slice(0, 100)}${post.content.length > 100 ? "..." : ""}\n${window.location.origin}${window.location.pathname}#/community?post=${post.id}`;
               await api.post(`/messages/${u.id}`, { content: msgContent });
               showToast(t("community.share_sent"), "success");
+              track("post_shared", { method: "dm" });
               closeModal();
             } catch (err) {
               showToast(err.message, "error");
@@ -796,6 +800,7 @@ async function _toggleLike(post, btnEl, countEl) {
     const updated = await api.post(`/posts/${post.id}/like`);
     post.is_liked = updated.is_liked;
     post.likes_count = updated.likes_count;
+    track("post_liked", { post_id: post.id, liked: post.is_liked });
 
     // Update SVG fill
     const svg = btnEl.querySelector("svg");
@@ -924,6 +929,7 @@ function _renderCommentInput(section, postId) {
       await api.post(`/posts/${postId}/comments`, { content });
       input.value = "";
       showToast(t("community.comment_posted"), "success");
+      track("comment_created", { post_id: postId, page_context: "community" });
       const post = _state.posts.find((p) => p.id === postId);
       if (post) post.comments_count++;
       const card = document.querySelector(`[data-post-id="${postId}"]`);
@@ -1055,6 +1061,7 @@ function _showPostEditor(post = null) {
       } else {
         await api.post("/posts", body);
         showToast(t("community.post_published"), "success");
+        track("post_created", { category: body.category, is_anonymous: body.is_anonymous });
       }
       closeModal();
       _loadPosts();
@@ -1409,6 +1416,7 @@ function _showLostFoundModal() {
         location: fd.get("location") || null,
       });
       showToast(t("lostfound.report_submitted"), "success");
+      track("lost_found_reported", { item_type: fd.get("item_type") });
       closeModal();
       _loadLostFound();
     } catch (err) {

@@ -34,6 +34,7 @@ function _resolve() {
   _currentHash = hash;
 
   renderNav();
+  window.dispatchEvent(new CustomEvent("analytics:page_view", { detail: { path } }));
 
   // exact match first
   if (routes[path]) {

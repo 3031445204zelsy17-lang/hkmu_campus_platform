@@ -2,6 +2,7 @@ import { api, isLoggedIn } from "../api.js";
 import { showToast } from "../components/toast.js";
 import { t } from "../utils/i18n.js";
 import { skeletonCard, errorState } from "../components/skeleton.js";
+import { track } from "../utils/analytics.js";
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -969,6 +970,7 @@ async function _updateProgress(courseId, status) {
 
   try {
     await api.put("/courses/progress", { course_id: courseId, status });
+    track("course_progress_updated", { course_id: courseId, status });
     const existing = _progress.find((p) => p.course_id === courseId);
     if (existing) {
       existing.status = status;
@@ -1016,6 +1018,7 @@ async function _loadDSAITemplate() {
   try {
     _progress = await api.post("/courses/progress/batch", { items });
     showToast(t("planner.template_loaded"), "success");
+    track("template_loaded");
     _render();
   } catch (err) {
     showToast(t("planner.template_failed") + " " + err.message, "error");

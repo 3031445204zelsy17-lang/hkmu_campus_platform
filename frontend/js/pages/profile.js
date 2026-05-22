@@ -2,6 +2,7 @@ import { api, isLoggedIn } from "../api.js";
 import { showToast } from "../components/toast.js";
 import { openModal, closeModal } from "../components/modal.js";
 import { t } from "../utils/i18n.js";
+import { track } from "../utils/analytics.js";
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -322,6 +323,7 @@ function _showEditModal() {
 
       _profileUser = await api.get("/users/me");
       showToast(t("profile.updated"), "success");
+      track("profile_updated");
       closeModal();
       _renderPage(document.getElementById("app-content"));
     } catch (err) {

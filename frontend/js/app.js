@@ -5,6 +5,7 @@ import { showToast } from "./components/toast.js";
 import { openModal, closeModal } from "./components/modal.js";
 import { initLang, t, currentLang, setLang, supportedLangs } from "./utils/i18n.js";
 import { initTheme, toggleTheme, currentTheme } from "./utils/theme.js";
+import { initAnalytics, identify, track, resetIdentity } from "./utils/analytics.js";
 
 // Pages
 import { renderHome } from "./pages/home.js";
@@ -160,9 +161,12 @@ function showAuthModal(mode = "login") {
           if (result.refresh_token) setRefreshToken(result.refresh_token);
           closeModal();
           showToast(t("auth.logged_in"), "success");
+          identify(result.user_id || result.id);
+          track("user_logged_in", { method: "username" });
           _onAuthChange();
         } else {
           showToast(t("auth.registered"), "success");
+          track("user_signed_up", { method: "email" });
           showAuthModal("login");
         }
       } catch (err) {
@@ -196,6 +200,8 @@ function showAuthModal(mode = "login") {
         setToken(result.access_token);
         if (result.refresh_token) setRefreshToken(result.refresh_token);
         closeModal();
+        identify(result.user_id || result.id);
+        track("user_logged_in", { method: "email" });
       } catch (err) {
         const el = document.getElementById("email-auth-error");
         if (err.message === "email_not_verified") {
@@ -226,6 +232,8 @@ window.handleGoogleSignIn = async (response) => {
     if (result.refresh_token) setRefreshToken(result.refresh_token);
     closeModal();
     showToast(t("auth.logged_in"), "success");
+    identify(result.user_id || result.id);
+    track("user_logged_in", { method: "google" });
     _onAuthChange();
   } catch (err) {
     showToast(t("auth.google_failed"), "error");
@@ -242,6 +250,7 @@ window.addEventListener("auth:show-login", () => showAuthModal("login"));
 window.addEventListener("auth:logout", () => {
   setToken(null);
   setRefreshToken(null);
+  resetIdentity();
   showToast(t("auth.logged_out"), "info");
   _onAuthChange();
   navigate("/");
@@ -357,6 +366,7 @@ function renderVerifyEmail() {
   api.post("/auth/verify-email", { token }).then(() => {
     document.getElementById("verify-status").textContent = t("auth.verified");
     showToast(t("auth.verified"), "success");
+    track("email_verified");
   }).catch(() => {
     document.getElementById("verify-status").textContent = t("auth.verify_failed");
     showToast(t("auth.verify_failed"), "error");
@@ -368,6 +378,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
   initLang();
   initSidebar();
+  initAnalytics();
   // Fetch Google Client ID from API (no longer in HTML meta)
   try {
     const res = await fetch("/api/v1/auth/config");

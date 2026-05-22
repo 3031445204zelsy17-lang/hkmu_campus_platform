@@ -3,6 +3,7 @@ import { showToast } from "../components/toast.js";
 import { openModal, closeModal } from "../components/modal.js";
 import { t } from "../utils/i18n.js";
 import { skeletonCard, errorState } from "../components/skeleton.js";
+import { track } from "../utils/analytics.js";
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -354,6 +355,7 @@ function _renderNewsCommentInput(section, newsId) {
       await api.post(`/news/${newsId}/comments`, { content });
       input.value = "";
       showToast(t("news.comment_posted"), "success");
+      track("comment_created", { post_id: newsId, page_context: "news" });
       await _loadNewsComments(newsId);
     } catch (err) {
       showToast(err.message, "error");
@@ -493,6 +495,7 @@ function _showCreateModal() {
         category: fd.get("category") || null,
       });
       showToast(t("news.link_added"), "success");
+      track("news_link_added", { category: fd.get("category") });
       closeModal();
       _loadNews();
     } catch (err) {
