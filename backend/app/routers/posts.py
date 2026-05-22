@@ -38,10 +38,10 @@ def _post_row_to_out(row, liked_set: set[int] | None = None) -> PostOut:
     if row["parent_post_id"]:
         quoted = QuotedPostOut(
             id=row["parent_id"],
-            author_nickname=row.get("parent_author"),
+            author_nickname=row["parent_author"] if "parent_author" in row.keys() else None,
             title=row["parent_title"],
             content_preview=(row["parent_content"] or "")[:150],
-            created_at=row.get("parent_created"),
+            created_at=row["parent_created"] if "parent_created" in row.keys() else None,
         )
     return PostOut(
         id=row["id"],
