@@ -19,3 +19,7 @@ SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASS = os.getenv("SMTP_PASS", "")
 SMTP_FROM = os.getenv("SMTP_FROM", "noreply@hkmu-campus.example.com")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:8000")
+
+# Hot sort algorithm tuning
+HOT_GRAVITY = float(os.getenv("HOT_GRAVITY", "48"))   # hours per 1-point decay
+HOT_SEED = float(os.getenv("HOT_SEED", "1.0"))         # baseline score for new posts

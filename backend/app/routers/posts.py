@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordBearer
 
 from ..database import get_db
+from ..config import HOT_GRAVITY, HOT_SEED
 from ..models import (
     PostCreate, PostUpdate, PostOut,
     CommentCreate, CommentOut,
@@ -83,9 +84,15 @@ async def list_posts(
     where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
 
     if sort == "hot":
-        order = "p.likes_count DESC, p.created_at DESC"
+        order = (
+            "(LN(MAX(1, p.likes_count + p.comments_count * 2))"
+            " + ? - ((JULIANDAY('now') - JULIANDAY(p.created_at)) * 24) / ?)"
+            " DESC, p.created_at DESC"
+        )
+        hot_params = [HOT_SEED, HOT_GRAVITY]
     else:
         order = "p.created_at DESC"
+        hot_params = []
 
     # total
     cur = await db.execute(
@@ -101,7 +108,7 @@ async def list_posts(
             {where}
             ORDER BY {order}
             LIMIT ? OFFSET ?""",
-        params + [page_size, offset],
+        hot_params + params + [page_size, offset],
     )
     rows = await cur.fetchall()
 
