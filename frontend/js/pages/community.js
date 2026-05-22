@@ -33,6 +33,7 @@ const CATEGORIES = [
   { value: "question", labelKey: "community.cat_question" },
   { value: "sharing", labelKey: "community.cat_sharing" },
   { value: "news", labelKey: "community.cat_news" },
+  { value: "treehole", labelKey: "community.cat_treehole" },
   { value: "lostfound", labelKey: "community.cat_lostfound" },
   { value: "other", labelKey: "community.cat_other" },
 ];
@@ -176,6 +177,7 @@ function CategoryBadge(category) {
     question: "bg-amber-100 text-amber-700",
     sharing: "bg-green-100 text-green-700",
     news: "bg-purple-100 text-purple-700",
+    treehole: "bg-gray-800 text-gray-100",
     other: "bg-gray-100 text-gray-600",
   };
   el.className = "category-badge " + (colors[category] || colors.other);
@@ -984,6 +986,28 @@ function _showPostEditor(post = null) {
     select.appendChild(opt);
   });
 
+  const anonWrapper = document.createElement("div");
+  anonWrapper.className = "flex items-center gap-2 text-sm text-gray-600";
+  const anonCheckbox = document.createElement("input");
+  anonCheckbox.type = "checkbox";
+  anonCheckbox.name = "is_anonymous";
+  anonCheckbox.id = "anon-toggle";
+  anonCheckbox.className = "w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500";
+  const anonLabel = document.createElement("label");
+  anonLabel.htmlFor = "anon-toggle";
+  anonLabel.className = "select-none cursor-pointer";
+  anonLabel.textContent = t("community.post_anonymously");
+  anonWrapper.appendChild(anonCheckbox);
+  anonWrapper.appendChild(anonLabel);
+
+  if (isEdit && post.is_anonymous) anonCheckbox.checked = true;
+
+  select.addEventListener("change", () => {
+    const isTreehole = select.value === "treehole";
+    anonCheckbox.checked = isTreehole;
+    anonCheckbox.disabled = isTreehole;
+  });
+
   const textarea = document.createElement("textarea");
   textarea.name = "content";
   textarea.placeholder = t("community.field_content");
@@ -1005,6 +1029,7 @@ function _showPostEditor(post = null) {
 
   form.appendChild(titleInput);
   form.appendChild(select);
+  form.appendChild(anonWrapper);
   form.appendChild(textarea);
   form.appendChild(errDiv);
   form.appendChild(submitBtn);
@@ -1018,6 +1043,7 @@ function _showPostEditor(post = null) {
       title: fd.get("title"),
       content: fd.get("content"),
       category: fd.get("category"),
+      is_anonymous: fd.get("is_anonymous") === "on",
     };
 
     const errEl = document.getElementById("post-editor-error");

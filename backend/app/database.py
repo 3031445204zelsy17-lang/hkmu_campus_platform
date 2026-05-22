@@ -208,5 +208,7 @@ async def init_db():
         await db.execute(
             "ALTER TABLE posts ADD COLUMN parent_post_id INTEGER REFERENCES posts(id) ON DELETE SET NULL"
         )
+    if "is_anonymous" not in posts_cols:
+        await db.execute("ALTER TABLE posts ADD COLUMN is_anonymous INTEGER DEFAULT 0")
 
     await db.commit()

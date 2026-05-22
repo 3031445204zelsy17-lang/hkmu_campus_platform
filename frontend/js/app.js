@@ -127,6 +127,14 @@ function showAuthModal(mode = "login") {
       try {
         document.getElementById("auth-error").classList.add("hidden");
 
+        // Password strength check (register only)
+        if (!isLoginMode) {
+          const pw = data.password;
+          if (pw.length < 8 || !/[A-Z]/.test(pw) || !/[a-z]/.test(pw) || !/\d/.test(pw)) {
+            throw new Error(t("auth.password_weak"));
+          }
+        }
+
         let url, body;
         if (isLoginMode) {
           url = "/api/v1/auth/login";
@@ -159,7 +167,11 @@ function showAuthModal(mode = "login") {
         }
       } catch (err) {
         const el = document.getElementById("auth-error");
-        el.textContent = err.message;
+        if (err.message === "email_not_verified") {
+          el.textContent = t("auth.email_not_verified");
+        } else {
+          el.textContent = err.message;
+        }
         el.classList.remove("hidden");
       }
     });
@@ -186,7 +198,11 @@ function showAuthModal(mode = "login") {
         closeModal();
       } catch (err) {
         const el = document.getElementById("email-auth-error");
-        el.textContent = err.message;
+        if (err.message === "email_not_verified") {
+          el.textContent = t("auth.email_not_verified");
+        } else {
+          el.textContent = err.message;
+        }
         el.classList.remove("hidden");
       }
     });
@@ -250,8 +266,8 @@ function renderResetPassword() {
       <div class="max-w-md mx-auto mt-16 p-6 bg-white rounded-2xl shadow-lg" data-page="auth-form">
         <h2 class="text-xl font-bold mb-4 text-gray-800">${t("auth.reset_password")}</h2>
         <form id="reset-form" class="space-y-3">
-          <input type="password" name="new_password" placeholder="${t("auth.new_password")}" aria-label="${t("auth.new_password")}" required minlength="6">
-          <input type="password" name="confirm" placeholder="${t("auth.confirm_password")}" aria-label="${t("auth.confirm_password")}" required minlength="6">
+          <input type="password" name="new_password" placeholder="${t("auth.new_password")}" aria-label="${t("auth.new_password")}" required minlength="8">
+          <input type="password" name="confirm" placeholder="${t("auth.confirm_password")}" aria-label="${t("auth.confirm_password")}" required minlength="8">
           <div id="reset-error" class="field-error hidden"></div>
           <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
             ${t("auth.reset_password")}
@@ -267,6 +283,12 @@ function renderResetPassword() {
       if (pw !== confirm) {
         const el = document.getElementById("reset-error");
         el.textContent = t("auth.password_mismatch");
+        el.classList.remove("hidden");
+        return;
+      }
+      if (pw.length < 8 || !/[A-Z]/.test(pw) || !/[a-z]/.test(pw) || !/\d/.test(pw)) {
+        const el = document.getElementById("reset-error");
+        el.textContent = t("auth.password_weak");
         el.classList.remove("hidden");
         return;
       }

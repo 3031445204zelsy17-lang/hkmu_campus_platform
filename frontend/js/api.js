@@ -100,7 +100,12 @@ export async function request(method, path, body = null, attempt = 0) {
 
     if (!res.ok) {
       const detail = await res.json().catch(() => ({}));
-      throw new Error(detail.detail || res.statusText);
+      const msg = typeof detail.detail === "string"
+        ? detail.detail
+        : Array.isArray(detail.detail)
+          ? detail.detail.map(e => e.msg).join("; ")
+          : res.statusText;
+      throw new Error(msg);
     }
 
     if (res.status === 204) return null;

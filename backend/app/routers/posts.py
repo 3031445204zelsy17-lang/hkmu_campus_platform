@@ -33,7 +33,15 @@ async def _batch_liked_set(post_ids: list[int], user_id: int) -> set[int]:
     return {r["post_id"] for r in await cur.fetchall()}
 
 
-def _post_row_to_out(row, liked_set: set[int] | None = None) -> PostOut:
+async def _is_admin(user_id: int) -> bool:
+    db = await get_db()
+    cur = await db.execute("SELECT identity FROM users WHERE id = ?", (user_id,))
+    row = await cur.fetchone()
+    return row is not None and row["identity"] == "admin"
+
+
+def _post_row_to_out(row, liked_set: set[int] | None = None,
+                     viewer_id: int | None = None, is_admin: bool = False) -> PostOut:
     quoted = None
     if row["parent_post_id"]:
         quoted = QuotedPostOut(
@@ -43,9 +51,13 @@ def _post_row_to_out(row, liked_set: set[int] | None = None) -> PostOut:
             content_preview=(row["parent_content"] or "")[:150],
             created_at=row["parent_created"] if "parent_created" in row.keys() else None,
         )
+    is_anon = bool(row["is_anonymous"]) if "is_anonymous" in row.keys() else False
+    show_author = True
+    if is_anon:
+        show_author = is_admin or (viewer_id is not None and row["author_id"] == viewer_id)
     return PostOut(
         id=row["id"],
-        author_id=row["author_id"],
+        author_id=row["author_id"] if show_author else None,
         title=row["title"],
         content=row["content"],
         category=row["category"],
@@ -53,11 +65,12 @@ def _post_row_to_out(row, liked_set: set[int] | None = None) -> PostOut:
         comments_count=row["comments_count"],
         created_at=row["created_at"],
         updated_at=row["updated_at"],
-        author_nickname=row["author_nickname"],
-        author_avatar=row["avatar_url"],
+        author_nickname=row["author_nickname"] if show_author else None,
+        author_avatar=row["avatar_url"] if show_author else None,
         is_liked=row["id"] in liked_set if liked_set else False,
         parent_post_id=row["parent_post_id"],
         quoted_post=quoted,
+        is_anonymous=is_anon,
     )
 
 
@@ -130,10 +143,12 @@ async def list_posts(
 
     # batch like check (1 query instead of N)
     liked_set: set[int] = set()
+    viewer_id = user["id"] if user else None
+    is_admin_flag = await _is_admin(viewer_id) if viewer_id else False
     if user and rows:
         liked_set = await _batch_liked_set([r["id"] for r in rows], user["id"])
 
-    items = [_post_row_to_out(r, liked_set).model_dump() for r in rows]
+    items = [_post_row_to_out(r, liked_set, viewer_id=viewer_id, is_admin=is_admin_flag).model_dump() for r in rows]
 
     return PaginatedResponse(
         items=items, total=total, page=page,
@@ -142,7 +157,7 @@ async def list_posts(
 
 
 @router.get("/{post_id}", response_model=PostOut)
-async def get_post(post_id: int):
+async def get_post(post_id: int, user: dict | None = Depends(_get_optional_user)):
     db = await get_db()
     cur = await db.execute(
         """SELECT p.*, u.nickname AS author_nickname, u.avatar_url,
@@ -159,7 +174,9 @@ async def get_post(post_id: int):
     row = await cur.fetchone()
     if not row:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Post not found")
-    return _post_row_to_out(row, set())
+    viewer_id = user["id"] if user else None
+    is_admin_flag = await _is_admin(viewer_id) if viewer_id else False
+    return _post_row_to_out(row, set(), viewer_id=viewer_id, is_admin=is_admin_flag)
 
 
 @router.post("", response_model=PostOut, status_code=status.HTTP_201_CREATED)
@@ -178,10 +195,14 @@ async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
     )
     now = datetime.now(timezone.utc).isoformat()
 
+    is_anonymous = body.is_anonymous
+    if body.category == "treehole":
+        is_anonymous = True
+
     cur = await db.execute(
-        """INSERT INTO posts (author_id, title, content, category, parent_post_id, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?)""",
-        (user["id"], safe["title"], safe["content"], safe["category"], body.parent_post_id, now, now),
+        """INSERT INTO posts (author_id, title, content, category, parent_post_id, is_anonymous, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        (user["id"], safe["title"], safe["content"], safe["category"], body.parent_post_id, int(is_anonymous), now, now),
     )
     await db.commit()
 
@@ -199,7 +220,8 @@ async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
         (post_id,),
     )
     row = await cur.fetchone()
-    return _post_row_to_out(row, {post_id})
+    is_admin_flag = await _is_admin(user["id"])
+    return _post_row_to_out(row, {post_id}, viewer_id=user["id"], is_admin=is_admin_flag)
 
 
 @router.put("/{post_id}", response_model=PostOut)
@@ -246,7 +268,8 @@ async def update_post(
         (post_id,),
     )
     row = await cur.fetchone()
-    return _post_row_to_out(row, {post_id})
+    is_admin_flag = await _is_admin(user["id"])
+    return _post_row_to_out(row, {post_id}, viewer_id=user["id"], is_admin=is_admin_flag)
 
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -256,7 +279,8 @@ async def delete_post(post_id: int, user: dict = Depends(get_current_user)):
     row = await cur.fetchone()
     if not row:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Post not found")
-    if row["author_id"] != user["id"]:
+    is_admin_flag = await _is_admin(user["id"])
+    if row["author_id"] != user["id"] and not is_admin_flag:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your post")
 
     await db.execute("DELETE FROM post_likes WHERE post_id = ?", (post_id,))
@@ -313,7 +337,9 @@ async def toggle_like(post_id: int, user: dict = Depends(get_current_user)):
     )
     row = await cur.fetchone()
     now_liked = not already_liked
-    return _post_row_to_out(row, {post_id} if now_liked else set())
+    is_admin_flag = await _is_admin(user["id"])
+    return _post_row_to_out(row, {post_id} if now_liked else set(),
+                            viewer_id=user["id"], is_admin=is_admin_flag)
 
 
 # ── Comments ─────────────────────────────────────────────────────────────────
