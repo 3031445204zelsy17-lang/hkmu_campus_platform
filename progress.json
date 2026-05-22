@@ -127,8 +127,8 @@
       "description": "校对所有已有的三语翻译，修正错误和不自然的表述",
       "module": "i18n",
       "dependencies": [],
-      "passes": false,
-      "files": ["frontend/js/utils/i18n.js"]
+      "passes": true,
+      "files": ["frontend/js/utils/i18n.js", "frontend/js/pages/planner.js", "frontend/js/pages/messages.js"]
     }
   ]
 }
