@@ -221,7 +221,7 @@ async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
     )
     row = await cur.fetchone()
     is_admin_flag = await _is_admin(user["id"])
-    return _post_row_to_out(row, {post_id}, viewer_id=user["id"], is_admin=is_admin_flag)
+    return _post_row_to_out(row, set(), viewer_id=user["id"], is_admin=is_admin_flag)
 
 
 @router.put("/{post_id}", response_model=PostOut)
@@ -269,7 +269,7 @@ async def update_post(
     )
     row = await cur.fetchone()
     is_admin_flag = await _is_admin(user["id"])
-    return _post_row_to_out(row, {post_id}, viewer_id=user["id"], is_admin=is_admin_flag)
+    return _post_row_to_out(row, set(), viewer_id=user["id"], is_admin=is_admin_flag)
 
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)

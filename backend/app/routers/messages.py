@@ -8,6 +8,7 @@ from ..models import MessageCreate, MessageOut, ConversationOut
 from ..services.auth_service import get_current_user, decode_access_token
 from ..services.rate_limiter import check_rate_limit
 from ..services.websocket_manager import manager
+from ..services.sanitizer import sanitize
 
 router = APIRouter(prefix="/messages", tags=["messages"])
 
@@ -133,7 +134,7 @@ async def send_message(
     now = datetime.now(timezone.utc).isoformat()
     cur = await db.execute(
         "INSERT INTO messages (sender_id, receiver_id, content, created_at) VALUES (?, ?, ?, ?)",
-        (user["id"], partner_id, body.content, now),
+        (user["id"], partner_id, sanitize(body.content), now),
     )
     await db.commit()
     msg_id = cur.lastrowid
@@ -257,7 +258,7 @@ async def ws_endpoint(ws: WebSocket):
                 now = datetime.now(timezone.utc).isoformat()
                 cur = await db.execute(
                     "INSERT INTO messages (sender_id, receiver_id, content, created_at) VALUES (?, ?, ?, ?)",
-                    (user_id, receiver_id, content, now),
+                    (user_id, receiver_id, sanitize(content), now),
                 )
                 await db.commit()
                 msg_id = cur.lastrowid

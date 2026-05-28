@@ -32,6 +32,35 @@ register("/messages", renderMessages, { auth: true });
 register("/reset-password", renderResetPassword);
 register("/verify-email", renderVerifyEmail);
 
+// --- Email login form — event delegation (form may not exist yet when modal opens) ---
+document.addEventListener("submit", async (e) => {
+  if (!e.target.matches("#email-login-form")) return;
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd.entries());
+
+  try {
+    document.getElementById("email-auth-error").classList.add("hidden");
+    const result = await request("POST", "/auth/email/login", {
+      email: data.email,
+      password: data.password,
+    });
+    setToken(result.access_token);
+    if (result.refresh_token) setRefreshToken(result.refresh_token);
+    closeModal();
+    identify(result.user_id || result.id);
+    track("user_logged_in", { method: "email" });
+  } catch (err) {
+    const el = document.getElementById("email-auth-error");
+    if (err.message === "email_not_verified") {
+      el.textContent = t("auth.email_not_verified");
+    } else {
+      el.textContent = err.message;
+    }
+    el.classList.remove("hidden");
+  }
+});
+
 // --- Auth modal ---
 function showAuthModal(mode = "login") {
   const isLogin = mode === "login";
@@ -172,39 +201,6 @@ function showAuthModal(mode = "login") {
         }
       } catch (err) {
         const el = document.getElementById("auth-error");
-        if (err.message === "email_not_verified") {
-          el.textContent = t("auth.email_not_verified");
-        } else {
-          el.textContent = err.message;
-        }
-        el.classList.remove("hidden");
-      }
-    });
-  }
-
-  // Email login form
-  const emailForm = document.getElementById("email-login-form");
-  if (emailForm) {
-    emailForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const fd = new FormData(e.target);
-      const data = Object.fromEntries(fd.entries());
-
-      try {
-        document.getElementById("email-auth-error").classList.add("hidden");
-
-        const result = await request("POST", "/auth/email/login", {
-          email: data.email,
-          password: data.password,
-        });
-
-        setToken(result.access_token);
-        if (result.refresh_token) setRefreshToken(result.refresh_token);
-        closeModal();
-        identify(result.user_id || result.id);
-        track("user_logged_in", { method: "email" });
-      } catch (err) {
-        const el = document.getElementById("email-auth-error");
         if (err.message === "email_not_verified") {
           el.textContent = t("auth.email_not_verified");
         } else {

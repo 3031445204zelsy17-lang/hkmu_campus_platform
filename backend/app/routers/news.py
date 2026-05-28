@@ -10,6 +10,13 @@ from ..services.sanitizer import sanitize
 router = APIRouter(prefix="/news", tags=["news"])
 
 
+async def _is_admin(user_id: int) -> bool:
+    db = await get_db()
+    cur = await db.execute("SELECT identity FROM users WHERE id = ?", (user_id,))
+    row = await cur.fetchone()
+    return row is not None and row["identity"] == "admin"
+
+
 @router.get("", response_model=PaginatedResponse)
 async def list_news(
     page: int = Query(1, ge=1),
@@ -65,6 +72,8 @@ async def create_news(
     user: dict = Depends(get_current_user),
 ):
     check_rate_limit(f"news:{user['id']}", max_requests=10, window_seconds=60)
+    if not await _is_admin(user["id"]):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Admin only")
     db = await get_db()
     now = datetime.now(timezone.utc).isoformat()
 
@@ -96,7 +105,8 @@ async def delete_news(
     row = await cur.fetchone()
     if not row:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "News not found")
-    if row["author_id"] != user["id"]:
+    is_admin = await _is_admin(user["id"])
+    if row["author_id"] != user["id"] and not is_admin:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your news")
 
     await db.execute("DELETE FROM news WHERE id = ?", (news_id,))

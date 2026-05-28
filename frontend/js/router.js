@@ -36,6 +36,13 @@ function _resolve() {
   renderNav();
   window.dispatchEvent(new CustomEvent("analytics:page_view", { detail: { path } }));
 
+  // Clear previous page content before rendering new page
+  const app = document.getElementById("app-content");
+  if (app) {
+    app.innerHTML = "";
+    app.removeAttribute("data-page");
+  }
+
   // exact match first
   if (routes[path]) {
     if (_guard(path)) {

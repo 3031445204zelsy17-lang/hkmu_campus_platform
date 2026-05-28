@@ -133,7 +133,7 @@ class QuotedPostOut(BaseModel):
 
 class PostOut(BaseModel):
     id: int
-    author_id: int
+    author_id: Optional[int]
     title: str
     content: str
     category: str

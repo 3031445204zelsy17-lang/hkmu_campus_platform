@@ -23,6 +23,12 @@ let _state = {
 
 let _fabContainer = null;
 
+function escapeHtml(str) {
+  const d = document.createElement("div");
+  d.textContent = str;
+  return d.innerHTML;
+}
+
 // Clean up FAB when navigating away from community
 window.addEventListener("hashchange", () => {
   if (!location.hash.startsWith("#/community")) _cleanupFab();
@@ -688,7 +694,7 @@ function _shareViaDM(post) {
           const row = document.createElement("button");
           row.type = "button";
           row.className = "flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-50 transition-colors text-left";
-          row.innerHTML = `<span class="font-medium text-sm">${u.nickname || u.username}</span>`;
+          row.innerHTML = `<span class="font-medium text-sm">${escapeHtml(u.nickname || u.username)}</span>`;
           row.addEventListener("click", async () => {
             try {
               const msgContent = `[${t("community.quoted_post")}] ${post.title}\n${post.content.slice(0, 100)}${post.content.length > 100 ? "..." : ""}\n${window.location.origin}${window.location.pathname}#/community?post=${post.id}`;
