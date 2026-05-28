@@ -124,6 +124,92 @@
 
 /* ── Mobile responsive ── */
 
+/* Liquid glass controls */
+[data-page="planner"] .planner-tabs-wrap,
+[data-page="planner"] .section-card,
+[data-page="planner"] .template-tip,
+[data-page="planner"] .course-card,
+[data-page="planner"] .feature-card {
+  border: 1px solid rgba(46, 125, 82, 0.12);
+  background: var(--glass-surface);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(20px) saturate(1.18);
+  -webkit-backdrop-filter: blur(20px) saturate(1.18);
+}
+
+[data-page="planner"] .planner-tabs-wrap {
+  gap: 6px;
+  padding: 6px;
+  border-bottom: 0 !important;
+  border-radius: 24px;
+}
+
+[data-page="planner"] .planner-tab {
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: transparent;
+}
+
+[data-page="planner"] .planner-tab:hover {
+  color: var(--color-primary-dark);
+  background: rgba(255, 255, 255, 0.46);
+}
+
+[data-page="planner"] .planner-tab.tab-active {
+  border-color: rgba(255, 255, 255, 0.32);
+  background: var(--glass-brand);
+  color: #ffffff;
+  box-shadow: 0 16px 36px rgba(46, 125, 82, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+[data-page="planner"] .template-tip {
+  border-left-color: rgba(0, 102, 204, 0.42);
+}
+
+[data-page="planner"] .course-card select,
+[data-page="planner"] #course-search,
+[data-page="planner"] #course-year-filter,
+[data-page="planner"] #course-cat-filter {
+  min-height: 42px;
+  border-radius: 16px;
+  background: var(--glass-surface-soft);
+}
+
+[data-page="planner"] .animated-gradient button {
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff !important;
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.14),
+              inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+
+[data-page="planner"] .animated-gradient button:first-child {
+  background: rgba(255, 255, 255, 0.86) !important;
+  color: var(--color-primary-dark) !important;
+}
+
+[data-page="planner"] .planner-sem-tabs button {
+  border: 1px solid rgba(46, 125, 82, 0.14);
+  background: var(--glass-surface-soft) !important;
+  color: var(--text-secondary) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+[data-page="planner"] .planner-sem-tabs button.bg-blue-600,
+[data-page="planner"] .planner-sem-tabs button.text-white {
+  border-color: rgba(255, 255, 255, 0.32);
+  background: var(--glass-brand) !important;
+  color: #ffffff !important;
+  box-shadow: 0 16px 36px rgba(46, 125, 82, 0.18),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
 @media (max-width: 768px) {
   [data-page="planner"] .planner-tabs-wrap {
     overflow-x: auto;
@@ -132,6 +218,9 @@
   }
   [data-page="planner"] .planner-tabs-wrap::-webkit-scrollbar {
     display: none;
+  }
+  [data-page="planner"] .planner-tab {
+    white-space: nowrap;
   }
   [data-page="planner"] .course-card {
     padding: 1rem;
@@ -152,6 +241,10 @@
 }
 
 @media (max-width: 480px) {
+  [data-page="planner"] {
+    overflow-x: hidden;
+  }
+
   [data-page="planner"] .planner-tab {
     font-size: 0.75rem;
     padding: 0.625rem 0.75rem;
@@ -177,6 +270,7 @@
   }
   [data-page="planner"] .section-card {
     padding: 1rem;
+    border-radius: 0.875rem;
   }
 }
 

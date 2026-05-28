@@ -1,0 +1,17 @@
+{
+  "appid": "touristappid",
+  "projectname": "hkmu-campus-miniprogram",
+  "description": "HKMU Campus Platform mini program client",
+  "miniprogramRoot": "./",
+  "compileType": "miniprogram",
+  "libVersion": "trial",
+  "setting": {
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "enhance": true,
+    "packNpmManually": false,
+    "urlCheck": false
+  },
+  "simulatorType": "wechat"
+}

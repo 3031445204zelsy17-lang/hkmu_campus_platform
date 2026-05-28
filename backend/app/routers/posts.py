@@ -3,20 +3,20 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordBearer
 
 from ..database import get_db
-from ..config import HOT_GRAVITY, HOT_SEED
 from ..models import (
-    PostCreate, PostUpdate, PostOut, QuotedPostOut,
+    PostCreate, PostUpdate, PostOut,
     CommentCreate, CommentOut,
     PaginatedResponse,
 )
-from ..services.auth_service import get_current_user, oauth2_scheme
-from fastapi.security import OAuth2PasswordBearer
-
-_optional_oauth2 = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
+from ..services.auth_service import get_current_user
 from ..services.rate_limiter import check_rate_limit
 from ..services.sanitizer import sanitize_dict
 
 router = APIRouter(prefix="/posts", tags=["posts"])
+optional_oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/api/v1/auth/login",
+    auto_error=False,
+)
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -33,31 +33,10 @@ async def _batch_liked_set(post_ids: list[int], user_id: int) -> set[int]:
     return {r["post_id"] for r in await cur.fetchall()}
 
 
-async def _is_admin(user_id: int) -> bool:
-    db = await get_db()
-    cur = await db.execute("SELECT identity FROM users WHERE id = ?", (user_id,))
-    row = await cur.fetchone()
-    return row is not None and row["identity"] == "admin"
-
-
-def _post_row_to_out(row, liked_set: set[int] | None = None,
-                     viewer_id: int | None = None, is_admin: bool = False) -> PostOut:
-    quoted = None
-    if row["parent_post_id"]:
-        quoted = QuotedPostOut(
-            id=row["parent_id"],
-            author_nickname=row["parent_author"] if "parent_author" in row.keys() else None,
-            title=row["parent_title"],
-            content_preview=(row["parent_content"] or "")[:150],
-            created_at=row["parent_created"] if "parent_created" in row.keys() else None,
-        )
-    is_anon = bool(row["is_anonymous"]) if "is_anonymous" in row.keys() else False
-    show_author = True
-    if is_anon:
-        show_author = is_admin or (viewer_id is not None and row["author_id"] == viewer_id)
+def _post_row_to_out(row, liked_set: set[int] | None = None) -> PostOut:
     return PostOut(
         id=row["id"],
-        author_id=row["author_id"] if show_author else None,
+        author_id=row["author_id"],
         title=row["title"],
         content=row["content"],
         category=row["category"],
@@ -65,18 +44,15 @@ def _post_row_to_out(row, liked_set: set[int] | None = None,
         comments_count=row["comments_count"],
         created_at=row["created_at"],
         updated_at=row["updated_at"],
-        author_nickname=row["author_nickname"] if show_author else None,
-        author_avatar=row["avatar_url"] if show_author else None,
+        author_nickname=row["author_nickname"],
+        author_avatar=row["avatar_url"],
         is_liked=row["id"] in liked_set if liked_set else False,
-        parent_post_id=row["parent_post_id"],
-        quoted_post=quoted,
-        is_anonymous=is_anon,
     )
 
 
 # ── Posts CRUD ───────────────────────────────────────────────────────────────
 
-async def _get_optional_user(token: str | None = Depends(_optional_oauth2)) -> dict | None:
+async def _get_optional_user(token: str | None = Depends(optional_oauth2_scheme)) -> dict | None:
     if not token:
         return None
     try:
@@ -108,15 +84,9 @@ async def list_posts(
     where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
 
     if sort == "hot":
-        order = (
-            "(LN(MAX(1, p.likes_count + p.comments_count * 2))"
-            " + ? - ((JULIANDAY('now') - JULIANDAY(p.created_at)) * 24) / ?)"
-            " DESC, p.created_at DESC"
-        )
-        hot_params = [HOT_SEED, HOT_GRAVITY]
+        order = "p.likes_count DESC, p.created_at DESC"
     else:
         order = "p.created_at DESC"
-        hot_params = []
 
     # total
     cur = await db.execute(
@@ -126,29 +96,22 @@ async def list_posts(
 
     # data
     cur = await db.execute(
-        f"""SELECT p.*, u.nickname AS author_nickname, u.avatar_url,
-               pp.id AS parent_id, pp.title AS parent_title,
-               pp.content AS parent_content, pp.created_at AS parent_created,
-               pu.nickname AS parent_author
+        f"""SELECT p.*, u.nickname AS author_nickname, u.avatar_url
             FROM posts p
             JOIN users u ON u.id = p.author_id
-            LEFT JOIN posts pp ON pp.id = p.parent_post_id
-            LEFT JOIN users pu ON pu.id = pp.author_id
             {where}
             ORDER BY {order}
             LIMIT ? OFFSET ?""",
-        hot_params + params + [page_size, offset],
+        params + [page_size, offset],
     )
     rows = await cur.fetchall()
 
     # batch like check (1 query instead of N)
     liked_set: set[int] = set()
-    viewer_id = user["id"] if user else None
-    is_admin_flag = await _is_admin(viewer_id) if viewer_id else False
     if user and rows:
         liked_set = await _batch_liked_set([r["id"] for r in rows], user["id"])
 
-    items = [_post_row_to_out(r, liked_set, viewer_id=viewer_id, is_admin=is_admin_flag).model_dump() for r in rows]
+    items = [_post_row_to_out(r, liked_set).model_dump() for r in rows]
 
     return PaginatedResponse(
         items=items, total=total, page=page,
@@ -157,71 +120,47 @@ async def list_posts(
 
 
 @router.get("/{post_id}", response_model=PostOut)
-async def get_post(post_id: int, user: dict | None = Depends(_get_optional_user)):
+async def get_post(post_id: int):
     db = await get_db()
     cur = await db.execute(
-        """SELECT p.*, u.nickname AS author_nickname, u.avatar_url,
-               pp.id AS parent_id, pp.title AS parent_title,
-               pp.content AS parent_content, pp.created_at AS parent_created,
-               pu.nickname AS parent_author
+        """SELECT p.*, u.nickname AS author_nickname, u.avatar_url
            FROM posts p
            JOIN users u ON u.id = p.author_id
-           LEFT JOIN posts pp ON pp.id = p.parent_post_id
-           LEFT JOIN users pu ON pu.id = pp.author_id
            WHERE p.id = ?""",
         (post_id,),
     )
     row = await cur.fetchone()
     if not row:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Post not found")
-    viewer_id = user["id"] if user else None
-    is_admin_flag = await _is_admin(viewer_id) if viewer_id else False
-    return _post_row_to_out(row, set(), viewer_id=viewer_id, is_admin=is_admin_flag)
+    return await _post_row_to_out(row, set())
 
 
 @router.post("", response_model=PostOut, status_code=status.HTTP_201_CREATED)
 async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
     check_rate_limit(f"post:{user['id']}", max_requests=10, window_seconds=60)
     db = await get_db()
-
-    if body.parent_post_id:
-        cur = await db.execute("SELECT id FROM posts WHERE id = ?", (body.parent_post_id,))
-        if not await cur.fetchone():
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Original post not found")
-
     safe = sanitize_dict(
         {"title": body.title, "content": body.content, "category": body.category},
         "title", "content", "category",
     )
     now = datetime.now(timezone.utc).isoformat()
 
-    is_anonymous = body.is_anonymous
-    if body.category == "treehole":
-        is_anonymous = True
-
     cur = await db.execute(
-        """INSERT INTO posts (author_id, title, content, category, parent_post_id, is_anonymous, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-        (user["id"], safe["title"], safe["content"], safe["category"], body.parent_post_id, int(is_anonymous), now, now),
+        """INSERT INTO posts (author_id, title, content, category, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        (user["id"], safe["title"], safe["content"], safe["category"], now, now),
     )
     await db.commit()
 
     post_id = cur.lastrowid
     cur = await db.execute(
-        """SELECT p.*, u.nickname AS author_nickname, u.avatar_url,
-               pp.id AS parent_id, pp.title AS parent_title,
-               pp.content AS parent_content, pp.created_at AS parent_created,
-               pu.nickname AS parent_author
-           FROM posts p
-           JOIN users u ON u.id = p.author_id
-           LEFT JOIN posts pp ON pp.id = p.parent_post_id
-           LEFT JOIN users pu ON pu.id = pp.author_id
+        """SELECT p.*, u.nickname AS author_nickname, u.avatar_url
+           FROM posts p JOIN users u ON u.id = p.author_id
            WHERE p.id = ?""",
         (post_id,),
     )
     row = await cur.fetchone()
-    is_admin_flag = await _is_admin(user["id"])
-    return _post_row_to_out(row, set(), viewer_id=user["id"], is_admin=is_admin_flag)
+    return await _post_row_to_out(row, {post_id})
 
 
 @router.put("/{post_id}", response_model=PostOut)
@@ -257,19 +196,13 @@ async def update_post(
     await db.commit()
 
     cur = await db.execute(
-        """SELECT p.*, u.nickname AS author_nickname, u.avatar_url,
-               pp.id AS parent_id, pp.title AS parent_title,
-               pp.content AS parent_content, pp.created_at AS parent_created,
-               pu.nickname AS parent_author
+        """SELECT p.*, u.nickname AS author_nickname, u.avatar_url
            FROM posts p JOIN users u ON u.id = p.author_id
-           LEFT JOIN posts pp ON pp.id = p.parent_post_id
-           LEFT JOIN users pu ON pu.id = pp.author_id
            WHERE p.id = ?""",
         (post_id,),
     )
     row = await cur.fetchone()
-    is_admin_flag = await _is_admin(user["id"])
-    return _post_row_to_out(row, set(), viewer_id=user["id"], is_admin=is_admin_flag)
+    return await _post_row_to_out(row, {post_id})
 
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -279,8 +212,7 @@ async def delete_post(post_id: int, user: dict = Depends(get_current_user)):
     row = await cur.fetchone()
     if not row:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Post not found")
-    is_admin_flag = await _is_admin(user["id"])
-    if row["author_id"] != user["id"] and not is_admin_flag:
+    if row["author_id"] != user["id"]:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your post")
 
     await db.execute("DELETE FROM post_likes WHERE post_id = ?", (post_id,))
@@ -325,21 +257,14 @@ async def toggle_like(post_id: int, user: dict = Depends(get_current_user)):
     await db.commit()
 
     cur = await db.execute(
-        """SELECT p.*, u.nickname AS author_nickname, u.avatar_url,
-               pp.id AS parent_id, pp.title AS parent_title,
-               pp.content AS parent_content, pp.created_at AS parent_created,
-               pu.nickname AS parent_author
+        """SELECT p.*, u.nickname AS author_nickname, u.avatar_url
            FROM posts p JOIN users u ON u.id = p.author_id
-           LEFT JOIN posts pp ON pp.id = p.parent_post_id
-           LEFT JOIN users pu ON pu.id = pp.author_id
            WHERE p.id = ?""",
         (post_id,),
     )
     row = await cur.fetchone()
     now_liked = not already_liked
-    is_admin_flag = await _is_admin(user["id"])
-    return _post_row_to_out(row, {post_id} if now_liked else set(),
-                            viewer_id=user["id"], is_admin=is_admin_flag)
+    return await _post_row_to_out(row, {post_id} if now_liked else set())
 
 
 # ── Comments ─────────────────────────────────────────────────────────────────

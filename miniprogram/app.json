@@ -1,0 +1,43 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/compose/compose",
+    "pages/news/news",
+    "pages/lostfound/lostfound",
+    "pages/profile/profile",
+    "pages/login/login"
+  ],
+  "window": {
+    "navigationBarTitleText": "HKMU Campus",
+    "navigationBarBackgroundColor": "#f4f2ec",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f4f2ec",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#6c7068",
+    "selectedColor": "#111813",
+    "backgroundColor": "#fffaf0",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "动态"
+      },
+      {
+        "pagePath": "pages/news/news",
+        "text": "发现"
+      },
+      {
+        "pagePath": "pages/lostfound/lostfound",
+        "text": "互助"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

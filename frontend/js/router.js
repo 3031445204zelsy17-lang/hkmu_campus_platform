@@ -1,11 +1,10 @@
 import { isLoggedIn } from "./api.js";
 import { t } from "./utils/i18n.js";
 import { showToast } from "./components/toast.js";
-import { renderNav } from "./components/nav.js";
 
 const routes = {};
 const routeOptions = {};
-let _currentHash = null;
+let _currentPath = null;
 
 export function register(path, handler, options = {}) {
   routes[path] = handler;
@@ -22,7 +21,7 @@ export function start() {
 }
 
 export function forceResolve() {
-  _currentHash = null;
+  _currentPath = null;
   _resolve();
 }
 
@@ -30,18 +29,8 @@ function _resolve() {
   const hash = window.location.hash || "#/";
   const path = hash.slice(1).split("?")[0];
 
-  if (hash === _currentHash) return;
-  _currentHash = hash;
-
-  renderNav();
-  window.dispatchEvent(new CustomEvent("analytics:page_view", { detail: { path } }));
-
-  // Clear previous page content before rendering new page
-  const app = document.getElementById("app-content");
-  if (app) {
-    app.innerHTML = "";
-    app.removeAttribute("data-page");
-  }
+  if (path === _currentPath) return;
+  _currentPath = path;
 
   // exact match first
   if (routes[path]) {
@@ -63,6 +52,7 @@ function _resolve() {
   }
 
   // 404 fallback
+  const app = document.getElementById("app-content");
   app.innerHTML = `
     <div class="flex flex-col items-center justify-center py-24 text-center">
       <h1 class="text-6xl font-bold text-gray-300 mb-4">404</h1>
@@ -76,7 +66,7 @@ function _guard(pattern) {
   const opts = routeOptions[pattern];
   if (opts?.auth && !isLoggedIn()) {
     showToast(t("auth.login_required"), "warning");
-    _currentHash = null;
+    _currentPath = null;
     navigate("/");
     return false;
   }

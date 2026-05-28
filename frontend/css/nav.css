@@ -1,19 +1,88 @@
+/* Shared component styles — Toast, Skeleton, Modal overrides */
+#toast-container > div {
+  max-width: 320px;
+}
+
+/* ── App Navigation ───────────────────────────────────────────────────── */
+
+#app-nav > div {
+  min-height: 64px;
+}
+
+#nav-links {
+  gap: 6px;
+}
+
+.mobile-account-action {
+  display: none;
+}
+
+.app-nav-item,
+.app-nav-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.app-nav-item:hover,
+.app-nav-control:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+}
+
+.app-nav-item.is-active,
+.app-nav-login {
+  background: #ffffff;
+  color: #2E7D52 !important;
+}
+
+.app-nav-utility {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+.app-nav-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.app-lang-wrap {
+  position: relative;
+  margin-left: 4px;
+}
+
+.app-lang-btn,
+.app-nav-theme {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.12);
+}
+
 /* ── Hamburger Button ─────────────────────────────────────────────────── */
 
 .hamburger-btn {
-  background: transparent;
+  background: #0066CC;
   border: none;
-  color: var(--text-on-primary);
+  color: #ffffff;
   cursor: pointer;
-  padding: 6px;
+  padding: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 999px;
   transition: all 0.3s ease;
+  box-shadow: 0 10px 22px rgba(0, 102, 204, 0.22);
 }
 .hamburger-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: #004F9E;
 }
 
 /* ── Brand Logo ───────────────────────────────────────────────────────── */
@@ -23,12 +92,13 @@
   align-items: center;
 }
 .brand-logo {
-  height: 36px;
+  height: 34px;
   object-fit: contain;
-  background: var(--bg-card);
-  padding: 4px 8px;
-  border-radius: 8px;
-  box-shadow: var(--shadow-sm);
+  background: #ffffff;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 14px;
+  box-shadow: 0 8px 18px rgba(17, 24, 19, 0.08);
 }
 
 /* ── Sidebar Overlay ──────────────────────────────────────────────────── */
@@ -52,57 +122,81 @@
   pointer-events: auto;
 }
 
-/* ── App Sidebar (persistent sidebar) ─────────────────────────────────── */
+/* ── Drawer Sidebar ───────────────────────────────────────────────────── */
 
-.app-sidebar {
-  width: 240px;
-  min-width: 240px;
-  flex-shrink: 0;
-  background-color: var(--bg-glass);
+.drawer-sidebar {
+  width: 280px;
+  background-color: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-right: 1px solid var(--border-light);
-  padding: 20px 16px;
+  padding: 20px;
+  box-shadow: var(--shadow-lg);
+  position: fixed;
+  top: 64px;
+  left: -300px;
+  height: calc(100vh - 64px);
+  z-index: 999;
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border-radius: 0 16px 16px 0;
   overflow-y: auto;
 }
+.drawer-sidebar.open {
+  transform: translateX(300px);
+}
 
-/* Nav link common styles */
-.app-sidebar ul {
+/* Section title */
+.drawer-sidebar .sidebar-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 10px;
+  position: relative;
+}
+.drawer-sidebar .sidebar-section h3::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 50px;
+  height: 2px;
+  background-color: var(--color-primary-dark);
+  border-radius: 2px;
+}
+
+/* Category list */
+.drawer-sidebar ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-.app-sidebar ul li {
-  margin-bottom: 4px;
+.drawer-sidebar ul li {
+  margin-bottom: 6px;
 }
-.app-sidebar ul li a,
-.app-sidebar ul li button {
+.drawer-sidebar ul li a {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 12px 16px;
   text-decoration: none;
-  border-radius: 10px;
-  font-size: 14px;
+  border-radius: 12px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--text-secondary);
   background: transparent;
   border: 1px solid transparent;
-  width: 100%;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
-.app-sidebar ul li a:hover,
-.app-sidebar ul li button:hover {
+.drawer-sidebar ul li a:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
   border-color: var(--border-light);
-  transform: translateX(3px);
+  box-shadow: var(--shadow-sm);
+  transform: translateX(4px);
 }
-
-/* Active nav item (gradient + glass effect) */
-.app-sidebar ul li a.active,
-.app-sidebar ul li button.active {
+.drawer-sidebar ul li a.active {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.05));
   color: var(--color-primary);
   font-weight: 600;
@@ -113,144 +207,152 @@
   -webkit-backdrop-filter: blur(8px);
 }
 
-/* SVG icon styles */
-.app-sidebar ul li a svg,
-.app-sidebar ul li button svg {
-  width: 18px;
-  height: 18px;
+/* Sidebar icon styles (Lucide SVGs) */
+.drawer-sidebar ul li a svg {
+  width: 20px;
+  height: 20px;
   color: var(--text-faint);
-  transition: all 0.25s ease;
+  transition: all 0.3s ease;
 }
-.app-sidebar ul li a:hover svg,
-.app-sidebar ul li button:hover svg {
+.drawer-sidebar ul li a:hover svg {
   color: var(--color-primary-light);
-  transform: scale(1.05);
-}
-.app-sidebar ul li a.active svg,
-.app-sidebar ul li button.active svg {
-  color: var(--color-primary);
   transform: scale(1.1);
+}
+.drawer-sidebar ul li a.active svg {
+  color: var(--color-primary);
+  transform: scale(1.15);
   filter: drop-shadow(0 2px 4px rgba(37, 99, 235, 0.3));
 }
 
-/* Sidebar divider */
-.sidebar-divider {
-  height: 1px;
-  background: var(--border-light);
-  margin: 12px 0;
-}
+/* ── Responsive ───────────────────────────────────────────────────────── */
 
-/* Sidebar auth section */
-.sidebar-auth-item {
-  margin-top: 4px;
-}
-
-/* ── Accordion Submenu (community categories) ──────────────────────────── */
-
-.sidebar-subsection {
-  margin-top: 4px;
-  padding-left: 12px;
-  border-left: 2px solid var(--border-light);
-  margin-left: 16px;
-}
-.sidebar-subsection.hidden {
-  display: none;
-}
-.sidebar-subsection ul li a {
-  padding: 8px 12px;
-  font-size: 13px;
-  gap: 8px;
-}
-.sidebar-subsection ul li a svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* ── Top Nav Utilities ─────────────────────────────────────────────────── */
-
-#nav-utilities button,
-#nav-utilities .lang-btn {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--text-on-primary);
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-size: 13px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  transition: background 0.2s;
-}
-#nav-utilities button:hover,
-#nav-utilities .lang-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-/* Language dropdown in top bar */
-#nav-utilities .lang-wrap {
-  position: relative;
-}
-#nav-utilities .lang-menu {
-  position: absolute;
-  right: 0;
-  top: 100%;
-  margin-top: 4px;
-  border-radius: 8px;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--border-color);
-  padding: 4px 0;
-  z-index: 50;
-  min-width: 120px;
-  background: var(--bg-card);
-}
-#nav-utilities .lang-menu.hidden {
-  display: none;
-}
-#nav-utilities .lang-menu button {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  padding: 6px 12px;
-  text-align: left;
-  width: 100%;
-  font-size: 13px;
-  cursor: pointer;
-}
-#nav-utilities .lang-menu button:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-/* ── Desktop: persistent sidebar ───────────────────────────────────────── */
-
-@media (min-width: 768px) {
-  .app-sidebar {
-    position: sticky;
-    top: 56px;
-    height: calc(100vh - 56px);
+@media (max-width: 768px) {
+  #app-nav {
+    top: 0;
+    width: 100%;
+    margin: 0;
+    border-radius: 0 0 22px 22px;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
-  .hamburger-btn.md\:hidden {
-    display: none !important;
+
+  #app-nav > div {
+    min-height: 58px;
+    padding: 7px 12px !important;
+    gap: 10px;
   }
-}
 
-/* ── Mobile: drawer mode ───────────────────────────────────────────────── */
+  #app-nav .brand-logo-link {
+    display: none;
+  }
 
-@media (max-width: 767px) {
-  .app-sidebar {
+  #app-nav .text-xl {
+    max-width: 170px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 18px !important;
+  }
+
+  .mobile-account-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.13);
+    color: #ffffff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  .mobile-account-action.is-active {
+    background: #ffffff;
+    color: #2E7D52;
+  }
+
+  #nav-links {
     position: fixed;
-    top: 56px;
-    left: -260px;
-    width: 240px;
-    height: calc(100vh - 56px);
-    z-index: 999;
-    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    border-radius: 0 16px 16px 0;
-    box-shadow: var(--shadow-lg);
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    z-index: 1100;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+    padding: 7px;
+    width: auto;
+    max-width: 430px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    overflow: hidden;
+    border: 1px solid rgba(17, 24, 19, 0.1);
+    border-radius: 26px;
+    background: linear-gradient(135deg, rgba(46, 125, 82, 0.97), rgba(120, 162, 47, 0.96));
+    box-shadow: 0 20px 50px rgba(46, 125, 82, 0.24);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    transform: translateZ(0);
   }
-  .app-sidebar.open {
-    transform: translateX(260px);
+
+  #nav-links .app-nav-item {
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    width: 100%;
+    min-height: 52px;
+    padding: 7px 3px;
+    border-radius: 18px;
+    font-size: 10.5px;
+    font-weight: 900;
+    line-height: 1.1;
+  }
+
+  #nav-links .app-nav-icon {
+    width: 19px;
+    height: 19px;
+  }
+
+  #nav-links .app-nav-item span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #nav-links .app-nav-item.is-active {
+    background: #ffffff;
+    color: #2E7D52 !important;
+  }
+
+  #nav-links .app-nav-utility,
+  #nav-links .app-nav-theme,
+  #nav-links .app-nav-login,
+  #nav-links .app-lang-wrap {
+    display: none;
+  }
+
+  #nav-links a[data-nav-path="/messages"],
+  #nav-links a[data-nav-path="/profile"] {
+    display: none;
+  }
+
+  .drawer-sidebar {
+    width: 260px;
+    left: -280px;
+    top: 82px;
+    height: calc(100vh - 82px);
+    border-radius: 0 24px 24px 0;
+  }
+  .drawer-sidebar.open {
+    transform: translateX(280px);
+  }
+  .drawer-sidebar ul li a {
+    padding: 10px 12px;
+    font-size: 14px;
   }
 }
 
@@ -262,5 +364,36 @@
   }
   .brand-logo {
     height: 30px;
+  }
+
+  #nav-links {
+    left: 10px;
+    right: 10px;
+    gap: 3px;
+    padding: 6px;
+    border-radius: 24px;
+  }
+
+  #nav-links .app-nav-item {
+    min-height: 50px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  #nav-links {
+    left: 8px;
+    right: 8px;
+  }
+
+  #nav-links .app-nav-item {
+    gap: 2px;
+    padding: 6px 2px;
+    font-size: 9.5px;
+  }
+
+  #nav-links .app-nav-icon {
+    width: 18px;
+    height: 18px;
   }
 }

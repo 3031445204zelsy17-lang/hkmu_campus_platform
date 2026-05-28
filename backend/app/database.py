@@ -48,8 +48,7 @@ async def init_db():
             likes_count INTEGER DEFAULT 0,
             comments_count INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            parent_post_id INTEGER REFERENCES posts(id) ON DELETE SET NULL
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS post_likes (
@@ -106,16 +105,7 @@ async def init_db():
             image_url TEXT,
             category TEXT,
             source_url TEXT NOT NULL,
-            published_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            comments_count INTEGER DEFAULT 0
-        );
-
-        CREATE TABLE IF NOT EXISTS news_comments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            news_id INTEGER NOT NULL REFERENCES news(id),
-            author_id INTEGER NOT NULL REFERENCES users(id),
-            content TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            published_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS lostfound (
@@ -160,23 +150,6 @@ async def init_db():
         CREATE INDEX IF NOT EXISTS idx_comments_author ON comments(author_id);
         CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
 
-        CREATE TABLE IF NOT EXISTS push_subscriptions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            endpoint TEXT NOT NULL,
-            p256dh_key TEXT NOT NULL,
-            auth_key TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_push_sub_endpoint
-            ON push_subscriptions(endpoint);
-        CREATE INDEX IF NOT EXISTS idx_push_sub_user
-            ON push_subscriptions(user_id);
-        CREATE INDEX IF NOT EXISTS idx_news_comments_news ON news_comments(news_id);
-        CREATE INDEX IF NOT EXISTS idx_news_comments_author ON news_comments(author_id);
-
         CREATE TABLE IF NOT EXISTS email_tokens (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL REFERENCES users(id),
@@ -213,17 +186,5 @@ async def init_db():
     news_cols = {row[1] for row in await cur.fetchall()}
     if "author_id" not in news_cols:
         await db.execute("ALTER TABLE news ADD COLUMN author_id INTEGER REFERENCES users(id)")
-    if "comments_count" not in news_cols:
-        await db.execute("ALTER TABLE news ADD COLUMN comments_count INTEGER DEFAULT 0")
-
-    # Migration: add parent_post_id to posts for repost/quote support
-    cur = await db.execute("PRAGMA table_info(posts)")
-    posts_cols = {row[1] for row in await cur.fetchall()}
-    if "parent_post_id" not in posts_cols:
-        await db.execute(
-            "ALTER TABLE posts ADD COLUMN parent_post_id INTEGER REFERENCES posts(id) ON DELETE SET NULL"
-        )
-    if "is_anonymous" not in posts_cols:
-        await db.execute("ALTER TABLE posts ADD COLUMN is_anonymous INTEGER DEFAULT 0")
 
     await db.commit()

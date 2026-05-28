@@ -1,6 +1,5 @@
-import re
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from typing import Optional
 
 
@@ -8,20 +7,9 @@ from typing import Optional
 
 class UserRegister(BaseModel):
     username: str = Field(min_length=3, max_length=30)
-    password: str = Field(min_length=8, max_length=128)
+    password: str = Field(min_length=6)
     nickname: str = Field(min_length=1, max_length=30)
     student_id: Optional[str] = None
-
-    @field_validator("password")
-    @classmethod
-    def password_strength(cls, v):
-        if not re.search(r'[A-Z]', v):
-            raise ValueError("Password must contain at least one uppercase letter")
-        if not re.search(r'[a-z]', v):
-            raise ValueError("Password must contain at least one lowercase letter")
-        if not re.search(r'\d', v):
-            raise ValueError("Password must contain at least one digit")
-        return v
 
 
 class UserLogin(BaseModel):
@@ -35,20 +23,9 @@ class GoogleLogin(BaseModel):
 
 class EmailRegister(BaseModel):
     email: str = Field(pattern=r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-    password: str = Field(min_length=8, max_length=128)
+    password: str = Field(min_length=6)
     nickname: str = Field(min_length=1, max_length=30)
     student_id: Optional[str] = None
-
-    @field_validator("password")
-    @classmethod
-    def password_strength(cls, v):
-        if not re.search(r'[A-Z]', v):
-            raise ValueError("Password must contain at least one uppercase letter")
-        if not re.search(r'[a-z]', v):
-            raise ValueError("Password must contain at least one lowercase letter")
-        if not re.search(r'\d', v):
-            raise ValueError("Password must contain at least one digit")
-        return v
 
 
 class EmailLogin(BaseModel):
@@ -62,18 +39,7 @@ class ForgotPassword(BaseModel):
 
 class ResetPassword(BaseModel):
     token: str = Field(min_length=1)
-    new_password: str = Field(min_length=8, max_length=128)
-
-    @field_validator("new_password")
-    @classmethod
-    def password_strength(cls, v):
-        if not re.search(r'[A-Z]', v):
-            raise ValueError("Password must contain at least one uppercase letter")
-        if not re.search(r'[a-z]', v):
-            raise ValueError("Password must contain at least one lowercase letter")
-        if not re.search(r'\d', v):
-            raise ValueError("Password must contain at least one digit")
-        return v
+    new_password: str = Field(min_length=6)
 
 
 class VerifyEmail(BaseModel):
@@ -113,8 +79,6 @@ class PostCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     content: str = Field(min_length=1, max_length=10000)
     category: str = Field(min_length=1, max_length=30)
-    parent_post_id: Optional[int] = None
-    is_anonymous: bool = False
 
 
 class PostUpdate(BaseModel):
@@ -123,17 +87,9 @@ class PostUpdate(BaseModel):
     category: Optional[str] = Field(None, max_length=30)
 
 
-class QuotedPostOut(BaseModel):
-    id: int
-    author_nickname: Optional[str] = None
-    title: str
-    content_preview: str
-    created_at: Optional[str] = None
-
-
 class PostOut(BaseModel):
     id: int
-    author_id: Optional[int]
+    author_id: int
     title: str
     content: str
     category: str
@@ -144,9 +100,6 @@ class PostOut(BaseModel):
     author_nickname: Optional[str] = None
     author_avatar: Optional[str] = None
     is_liked: bool = False
-    parent_post_id: Optional[int] = None
-    quoted_post: Optional[QuotedPostOut] = None
-    is_anonymous: bool = False
 
 
 # --- Comments ---
@@ -226,21 +179,6 @@ class NewsOut(BaseModel):
     category: Optional[str] = None
     source_url: str
     published_at: Optional[str] = None
-    comments_count: int = 0
-
-
-class NewsCommentCreate(BaseModel):
-    content: str = Field(min_length=1, max_length=2000)
-
-
-class NewsCommentOut(BaseModel):
-    id: int
-    news_id: int
-    author_id: int
-    content: str
-    created_at: Optional[str] = None
-    author_nickname: Optional[str] = None
-    author_avatar: Optional[str] = None
 
 
 # --- Lost & Found ---
@@ -306,9 +244,3 @@ class PaginatedResponse(BaseModel):
     page: int
     page_size: int
     has_next: bool
-
-
-# --- Push Notifications ---
-
-class PushSubscriptionIn(BaseModel):
-    subscription: dict

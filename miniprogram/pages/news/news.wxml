@@ -1,0 +1,55 @@
+<view class="page-shell">
+  <view class="top-bar tight">
+    <view class="brand-lockup">
+      <view class="eyebrow">DISCOVER</view>
+      <view class="app-title">发现</view>
+      <view class="subtitle">把校园新闻做成适合手机扫读的信息流。</view>
+    </view>
+  </view>
+
+  <view class="search-dock flat">
+    <view class="search-mark">#</view>
+    <input
+      class="search-input"
+      placeholder="搜索标题、摘要或分类"
+      value="{{keyword}}"
+      confirm-type="search"
+      bindinput="updateKeyword"
+    />
+    <view wx:if="{{keyword}}" class="text-link" bindtap="clearKeyword">清除</view>
+  </view>
+
+  <view wx:if="{{featuredItem}}" class="spotlight-card">
+    <view class="spotlight-kicker">{{featuredItem.category}} · {{featuredItem.publishedAtLabel}}</view>
+    <view class="spotlight-title">{{featuredItem.title}}</view>
+    <view class="spotlight-summary">{{featuredItem.summary}}</view>
+    <view class="spotlight-footer">
+      <view>{{featuredItem.sourceLabel}}</view>
+      <button data-url="{{featuredItem.sourceUrl}}" bindtap="copySourceLink">复制链接</button>
+    </view>
+  </view>
+
+  <view class="section-header">
+    <view>
+      <view class="section-title">继续阅读</view>
+      <view class="section-note">{{filteredItems.length}} 条内容</view>
+    </view>
+  </view>
+
+  <view wx:if="{{filteredItems.length === 0 && !loading}}" class="empty-state flat">
+    <view class="empty-title">没有匹配的新闻</view>
+    <view class="empty-copy">换个关键词，或下拉刷新试试。</view>
+  </view>
+
+  <view wx:for="{{listItems}}" wx:key="id" class="article-card">
+    <view class="article-meta">
+      <view class="mini-pill green">{{item.category}}</view>
+      <view class="mini-pill">{{item.publishedAtLabel}}</view>
+    </view>
+    <view class="article-title">{{item.title}}</view>
+    <view class="article-summary">{{item.summary}}</view>
+    <button class="inline-action" data-url="{{item.sourceUrl}}" bindtap="copySourceLink">复制原文链接</button>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-line">正在加载发现内容...</view>
+</view>

@@ -2,57 +2,48 @@
 # 由 scripts/sync-ownership.sh 从 module-registry.json 自动生成
 
 # 学术规划
-/backend/app/routers/courses.py @3031445204zelsy17-lang
-/frontend/js/pages/academic.js @3031445204zelsy17-lang
+/backend/app/routers/courses.py @[待分配]
+/frontend/js/pages/academic.js @[待分配]
 
 # 认证系统
-/backend/app/routers/auth.py @3031445204zelsy17-lang
-/backend/app/services/auth_service.py @3031445204zelsy17-lang
-/frontend/js/auth.js @3031445204zelsy17-lang
-/frontend/js/pages/auth.js @3031445204zelsy17-lang
+/backend/app/routers/auth.py @[待分配]
+/backend/app/services/auth_service.py @[待分配]
+/frontend/js/auth.js @[待分配]
+/frontend/js/pages/auth.js @[待分配]
 
 # 社区论坛
-/backend/app/routers/posts.py @3031445204zelsy17-lang
-/frontend/js/pages/community.js @3031445204zelsy17-lang
-
-# 部署与运维
-
-# 首页设计
-/frontend/js/pages/home.js @ryanST888
+/backend/app/routers/posts.py @[待分配]
+/frontend/js/pages/community.js @[待分配]
 
 # 国际化
-/frontend/js/utils/i18n.js @3031445204zelsy17-lang
+/frontend/js/utils/i18n.js @[待分配]
 
 # 失物招领
-/backend/app/routers/lostfound.py @3031445204zelsy17-lang
-/frontend/js/pages/lostfound.js @3031445204zelsy17-lang
+/backend/app/routers/lostfound.py @[待分配]
+/frontend/js/pages/lostfound.js @[待分配]
 
 # 私信系统
-/backend/app/routers/messages.py @3031445204zelsy17-lang
-/backend/app/services/websocket_manager.py @3031445204zelsy17-lang
-/frontend/js/pages/messaging.js @3031445204zelsy17-lang
+/backend/app/routers/messages.py @[待分配]
+/backend/app/services/websocket_manager.py @[待分配]
+/frontend/js/pages/messaging.js @[待分配]
 
 # 校园新闻
-/backend/app/routers/news.py @3031445204zelsy17-lang
-/frontend/js/pages/news.js @3031445204zelsy17-lang
-
-# 宣传网站
-
-# 测试
+/backend/app/routers/news.py @[待分配]
+/frontend/js/pages/news.js @[待分配]
 
 # 用户管理
-/backend/app/routers/users.py @3031445204zelsy17-lang
-/frontend/js/pages/profile.js @3031445204zelsy17-lang
+/backend/app/routers/users.py @[待分配]
+/frontend/js/pages/profile.js @[待分配]
 
 # 共享基础 — 需要全员 review
-/backend/app/main.py @3031445204zelsy17-lang @ryanST888 @BKPNC @panbaian8-svg
-/backend/app/database.py @3031445204zelsy17-lang @ryanST888 @BKPNC @panbaian8-svg
-/backend/app/models.py @3031445204zelsy17-lang @ryanST888 @BKPNC @panbaian8-svg
-/backend/app/config.py @3031445204zelsy17-lang @ryanST888 @BKPNC @panbaian8-svg
-/frontend/app.js @3031445204zelsy17-lang @ryanST888 @BKPNC @panbaian8-svg
-/frontend/router.js @3031445204zelsy17-lang @ryanST888 @BKPNC @panbaian8-svg
-/frontend/api.js @3031445204zelsy17-lang @ryanST888 @BKPNC @panbaian8-svg
-/frontend/components/ @3031445204zelsy17-lang @ryanST888 @BKPNC @panbaian8-svg
+/backend/app/main.py @[待分配]
+/backend/app/database.py @[待分配]
+/backend/app/models.py @[待分配]
+/backend/app/config.py @[待分配]
+/frontend/app.js @[待分配]
+/frontend/router.js @[待分配]
+/frontend/api.js @[待分配]
+/frontend/components/ @[待分配]
 
 # 默认
-* @3031445204zelsy17-lang @ryanST888 @BKPNC @panbaian8-svg
+* @[待分配]

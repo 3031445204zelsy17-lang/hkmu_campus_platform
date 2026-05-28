@@ -1,0 +1,86 @@
+<view class="page-shell feed-shell">
+  <view class="top-bar">
+    <view class="brand-lockup">
+      <view class="eyebrow">HKMU CAMPUS</view>
+      <view class="app-title">动态</view>
+    </view>
+    <button class="avatar-button" bindtap="goProfileOrLogin">
+      <image wx:if="{{user && user.avatar_url}}" src="{{user.avatar_url}}" mode="aspectFill" />
+      <view wx:else>{{userInitial}}</view>
+    </button>
+  </view>
+
+  <view class="compose-card" bindtap="goCompose">
+    <view class="compose-row">
+      <view class="avatar small">
+        <image wx:if="{{user && user.avatar_url}}" src="{{user.avatar_url}}" mode="aspectFill" />
+        <view wx:else>{{userInitial}}</view>
+      </view>
+      <view class="compose-placeholder">分享校园里的新鲜事...</view>
+      <view class="compose-submit">发布</view>
+    </view>
+  </view>
+
+  <view class="search-dock">
+    <view class="search-mark">#</view>
+    <input
+      class="search-input"
+      placeholder="搜索动态、课程、活动"
+      value="{{keyword}}"
+      confirm-type="search"
+      bindinput="updateKeyword"
+      bindconfirm="submitSearch"
+    />
+    <view wx:if="{{keyword}}" class="text-link" bindtap="clearSearch">清除</view>
+  </view>
+
+  <view class="segmented">
+    <view
+      wx:for="{{feedTabs}}"
+      wx:key="key"
+      class="{{item.className}}"
+      data-sort="{{item.key}}"
+      bindtap="switchSort"
+    >
+      {{item.label}}
+    </view>
+  </view>
+
+  <view wx:if="{{posts.length === 0 && !loading}}" class="empty-state">
+    <view class="empty-title">还没有动态</view>
+    <view class="empty-copy">登录后发第一条校园动态，让这里真正热起来。</view>
+  </view>
+
+  <view class="feed-list">
+    <view wx:for="{{posts}}" wx:key="id" class="feed-card">
+      <view class="feed-head">
+        <view class="avatar">
+          <image wx:if="{{item.authorAvatar}}" src="{{item.authorAvatar}}" mode="aspectFill" />
+          <view wx:else>{{item.authorInitial}}</view>
+        </view>
+        <view class="feed-main">
+          <view class="feed-author-row">
+            <view>
+              <view class="feed-author">{{item.authorName}}</view>
+              <view class="feed-meta">{{item.handle}} · {{item.createdAtLabel}}</view>
+            </view>
+            <view class="{{item.topicClass}}">{{item.category}}</view>
+          </view>
+          <view class="feed-title">{{item.title}}</view>
+          <view class="feed-body">{{item.content}}</view>
+          <view class="feed-actions">
+            <button class="{{item.likeClass}}" data-index="{{index}}" catchtap="toggleLike">
+              {{item.likeLabel}} 赞
+            </button>
+            <button class="feed-action" catchtap="openComments">
+              {{item.commentsLabel}} 评论
+            </button>
+            <button class="feed-action" catchtap="goCompose">转发想法</button>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-line">正在刷新动态...</view>
+</view>

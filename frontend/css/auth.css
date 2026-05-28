@@ -97,10 +97,63 @@
 
 /* ── Mobile responsive ── */
 
+/* Liquid glass controls */
+#modal-overlay > div,
+[data-page="auth-form"] {
+  border: 1px solid rgba(46, 125, 82, 0.12) !important;
+  background: var(--glass-surface) !important;
+  box-shadow: 0 28px 80px rgba(46, 125, 82, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.74) !important;
+  backdrop-filter: blur(22px) saturate(1.22);
+  -webkit-backdrop-filter: blur(22px) saturate(1.22);
+}
+
+#auth-form input,
+#email-login-form input,
+[data-page="auth-form"] input {
+  min-height: 44px;
+  border-radius: 18px;
+  background: var(--glass-surface-soft);
+}
+
+#auth-form button,
+#email-login-form button,
+[data-page="auth-form"] button {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px !important;
+  background: var(--glass-primary) !important;
+  color: #ffffff !important;
+  box-shadow: var(--glass-shadow-strong);
+}
+
+.auth-tab {
+  border: 1px solid rgba(46, 125, 82, 0.14);
+  border-radius: 999px;
+  background: var(--glass-surface-soft);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.auth-tab.active {
+  border-color: rgba(255, 255, 255, 0.32);
+  background: var(--glass-brand);
+  color: #ffffff;
+  box-shadow: 0 16px 36px rgba(46, 125, 82, 0.18),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.google-signin-btn {
+  border-radius: 999px;
+}
+
 @media (max-width: 480px) {
   #auth-form input {
     min-height: 44px;
     font-size: 16px; /* prevents iOS zoom */
+  }
+  #auth-form button,
+  #email-login-form button,
+  [data-page="auth-form"] button {
+    min-height: 44px;
   }
   .google-signin-btn {
     width: 100%;
