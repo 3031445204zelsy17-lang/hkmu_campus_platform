@@ -63,7 +63,6 @@ function _resolve() {
   }
 
   // 404 fallback
-  const app = document.getElementById("app-content");
   app.innerHTML = `
     <div class="flex flex-col items-center justify-center py-24 text-center">
       <h1 class="text-6xl font-bold text-gray-300 mb-4">404</h1>
