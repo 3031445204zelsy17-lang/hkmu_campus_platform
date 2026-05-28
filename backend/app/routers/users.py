@@ -10,7 +10,6 @@ from ..services.sanitizer import sanitize
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-ALLOWED_UPLOAD_EXT = {"jpg", "jpeg", "png", "gif", "webp"}
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "frontend", "assets", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -92,8 +91,6 @@ async def upload_avatar(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Image too large (max 2MB)")
 
     ext = file.filename.rsplit(".", 1)[-1] if file.filename and "." in file.filename else "png"
-    if ext.lower() not in ALLOWED_UPLOAD_EXT:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "File type not allowed")
     filename = f"{uuid.uuid4().hex}.{ext}"
     filepath = os.path.join(UPLOAD_DIR, filename)
 

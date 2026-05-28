@@ -4,13 +4,13 @@ import secrets
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from starlette.responses import Response
 import os
 
 from .database import init_db, close_db
 from .config import API_PREFIX, SECRET_KEY
-from .routers import auth, posts, courses, users, news, lostfound, messages, push
+from .routers import auth, posts, courses, users, news, lostfound, messages
 
 
 @asynccontextmanager
@@ -61,15 +61,19 @@ async def no_cache_dev(request: Request, call_next):
 # CSRF double-submit cookie
 CSRF_COOKIE = "csrf_token"
 CSRF_HEADER = "X-CSRF-Token"
+CLIENT_PLATFORM_HEADER = "X-Client-Platform"
+CSRF_BYPASS_CLIENTS = {"wechat-miniprogram"}
 SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
 
 
 @app.middleware("http")
 async def csrf_protect(request: Request, call_next):
-    # Set CSRF cookie on every response if not present
-    response: Response = await call_next(request)
+    client_platform = request.headers.get(CLIENT_PLATFORM_HEADER, "").strip().lower()
+    if client_platform in CSRF_BYPASS_CLIENTS:
+        return await call_next(request)
 
     if request.method in SAFE_METHODS:
+        response: Response = await call_next(request)
         cookie_val = request.cookies.get(CSRF_COOKIE)
         if not cookie_val:
             response.set_cookie(
@@ -81,13 +85,12 @@ async def csrf_protect(request: Request, call_next):
             )
         return response
 
-    # Mutating requests: validate header matches cookie
     cookie_val = request.cookies.get(CSRF_COOKIE)
     header_val = request.headers.get(CSRF_HEADER)
     if not cookie_val or not header_val or not secrets.compare_digest(cookie_val, header_val):
         return JSONResponse({"detail": "CSRF token missing or invalid"}, status_code=403)
 
-    return response
+    return await call_next(request)
 
 
 app.include_router(auth.router, prefix=API_PREFIX)
@@ -97,7 +100,6 @@ app.include_router(users.router, prefix=API_PREFIX)
 app.include_router(news.router, prefix=API_PREFIX)
 app.include_router(lostfound.router, prefix=API_PREFIX)
 app.include_router(messages.router, prefix=API_PREFIX)
-app.include_router(push.router, prefix=API_PREFIX)
 
 
 @app.get("/api/health")
@@ -106,5 +108,15 @@ async def health():
 
 
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
+
+
+@app.get("/stats", include_in_schema=False)
+async def stats_page():
+    index_path = os.path.join(frontend_path, "index.html")
+    if os.path.isfile(index_path):
+        return FileResponse(index_path)
+    return JSONResponse({"detail": "Frontend not found"}, status_code=404)
+
+
 if os.path.isdir(frontend_path):
     app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")

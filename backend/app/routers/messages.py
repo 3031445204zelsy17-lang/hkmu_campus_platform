@@ -8,7 +8,6 @@ from ..models import MessageCreate, MessageOut, ConversationOut
 from ..services.auth_service import get_current_user, decode_access_token
 from ..services.rate_limiter import check_rate_limit
 from ..services.websocket_manager import manager
-from ..services.sanitizer import sanitize
 
 router = APIRouter(prefix="/messages", tags=["messages"])
 
@@ -134,7 +133,7 @@ async def send_message(
     now = datetime.now(timezone.utc).isoformat()
     cur = await db.execute(
         "INSERT INTO messages (sender_id, receiver_id, content, created_at) VALUES (?, ?, ?, ?)",
-        (user["id"], partner_id, sanitize(body.content), now),
+        (user["id"], partner_id, body.content, now),
     )
     await db.commit()
     msg_id = cur.lastrowid
@@ -169,17 +168,6 @@ async def send_message(
         "is_read": False,
         "created_at": now,
     })
-
-    # Web Push notification if partner is offline
-    if not manager.is_online(partner_id):
-        from ..services.push_service import send_push_to_user
-        await send_push_to_user(partner_id, {
-            "type": "message",
-            "title": f"{user.get('username', 'Someone')} sent you a message",
-            "body": body.content[:100],
-            "url": "/#/messages",
-            "sender_id": user["id"],
-        })
 
     return msg_out
 
@@ -258,7 +246,7 @@ async def ws_endpoint(ws: WebSocket):
                 now = datetime.now(timezone.utc).isoformat()
                 cur = await db.execute(
                     "INSERT INTO messages (sender_id, receiver_id, content, created_at) VALUES (?, ?, ?, ?)",
-                    (user_id, receiver_id, sanitize(content), now),
+                    (user_id, receiver_id, content, now),
                 )
                 await db.commit()
                 msg_id = cur.lastrowid
@@ -274,20 +262,6 @@ async def ws_endpoint(ws: WebSocket):
                 }
                 await manager.send_to_user(receiver_id, chat_msg)
                 await manager.send_to_user(user_id, chat_msg)
-
-                # Web Push if receiver is offline
-                if not manager.is_online(receiver_id):
-                    from ..services.push_service import send_push_to_user
-                    cur2 = await db.execute("SELECT username FROM users WHERE id = ?", (user_id,))
-                    sender_row = await cur2.fetchone()
-                    sender_name = sender_row["username"] if sender_row else "Someone"
-                    await send_push_to_user(receiver_id, {
-                        "type": "message",
-                        "title": f"{sender_name} sent you a message",
-                        "body": content[:100],
-                        "url": "/#/messages",
-                        "sender_id": user_id,
-                    })
 
             elif msg_type == "mark_read":
                 partner_id = data.get("partner_id")

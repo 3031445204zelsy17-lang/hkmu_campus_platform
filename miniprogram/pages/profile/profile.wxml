@@ -1,0 +1,65 @@
+<view class="page-shell">
+  <view class="profile-cover"></view>
+
+  <view wx:if="{{user}}" class="profile-card">
+    <view class="avatar large">
+      <image wx:if="{{user.avatar_url}}" src="{{user.avatar_url}}" mode="aspectFill" />
+      <view wx:else>{{user.initial}}</view>
+    </view>
+    <view class="profile-name">{{user.displayName}}</view>
+    <view class="profile-handle">@{{user.username}} · {{identityLabel}}</view>
+    <view class="profile-bio">{{user.bioLabel}}</view>
+
+    <view class="profile-stats">
+      <view class="profile-stat">
+        <view class="profile-stat-value">{{joinedAtDisplay}}</view>
+        <view class="profile-stat-label">加入时间</view>
+      </view>
+      <view class="profile-stat">
+        <view class="profile-stat-value">{{user.providerLabel}}</view>
+        <view class="profile-stat-label">登录方式</view>
+      </view>
+    </view>
+
+    <view class="action-row">
+      <button class="primary-action" bindtap="goCompose">发动态</button>
+      <button class="secondary-action" bindtap="refreshProfile">刷新资料</button>
+    </view>
+
+    <view class="profile-list">
+      <view class="profile-row">
+        <view class="profile-row-label">邮箱</view>
+        <view class="profile-row-value">{{user.emailLabel}}</view>
+      </view>
+      <view class="profile-row">
+        <view class="profile-row-label">学号</view>
+        <view class="profile-row-value">{{user.studentIdLabel}}</view>
+      </view>
+      <view class="profile-row">
+        <view class="profile-row-label">简介</view>
+        <view class="profile-row-value">{{user.bioLabel}}</view>
+      </view>
+    </view>
+
+    <view class="action-row">
+      <button class="danger-action" bindtap="logout">退出登录</button>
+    </view>
+  </view>
+
+  <view wx:else>
+    <view class="top-bar tight">
+      <view class="brand-lockup">
+        <view class="eyebrow">PROFILE</view>
+        <view class="app-title">我的</view>
+        <view class="subtitle">登录后拥有头像、资料和发布身份。</view>
+      </view>
+    </view>
+    <view class="empty-state flat">
+      <view class="empty-title">还没有登录</view>
+      <view class="empty-copy">用微信或校园账号登录后，就能在动态流里发布内容。</view>
+      <view class="action-row">
+        <button class="primary-action" bindtap="goToLogin">去登录</button>
+      </view>
+    </view>
+  </view>
+</view>

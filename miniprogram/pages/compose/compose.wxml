@@ -1,0 +1,56 @@
+<view class="page-shell">
+  <view class="top-bar tight">
+    <view class="brand-lockup">
+      <view class="eyebrow">NEW POST</view>
+      <view class="app-title compact">发布校园动态</view>
+    </view>
+    <button class="top-action" loading="{{loading}}" bindtap="submitPost">发布</button>
+  </view>
+
+  <view class="composer-sheet">
+    <view class="composer-head">
+      <view class="avatar small">
+        <image wx:if="{{user && user.avatar_url}}" src="{{user.avatar_url}}" mode="aspectFill" />
+        <view wx:else>{{userInitial}}</view>
+      </view>
+      <view>
+        <view class="composer-name">{{displayName}}</view>
+        <view class="composer-scope">发布到校园公共动态流</view>
+      </view>
+    </view>
+
+    <view class="field-label">标题</view>
+    <input
+      class="text-input"
+      maxlength="80"
+      placeholder="一句话说清楚重点"
+      value="{{title}}"
+      data-field="title"
+      bindinput="updateField"
+    />
+
+    <view class="field-label">话题</view>
+    <scroll-view scroll-x class="category-strip">
+      <view
+        wx:for="{{categories}}"
+        wx:key="name"
+        class="{{item.className}}"
+        data-category="{{item.name}}"
+        bindtap="selectCategory"
+      >
+        {{item.name}}
+      </view>
+    </scroll-view>
+
+    <view class="field-label">正文</view>
+    <textarea
+      class="text-area"
+      maxlength="2000"
+      placeholder="像发一条手机动态一样写：问题、见闻、活动、课程经验都可以。"
+      value="{{content}}"
+      data-field="content"
+      bindinput="updateField"
+    />
+    <view class="helper-text">内容会直接保存到同一个后端 posts 数据表。</view>
+  </view>
+</view>

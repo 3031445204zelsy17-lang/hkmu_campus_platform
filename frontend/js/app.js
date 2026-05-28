@@ -5,14 +5,13 @@ import { showToast } from "./components/toast.js";
 import { openModal, closeModal } from "./components/modal.js";
 import { initLang, t, currentLang, setLang, supportedLangs } from "./utils/i18n.js";
 import { initTheme, toggleTheme, currentTheme } from "./utils/theme.js";
-import { initAnalytics, identify, track, resetIdentity } from "./utils/analytics.js";
-import { subscribePush, unsubscribePush } from "./utils/push.js";
 
 // Pages
-import { renderHome } from "./pages/home.js";
+import { renderHome } from "./pages/home.js?v=phase11";
 import { renderCommunity } from "./pages/community.js";
-import { renderPlanner } from "./pages/planner.js";
+import { renderPlanner } from "./pages/planner.js?v=phase11";
 import { renderNews } from "./pages/news.js";
+import { renderLostFound } from "./pages/lostfound.js";
 import { renderProfile } from "./pages/profile.js";
 import { renderMessages } from "./pages/messages.js";
 import { api } from "./api.js";
@@ -25,41 +24,12 @@ register("/", renderHome);
 register("/community", renderCommunity);
 register("/planner", renderPlanner);
 register("/news", renderNews);
-register("/lostfound", () => navigate("/community?category=lostfound"));
+register("/lostfound", renderLostFound);
 register("/profile", renderProfile, { auth: true });
 register("/profile/:id", renderProfile, { auth: true });
 register("/messages", renderMessages, { auth: true });
 register("/reset-password", renderResetPassword);
 register("/verify-email", renderVerifyEmail);
-
-// --- Email login form — event delegation (form may not exist yet when modal opens) ---
-document.addEventListener("submit", async (e) => {
-  if (!e.target.matches("#email-login-form")) return;
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const data = Object.fromEntries(fd.entries());
-
-  try {
-    document.getElementById("email-auth-error").classList.add("hidden");
-    const result = await request("POST", "/auth/email/login", {
-      email: data.email,
-      password: data.password,
-    });
-    setToken(result.access_token);
-    if (result.refresh_token) setRefreshToken(result.refresh_token);
-    closeModal();
-    identify(result.user_id || result.id);
-    track("user_logged_in", { method: "email" });
-  } catch (err) {
-    const el = document.getElementById("email-auth-error");
-    if (err.message === "email_not_verified") {
-      el.textContent = t("auth.email_not_verified");
-    } else {
-      el.textContent = err.message;
-    }
-    el.classList.remove("hidden");
-  }
-});
 
 // --- Auth modal ---
 function showAuthModal(mode = "login") {
@@ -158,14 +128,6 @@ function showAuthModal(mode = "login") {
       try {
         document.getElementById("auth-error").classList.add("hidden");
 
-        // Password strength check (register only)
-        if (!isLoginMode) {
-          const pw = data.password;
-          if (pw.length < 8 || !/[A-Z]/.test(pw) || !/[a-z]/.test(pw) || !/\d/.test(pw)) {
-            throw new Error(t("auth.password_weak"));
-          }
-        }
-
         let url, body;
         if (isLoginMode) {
           url = "/api/v1/auth/login";
@@ -191,21 +153,41 @@ function showAuthModal(mode = "login") {
           if (result.refresh_token) setRefreshToken(result.refresh_token);
           closeModal();
           showToast(t("auth.logged_in"), "success");
-          identify(result.user_id || result.id);
-          track("user_logged_in", { method: "username" });
           _onAuthChange();
         } else {
           showToast(t("auth.registered"), "success");
-          track("user_signed_up", { method: "email" });
           showAuthModal("login");
         }
       } catch (err) {
         const el = document.getElementById("auth-error");
-        if (err.message === "email_not_verified") {
-          el.textContent = t("auth.email_not_verified");
-        } else {
-          el.textContent = err.message;
-        }
+        el.textContent = err.message;
+        el.classList.remove("hidden");
+      }
+    });
+  }
+
+  // Email login form
+  const emailForm = document.getElementById("email-login-form");
+  if (emailForm) {
+    emailForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const data = Object.fromEntries(fd.entries());
+
+      try {
+        document.getElementById("email-auth-error").classList.add("hidden");
+
+        const result = await request("POST", "/auth/email/login", {
+          email: data.email,
+          password: data.password,
+        });
+
+        setToken(result.access_token);
+        if (result.refresh_token) setRefreshToken(result.refresh_token);
+        closeModal();
+      } catch (err) {
+        const el = document.getElementById("email-auth-error");
+        el.textContent = err.message;
         el.classList.remove("hidden");
       }
     });
@@ -229,8 +211,6 @@ window.handleGoogleSignIn = async (response) => {
     if (result.refresh_token) setRefreshToken(result.refresh_token);
     closeModal();
     showToast(t("auth.logged_in"), "success");
-    identify(result.user_id || result.id);
-    track("user_logged_in", { method: "google" });
     _onAuthChange();
   } catch (err) {
     showToast(t("auth.google_failed"), "error");
@@ -239,7 +219,6 @@ window.handleGoogleSignIn = async (response) => {
 
 function _onAuthChange() {
   renderNav();
-  if (isLoggedIn()) subscribePush();
 }
 
 // --- Event listeners ---
@@ -248,8 +227,6 @@ window.addEventListener("auth:show-login", () => showAuthModal("login"));
 window.addEventListener("auth:logout", () => {
   setToken(null);
   setRefreshToken(null);
-  resetIdentity();
-  unsubscribePush();
   showToast(t("auth.logged_out"), "info");
   _onAuthChange();
   navigate("/");
@@ -259,6 +236,10 @@ window.addEventListener("auth:logout", () => {
 window.addEventListener("lang:change", () => {
   renderNav();
   forceResolve();
+});
+
+window.addEventListener("hashchange", () => {
+  renderNav();
 });
 
 // --- Reset Password Page ---
@@ -274,8 +255,8 @@ function renderResetPassword() {
       <div class="max-w-md mx-auto mt-16 p-6 bg-white rounded-2xl shadow-lg" data-page="auth-form">
         <h2 class="text-xl font-bold mb-4 text-gray-800">${t("auth.reset_password")}</h2>
         <form id="reset-form" class="space-y-3">
-          <input type="password" name="new_password" placeholder="${t("auth.new_password")}" aria-label="${t("auth.new_password")}" required minlength="8">
-          <input type="password" name="confirm" placeholder="${t("auth.confirm_password")}" aria-label="${t("auth.confirm_password")}" required minlength="8">
+          <input type="password" name="new_password" placeholder="${t("auth.new_password")}" aria-label="${t("auth.new_password")}" required minlength="6">
+          <input type="password" name="confirm" placeholder="${t("auth.confirm_password")}" aria-label="${t("auth.confirm_password")}" required minlength="6">
           <div id="reset-error" class="field-error hidden"></div>
           <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
             ${t("auth.reset_password")}
@@ -291,12 +272,6 @@ function renderResetPassword() {
       if (pw !== confirm) {
         const el = document.getElementById("reset-error");
         el.textContent = t("auth.password_mismatch");
-        el.classList.remove("hidden");
-        return;
-      }
-      if (pw.length < 8 || !/[A-Z]/.test(pw) || !/[a-z]/.test(pw) || !/\d/.test(pw)) {
-        const el = document.getElementById("reset-error");
-        el.textContent = t("auth.password_weak");
         el.classList.remove("hidden");
         return;
       }
@@ -365,7 +340,6 @@ function renderVerifyEmail() {
   api.post("/auth/verify-email", { token }).then(() => {
     document.getElementById("verify-status").textContent = t("auth.verified");
     showToast(t("auth.verified"), "success");
-    track("email_verified");
   }).catch(() => {
     document.getElementById("verify-status").textContent = t("auth.verify_failed");
     showToast(t("auth.verify_failed"), "error");
@@ -377,7 +351,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
   initLang();
   initSidebar();
-  initAnalytics();
   // Fetch Google Client ID from API (no longer in HTML meta)
   try {
     const res = await fetch("/api/v1/auth/config");

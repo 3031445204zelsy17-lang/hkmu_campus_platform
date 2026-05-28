@@ -2,7 +2,6 @@ import { api, isLoggedIn } from "../api.js";
 import { showToast } from "../components/toast.js";
 import { t } from "../utils/i18n.js";
 import { skeletonCard, errorState } from "../components/skeleton.js";
-import { track } from "../utils/analytics.js";
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -79,8 +78,11 @@ function _refreshIcons() {
 
 // ── UI Components ─────────────────────────────────────────────────────────────
 
-function ViewTab(label, viewId, iconName, requiresAuth = false) {
+function ViewTab(label, viewId, iconName) {
   const btn = document.createElement("button");
+  btn.type = "button";
+  btn.dataset.view = viewId;
+  btn.setAttribute("aria-selected", String(_view === viewId));
   btn.className = `planner-tab flex items-center gap-2 ${
     _view === viewId ? "tab-active" : ""
   }`;
@@ -88,14 +90,19 @@ function ViewTab(label, viewId, iconName, requiresAuth = false) {
   const span = document.createElement("span");
   span.textContent = label;
   btn.appendChild(span);
-  if (requiresAuth && !isLoggedIn()) {
-    btn.appendChild(LucideIcon("lock", "w-3.5 h-3.5 text-gray-400 ml-0.5"));
-  }
   btn.addEventListener("click", () => {
     _view = viewId;
     _render();
   });
   return btn;
+}
+
+function _syncViewTabs() {
+  document.querySelectorAll('[data-page="planner"] .planner-tab').forEach((btn) => {
+    const isActive = btn.dataset.view === _view;
+    btn.classList.toggle("tab-active", isActive);
+    btn.setAttribute("aria-selected", String(isActive));
+  });
 }
 
 function ProgressBar(pct, label, size = "sm") {
@@ -267,37 +274,6 @@ function StatusDropdown(courseId, currentStatus) {
 
 // ── Views ─────────────────────────────────────────────────────────────────────
 
-function _renderLoginPrompt(container) {
-  const msg = document.createElement("div");
-  msg.className = "text-center py-16";
-
-  const iconWrap = document.createElement("div");
-  iconWrap.className = "w-20 h-20 bg-gradient-to-br from-blue-100 to-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6";
-  iconWrap.appendChild(LucideIcon("lock", "w-10 h-10 text-blue-500"));
-  msg.appendChild(iconWrap);
-
-  const loginTitle = document.createElement("h3");
-  loginTitle.className = "text-xl font-bold text-gray-800 mb-2";
-  loginTitle.textContent = t("planner.login_required");
-  msg.appendChild(loginTitle);
-
-  const loginMsg = document.createElement("p");
-  loginMsg.className = "text-gray-500 mb-6";
-  loginMsg.textContent = t("planner.login_required_desc");
-  msg.appendChild(loginMsg);
-
-  const loginBtn = document.createElement("button");
-  loginBtn.className = "bg-gradient-to-r from-blue-600 to-green-600 text-white px-8 py-3 rounded-xl hover:opacity-90 transition-opacity font-semibold flex items-center gap-2 mx-auto shadow-md";
-  loginBtn.appendChild(LucideIcon("log-in", "w-5 h-5"));
-  const loginBtnText = document.createElement("span");
-  loginBtnText.textContent = t("planner.sign_in");
-  loginBtn.appendChild(loginBtnText);
-  loginBtn.addEventListener("click", () => window.dispatchEvent(new CustomEvent("auth:show-login")));
-  msg.appendChild(loginBtn);
-
-  container.appendChild(msg);
-}
-
 function _renderOverview(container) {
   const total = _courses.length;
   const completed = _progress.filter((p) => p.status === "completed").length;
@@ -354,23 +330,20 @@ function _renderOverview(container) {
   const btn1 = document.createElement("button");
   btn1.className = "bg-white px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity";
   btn1.style.color = "#0066CC";
-  btn1.appendChild(LucideIcon(isLoggedIn() ? "bar-chart-2" : "book-open", "w-5 h-5"));
+  btn1.appendChild(LucideIcon("bar-chart-2", "w-5 h-5"));
   const btn1Text = document.createElement("span");
-  btn1Text.textContent = isLoggedIn() ? t("planner.view_progress") : t("planner.browse_courses");
+  btn1Text.textContent = t("planner.view_progress");
   btn1.appendChild(btn1Text);
-  btn1.addEventListener("click", () => { _view = isLoggedIn() ? "progress" : "browse"; _render(); });
+  btn1.addEventListener("click", () => { _view = "progress"; _render(); });
   ctaRow.appendChild(btn1);
 
   const btn2 = document.createElement("button");
   btn2.className = "bg-white/20 text-white border-2 border-white/50 px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-white/30 transition-colors";
-  btn2.appendChild(LucideIcon(isLoggedIn() ? "book-open" : "log-in", "w-5 h-5"));
+  btn2.appendChild(LucideIcon("book-open", "w-5 h-5"));
   const btn2Text = document.createElement("span");
-  btn2Text.textContent = isLoggedIn() ? t("planner.browse_courses") : t("planner.sign_in");
+  btn2Text.textContent = t("planner.browse_courses");
   btn2.appendChild(btn2Text);
-  btn2.addEventListener("click", () => {
-    if (isLoggedIn()) { _view = "browse"; _render(); }
-    else { window.dispatchEvent(new CustomEvent("auth:show-login")); }
-  });
+  btn2.addEventListener("click", () => { _view = "browse"; _render(); });
   ctaRow.appendChild(btn2);
 
   inner.appendChild(ctaRow);
@@ -397,14 +370,11 @@ function _renderOverview(container) {
   const statsSection = document.createElement("div");
   statsSection.className = "py-8";
   const statsGrid = document.createElement("div");
-  const statsCols = isLoggedIn() ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2";
-  statsGrid.className = `grid ${statsCols} gap-6`;
+  statsGrid.className = "grid grid-cols-2 lg:grid-cols-4 gap-6";
   statsGrid.appendChild(StatCard("Total Courses", total, "text-blue-600", "book-open"));
   statsGrid.appendChild(StatCard("Total Credits", totalCredits, "text-green-600", "award"));
-  if (isLoggedIn()) {
-    statsGrid.appendChild(StatCard("Completed", completed, "text-green-500", "check-circle"));
-    statsGrid.appendChild(StatCard("Credits Earned", `${completedCredits}/${totalCredits}`, "text-blue-600", "graduation-cap"));
-  }
+  statsGrid.appendChild(StatCard("Completed", completed, "text-green-500", "check-circle"));
+  statsGrid.appendChild(StatCard("Credits Earned", `${completedCredits}/${totalCredits}`, "text-blue-600", "graduation-cap"));
   statsSection.appendChild(statsGrid);
   container.appendChild(statsSection);
 
@@ -426,7 +396,6 @@ function _renderOverview(container) {
   container.appendChild(featureSection);
 
   // ── 4. Year-by-year progress ─────────────────────────────────────────────
-  if (isLoggedIn()) {
   const yearSection = document.createElement("div");
   yearSection.className = "py-8";
 
@@ -465,7 +434,6 @@ function _renderOverview(container) {
     yearSection.appendChild(yearCard);
   });
   container.appendChild(yearSection);
-  } // end isLoggedIn() year-by-year
 
   // ── 5. DSAI template tip ─────────────────────────────────────────────────
   if (isLoggedIn() && _progress.length === 0) {
@@ -500,15 +468,10 @@ function _renderOverview(container) {
 }
 
 function _renderProgress(container) {
-  if (!isLoggedIn()) {
-    _renderLoginPrompt(container);
-    return;
-  }
-
   if (_courses.length === 0) {
     const empty = document.createElement("p");
     empty.className = "text-gray-400 text-center py-8";
-    empty.textContent = t("planner.no_courses_loaded");
+    empty.textContent = "No courses loaded.";
     container.appendChild(empty);
     return;
   }
@@ -545,11 +508,11 @@ function _renderBrowse(container) {
   heading.className = "mb-6";
   const h1 = document.createElement("h1");
   h1.className = "text-3xl font-bold mb-2";
-  h1.textContent = t("planner.all_courses");
+  h1.textContent = "All Courses";
   heading.appendChild(h1);
   const subtitle = document.createElement("p");
   subtitle.className = "text-gray-500";
-  subtitle.textContent = t("planner.browse_desc");
+  subtitle.textContent = "Browse the complete DSAI curriculum.";
   heading.appendChild(subtitle);
   container.appendChild(heading);
 
@@ -644,7 +607,34 @@ function _renderBrowse(container) {
 
 function _renderPlan(container) {
   if (!isLoggedIn()) {
-    _renderLoginPrompt(container);
+    const msg = document.createElement("div");
+    msg.className = "text-center py-16";
+
+    const iconWrap = document.createElement("div");
+    iconWrap.className = "w-20 h-20 bg-gradient-to-br from-blue-100 to-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6";
+    iconWrap.appendChild(LucideIcon("lock", "w-10 h-10 text-blue-500"));
+    msg.appendChild(iconWrap);
+
+    const loginTitle = document.createElement("h3");
+    loginTitle.className = "text-xl font-bold text-gray-800 mb-2";
+    loginTitle.textContent = t("planner.login_required");
+    msg.appendChild(loginTitle);
+
+    const loginMsg = document.createElement("p");
+    loginMsg.className = "text-gray-500 mb-6";
+    loginMsg.textContent = t("planner.login_required_desc");
+    msg.appendChild(loginMsg);
+
+    const loginBtn = document.createElement("button");
+    loginBtn.className = "bg-gradient-to-r from-blue-600 to-green-600 text-white px-8 py-3 rounded-xl hover:opacity-90 transition-opacity font-semibold flex items-center gap-2 mx-auto shadow-md";
+    loginBtn.appendChild(LucideIcon("log-in", "w-5 h-5"));
+    const loginBtnText = document.createElement("span");
+    loginBtnText.textContent = t("planner.sign_in");
+    loginBtn.appendChild(loginBtnText);
+    loginBtn.addEventListener("click", () => window.dispatchEvent(new CustomEvent("auth:show-login")));
+    msg.appendChild(loginBtn);
+
+    container.appendChild(msg);
     return;
   }
 
@@ -894,9 +884,9 @@ export async function renderPlanner() {
   const tabBar = document.createElement("div");
   tabBar.className = "flex border-b border-gray-200 mb-6 planner-tabs-wrap";
   tabBar.appendChild(ViewTab("Overview", "overview", "layout-dashboard"));
-  tabBar.appendChild(ViewTab("My Progress", "progress", "bar-chart-2", true));
+  tabBar.appendChild(ViewTab("My Progress", "progress", "bar-chart-2"));
   tabBar.appendChild(ViewTab("Browse", "browse", "book-open"));
-  tabBar.appendChild(ViewTab("Plan", "plan", "git-branch", true));
+  tabBar.appendChild(ViewTab("Plan", "plan", "git-branch"));
   container.appendChild(tabBar);
 
   // Content area — show skeleton loading while fetching
@@ -918,6 +908,7 @@ function _render() {
   const content = document.getElementById("planner-content");
   if (!content) return;
   content.innerHTML = "";
+  _syncViewTabs();
 
   switch (_view) {
     case "overview":
@@ -970,7 +961,6 @@ async function _updateProgress(courseId, status) {
 
   try {
     await api.put("/courses/progress", { course_id: courseId, status });
-    track("course_progress_updated", { course_id: courseId, status });
     const existing = _progress.find((p) => p.course_id === courseId);
     if (existing) {
       existing.status = status;
@@ -1018,7 +1008,6 @@ async function _loadDSAITemplate() {
   try {
     _progress = await api.post("/courses/progress/batch", { items });
     showToast(t("planner.template_loaded"), "success");
-    track("template_loaded");
     _render();
   } catch (err) {
     showToast(t("planner.template_failed") + " " + err.message, "error");

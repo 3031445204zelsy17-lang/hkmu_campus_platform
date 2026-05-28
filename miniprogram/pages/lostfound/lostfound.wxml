@@ -1,0 +1,55 @@
+<view class="page-shell">
+  <view class="top-bar tight">
+    <view class="brand-lockup">
+      <view class="eyebrow">HELP DESK</view>
+      <view class="app-title">互助</view>
+      <view class="subtitle">像刷同城信息一样找失物、看招领。</view>
+    </view>
+  </view>
+
+  <view class="search-dock flat">
+    <view class="search-mark">#</view>
+    <input
+      class="search-input"
+      placeholder="搜索物品、地点、发布者"
+      value="{{keyword}}"
+      confirm-type="search"
+      bindinput="updateKeyword"
+    />
+  </view>
+
+  <view class="segmented flat">
+    <view class="{{allTabClass}}" data-filter="all" bindtap="setTypeFilter">全部</view>
+    <view class="{{lostTabClass}}" data-filter="lost" bindtap="setTypeFilter">失物</view>
+    <view class="{{foundTabClass}}" data-filter="found" bindtap="setTypeFilter">招领</view>
+  </view>
+
+  <view class="segmented flat">
+    <view class="{{activeStatusClass}}" data-status="active" bindtap="setStatusFilter">进行中</view>
+    <view class="{{resolvedStatusClass}}" data-status="resolved" bindtap="setStatusFilter">已解决</view>
+    <view class="{{allStatusClass}}" data-status="all" bindtap="setStatusFilter">全部</view>
+  </view>
+
+  <view wx:if="{{filteredItems.length === 0 && !loading}}" class="empty-state flat">
+    <view class="empty-title">没有匹配记录</view>
+    <view class="empty-copy">调整筛选条件，或下拉刷新。</view>
+  </view>
+
+  <view wx:for="{{filteredItems}}" wx:key="id" class="utility-card">
+    <view class="feed-head">
+      <view class="avatar small">{{item.authorInitial}}</view>
+      <view class="feed-main">
+        <view class="utility-meta">
+          <view class="{{item.typeClass}}">{{item.typeLabel}}</view>
+          <view class="{{item.statusClass}}">{{item.statusLabel}}</view>
+          <view class="mini-pill">{{item.createdAtLabel}}</view>
+        </view>
+        <view class="utility-title">{{item.title}}</view>
+        <view class="utility-summary">{{item.description}}</view>
+        <view class="card-footer">{{item.category}} · {{item.location}} · {{item.author}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-line">正在加载互助信息...</view>
+</view>

@@ -1,154 +1,241 @@
 {
-  "project": "HKMU Campus Platform — 功能优化",
-  "created": "2026-05-21",
-  "prev_phase_note": "T01-T26 基础开发已全部完成。经代码审查，部分优化任务已在之前开发中完成，本文件只保留真正需要做的任务",
-  "completed_in_review": {
-    "note": "以下任务在 T01-T26 开发中已实现，无需重复",
-    "tasks": [
-      {"id": "A1", "reason": "登录/注册已完整实现，含表单验证、JWT、错误提示、Google OAuth"},
-      {"id": "A3", "reason": "Google 登录已集成到 app.js，含 renderButton()"},
-      {"id": "C1", "reason": "课程页面已完整，含 4 视图、DSAI 模板、进度追踪"},
-      {"id": "D1", "reason": "私信页面已完整，含 WebSocket + 轮询降级"},
-      {"id": "D2", "reason": "未读消息角标已实现，导航栏支持"},
-      {"id": "D3", "reason": "WebSocket 前端已对接，含自动重连"},
-      {"id": "E1", "reason": "新闻已是独立模块，有独立路由和页面"},
-      {"id": "E3", "reason": "新闻分类筛选已实现"},
-      {"id": "B4", "reason": "搜索功能后端已实现（title+content 搜索），前端需确认"},
-      {"id": "G2", "reason": "用户设置已有头像上传、昵称、bio 编辑"},
-      {"id": "A4", "reason": "邮箱验证后端已实现，前端有 verify 页面"},
-      {"id": "H1", "reason": "i18n 三语系统已完整覆盖主要页面"}
-    ]
-  },
+  "project": "HKMU Campus Platform",
+  "created": "2026-05-07",
+  "plan_ref": "/Users/yifanshi/Desktop/校园论坛计划/HKMU_Campus_Platform_优化计划.md",
   "tasks": [
     {
-      "id": "T00",
-      "phase": 6,
-      "title": "全项目健康检查",
-      "description": "启动服务，逐页面检查实际运行状态，输出完整诊断报告：每个页面的功能完整度、已知 bug、代码质量评估，为后续任务提供基线",
-      "module": "shared",
+      "id": "T01",
+      "title": "后端配置与数据库初始化",
+      "description": "创建 config.py（从 .env 读配置）、database.py（SQLite 连接 + 9张表 + 索引）、.env.example 模板",
+      "phase": 0,
       "dependencies": [],
+      "passes": true,
+      "files": ["backend/app/config.py", "backend/app/database.py", ".env.example"]
+    },
+    {
+      "id": "T02",
+      "title": "Pydantic 数据模型",
+      "description": "创建 models.py：User/Post/Comment/Course/UserCourse/CourseReview/News/LostFound/Message 的请求/响应模型",
+      "phase": 0,
+      "dependencies": ["T01"],
+      "passes": true,
+      "files": ["backend/app/models.py"]
+    },
+    {
+      "id": "T03",
+      "title": "课程种子数据脚本",
+      "description": "从 HKMU_Campus_Forum 提取 43 门课程数据，创建 seed_courses.py 导入数据库 + 测试账号",
+      "phase": 0,
+      "dependencies": ["T01"],
+      "passes": true,
+      "files": ["scripts/seed_courses.py"]
+    },
+    {
+      "id": "T04",
+      "title": "前端路由与 API 层",
+      "description": "router.js（Hash 路由器，支持 #/ #/community #/planner 等路由）+ api.js（fetch 封装，JWT 自动注入，统一错误处理）",
+      "phase": 0,
+      "dependencies": [],
+      "passes": true,
+      "files": ["frontend/js/router.js", "frontend/js/api.js"]
+    },
+    {
+      "id": "T05",
+      "title": "前端共享 UI 组件",
+      "description": "Toast（消息提示）、Skeleton（骨架屏）、Modal（模态框）、Nav（导航栏渲染）组件",
+      "phase": 0,
+      "dependencies": ["T04"],
+      "passes": true,
+      "files": ["frontend/js/components/toast.js", "frontend/js/components/skeleton.js", "frontend/js/components/modal.js", "frontend/js/components/nav.js"]
+    },
+    {
+      "id": "T06",
+      "title": "前端页面骨架 + CSS 结构",
+      "description": "创建所有页面 stub（home/community/planner/news/lostfound/profile/messages/auth）+ CSS 文件（nav/community/academic/profile/auth/components）+ 更新 app.js 初始化逻辑",
+      "phase": 0,
+      "dependencies": ["T04", "T05"],
+      "passes": true,
+      "files": ["frontend/js/pages/", "frontend/css/", "frontend/js/app.js"]
+    },
+    {
+      "id": "T07",
+      "title": "开发脚本 + 服务启动验证",
+      "description": "创建 dev.py 启动脚本，验证 uvicorn 可启动、Swagger UI 可访问、数据库建表成功、前端页面可加载",
+      "phase": 0,
+      "dependencies": ["T02", "T03", "T06"],
+      "passes": true,
+      "files": ["scripts/dev.py"]
+    },
+    {
+      "id": "T08",
+      "title": "后端认证端点",
+      "description": "auth_service.py（JWT 生成/验证、bcrypt 哈希）+ auth.py 路由（register/login/me），含速率限制",
+      "phase": 1,
+      "dependencies": ["T07"],
+      "passes": true,
+      "files": ["backend/app/services/auth_service.py", "backend/app/routers/auth.py"]
+    },
+    {
+      "id": "T09",
+      "title": "前端登录注册 UI",
+      "description": "auth.js + auth.css：登录/注册模态框，JWT 存储，登录状态管理，替代原 CampusUser localStorage 单例",
+      "phase": 1,
+      "dependencies": ["T08"],
+      "passes": true,
+      "files": ["frontend/js/auth.js", "frontend/css/auth.css"]
+    },
+    {
+      "id": "T10",
+      "title": "认证流程集成验证",
+      "description": "验证完整认证流程：注册→登录→获取用户信息→Token过期自动跳转→受保护路由守卫",
+      "phase": 1,
+      "dependencies": ["T09"],
       "passes": true,
       "files": []
     },
     {
-      "id": "F1",
-      "phase": 7,
-      "title": "失物招领（已作为社区标签完成）",
-      "description": "失物招领已集成在社区页面中，作为 category=lostfound 标签，含筛选、发布、卡片列表",
-      "module": "lostfound",
-      "dependencies": [],
+      "id": "T11",
+      "title": "后端帖子 CRUD + 点赞",
+      "description": "posts.py 路由：帖子列表（分页+排序+分类筛选）、创建/编辑/删除（仅作者）、点赞（事务+防重复）",
+      "phase": 2,
+      "dependencies": ["T10"],
       "passes": true,
-      "files": ["frontend/js/pages/lostfound.js", "frontend/css/lostfound.css"]
+      "files": ["backend/app/routers/posts.py"]
     },
     {
-      "id": "B3",
-      "phase": 7,
-      "title": "热门话题排序算法",
-      "description": "后端已有 hot 排序端点，需确认是否使用了时间衰减算法，还是简单按点赞数排序。如需要，实现 Hacker News 风格的时间衰减排序",
-      "module": "community",
-      "dependencies": [],
+      "id": "T12",
+      "title": "后端评论端点",
+      "description": "评论列表（分页）+ 添加评论（事务更新 comments_count）",
+      "phase": 2,
+      "dependencies": ["T11"],
       "passes": true,
-      "files": ["backend/app/routers/posts.py", "frontend/js/pages/community.js"]
+      "files": ["backend/app/routers/posts.py"]
     },
     {
-      "id": "A2",
-      "phase": 7,
-      "title": "游客模式完善",
-      "description": "后端已支持 optional auth，需确认前端游客体验是否完整：游客可浏览公开内容，操作时引导登录",
-      "module": "auth",
-      "dependencies": [],
+      "id": "T13",
+      "title": "前端社区信息流页面",
+      "description": "community.js + community.css：帖子列表渲染、PostCard/PostHeader/PostBody/PostActions 函数化组件、毛玻璃样式（data-page 隔离）",
+      "phase": 2,
+      "dependencies": ["T11"],
       "passes": true,
-      "files": ["frontend/js/router.js", "frontend/js/app.js"]
+      "files": ["frontend/js/pages/community.js", "frontend/css/community.css"]
     },
     {
-      "id": "E2",
-      "phase": 7,
-      "title": "新闻评论区",
-      "description": "社区评论系统已完善，需为新闻添加独立评论功能，可参考社区评论实现",
-      "module": "news",
-      "dependencies": [],
+      "id": "T14",
+      "title": "前端帖子交互功能",
+      "description": "点赞切换、评论展开/提交、最新/热门排序、分类筛选、空状态设计、发帖/编辑/删除操作",
+      "phase": 2,
+      "dependencies": ["T12", "T13"],
       "passes": true,
-      "files": ["frontend/js/pages/news.js", "backend/app/routers/news.py"]
+      "files": ["frontend/js/pages/community.js"]
     },
     {
-      "id": "C2",
-      "phase": 8,
-      "title": "课程预览（未登录）",
-      "description": "游客可查看课程基本信息，点击详情/操作时引导登录。依赖 A2 游客模式",
-      "module": "academic",
-      "dependencies": ["A2"],
+      "id": "T15",
+      "title": "i18n 国际化集成",
+      "description": "移植 MUwall 的 data-i18n 三语言系统到 utils/i18n.js，社区模块支持语言切换",
+      "phase": 2,
+      "dependencies": ["T13"],
+      "passes": true,
+      "files": ["frontend/js/utils/i18n.js"]
+    },
+    {
+      "id": "T16",
+      "title": "后端课程与进度端点",
+      "description": "courses.py 路由：课程列表/详情、用户进度 CRUD（INSERT OR REPLACE 防重复）、课程评价",
+      "phase": 3,
+      "dependencies": ["T10"],
+      "passes": true,
+      "files": ["backend/app/routers/courses.py"]
+    },
+    {
+      "id": "T17",
+      "title": "前端课程规划器页面",
+      "description": "planner.js + academic.css：4视图（首页/进度/浏览/计划）、课程卡片渲染、进度条、先修课检查、连接 API",
+      "phase": 3,
+      "dependencies": ["T16"],
+      "passes": true,
+      "files": ["frontend/js/pages/planner.js", "frontend/css/academic.css"]
+    },
+    {
+      "id": "T18",
+      "title": "新用户引导 — DSAI 选课模板",
+      "description": "一键加载 DSAI 标准选课模板到用户进度，新用户首次进入规划器时展示引导提示",
+      "phase": 3,
+      "dependencies": ["T17"],
       "passes": true,
       "files": ["frontend/js/pages/planner.js"]
     },
     {
-      "id": "B5",
-      "phase": 8,
-      "title": "帖子分享功能",
-      "description": "支持将帖子分享到社交平台或复制链接",
-      "module": "community",
-      "dependencies": [],
+      "id": "T19",
+      "title": "后端用户/新闻/失物招领端点",
+      "description": "users.py（资料 CRUD + 头像上传）、news.py（链接聚合 CRUD）、lostfound.py（CRUD + 筛选）",
+      "phase": 4,
+      "dependencies": ["T10"],
       "passes": true,
-      "files": ["frontend/js/pages/community.js", "backend/app/routers/posts.py"]
+      "files": ["backend/app/routers/users.py", "backend/app/routers/news.py", "backend/app/routers/lostfound.py"]
     },
     {
-      "id": "B6",
-      "phase": 8,
-      "title": "匿名发帖 + 树洞板块",
-      "description": "支持匿名发布帖子，增加树洞板块分类。决策：伪匿名 — 普通用户看不到作者，管理员可见。数据库加 is_anonymous 字段",
-      "module": "community",
-      "dependencies": [],
+      "id": "T20",
+      "title": "前端个人中心页面",
+      "description": "profile.js + profile.css：社交媒体风格主页（头像、发帖记录、学术进度摘要、个人资料编辑）",
+      "phase": 4,
+      "dependencies": ["T19"],
       "passes": true,
-      "files": ["frontend/js/pages/community.js", "backend/app/routers/posts.py"]
+      "files": ["frontend/js/pages/profile.js", "frontend/css/profile.css"]
     },
     {
-      "id": "C3",
-      "phase": 8,
-      "title": "选课规划工具",
-      "description": "在现有课程规划器基础上增加学分统计和推荐功能。需确认 HKMU 学分规则",
-      "module": "academic",
-      "dependencies": [],
-      "passes": false,
-      "files": ["frontend/js/pages/academic.js"]
-    },
-    {
-      "id": "F2",
-      "phase": 8,
-      "title": "图片上传 + 预览",
-      "description": "失物招领支持上传图片，带预览功能。决策：云存储（Railway 不持久化本地文件，实现时选 Cloudflare R2 或 AWS S3）",
-      "module": "lostfound",
-      "dependencies": ["F1"],
-      "passes": false,
-      "files": ["frontend/js/pages/lostfound.js", "backend/app/routers/lostfound.py"]
-    },
-    {
-      "id": "H2",
-      "phase": 9,
-      "title": "现有翻译校对",
-      "description": "校对所有已有的三语翻译，修正错误和不自然的表述",
-      "module": "i18n",
-      "dependencies": [],
+      "id": "T21",
+      "title": "前端新闻与失物招领页面",
+      "description": "news.js（URL 链接聚合，点击跳转外部网页）、lostfound.js（列表+发布+筛选）",
+      "phase": 4,
+      "dependencies": ["T19"],
       "passes": true,
-      "files": ["frontend/js/utils/i18n.js", "frontend/js/pages/planner.js", "frontend/js/pages/messages.js"]
+      "files": ["frontend/js/pages/news.js", "frontend/js/pages/lostfound.js"]
     },
     {
-      "id": "I3",
-      "phase": 10,
-      "title": "数据埋点 GA4 + Mixpanel",
-      "description": "集成 Google Analytics 4 和 Mixpanel，追踪用户行为事件（页面浏览、发帖、注册、课程规划等），支撑 AARRR 评估和北极星指标计算",
-      "module": "shared",
-      "dependencies": [],
+      "id": "T22",
+      "title": "后端私信系统",
+      "description": "websocket_manager.py（连接管理）+ messages.py 路由（会话列表、消息历史、WebSocket 端点、已读标记）",
+      "phase": 5,
+      "dependencies": ["T10"],
       "passes": true,
-      "files": ["frontend/js/utils/analytics.js", "frontend/js/app.js", "frontend/index.html", "frontend/js/router.js", "frontend/js/pages/community.js", "frontend/js/pages/planner.js", "frontend/js/pages/news.js", "frontend/js/pages/messages.js", "frontend/js/pages/profile.js", "frontend/sw.js"]
+      "files": ["backend/app/services/websocket_manager.py", "backend/app/routers/messages.py"]
     },
     {
-      "id": "I4",
-      "phase": 10,
-      "title": "Web Push 通知",
-      "description": "实现浏览器推送通知（私信提醒、帖子回复通知等），基于 Service Worker + Push API",
-      "module": "shared",
-      "dependencies": [],
+      "id": "T23",
+      "title": "前端私信界面",
+      "description": "messages.js：聊天界面、WebSocket 客户端（含 REST 轮询降级）、断连提示、未读消息计数、自动重连",
+      "phase": 5,
+      "dependencies": ["T22"],
       "passes": true,
-      "files": ["frontend/sw.js", "backend/app/main.py"]
+      "files": ["frontend/js/pages/messages.js"]
+    },
+    {
+      "id": "T24",
+      "title": "PWA 配置",
+      "description": "manifest.json（图标、启动屏、全屏模式）+ sw.js（分级缓存：HTML Network First、CSS/JS Cache First、API Network Only）+ PWA 图标",
+      "phase": 6,
+      "dependencies": ["T23"],
+      "passes": true,
+      "files": ["frontend/manifest.json", "frontend/sw.js", "frontend/icons/"]
+    },
+    {
+      "id": "T25",
+      "title": "响应式打磨与最终测试",
+      "description": "375px~1440px 响应式测试、iOS Safari + Android Chrome 添加到主屏幕测试、全功能回归测试、bug 修复",
+      "phase": 6,
+      "dependencies": ["T24"],
+      "passes": true,
+      "files": []
+    },
+    {
+      "id": "T26",
+      "title": "README 完善 + 部署配置",
+      "description": "README.md 完善（启动方式、API 文档、技术栈）、GitHub Actions 部署配置、.env.example 确认完整",
+      "phase": 6,
+      "dependencies": ["T25"],
+      "passes": true,
+      "files": ["README.md", ".github/workflows/deploy.yml"]
     }
   ]
 }

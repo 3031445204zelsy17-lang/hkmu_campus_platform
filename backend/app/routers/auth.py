@@ -1,7 +1,6 @@
 import re
 import secrets
 import hashlib
-import time
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from google.oauth2 import id_token as google_id_token
@@ -18,36 +17,27 @@ from ..services.auth_service import (
     create_refresh_token, verify_refresh_token, rotate_refresh_token,
     OAUTH_NO_PASSWORD, is_oauth_only,
 )
+from ..services.wechat_service import (
+    WechatMiniProgramAuthError,
+    WechatMiniProgramConfigError,
+    exchange_code_for_session,
+)
 from ..services.sanitizer import sanitize_dict, sanitize
 from ..services.rate_limiter import check_rate_limit
 from ..services.email_service import send_password_reset_email, send_verification_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-# --- Login lockout (in-memory) ---
-_LOCKOUT_MAX = 5
-_LOCKOUT_WINDOW = 900  # 15 minutes
-_login_fails: dict[str, list[float]] = {}
 
+async def _generate_unique_wechat_username(db, openid: str) -> str:
+    base_name = f"wx_{openid[:8]}"
+    username = base_name
 
-def _check_lockout(key: str):
-    attempts = _login_fails.get(key, [])
-    cutoff = time.monotonic() - _LOCKOUT_WINDOW
-    attempts = [t for t in attempts if t > cutoff]
-    _login_fails[key] = attempts
-    if len(attempts) >= _LOCKOUT_MAX:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many failed attempts. Please try again later.",
-        )
-
-
-def _record_failure(key: str):
-    _login_fails.setdefault(key, []).append(time.monotonic())
-
-
-def _clear_failures(key: str):
-    _login_fails.pop(key, None)
+    while True:
+        cur = await db.execute("SELECT 1 FROM users WHERE username = ?", (username,))
+        if not await cur.fetchone():
+            return username
+        username = f"{base_name}_{secrets.token_hex(2)}"
 
 
 @router.get("/config")
@@ -103,29 +93,20 @@ async def register(body: UserRegister):
 @router.post("/login", response_model=Token)
 async def login(body: UserLogin):
     check_rate_limit(f"login:{body.username}", max_requests=5, window_seconds=60)
-    _check_lockout(f"login:{body.username}")
 
     db = await get_db()
     cur = await db.execute(
-        "SELECT id, username, password_hash, email_verified FROM users WHERE username = ?",
+        "SELECT id, username, password_hash FROM users WHERE username = ?",
         (body.username,),
     )
     row = await cur.fetchone()
 
     if not row or not verify_password(body.password, row["password_hash"]):
-        _record_failure(f"login:{body.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
 
-    if not row["email_verified"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="email_not_verified",
-        )
-
-    _clear_failures(f"login:{body.username}")
     token = create_access_token({"sub": str(row["id"]), "username": row["username"]})
     refresh = await create_refresh_token(row["id"])
     return Token(access_token=token, refresh_token=refresh)
@@ -220,6 +201,67 @@ async def google_login(body: GoogleLogin):
     return Token(access_token=token, refresh_token=refresh)
 
 
+@router.post("/wechat/miniprogram", response_model=Token)
+async def wechat_miniprogram_login(body: dict):
+    code = str(body.get("code") or "").strip()
+    nickname = str(body.get("nickname") or "").strip()
+    avatar_url = str(body.get("avatar_url") or "").strip() or None
+
+    if not code:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Missing code")
+
+    try:
+        session = await exchange_code_for_session(code)
+    except WechatMiniProgramConfigError as exc:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(exc))
+    except WechatMiniProgramAuthError as exc:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, str(exc))
+
+    db = await get_db()
+    cur = await db.execute(
+        "SELECT id, username FROM users WHERE oauth_provider = 'wechat_miniprogram' AND oauth_id = ?",
+        (session.openid,),
+    )
+    row = await cur.fetchone()
+
+    safe_nickname = sanitize(nickname)[:30] if nickname else None
+    now = datetime.now(timezone.utc).isoformat()
+
+    if row:
+        updates = {}
+        if safe_nickname:
+            updates["nickname"] = safe_nickname
+        if avatar_url:
+            updates["avatar_url"] = avatar_url
+        if updates:
+            updates["updated_at"] = now
+            set_clause = ", ".join(f"{key} = ?" for key in updates)
+            await db.execute(
+                f"UPDATE users SET {set_clause} WHERE id = ?",
+                list(updates.values()) + [row["id"]],
+            )
+            await db.commit()
+
+        token = create_access_token({"sub": str(row["id"]), "username": row["username"]})
+        refresh = await create_refresh_token(row["id"])
+        return Token(access_token=token, refresh_token=refresh)
+
+    username = await _generate_unique_wechat_username(db, session.openid)
+    display_name = safe_nickname or f"微信用户{secrets.randbelow(9000) + 1000}"
+
+    cur = await db.execute(
+        """INSERT INTO users (username, password_hash, nickname, avatar_url, oauth_provider, oauth_id, created_at, updated_at)
+           VALUES (?, ?, ?, ?, 'wechat_miniprogram', ?, ?, ?)""",
+        (username, OAUTH_NO_PASSWORD, display_name, avatar_url, session.openid, now, now),
+    )
+    await db.commit()
+    user_id = cur.lastrowid
+
+    token = create_access_token({"sub": str(user_id), "username": username})
+    refresh = await create_refresh_token(user_id)
+    return Token(access_token=token, refresh_token=refresh)
+
+
 # --- Email Auth ---
 
 @router.post("/email/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
@@ -265,33 +307,22 @@ async def email_register(body: EmailRegister):
 @router.post("/email/login", response_model=Token)
 async def email_login(body: EmailLogin):
     check_rate_limit(f"login:{body.email}", max_requests=5, window_seconds=60)
-    _check_lockout(f"login:{body.email}")
     db = await get_db()
     cur = await db.execute(
-        "SELECT id, username, password_hash, email, email_verified FROM users WHERE email = ?",
+        "SELECT id, username, password_hash FROM users WHERE email = ?",
         (body.email,),
     )
     row = await cur.fetchone()
 
     if not row:
-        _record_failure(f"login:{body.email}")
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid email or password")
 
     if is_oauth_only(row["password_hash"]):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "This account uses Google login. Please sign in with Google.")
 
     if not verify_password(body.password, row["password_hash"]):
-        _record_failure(f"login:{body.email}")
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid email or password")
 
-    if not row["email_verified"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="email_not_verified",
-            headers={"X-User-Email": row["email"]},
-        )
-
-    _clear_failures(f"login:{body.email}")
     token = create_access_token({"sub": str(row["id"]), "username": row["username"]})
     refresh = await create_refresh_token(row["id"])
     return Token(access_token=token, refresh_token=refresh)

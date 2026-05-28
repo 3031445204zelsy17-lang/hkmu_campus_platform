@@ -3,7 +3,6 @@ import { showToast } from "../components/toast.js";
 import { openModal, closeModal } from "../components/modal.js";
 import { t } from "../utils/i18n.js";
 import { skeletonCard, errorState } from "../components/skeleton.js";
-import { track } from "../utils/analytics.js";
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -16,22 +15,13 @@ let _state = {
   category: null,
   search: null,
   loading: false,
-  highlightPostId: null,
-  lfItemType: null,
-  lfStatusFilter: null,
 };
 
 let _fabContainer = null;
 
-function escapeHtml(str) {
-  const d = document.createElement("div");
-  d.textContent = str;
-  return d.innerHTML;
-}
-
 // Clean up FAB when navigating away from community
 window.addEventListener("hashchange", () => {
-  if (!location.hash.startsWith("#/community")) _cleanupFab();
+  if (location.hash !== "#/community") _cleanupFab();
 });
 
 const CATEGORIES = [
@@ -40,8 +30,6 @@ const CATEGORIES = [
   { value: "question", labelKey: "community.cat_question" },
   { value: "sharing", labelKey: "community.cat_sharing" },
   { value: "news", labelKey: "community.cat_news" },
-  { value: "treehole", labelKey: "community.cat_treehole" },
-  { value: "lostfound", labelKey: "community.cat_lostfound" },
   { value: "other", labelKey: "community.cat_other" },
 ];
 
@@ -96,21 +84,6 @@ function _commentIcon() {
   path.setAttribute("stroke-linejoin", "round");
   path.setAttribute("stroke-width", "2");
   path.setAttribute("d", "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z");
-  svg.appendChild(path);
-  return svg;
-}
-
-function _shareIcon() {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("class", "w-4 h-4");
-  svg.setAttribute("fill", "none");
-  svg.setAttribute("stroke", "currentColor");
-  svg.setAttribute("viewBox", "0 0 24 24");
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute("stroke-linecap", "round");
-  path.setAttribute("stroke-linejoin", "round");
-  path.setAttribute("stroke-width", "2");
-  path.setAttribute("d", "M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z");
   svg.appendChild(path);
   return svg;
 }
@@ -184,7 +157,6 @@ function CategoryBadge(category) {
     question: "bg-amber-100 text-amber-700",
     sharing: "bg-green-100 text-green-700",
     news: "bg-purple-100 text-purple-700",
-    treehole: "bg-gray-800 text-gray-100",
     other: "bg-gray-100 text-gray-600",
   };
   el.className = "category-badge " + (colors[category] || colors.other);
@@ -223,32 +195,6 @@ function PostBody(post) {
 
   el.appendChild(headerRow);
   el.appendChild(content);
-
-  if (post.quoted_post) {
-    const qCard = document.createElement("div");
-    qCard.className = "quoted-post-card";
-    qCard.addEventListener("click", () => {
-      window.location.hash = `#/community?post=${post.quoted_post.id}`;
-    });
-
-    const qAuthor = document.createElement("div");
-    qAuthor.className = "quoted-author";
-    qAuthor.textContent = `@${post.quoted_post.author_nickname || "?"}`;
-
-    const qTitle = document.createElement("div");
-    qTitle.className = "quoted-title";
-    qTitle.textContent = post.quoted_post.title;
-
-    const qPreview = document.createElement("div");
-    qPreview.className = "quoted-preview";
-    qPreview.textContent = post.quoted_post.content_preview;
-
-    qCard.appendChild(qAuthor);
-    qCard.appendChild(qTitle);
-    qCard.appendChild(qPreview);
-    el.appendChild(qCard);
-  }
-
   return el;
 }
 
@@ -276,26 +222,6 @@ function PostActions(post) {
 
   el.appendChild(likeBtn);
   el.appendChild(commentBtn);
-
-  // Share button
-  const shareWrapper = document.createElement("div");
-  shareWrapper.style.position = "relative";
-
-  const shareBtn = document.createElement("button");
-  shareBtn.className = "action-btn";
-  shareBtn.appendChild(_shareIcon());
-  const shareLabel = document.createElement("span");
-  shareLabel.textContent = t("community.share");
-  shareBtn.appendChild(shareLabel);
-
-  shareBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    _toggleShareMenu(shareWrapper, post);
-  });
-
-  shareWrapper.appendChild(shareBtn);
-  el.appendChild(shareWrapper);
-
   return el;
 }
 
@@ -416,8 +342,11 @@ function CategoryFilter() {
     btn.appendChild(textContainer);
 
     btn.addEventListener("click", () => {
-      const newHash = c.value ? `#/community?category=${c.value}` : "#/community";
-      window.location.hash = newHash;
+      _state.category = c.value;
+      _state.page = 1;
+      el.querySelectorAll("[role='tab']").forEach((t) => t.setAttribute("aria-selected", "false"));
+      btn.setAttribute("aria-selected", "true");
+      _loadPosts();
     });
     el.appendChild(btn);
   });
@@ -433,10 +362,13 @@ export function renderCommunity() {
   // Read category/search from URL hash query params
   const hashQuery = window.location.hash.split("?")[1] || "";
   const urlParams = new URLSearchParams(hashQuery);
-  _state.category = urlParams.get("category") || null;
-  _state.search = urlParams.get("search") || null;
-  _state.highlightPostId = urlParams.get("post") || null;
-  _state.page = 1;
+  const urlCategory = urlParams.get("category");
+  const urlSearch = urlParams.get("search");
+  if (urlCategory !== null || urlSearch !== null) {
+    _state.category = urlCategory || null;
+    _state.search = urlSearch || null;
+    _state.page = 1;
+  }
 
   const app = document.getElementById("app-content");
   app.setAttribute("data-page", "community");
@@ -453,17 +385,13 @@ export function renderCommunity() {
   header.appendChild(title);
   container.appendChild(header);
 
-  // Filter bar depends on category
-  if (_state.category === "lostfound") {
-    container.appendChild(_LostFoundFilterBar());
-  } else {
-    container.appendChild(FilterBar());
-  }
+  // Filter bar (sort + search)
+  container.appendChild(FilterBar());
 
   // Category tabs
   container.appendChild(CategoryFilter());
 
-  // Feed
+  // Posts feed
   const feed = document.createElement("div");
   feed.id = "posts-feed";
   feed.className = "post-list";
@@ -479,22 +407,13 @@ export function renderCommunity() {
     _fabContainer.className = "fab-container";
     const fabBtn = document.createElement("button");
     fabBtn.className = "fab-btn";
-    if (_state.category === "lostfound") {
-      fabBtn.textContent = t("lostfound.report_item");
-      fabBtn.addEventListener("click", () => _showLostFoundModal());
-    } else {
-      fabBtn.textContent = t("community.new_post");
-      fabBtn.addEventListener("click", () => _showPostEditor());
-    }
+    fabBtn.textContent = t("community.new_post");
+    fabBtn.addEventListener("click", () => _showPostEditor());
     _fabContainer.appendChild(fabBtn);
     document.body.appendChild(_fabContainer);
   }
 
-  if (_state.category === "lostfound") {
-    _loadLostFound();
-  } else {
-    _loadPosts();
-  }
+  _loadPosts();
 }
 
 // ── Data Loading ─────────────────────────────────────────────────────────────
@@ -538,19 +457,6 @@ async function _loadPosts() {
       _state.posts.forEach((post) => feed.appendChild(PostCard(post)));
     }
 
-    // Highlight shared post if ?post={id} is present
-    if (_state.highlightPostId) {
-      const targetCard = feed.querySelector(`[data-post-id="${_state.highlightPostId}"]`);
-      if (targetCard) {
-        setTimeout(() => {
-          targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
-          targetCard.classList.add("post-highlight");
-          setTimeout(() => targetCard.classList.remove("post-highlight"), 3000);
-        }, 100);
-      }
-      _state.highlightPostId = null;
-    }
-
     // Load more button
     if (data.has_next) {
       const moreBtn = document.createElement("button");
@@ -572,230 +478,6 @@ async function _loadPosts() {
 
 // ── Interactions ─────────────────────────────────────────────────────────────
 
-let _activeShareMenu = null;
-
-function _closeShareMenu() {
-  if (_activeShareMenu) {
-    _activeShareMenu.remove();
-    _activeShareMenu = null;
-  }
-}
-
-function _toggleShareMenu(wrapper, post) {
-  _closeShareMenu();
-
-  const menu = document.createElement("div");
-  menu.className = "share-menu";
-
-  // Copy link
-  const copyItem = document.createElement("button");
-  copyItem.className = "share-menu-item";
-  copyItem.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>`;
-  const copyText = document.createElement("span");
-  copyText.textContent = t("community.share_copy_link");
-  copyItem.appendChild(copyText);
-  copyItem.addEventListener("click", (e) => { e.stopPropagation(); _shareExternal(post); });
-
-  // DM forward
-  const dmItem = document.createElement("button");
-  dmItem.className = "share-menu-item";
-  dmItem.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>`;
-  const dmText = document.createElement("span");
-  dmText.textContent = t("community.share_dm");
-  dmItem.appendChild(dmText);
-  dmItem.addEventListener("click", (e) => { e.stopPropagation(); _closeShareMenu(); _shareViaDM(post); });
-
-  // Repost
-  const repostItem = document.createElement("button");
-  repostItem.className = "share-menu-item";
-  repostItem.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>`;
-  const repostText = document.createElement("span");
-  repostText.textContent = t("community.share_repost");
-  repostItem.appendChild(repostText);
-  repostItem.addEventListener("click", (e) => { e.stopPropagation(); _closeShareMenu(); _shareAsRepost(post); });
-
-  menu.appendChild(copyItem);
-  menu.appendChild(dmItem);
-  menu.appendChild(repostItem);
-  wrapper.appendChild(menu);
-  _activeShareMenu = menu;
-
-  // Close on outside click
-  setTimeout(() => {
-    const closer = (evt) => {
-      if (!menu.contains(evt.target)) {
-        _closeShareMenu();
-        document.removeEventListener("click", closer, true);
-      }
-    };
-    document.addEventListener("click", closer, true);
-  }, 0);
-}
-
-async function _shareExternal(post) {
-  _closeShareMenu();
-  const baseUrl = window.location.origin + window.location.pathname;
-  const shareUrl = `${baseUrl}#/community?post=${post.id}`;
-  const shareTitle = post.title || "HKMU Community Post";
-
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: shareTitle, text: post.content.slice(0, 100), url: shareUrl });
-      track("post_shared", { method: "native" });
-      return;
-    } catch (err) {
-      if (err.name === "AbortError") return;
-    }
-  }
-
-  try {
-    await navigator.clipboard.writeText(shareUrl);
-    track("post_shared", { method: "copy_link" });
-  } catch {
-    const ta = document.createElement("textarea");
-    ta.value = shareUrl;
-    ta.style.cssText = "position:fixed;opacity:0";
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    document.body.removeChild(ta);
-  }
-  showToast(t("community.link_copied"), "success");
-}
-
-function _shareViaDM(post) {
-  if (!isLoggedIn()) { showToast(t("community.share_login_required"), "warning"); return; }
-
-  const wrapper = document.createElement("div");
-
-  const searchInput = document.createElement("input");
-  searchInput.type = "text";
-  searchInput.placeholder = t("community.share_search_user");
-  searchInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 mb-3";
-
-  const resultsDiv = document.createElement("div");
-  resultsDiv.className = "max-h-60 overflow-y-auto";
-  resultsDiv.textContent = "";
-
-  let searchTimer = null;
-  searchInput.addEventListener("input", () => {
-    clearTimeout(searchTimer);
-    const q = searchInput.value.trim();
-    if (!q) { resultsDiv.innerHTML = ""; return; }
-    searchTimer = setTimeout(async () => {
-      try {
-        const users = await api.get(`/users/search?q=${encodeURIComponent(q)}`);
-        resultsDiv.innerHTML = "";
-        if (!users.length) {
-          resultsDiv.textContent = t("messages.no_users");
-          return;
-        }
-        users.forEach((u) => {
-          const row = document.createElement("button");
-          row.type = "button";
-          row.className = "flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-50 transition-colors text-left";
-          row.innerHTML = `<span class="font-medium text-sm">${escapeHtml(u.nickname || u.username)}</span>`;
-          row.addEventListener("click", async () => {
-            try {
-              const msgContent = `[${t("community.quoted_post")}] ${post.title}\n${post.content.slice(0, 100)}${post.content.length > 100 ? "..." : ""}\n${window.location.origin}${window.location.pathname}#/community?post=${post.id}`;
-              await api.post(`/messages/${u.id}`, { content: msgContent });
-              showToast(t("community.share_sent"), "success");
-              track("post_shared", { method: "dm" });
-              closeModal();
-            } catch (err) {
-              showToast(err.message, "error");
-            }
-          });
-          resultsDiv.appendChild(row);
-        });
-      } catch {
-        resultsDiv.textContent = t("messages.search_failed");
-      }
-    }, 300);
-  });
-
-  wrapper.appendChild(searchInput);
-  wrapper.appendChild(resultsDiv);
-  openModal(t("community.share_dm"), wrapper);
-  setTimeout(() => searchInput.focus(), 100);
-}
-
-function _shareAsRepost(post) {
-  if (!isLoggedIn()) { showToast(t("community.share_login_required"), "warning"); return; }
-
-  const form = document.createElement("form");
-  form.id = "post-editor-form";
-  form.className = "space-y-3";
-
-  // Quoted post preview
-  const quotePreview = document.createElement("div");
-  quotePreview.className = "repost-quote-preview";
-  const qAuthor = document.createElement("div");
-  qAuthor.className = "rq-author";
-  qAuthor.textContent = `@${post.author_nickname || "?"}`;
-  const qTitle = document.createElement("div");
-  qTitle.className = "rq-title";
-  qTitle.textContent = post.title;
-  quotePreview.appendChild(qAuthor);
-  quotePreview.appendChild(qTitle);
-
-  const titleInput = document.createElement("input");
-  titleInput.type = "hidden";
-  titleInput.name = "title";
-  titleInput.value = `${t("community.repost_label")}: ${post.title}`;
-
-  const categoryInput = document.createElement("input");
-  categoryInput.type = "hidden";
-  categoryInput.name = "category";
-  categoryInput.value = post.category;
-
-  const textarea = document.createElement("textarea");
-  textarea.name = "content";
-  textarea.placeholder = t("community.field_content");
-  textarea.maxLength = 10000;
-  textarea.rows = 3;
-  textarea.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 resize-none";
-
-  const errDiv = document.createElement("div");
-  errDiv.className = "text-red-500 text-xs hidden";
-
-  const submitBtn = document.createElement("button");
-  submitBtn.type = "submit";
-  submitBtn.className = "w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium";
-  submitBtn.textContent = t("community.publish");
-
-  form.appendChild(quotePreview);
-  form.appendChild(titleInput);
-  form.appendChild(categoryInput);
-  form.appendChild(textarea);
-  form.appendChild(errDiv);
-  form.appendChild(submitBtn);
-
-  openModal(t("community.share_repost"), form);
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const userContent = fd.get("content") || "";
-    const body = {
-      title: fd.get("title"),
-      content: userContent || fd.get("title"),
-      category: fd.get("category"),
-      parent_post_id: post.id,
-    };
-
-    try {
-      await api.post("/posts", body);
-      showToast(t("community.post_published"), "success");
-      closeModal();
-      _loadPosts();
-    } catch (err) {
-      errDiv.textContent = err.message;
-      errDiv.classList.remove("hidden");
-    }
-  });
-}
-
 async function _toggleLike(post, btnEl, countEl) {
   if (!isLoggedIn()) {
     window.dispatchEvent(new CustomEvent("auth:show-login"));
@@ -806,7 +488,6 @@ async function _toggleLike(post, btnEl, countEl) {
     const updated = await api.post(`/posts/${post.id}/like`);
     post.is_liked = updated.is_liked;
     post.likes_count = updated.likes_count;
-    track("post_liked", { post_id: post.id, liked: post.is_liked });
 
     // Update SVG fill
     const svg = btnEl.querySelector("svg");
@@ -888,15 +569,6 @@ async function _loadComments(postId) {
 
     if (isLoggedIn()) {
       _renderCommentInput(section, postId);
-    } else {
-      const loginPrompt = document.createElement("div");
-      loginPrompt.className = "text-center py-2";
-      const loginBtn = document.createElement("button");
-      loginBtn.className = "text-sm text-blue-500 hover:underline";
-      loginBtn.textContent = t("community.login_to_comment");
-      loginBtn.addEventListener("click", () => window.dispatchEvent(new CustomEvent("auth:show-login")));
-      loginPrompt.appendChild(loginBtn);
-      section.appendChild(loginPrompt);
     }
   } catch (err) {
     section.innerHTML = "";
@@ -935,7 +607,6 @@ function _renderCommentInput(section, postId) {
       await api.post(`/posts/${postId}/comments`, { content });
       input.value = "";
       showToast(t("community.comment_posted"), "success");
-      track("comment_created", { post_id: postId, page_context: "community" });
       const post = _state.posts.find((p) => p.id === postId);
       if (post) post.comments_count++;
       const card = document.querySelector(`[data-post-id="${postId}"]`);
@@ -998,28 +669,6 @@ function _showPostEditor(post = null) {
     select.appendChild(opt);
   });
 
-  const anonWrapper = document.createElement("div");
-  anonWrapper.className = "flex items-center gap-2 text-sm text-gray-600";
-  const anonCheckbox = document.createElement("input");
-  anonCheckbox.type = "checkbox";
-  anonCheckbox.name = "is_anonymous";
-  anonCheckbox.id = "anon-toggle";
-  anonCheckbox.className = "w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500";
-  const anonLabel = document.createElement("label");
-  anonLabel.htmlFor = "anon-toggle";
-  anonLabel.className = "select-none cursor-pointer";
-  anonLabel.textContent = t("community.post_anonymously");
-  anonWrapper.appendChild(anonCheckbox);
-  anonWrapper.appendChild(anonLabel);
-
-  if (isEdit && post.is_anonymous) anonCheckbox.checked = true;
-
-  select.addEventListener("change", () => {
-    const isTreehole = select.value === "treehole";
-    anonCheckbox.checked = isTreehole;
-    anonCheckbox.disabled = isTreehole;
-  });
-
   const textarea = document.createElement("textarea");
   textarea.name = "content";
   textarea.placeholder = t("community.field_content");
@@ -1041,7 +690,6 @@ function _showPostEditor(post = null) {
 
   form.appendChild(titleInput);
   form.appendChild(select);
-  form.appendChild(anonWrapper);
   form.appendChild(textarea);
   form.appendChild(errDiv);
   form.appendChild(submitBtn);
@@ -1055,7 +703,6 @@ function _showPostEditor(post = null) {
       title: fd.get("title"),
       content: fd.get("content"),
       category: fd.get("category"),
-      is_anonymous: fd.get("is_anonymous") === "on",
     };
 
     const errEl = document.getElementById("post-editor-error");
@@ -1067,7 +714,6 @@ function _showPostEditor(post = null) {
       } else {
         await api.post("/posts", body);
         showToast(t("community.post_published"), "success");
-        track("post_created", { category: body.category, is_anonymous: body.is_anonymous });
       }
       closeModal();
       _loadPosts();
@@ -1114,320 +760,4 @@ function _getCurrentUserId() {
   } catch {
     return null;
   }
-}
-
-// ── Lost & Found Integration ─────────────────────────────────────────────────
-
-const LF_ITEM_TYPES = [
-  { value: null, labelKey: "lostfound.type_all" },
-  { value: "lost", labelKey: "lostfound.type_lost" },
-  { value: "found", labelKey: "lostfound.type_found" },
-];
-
-const LF_STATUS_OPTIONS = [
-  { value: null, labelKey: "lostfound.status_all" },
-  { value: "active", labelKey: "lostfound.status_active" },
-  { value: "resolved", labelKey: "lostfound.status_resolved" },
-];
-
-function _LostFoundFilterBar() {
-  const bar = document.createElement("div");
-  bar.className = "lf-filter-bar";
-
-  const typeWrap = document.createElement("div");
-  typeWrap.className = "lf-type-tabs";
-
-  LF_ITEM_TYPES.forEach((itemType) => {
-    const btn = document.createElement("button");
-    btn.className = "lf-type-tab" + (_state.lfItemType === itemType.value ? " active" : "");
-    btn.textContent = t(itemType.labelKey);
-    if (itemType.value === "lost") btn.classList.add("lost");
-    if (itemType.value === "found") btn.classList.add("found");
-    btn.addEventListener("click", () => {
-      _state.lfItemType = itemType.value;
-      _state.page = 1;
-      _loadLostFound();
-      typeWrap.querySelectorAll(".lf-type-tab").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-    });
-    typeWrap.appendChild(btn);
-  });
-
-  bar.appendChild(typeWrap);
-
-  const statusSelect = document.createElement("select");
-  statusSelect.className = "lf-status-select";
-  LF_STATUS_OPTIONS.forEach((s) => {
-    const opt = document.createElement("option");
-    opt.value = s.value || "";
-    opt.textContent = t(s.labelKey);
-    if (_state.lfStatusFilter === s.value) opt.selected = true;
-    statusSelect.appendChild(opt);
-  });
-  statusSelect.addEventListener("change", () => {
-    _state.lfStatusFilter = statusSelect.value || null;
-    _state.page = 1;
-    _loadLostFound();
-  });
-  bar.appendChild(statusSelect);
-
-  return bar;
-}
-
-async function _loadLostFound() {
-  const feed = document.getElementById("posts-feed");
-  if (!feed) return;
-
-  _state.loading = true;
-  feed.innerHTML = skeletonCard(3);
-
-  try {
-    const params = new URLSearchParams({
-      page: _state.page,
-      page_size: _state.pageSize,
-    });
-    if (_state.lfItemType) params.set("item_type", _state.lfItemType);
-    if (_state.lfStatusFilter) params.set("status", _state.lfStatusFilter);
-
-    const data = await api.get(`/lostfound?${params}`);
-    feed.innerHTML = "";
-
-    if (data.items.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "text-center py-16";
-      const icon = document.createElement("div");
-      icon.className = "text-5xl mb-3 opacity-30";
-      icon.textContent = "\u{1F50D}";
-      const p = document.createElement("p");
-      p.className = "text-gray-400 text-lg";
-      p.textContent = t("lostfound.empty_title");
-      empty.appendChild(icon);
-      empty.appendChild(p);
-      feed.appendChild(empty);
-    } else {
-      data.items.forEach((item) => feed.appendChild(_LostFoundCard(item)));
-    }
-
-    if (data.has_next) {
-      const moreBtn = document.createElement("button");
-      moreBtn.className = "w-full py-2 text-sm text-blue-500 hover:text-blue-700 transition-colors";
-      moreBtn.textContent = t("lostfound.load_more");
-      moreBtn.addEventListener("click", () => {
-        _state.page++;
-        _loadLostFound();
-      });
-      feed.appendChild(moreBtn);
-    }
-  } catch (err) {
-    feed.innerHTML = "";
-    feed.appendChild(errorState(t("lostfound.load_failed")));
-    showToast(t("lostfound.load_failed"), "error");
-  } finally {
-    _state.loading = false;
-  }
-}
-
-function _LostFoundCard(item) {
-  const card = document.createElement("div");
-  card.className = "lf-card card-hover";
-
-  const typeBadge = document.createElement("span");
-  typeBadge.className = "lf-type-badge " + item.item_type;
-  typeBadge.textContent = item.item_type === "lost" ? t("lostfound.lost_label") : t("lostfound.found_label");
-  card.appendChild(typeBadge);
-
-  if (item.status === "resolved") {
-    const statusBadge = document.createElement("span");
-    statusBadge.className = "lf-status-badge resolved";
-    statusBadge.textContent = t("lostfound.resolved_label");
-    card.appendChild(statusBadge);
-  }
-
-  const body = document.createElement("div");
-  body.className = "lf-card-body";
-
-  const title = document.createElement("h3");
-  title.className = "lf-card-title";
-  title.textContent = item.title;
-  body.appendChild(title);
-
-  if (item.location) {
-    const loc = document.createElement("p");
-    loc.className = "lf-card-location";
-    loc.textContent = "\u{1F4CD} " + item.location;
-    body.appendChild(loc);
-  }
-
-  const desc = document.createElement("p");
-  desc.className = "lf-card-desc";
-  desc.textContent = item.description.length > 150 ? item.description.slice(0, 150) + "..." : item.description;
-  body.appendChild(desc);
-
-  const meta = document.createElement("div");
-  meta.className = "lf-card-meta";
-  const author = document.createElement("span");
-  author.textContent = item.author_nickname || t("community.anonymous");
-  const time = document.createElement("span");
-  time.textContent = _timeAgo(item.created_at);
-  meta.appendChild(author);
-  meta.appendChild(time);
-  body.appendChild(meta);
-
-  card.appendChild(body);
-
-  if (isLoggedIn() && _isLfItemOwner(item.author_id)) {
-    const actions = document.createElement("div");
-    actions.className = "lf-card-actions";
-
-    if (item.status === "active") {
-      const resolveBtn = document.createElement("button");
-      resolveBtn.className = "lf-action-btn resolve";
-      resolveBtn.textContent = t("lostfound.resolved_label");
-      resolveBtn.addEventListener("click", () => _resolveLfItem(item.id));
-      actions.appendChild(resolveBtn);
-    }
-
-    const delBtn = document.createElement("button");
-    delBtn.className = "lf-action-btn delete";
-    delBtn.textContent = t("community.delete");
-    delBtn.addEventListener("click", () => _deleteLfItem(item.id));
-    actions.appendChild(delBtn);
-
-    card.appendChild(actions);
-  }
-
-  return card;
-}
-
-function _isLfItemOwner(authorId) {
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) return false;
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return parseInt(payload.sub) === authorId;
-  } catch {
-    return false;
-  }
-}
-
-async function _resolveLfItem(itemId) {
-  if (!confirm(t("lostfound.confirm_resolve"))) return;
-  try {
-    await api.put(`/lostfound/${itemId}`, { status: "resolved" });
-    showToast(t("lostfound.marked_resolved"), "success");
-    _loadLostFound();
-  } catch (err) {
-    showToast(err.message, "error");
-  }
-}
-
-async function _deleteLfItem(itemId) {
-  if (!confirm(t("lostfound.confirm_delete"))) return;
-  try {
-    await api.del(`/lostfound/${itemId}`);
-    showToast(t("lostfound.report_deleted"), "info");
-    _loadLostFound();
-  } catch (err) {
-    showToast(err.message, "error");
-  }
-}
-
-function _showLostFoundModal() {
-  const form = document.createElement("form");
-  form.id = "lf-create-form";
-  form.className = "space-y-3";
-
-  const typeGroup = document.createElement("div");
-  typeGroup.className = "flex gap-3";
-
-  const lostLabel = document.createElement("label");
-  lostLabel.className = "lf-radio-label";
-  const lostRadio = document.createElement("input");
-  lostRadio.type = "radio";
-  lostRadio.name = "item_type";
-  lostRadio.value = "lost";
-  lostRadio.required = true;
-  lostRadio.checked = true;
-  lostLabel.appendChild(lostRadio);
-  lostLabel.appendChild(document.createTextNode(" " + t("lostfound.i_lost")));
-
-  const foundLabel = document.createElement("label");
-  foundLabel.className = "lf-radio-label";
-  const foundRadio = document.createElement("input");
-  foundRadio.type = "radio";
-  foundRadio.name = "item_type";
-  foundRadio.value = "found";
-  foundRadio.checked = false;
-  foundLabel.appendChild(foundRadio);
-  foundLabel.appendChild(document.createTextNode(" " + t("lostfound.i_found")));
-
-  typeGroup.appendChild(lostLabel);
-  typeGroup.appendChild(foundLabel);
-
-  const titleInput = document.createElement("input");
-  titleInput.type = "text";
-  titleInput.name = "title";
-  titleInput.placeholder = t("lostfound.field_title");
-  titleInput.required = true;
-  titleInput.maxLength = 200;
-  titleInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
-  titleInput.setAttribute("aria-label", t("lostfound.field_title"));
-
-  const locationInput = document.createElement("input");
-  locationInput.type = "text";
-  locationInput.name = "location";
-  locationInput.placeholder = t("lostfound.field_location");
-  locationInput.maxLength = 200;
-  locationInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400";
-  locationInput.setAttribute("aria-label", t("lostfound.field_location"));
-
-  const descInput = document.createElement("textarea");
-  descInput.name = "description";
-  descInput.placeholder = t("lostfound.field_desc");
-  descInput.required = true;
-  descInput.maxLength = 2000;
-  descInput.rows = 4;
-  descInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 resize-none";
-  descInput.setAttribute("aria-label", t("lostfound.field_desc"));
-
-  const errDiv = document.createElement("div");
-  errDiv.id = "lf-create-error";
-  errDiv.className = "text-red-500 text-xs hidden";
-
-  const submitBtn = document.createElement("button");
-  submitBtn.type = "submit";
-  submitBtn.className = "w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium";
-  submitBtn.textContent = t("lostfound.submit_report");
-
-  form.appendChild(typeGroup);
-  form.appendChild(titleInput);
-  form.appendChild(locationInput);
-  form.appendChild(descInput);
-  form.appendChild(errDiv);
-  form.appendChild(submitBtn);
-
-  openModal(t("lostfound.report_modal"), form);
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const errEl = document.getElementById("lf-create-error");
-
-    try {
-      errEl.classList.add("hidden");
-      await api.post("/lostfound", {
-        title: fd.get("title"),
-        description: fd.get("description"),
-        item_type: fd.get("item_type"),
-        location: fd.get("location") || null,
-      });
-      showToast(t("lostfound.report_submitted"), "success");
-      track("lost_found_reported", { item_type: fd.get("item_type") });
-      closeModal();
-      _loadLostFound();
-    } catch (err) {
-      errEl.textContent = err.message;
-      errEl.classList.remove("hidden");
-    }
-  });
 }

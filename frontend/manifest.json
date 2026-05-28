@@ -4,8 +4,8 @@
   "description": "HKMU campus forum, academic planner, messaging, and more",
   "start_url": "/#/",
   "display": "standalone",
-  "background_color": "#F5F7FA",
-  "theme_color": "#0066CC",
+  "background_color": "#FFFFFF",
+  "theme_color": "#2E7D52",
   "lang": "zh-Hant",
   "orientation": "portrait-primary",
   "icons": [

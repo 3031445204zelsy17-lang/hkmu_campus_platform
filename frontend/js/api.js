@@ -83,29 +83,22 @@ export async function request(method, path, body = null, attempt = 0) {
     const res = await fetch(`${API_BASE}${path}`, opts);
 
     if (res.status === 401) {
-      // Only attempt refresh / logout if user was logged in
-      if (_token) {
-        if (attempt === 0 && _refreshToken) {
-          const refreshed = await _tryRefresh();
-          if (refreshed) {
-            return request(method, path, body, attempt + 1);
-          }
+      // Try refresh token once
+      if (attempt === 0 && _refreshToken) {
+        const refreshed = await _tryRefresh();
+        if (refreshed) {
+          return request(method, path, body, attempt + 1);
         }
-        setToken(null);
-        setRefreshToken(null);
-        window.dispatchEvent(new CustomEvent("auth:logout"));
       }
+      setToken(null);
+      setRefreshToken(null);
+      window.dispatchEvent(new CustomEvent("auth:logout"));
       throw new Error("Unauthorized");
     }
 
     if (!res.ok) {
       const detail = await res.json().catch(() => ({}));
-      const msg = typeof detail.detail === "string"
-        ? detail.detail
-        : Array.isArray(detail.detail)
-          ? detail.detail.map(e => e.msg).join("; ")
-          : res.statusText;
-      throw new Error(msg);
+      throw new Error(detail.detail || res.statusText);
     }
 
     if (res.status === 204) return null;

@@ -1,25 +1,25 @@
-const CACHE_NAME = 'hkmu-campus-v8';
+const CACHE_NAME = 'hkmu-campus-v9';
 const STATIC_CACHE = `${CACHE_NAME}-static`;
 const DYNAMIC_CACHE = `${CACHE_NAME}-dynamic`;
 
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/css/main.css',
-  '/css/nav.css',
-  '/css/auth.css',
-  '/css/community.css',
-  '/css/academic.css',
-  '/css/profile.css',
-  '/css/news.css',
-  '/css/lostfound.css',
-  '/css/messages.css',
-  '/js/app.js',
+  '/css/main.css?v=phase11',
+  '/css/nav.css?v=phase11',
+  '/css/auth.css?v=phase11',
+  '/css/community.css?v=phase11',
+  '/css/academic.css?v=phase11',
+  '/css/profile.css?v=phase11',
+  '/css/news.css?v=phase11',
+  '/css/lostfound.css?v=phase11',
+  '/css/messages.css?v=phase11',
+  '/js/app.js?v=phase11',
   '/js/router.js',
   '/js/api.js',
-  '/js/pages/home.js',
+  '/js/pages/home.js?v=phase11',
   '/js/pages/community.js',
-  '/js/pages/planner.js',
+  '/js/pages/planner.js?v=phase11',
   '/js/pages/profile.js',
   '/js/pages/news.js',
   '/js/pages/lostfound.js',
@@ -29,7 +29,6 @@ const STATIC_ASSETS = [
   '/js/components/modal.js',
   '/js/components/nav.js',
   '/js/utils/i18n.js',
-  '/js/utils/analytics.js',
   '/js/utils/storage.js',
   '/js/utils/time.js',
   '/icons/HKMU.png',
@@ -55,52 +54,6 @@ self.addEventListener('activate', (event) => {
     )
   );
   self.clients.claim();
-});
-
-// --- Push notifications ---
-
-self.addEventListener('push', (event) => {
-  let data = {};
-  try {
-    data = event.data.json();
-  } catch {
-    data = { title: 'HKMU Campus', body: 'You have a new notification' };
-  }
-
-  const title = data.title || 'HKMU Campus';
-  const options = {
-    body: data.body || '',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
-    data: {
-      url: data.url || '/',
-      type: data.type || 'generic',
-      sender_id: data.sender_id,
-    },
-    vibrate: [100, 50, 100],
-    tag: data.tag || `hkmu-${data.type || 'default'}-${Date.now()}`,
-    requireInteraction: false,
-  };
-
-  event.waitUntil(self.registration.showNotification(title, options));
-});
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-
-  const targetUrl = event.notification.data?.url || '/';
-
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          client.navigate(targetUrl);
-          return client.focus();
-        }
-      }
-      return clients.openWindow(targetUrl);
-    })
-  );
 });
 
 self.addEventListener('fetch', (event) => {
@@ -145,9 +98,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets (CSS/JS/images): Cache First (ignore query params so ?v=xxx matches)
+  // Static assets (CSS/JS/images): Cache First
   event.respondWith(
-    caches.match(request, { ignoreSearch: true }).then(
+    caches.match(request).then(
       (cached) =>
         cached ||
         fetch(request).then((response) => {

@@ -4,12 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>HKMU Campus Platform</title>
-    <meta name="theme-color" content="#0066CC">
+    <meta name="theme-color" content="#2E7D52">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="HKMU Campus">
-    <meta name="ga4-measurement-id" content="">
-    <meta name="mixpanel-token" content="">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -18,22 +16,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config={theme:{extend:{colors:{'hkmu-blue':'#0066CC','hkmu-green':'#2E7D52','hkmu-light-blue':'#E3F2FD','hkmu-light-green':'#E8F5E9','page-bg':'#F5F7FA','text-primary':'#1A1A2E','text-secondary':'#6B7280'}}}}</script>
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/nav.css">
-    <link rel="stylesheet" href="css/auth.css">
-    <link rel="stylesheet" href="css/community.css">
-    <link rel="stylesheet" href="css/academic.css">
-    <link rel="stylesheet" href="css/profile.css">
-    <link rel="stylesheet" href="css/news.css">
-    <link rel="stylesheet" href="css/lostfound.css">
-    <link rel="stylesheet" href="css/messages.css">
+    <link rel="stylesheet" href="css/main.css?v=phase11">
+    <link rel="stylesheet" href="css/nav.css?v=phase11">
+    <link rel="stylesheet" href="css/auth.css?v=phase11">
+    <link rel="stylesheet" href="css/community.css?v=phase11">
+    <link rel="stylesheet" href="css/academic.css?v=phase11">
+    <link rel="stylesheet" href="css/profile.css?v=phase11">
+    <link rel="stylesheet" href="css/news.css?v=phase11">
+    <link rel="stylesheet" href="css/lostfound.css?v=phase11">
+    <link rel="stylesheet" href="css/messages.css?v=phase11">
 </head>
 <body class="bg-gray-50 min-h-screen">
     <a href="#app-content" class="skip-link">Skip to main content</a>
     <nav id="app-nav" class="sticky top-0 z-50 shadow-sm" aria-label="Main navigation">
-        <div class="px-4 py-3 flex items-center justify-between">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <button id="sidebar-toggle" class="hamburger-btn md:hidden" aria-label="Toggle sidebar menu">
+                <button id="sidebar-toggle" class="hamburger-btn">
                     <i data-lucide="menu" class="w-5 h-5"></i>
                 </button>
                 <a href="https://www.hkmu.edu.hk/" target="_blank" class="brand-logo-link">
@@ -41,24 +39,20 @@
                 </a>
                 <a href="#/" class="text-xl font-bold">HKMU Campus</a>
             </div>
-            <div id="nav-utilities" class="flex items-center gap-2"></div>
+            <div id="nav-links" class="flex gap-4 text-sm items-center"></div>
         </div>
     </nav>
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
-    <div id="app-layout">
-        <aside id="app-sidebar" class="app-sidebar" aria-label="Sidebar navigation">
-            <nav>
-                <ul id="sidebar-main-nav"></ul>
-            </nav>
-            <div id="sidebar-community-section" class="sidebar-subsection hidden">
-                <ul id="sidebar-community-cats"></ul>
-            </div>
-        </aside>
-        <main id="app-content" class="app-main"></main>
-    </div>
+    <aside id="drawer-sidebar" class="drawer-sidebar" aria-label="Sidebar navigation">
+        <div class="sidebar-section">
+            <h3>Categories</h3>
+            <ul id="sidebar-categories"></ul>
+        </div>
+    </aside>
+    <main id="app-content" class="max-w-6xl mx-auto px-4 py-6"></main>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="js/app.js" type="module"></script>
+    <script src="js/app.js?v=phase11" type="module"></script>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {

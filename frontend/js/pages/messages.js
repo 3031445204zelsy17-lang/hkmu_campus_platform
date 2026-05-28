@@ -3,7 +3,6 @@ import { showToast } from "../components/toast.js";
 import { openModal, closeModal } from "../components/modal.js";
 import { t } from "../utils/i18n.js";
 import { errorState } from "../components/skeleton.js";
-import { track } from "../utils/analytics.js";
 
 let _ws = null;
 let _wsReconnectDelay = 5000;
@@ -438,13 +437,11 @@ async function sendMessage() {
 
   // Try WS first
   const sent = wsSend({ type: "chat", receiver_id: _state.activePartner, content });
-  if (sent) track("message_sent", { via: "ws" });
 
   if (!sent) {
     // REST fallback
     try {
       const msg = await api.post(`/messages/${_state.activePartner}`, { content });
-      track("message_sent", { via: "rest" });
       _state.messages.push(msg);
       renderMessagesArea();
       scrollToBottom();
@@ -496,7 +493,7 @@ function showNewConvModal() {
     </div>
   `;
 
-  openModal(t("messages.new_conversation"), html);
+  openModal("New Conversation", html);
 
   const searchInput = document.getElementById("msg-search-input");
   const resultsEl = document.getElementById("msg-search-results");

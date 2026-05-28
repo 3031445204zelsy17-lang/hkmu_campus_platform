@@ -130,120 +130,6 @@
   background-color: var(--bg-hover);
 }
 
-/* ── Share Menu ──────────────────────────────────────────────────────── */
-
-[data-page="community"] .share-menu {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  right: 0;
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: 10px;
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  min-width: 160px;
-  z-index: 100;
-  overflow: hidden;
-}
-
-[data-page="community"] .share-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 16px;
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.15s;
-}
-
-[data-page="community"] .share-menu-item:hover {
-  background-color: var(--bg-hover);
-  color: var(--color-primary-dark);
-}
-
-/* ── Quoted Post Card ────────────────────────────────────────────────── */
-
-[data-page="community"] .quoted-post-card {
-  border-left: 3px solid var(--color-primary);
-  background: var(--bg-card-alt);
-  border-radius: 0 8px 8px 0;
-  padding: 10px 14px;
-  margin-top: 10px;
-  cursor: pointer;
-  transition: background-color 0.15s;
-}
-
-[data-page="community"] .quoted-post-card:hover {
-  background: var(--bg-hover);
-}
-
-[data-page="community"] .quoted-post-card .quoted-author {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 4px;
-}
-
-[data-page="community"] .quoted-post-card .quoted-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
-  margin-bottom: 3px;
-}
-
-[data-page="community"] .quoted-post-card .quoted-preview {
-  font-size: 13px;
-  color: var(--text-muted);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* ── Post Highlight (shared link target) ─────────────────────────────── */
-
-[data-page="community"] .post-highlight {
-  animation: highlight-pulse 3s ease-out;
-  outline: 2px solid var(--color-primary);
-  outline-offset: 4px;
-  border-radius: 8px;
-}
-
-@keyframes highlight-pulse {
-  0%   { background-color: rgba(46, 125, 82, 0.15); }
-  30%  { background-color: rgba(46, 125, 82, 0.08); }
-  100% { background-color: transparent; }
-}
-
-/* ── Repost Editor Quote Preview ─────────────────────────────────────── */
-
-[data-page="community"] .repost-quote-preview {
-  border-left: 3px solid var(--color-primary);
-  background: var(--bg-card-alt);
-  border-radius: 0 8px 8px 0;
-  padding: 10px 14px;
-  margin-bottom: 12px;
-  pointer-events: none;
-}
-
-[data-page="community"] .repost-quote-preview .rq-author {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-[data-page="community"] .repost-quote-preview .rq-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
-  margin-top: 2px;
-}
-
 /* ── Filter Bar ───────────────────────────────────────────────────── */
 
 [data-page="community"] .filter-bar {
@@ -691,10 +577,127 @@
 
 /* ── Responsive Breakpoints ───────────────────────────────────────── */
 
+/* Liquid glass controls */
+[data-page="community"] .filter-bar {
+  border: 1px solid rgba(46, 125, 82, 0.12);
+  border-radius: 26px;
+  background: var(--glass-surface);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(22px) saturate(1.22);
+  -webkit-backdrop-filter: blur(22px) saturate(1.22);
+}
+
+[data-page="community"] .filter-btn,
+[data-page="community"] .category-tab,
+[data-page="community"] .action-btn {
+  border: 1px solid rgba(46, 125, 82, 0.14);
+  border-radius: 999px;
+  background: var(--glass-surface-soft);
+  color: var(--text-secondary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72),
+              0 12px 28px rgba(46, 125, 82, 0.07);
+  backdrop-filter: blur(16px) saturate(1.22);
+  -webkit-backdrop-filter: blur(16px) saturate(1.22);
+}
+
+[data-page="community"] .filter-btn.active,
+[data-page="community"] .category-tab.active,
+[data-page="community"] .action-btn.liked {
+  border-color: rgba(255, 255, 255, 0.32);
+  background: var(--glass-brand);
+  color: #ffffff;
+  box-shadow: 0 16px 36px rgba(46, 125, 82, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+[data-page="community"] .category-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 8px 18px;
+  text-transform: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+[data-page="community"] .category-tab::before,
+[data-page="community"] .category-tab::after {
+  display: none;
+}
+
+[data-page="community"] .category-tab .text-container {
+  mix-blend-mode: normal;
+}
+
+[data-page="community"] .category-tab:hover .text {
+  animation: none;
+}
+
+[data-page="community"] .search-box {
+  max-width: 390px;
+  padding: 5px;
+  border: 1px solid rgba(46, 125, 82, 0.14);
+  border-radius: 999px;
+  background: var(--glass-surface-soft);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72),
+              0 14px 32px rgba(46, 125, 82, 0.08);
+  backdrop-filter: blur(18px) saturate(1.18);
+  -webkit-backdrop-filter: blur(18px) saturate(1.18);
+}
+
+[data-page="community"] .search-box input {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: none;
+}
+
+[data-page="community"] .search-box input:focus {
+  box-shadow: none;
+  background: transparent;
+}
+
+[data-page="community"] .search-box button,
+[data-page="community"] .comment-input button,
+.fab-btn {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: var(--glass-primary);
+  color: #ffffff;
+  box-shadow: var(--glass-shadow-strong);
+}
+
+[data-page="community"] .search-box button {
+  min-height: 40px;
+  border-radius: 999px;
+}
+
+[data-page="community"] .comment-input {
+  align-items: stretch;
+  padding: 5px;
+  border: 1px solid rgba(46, 125, 82, 0.12);
+  border-radius: 999px;
+  background: var(--glass-surface-soft);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+[data-page="community"] .comment-input input {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+[data-page="community"] .comment-input button {
+  min-height: 40px;
+  border-radius: 999px;
+}
+
 @media (aspect-ratio: 4/3) or (max-width: 1280px) {
   [data-page="community"] .filter-bar { padding: 12px 16px; gap: 10px; }
   [data-page="community"] .filter-btn { padding: 6px 12px; font-size: 13px; }
-  [data-page="community"] .search-box { max-width: 250px; }
+  [data-page="community"] .search-box { max-width: 360px; }
   [data-page="community"] .search-box input { padding: 6px 10px; font-size: 13px; }
   [data-page="community"] .search-box button { padding: 6px 12px; }
   [data-page="community"] .post-card { padding: 16px; }
@@ -724,20 +727,56 @@
 
 @media (max-width: 768px) {
   [data-page="community"] .filter-bar {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: stretch;
     gap: 10px;
+    padding: 12px;
   }
+
+  [data-page="community"] .filter-btn {
+    width: 100%;
+    min-height: 42px;
+    text-align: center;
+  }
+
   [data-page="community"] .search-box {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-column: 1 / -1;
     margin-left: 0;
     max-width: 100%;
   }
+
+  [data-page="community"] .search-box input {
+    width: 100%;
+  }
+
+  [data-page="community"] .search-box button {
+    min-width: 74px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
   [data-page="community"] .category-tabs {
-    flex-direction: column;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 0 2px 2px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  [data-page="community"] .category-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  [data-page="community"] .category-tab {
+    flex: 0 0 auto;
+    min-height: 40px;
+    white-space: nowrap;
   }
   .fab-container {
-    bottom: 20px;
-    right: 20px;
+    bottom: 92px;
+    bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+    right: 16px;
   }
   .fab-btn {
     padding: 10px 20px;
@@ -756,8 +795,11 @@
   }
   [data-page="community"] .post-actions {
     gap: 8px;
+    flex-wrap: wrap;
   }
   [data-page="community"] .action-btn {
+    flex: 1 1 30%;
+    justify-content: center;
     padding: 8px 12px;
     min-height: 44px;
   }
@@ -777,8 +819,8 @@
   .fab-btn {
     padding: 12px;
     border-radius: 50%;
-    width: 56px;
-    height: 56px;
+    width: 54px;
+    height: 54px;
     font-size: 20px;
   }
   .fab-btn span.fab-label {

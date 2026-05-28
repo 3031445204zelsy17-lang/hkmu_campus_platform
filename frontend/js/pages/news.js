@@ -3,7 +3,6 @@ import { showToast } from "../components/toast.js";
 import { openModal, closeModal } from "../components/modal.js";
 import { t } from "../utils/i18n.js";
 import { skeletonCard, errorState } from "../components/skeleton.js";
-import { track } from "../utils/analytics.js";
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -107,16 +106,11 @@ function _CategoryFilter() {
 }
 
 function _NewsCard(item) {
-  const card = document.createElement("div");
+  const card = document.createElement("a");
   card.className = "news-card card-hover";
-  card.dataset.newsId = item.id;
-
-  // Clickable link wrapper
-  const link = document.createElement("a");
-  link.href = item.source_url;
-  link.target = "_blank";
-  link.rel = "noopener noreferrer";
-  link.className = "news-card-link";
+  card.href = item.source_url;
+  card.target = "_blank";
+  card.rel = "noopener noreferrer";
 
   if (item.image_url) {
     const img = document.createElement("img");
@@ -124,7 +118,7 @@ function _NewsCard(item) {
     img.src = item.image_url;
     img.alt = item.title;
     img.onerror = () => img.remove();
-    link.appendChild(img);
+    card.appendChild(img);
   }
 
   const body = document.createElement("div");
@@ -158,23 +152,7 @@ function _NewsCard(item) {
   }
 
   body.appendChild(meta);
-  link.appendChild(body);
-  card.appendChild(link);
-
-  // Action bar
-  const actions = document.createElement("div");
-  actions.className = "news-card-actions";
-
-  const commentBtn = document.createElement("button");
-  commentBtn.className = "action-btn";
-  commentBtn.appendChild(_newsCommentIcon());
-  const commentCount = document.createElement("span");
-  commentCount.textContent = item.comments_count || 0;
-  commentBtn.appendChild(commentCount);
-  commentBtn.addEventListener("click", () => _toggleNewsComments(item.id));
-  actions.appendChild(commentBtn);
-
-  card.appendChild(actions);
+  card.appendChild(body);
 
   // Delete button — only for author
   const currentUserId = _getCurrentUserId();
@@ -191,12 +169,6 @@ function _NewsCard(item) {
     card.appendChild(delBtn);
   }
 
-  // Comments section (hidden)
-  const commentsContainer = document.createElement("div");
-  commentsContainer.className = "comments-section hidden";
-  commentsContainer.id = `news-comments-${item.id}`;
-  card.appendChild(commentsContainer);
-
   return card;
 }
 
@@ -212,162 +184,6 @@ function _EmptyState() {
   el.appendChild(icon);
   el.appendChild(p);
   return el;
-}
-
-// ── SVG / Avatar Helpers ──────────────────────────────────────────────────────
-
-function _newsCommentIcon() {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("class", "w-4 h-4");
-  svg.setAttribute("fill", "none");
-  svg.setAttribute("stroke", "currentColor");
-  svg.setAttribute("viewBox", "0 0 24 24");
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute("stroke-linecap", "round");
-  path.setAttribute("stroke-linejoin", "round");
-  path.setAttribute("stroke-width", "2");
-  path.setAttribute("d", "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z");
-  svg.appendChild(path);
-  return svg;
-}
-
-function _commentAvatarFallback(c) {
-  const el = document.createElement("div");
-  el.className = "comment-avatar-fallback";
-  el.textContent = (c.author_nickname || "?")[0].toUpperCase();
-  return el;
-}
-
-// ── News Comment Interactions ────────────────────────────────────────────────
-
-async function _toggleNewsComments(newsId) {
-  const section = document.getElementById(`news-comments-${newsId}`);
-  if (!section) return;
-
-  if (section.classList.contains("hidden")) {
-    section.classList.remove("hidden");
-    await _loadNewsComments(newsId);
-  } else {
-    section.classList.add("hidden");
-  }
-}
-
-async function _loadNewsComments(newsId) {
-  const section = document.getElementById(`news-comments-${newsId}`);
-  if (!section) return;
-  section.innerHTML = '<div class="flex justify-center py-2"><div class="spinner"></div></div>';
-
-  try {
-    const data = await api.get(`/news/${newsId}/comments?page=1&page_size=50`);
-    section.innerHTML = "";
-
-    data.items.forEach((c) => {
-      const row = document.createElement("div");
-      row.className = "comment";
-
-      if (c.author_avatar) {
-        const img = document.createElement("img");
-        img.className = "comment-avatar";
-        img.src = c.author_avatar;
-        img.alt = (c.author_nickname || "?")[0].toUpperCase();
-        img.onerror = () => img.replaceWith(_commentAvatarFallback(c));
-        row.appendChild(img);
-      } else {
-        row.appendChild(_commentAvatarFallback(c));
-      }
-
-      const body = document.createElement("div");
-      body.className = "comment-content";
-
-      const meta = document.createElement("div");
-      const nameSpan = document.createElement("span");
-      nameSpan.className = "comment-author";
-      nameSpan.textContent = c.author_nickname;
-      meta.appendChild(nameSpan);
-
-      const timeSpan = document.createElement("span");
-      timeSpan.className = "comment-time";
-      timeSpan.textContent = _timeAgo(c.created_at);
-      meta.appendChild(timeSpan);
-      body.appendChild(meta);
-
-      const text = document.createElement("p");
-      text.textContent = c.content;
-      body.appendChild(text);
-
-      row.appendChild(body);
-      section.appendChild(row);
-    });
-
-    if (data.items.length === 0) {
-      const empty = document.createElement("p");
-      empty.className = "text-xs text-gray-400 text-center py-2";
-      empty.textContent = t("news.no_comments");
-      section.appendChild(empty);
-    }
-
-    if (isLoggedIn()) {
-      _renderNewsCommentInput(section, newsId);
-    } else {
-      const loginPrompt = document.createElement("div");
-      loginPrompt.className = "text-center py-2";
-      const loginBtn = document.createElement("button");
-      loginBtn.className = "text-sm text-blue-500 hover:underline";
-      loginBtn.textContent = t("news.login_to_comment");
-      loginBtn.addEventListener("click", () => window.dispatchEvent(new CustomEvent("auth:show-login")));
-      loginPrompt.appendChild(loginBtn);
-      section.appendChild(loginPrompt);
-    }
-  } catch (err) {
-    section.innerHTML = "";
-    const errorEl = document.createElement("p");
-    errorEl.className = "text-xs text-red-400 text-center";
-    errorEl.textContent = t("error.load_failed");
-    section.appendChild(errorEl);
-    showToast(err.message, "error");
-  }
-}
-
-function _renderNewsCommentInput(section, newsId) {
-  const form = document.createElement("div");
-  form.className = "comment-input";
-
-  const input = document.createElement("input");
-  input.type = "text";
-  input.placeholder = t("news.write_comment");
-  input.setAttribute("aria-label", t("news.write_comment"));
-
-  const btn = document.createElement("button");
-  btn.textContent = t("news.send");
-  btn.disabled = true;
-
-  input.addEventListener("input", () => {
-    btn.disabled = !input.value.trim();
-  });
-
-  btn.addEventListener("click", async () => {
-    const content = input.value.trim();
-    if (!content) return;
-    btn.disabled = true;
-    btn.textContent = "...";
-
-    try {
-      await api.post(`/news/${newsId}/comments`, { content });
-      input.value = "";
-      showToast(t("news.comment_posted"), "success");
-      track("comment_created", { post_id: newsId, page_context: "news" });
-      await _loadNewsComments(newsId);
-    } catch (err) {
-      showToast(err.message, "error");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = t("news.send");
-    }
-  });
-
-  form.appendChild(input);
-  form.appendChild(btn);
-  section.appendChild(form);
 }
 
 // ── Data Loading ─────────────────────────────────────────────────────────────
@@ -495,7 +311,6 @@ function _showCreateModal() {
         category: fd.get("category") || null,
       });
       showToast(t("news.link_added"), "success");
-      track("news_link_added", { category: fd.get("category") });
       closeModal();
       _loadNews();
     } catch (err) {
