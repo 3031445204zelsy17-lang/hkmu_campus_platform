@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hkmu-campus-v7';
+const CACHE_NAME = 'hkmu-campus-v8';
 const STATIC_CACHE = `${CACHE_NAME}-static`;
 const DYNAMIC_CACHE = `${CACHE_NAME}-dynamic`;
 
@@ -145,9 +145,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets (CSS/JS/images): Cache First
+  // Static assets (CSS/JS/images): Cache First (ignore query params so ?v=xxx matches)
   event.respondWith(
-    caches.match(request).then(
+    caches.match(request, { ignoreSearch: true }).then(
       (cached) =>
         cached ||
         fetch(request).then((response) => {
