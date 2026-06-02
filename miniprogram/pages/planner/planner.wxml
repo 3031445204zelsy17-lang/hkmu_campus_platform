@@ -1,0 +1,36 @@
+<app-header bind:languagechange="handleLanguageChange" />
+
+<view class="page-shell planner-shell">
+  <view class="top-bar tight">
+    <view class="brand-lockup">
+      <view class="eyebrow">{{text.eyebrow}}</view>
+      <view class="app-title">{{text.title}}</view>
+      <view class="subtitle">{{text.subtitle}}</view>
+    </view>
+  </view>
+
+  <view class="planner-hero">
+    <view>
+      <view class="planner-kicker">{{text.termPreview}}</view>
+      <view class="planner-title">{{text.heroTitle}}</view>
+      <view class="planner-copy">{{text.heroCopy}}</view>
+    </view>
+    <view class="planner-score">68%</view>
+  </view>
+
+  <view class="web-panel">
+    <view class="section-title">{{text.planTitle}}</view>
+    <view wx:for="{{courses}}" wx:key="code" class="course-row">
+      <view>
+        <view class="course-code">{{item.code}}</view>
+        <view class="course-name">{{item.name}}</view>
+      </view>
+      <view class="{{item.className}}">{{item.status}}</view>
+    </view>
+  </view>
+
+  <view class="web-panel">
+    <view class="section-title">{{text.reminderTitle}}</view>
+    <view class="panel-copy">{{text.reminderCopy}}</view>
+  </view>
+</view>

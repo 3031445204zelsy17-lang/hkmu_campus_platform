@@ -1,0 +1,57 @@
+<app-header bind:languagechange="handleLanguageChange" />
+
+<view class="page-shell">
+  <view class="top-bar tight">
+    <view class="brand-lockup">
+      <view class="eyebrow">{{text.eyebrow}}</view>
+      <view class="app-title">{{text.title}}</view>
+      <view class="subtitle">{{text.subtitle}}</view>
+    </view>
+  </view>
+
+  <view class="search-dock flat">
+    <view class="search-mark">#</view>
+    <input
+      class="search-input"
+      placeholder="{{text.searchPlaceholder}}"
+      value="{{keyword}}"
+      confirm-type="search"
+      bindinput="updateKeyword"
+    />
+    <view wx:if="{{keyword}}" class="text-link" bindtap="clearKeyword">{{text.clear}}</view>
+  </view>
+
+  <view wx:if="{{featuredItem}}" class="spotlight-card">
+    <view class="spotlight-kicker">{{featuredItem.category}} {{text.separator}} {{featuredItem.publishedAtLabel}}</view>
+    <view class="spotlight-title">{{featuredItem.title}}</view>
+    <view class="spotlight-summary">{{featuredItem.summary}}</view>
+    <view class="spotlight-footer">
+      <view>{{featuredItem.sourceLabel}}</view>
+      <button data-url="{{featuredItem.sourceUrl}}" bindtap="copySourceLink">{{text.copyLink}}</button>
+    </view>
+  </view>
+
+  <view class="section-header">
+    <view>
+      <view class="section-title">{{text.sectionTitle}}</view>
+      <view class="section-note">{{filteredItems.length}} {{text.countSuffix}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{filteredItems.length === 0 && !loading}}" class="empty-state flat">
+    <view class="empty-title">{{text.emptyTitle}}</view>
+    <view class="empty-copy">{{text.emptyCopy}}</view>
+  </view>
+
+  <view wx:for="{{listItems}}" wx:key="id" class="article-card">
+    <view class="article-meta">
+      <view class="mini-pill green">{{item.category}}</view>
+      <view class="mini-pill">{{item.publishedAtLabel}}</view>
+    </view>
+    <view class="article-title">{{item.title}}</view>
+    <view class="article-summary">{{item.summary}}</view>
+    <button class="inline-action" data-url="{{item.sourceUrl}}" bindtap="copySourceLink">{{text.copySource}}</button>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-line">{{text.loading}}</view>
+</view>

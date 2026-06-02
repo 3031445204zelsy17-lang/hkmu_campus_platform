@@ -1,0 +1,17 @@
+<view class="app-header" style="padding-top: {{statusBarHeight}}px;">
+  <view class="app-header-row" style="height: {{navBarHeight}}px; padding-right: {{rightReserve}}px;">
+    <view class="header-title" style="right: {{titleRight}}px;">{{title}}</view>
+    <view class="language-switch" style="right: {{languageRight}}px;">
+      <view
+        wx:for="{{languageOptions}}"
+        wx:key="value"
+        class="language-option {{locale == item.value ? 'is-active' : ''}}"
+        data-locale="{{item.value}}"
+        bindtap="selectLanguage"
+      >
+        {{item.label}}
+      </view>
+    </view>
+  </view>
+</view>
+<view style="height: {{headerHeight}}px;"></view>

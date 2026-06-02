@@ -1,0 +1,342 @@
+const auth = require("../../utils/auth");
+const { request } = require("../../utils/request");
+const { API_ORIGIN } = require("../../utils/config");
+const { formatDate, getInitial } = require("../../utils/format");
+const { syncTabBar } = require("../../utils/tabbar");
+const { getLocale, getTexts } = require("../../utils/i18n");
+
+const FEED_TAB_KEYS = ["newest", "hot"];
+const COMMUNITY_BOARD_KEYS = [
+  "all",
+  "discussion",
+  "qa",
+  "sharing",
+  "campusNews",
+  "lostfound",
+  "other",
+];
+
+const COMMUNITY_BOARD_ROUTES = {
+  campusNews: "/pages/news/news",
+  lostfound: "/pages/lostfound/lostfound",
+};
+
+function avatarUrl(value) {
+  if (!value) {
+    return "";
+  }
+
+  return value.startsWith("/") ? `${API_ORIGIN}${value}` : value;
+}
+
+function compactNumber(value) {
+  const number = Number(value || 0);
+  if (number >= 1000) {
+    return `${(number / 1000).toFixed(1)}k`;
+  }
+  return String(number);
+}
+
+function buildTabs(activeKey, text = getTexts("community")) {
+  return FEED_TAB_KEYS.map((key) => ({
+    className: key === activeKey ? "segment-item active" : "segment-item",
+    key,
+    label: text.feedTabs[key],
+  }));
+}
+
+function buildCommunityBoards(activeKey, text = getTexts("community")) {
+  return COMMUNITY_BOARD_KEYS.map((key) => {
+    const item = text.boards[key];
+
+    return {
+      className: key === activeKey ? "community-board-item active" : "community-board-item",
+      icon: item.icon,
+      key,
+      label: item.label,
+      route: COMMUNITY_BOARD_ROUTES[key] || "",
+    };
+  });
+}
+
+function inferCommunityBoardKey(item) {
+  const source = [
+    item.category,
+    item.title,
+    item.content,
+  ].join(" ").toLowerCase();
+
+  if (/lost|found|失物|招领|招領/.test(source)) return "lostfound";
+  if (/news|notice|announcement|新聞|新闻|公告/.test(source)) return "campusNews";
+  if (/q&a|qa|question|ask|問答|问答|求助|help/.test(source)) return "qa";
+  if (/share|sharing|分享|life|activity|生活|活動|活动/.test(source)) return "sharing";
+  if (/discussion|discuss|course|campus|討論|讨论|課程|课程|校園|校园/.test(source)) return "discussion";
+  return "other";
+}
+
+function normalizePost(item, text = getTexts("community"), rawIndex = -1) {
+  const authorName = item.author_nickname || text.defaultAuthor;
+  const content = String(item.content || "").trim();
+
+  return {
+    authorAvatar: avatarUrl(item.author_avatar),
+    authorInitial: getInitial(authorName),
+    authorName,
+    category: item.category || text.defaultCategory,
+    commentsLabel: compactNumber(item.comments_count),
+    content,
+    createdAtLabel: formatDate(item.created_at) || text.justNow,
+    handle: `@campus${item.author_id || item.id}`,
+    id: item.id,
+    isLiked: !!item.is_liked,
+    likeClass: item.is_liked ? "post-action like-action is-liked" : "post-action like-action",
+    likeIcon: item.is_liked ? "♥" : "♡",
+    likeIconClass: item.is_liked ? "social-glyph like-glyph filled" : "social-glyph like-glyph",
+    likeLabel: compactNumber(item.likes_count),
+    rawIndex,
+    sectionKey: inferCommunityBoardKey(item),
+    title: item.title,
+    topicClass: item.likes_count > 0 ? "topic-pill hot" : "topic-pill",
+  };
+}
+
+function buildVisiblePosts(rawPosts, text, activeBoard) {
+  const posts = rawPosts.map((item, index) => normalizePost(item, text, index));
+
+  if (activeBoard === "all") {
+    return posts;
+  }
+
+  return posts.filter((item) => item.sectionKey === activeBoard);
+}
+
+Page({
+  data: {
+    categoryFilter: "all",
+    communityBoards: buildCommunityBoards("all"),
+    feedTabs: buildTabs("newest"),
+    hasNext: true,
+    keyword: "",
+    loading: false,
+    locale: getLocale(),
+    page: 1,
+    posts: [],
+    rawPosts: [],
+    sort: "newest",
+    text: getTexts("community"),
+    user: null,
+  },
+
+  onShow() {
+    this.applyLocale(getLocale());
+    syncTabBar(this, 1);
+
+    auth.bootstrapSession().then((user) => {
+      this.setData({ user: user || null });
+      if (!this._hasLoadedPosts) {
+        this._hasLoadedPosts = true;
+        this.loadPosts(true);
+      }
+    });
+  },
+
+  handleLanguageChange(event) {
+    this.applyLocale(event.detail.locale);
+  },
+
+  applyLocale(locale = getLocale()) {
+    const text = getTexts("community", locale);
+    const posts = buildVisiblePosts(this.data.rawPosts, text, this.data.categoryFilter);
+
+    this.setData({
+      communityBoards: buildCommunityBoards(this.data.categoryFilter, text),
+      feedTabs: buildTabs(this.data.sort, text),
+      locale,
+      posts,
+      text,
+    });
+
+    syncTabBar(this, 1);
+  },
+
+  onPullDownRefresh() {
+    this.loadPosts(true).finally(() => {
+      wx.stopPullDownRefresh();
+    });
+  },
+
+  onReachBottom() {
+    if (!this.data.loading && this.data.hasNext) {
+      this.loadPosts(false);
+    }
+  },
+
+  updateKeyword(event) {
+    this.setData({
+      keyword: event.detail.value,
+    });
+  },
+
+  submitSearch() {
+    this.loadPosts(true);
+  },
+
+  clearSearch() {
+    this.setData({ keyword: "" });
+    this.loadPosts(true);
+  },
+
+  switchCommunityBoard(event) {
+    const key = event.currentTarget.dataset.key;
+    const route = event.currentTarget.dataset.route;
+
+    if (!key || key === this.data.categoryFilter) {
+      return;
+    }
+
+    if (route) {
+      if (key === "campusNews") {
+        wx.switchTab({ url: route });
+      } else {
+        wx.navigateTo({ url: route });
+      }
+      return;
+    }
+
+    this.setData({
+      categoryFilter: key,
+      communityBoards: buildCommunityBoards(key, this.data.text),
+      posts: buildVisiblePosts(this.data.rawPosts, this.data.text, key),
+    });
+  },
+
+  switchSort(event) {
+    const sort = event.currentTarget.dataset.sort;
+    if (!sort || sort === this.data.sort) {
+      return;
+    }
+
+    this.setData({
+      feedTabs: buildTabs(sort, this.data.text),
+      sort,
+    });
+    this.loadPosts(true);
+  },
+
+  loadPosts(reset) {
+    if (this.data.loading) {
+      return Promise.resolve();
+    }
+
+    const nextPage = reset ? 1 : this.data.page;
+    const query = [`page=${nextPage}`, "page_size=2", `sort=${this.data.sort}`];
+    const keyword = this.data.keyword.trim();
+
+    if (keyword) {
+      query.push(`search=${encodeURIComponent(keyword)}`);
+    }
+
+    this.setData({ loading: true });
+
+    return request({
+      path: `/posts?${query.join("&")}`,
+      auth: !!this.data.user,
+    })
+      .then((data) => {
+        const nextRawPosts = data.items || [];
+        const rawPosts = reset ? nextRawPosts : this.data.rawPosts.concat(nextRawPosts);
+        const posts = buildVisiblePosts(rawPosts, this.data.text, this.data.categoryFilter);
+
+        this.setData({
+          hasNext: !!data.has_next,
+          page: nextPage + 1,
+          posts,
+          rawPosts,
+        });
+      })
+      .catch((error) => {
+        wx.showToast({
+          title: error.message || this.data.text.loadFail,
+          icon: "none",
+        });
+      })
+      .finally(() => {
+        this.setData({ loading: false });
+      });
+  },
+
+  toggleLike(event) {
+    if (!this.data.user) {
+      wx.navigateTo({ url: "/pages/login/login" });
+      return;
+    }
+
+    const index = Number(event.currentTarget.dataset.index);
+    const post = this.data.posts[index];
+    if (!post || post.rawIndex < 0) {
+      return;
+    }
+    this._likeLocks = this._likeLocks || {};
+    if (this._likeLocks[post.id]) {
+      return;
+    }
+    this._likeLocks[post.id] = true;
+
+    const previousRawPost = this.data.rawPosts[post.rawIndex] || {};
+    const nextLiked = !post.isLiked;
+    const currentLikes = Number((previousRawPost && previousRawPost.likes_count) || 0);
+    const optimisticRawPosts = this.data.rawPosts.slice();
+    optimisticRawPosts[post.rawIndex] = {
+      ...previousRawPost,
+      is_liked: nextLiked,
+      likes_count: Math.max(0, currentLikes + (nextLiked ? 1 : -1)),
+    };
+    this.setData({
+      posts: buildVisiblePosts(optimisticRawPosts, this.data.text, this.data.categoryFilter),
+      rawPosts: optimisticRawPosts,
+    });
+
+    request({
+      method: "POST",
+      path: `/posts/${post.id}/like`,
+      auth: true,
+      })
+      .then((updatedPost) => {
+        const rawPosts = this.data.rawPosts.slice();
+        rawPosts[post.rawIndex] = updatedPost;
+        const posts = buildVisiblePosts(rawPosts, this.data.text, this.data.categoryFilter);
+        this.setData({ posts, rawPosts });
+      })
+      .catch((error) => {
+        const rawPosts = this.data.rawPosts.slice();
+        rawPosts[post.rawIndex] = previousRawPost;
+        this.setData({
+          posts: buildVisiblePosts(rawPosts, this.data.text, this.data.categoryFilter),
+          rawPosts,
+        });
+        wx.showToast({
+          title: error.message || this.data.text.actionFail,
+          icon: "none",
+        });
+      })
+      .finally(() => {
+        delete this._likeLocks[post.id];
+      });
+  },
+
+  openComments() {
+    wx.showToast({
+      title: this.data.text.commentsSoon,
+      icon: "none",
+    });
+  },
+
+  goCompose() {
+    if (!this.data.user) {
+      wx.navigateTo({ url: "/pages/login/login" });
+      return;
+    }
+
+    wx.navigateTo({ url: "/pages/compose/compose" });
+  },
+});

@@ -1,0 +1,9 @@
+{
+  "desc": "HKMU Campus mini program sitemap",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+}

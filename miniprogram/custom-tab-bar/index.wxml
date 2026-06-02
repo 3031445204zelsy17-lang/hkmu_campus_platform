@@ -1,0 +1,27 @@
+<view class="tabbar-shell">
+  <view
+    class="tabbar-pill {{hydrating ? 'is-hydrating' : ''}} {{dragging ? 'is-dragging' : ''}} {{switching ? 'is-switching' : ''}}"
+    catchtouchstart="handleTouchStart"
+    catchtouchmove="handleTouchMove"
+    catchtouchend="handleTouchEnd"
+    catchtouchcancel="handleTouchCancel"
+  >
+    <view
+      class="tabbar-liquid-capsule {{dragging ? 'is-pressed' : ''}}"
+      style="{{pillStyle}}"
+    ></view>
+    <view
+      wx:for="{{list}}"
+      wx:key="pagePath"
+      class="tabbar-item {{displaySelected == index ? 'is-active' : ''}} {{dragging && displaySelected == index ? 'is-drag-target' : ''}} {{pressedIndex == index ? 'is-pressed' : ''}}"
+      data-index="{{index}}"
+    >
+      <view class="tabbar-icon icon-{{item.key}}">
+        <view class="icon-piece piece-a"></view>
+        <view class="icon-piece piece-b"></view>
+        <view class="icon-piece piece-c"></view>
+      </view>
+      <view class="tabbar-label">{{item.text}}</view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,67 @@
+/* pages/community/community.wxss */
+
+.community-board-scroll {
+  width: 100%;
+  margin: 0 0 22rpx;
+  white-space: nowrap;
+}
+
+.community-board-row {
+  display: inline-flex;
+  gap: 16rpx;
+  padding: 4rpx 44rpx 8rpx;
+  box-sizing: border-box;
+}
+
+.community-board-item {
+  width: 150rpx;
+  min-height: 116rpx;
+  padding: 16rpx 12rpx;
+  border: 1rpx solid rgba(90, 130, 90, 0.12);
+  border-radius: 32rpx;
+  background: #FFFFFF;
+  box-shadow: 0 12rpx 34rpx rgba(30, 70, 40, 0.05);
+  color: #6B7280;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  text-align: center;
+  vertical-align: top;
+}
+
+.community-board-item.active {
+  border-color: rgba(127, 191, 77, 0.28);
+  background: #F4FAF1;
+  box-shadow:
+    0 14rpx 38rpx rgba(30, 70, 40, 0.07),
+    inset 0 2rpx 0 rgba(255, 255, 255, 0.72);
+  color: #3D7A2E;
+}
+
+.community-board-icon {
+  min-width: 48rpx;
+  height: 48rpx;
+  padding: 0 10rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-size: 19rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.community-board-label {
+  max-width: 100%;
+  margin-top: 10rpx;
+  font-size: 23rpx;
+  font-weight: 650;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,0 +1,67 @@
+<app-header bind:languagechange="handleLanguageChange" />
+
+<view class="page-shell">
+  <view class="profile-cover"></view>
+
+  <view wx:if="{{user}}" class="profile-card">
+    <view class="avatar large">
+      <image wx:if="{{user.avatar_url}}" src="{{user.avatar_url}}" mode="aspectFill" />
+      <view wx:else>{{user.initial}}</view>
+    </view>
+    <view class="profile-name">{{user.displayName}}</view>
+    <view class="profile-handle">@{{user.username}} {{text.separator}} {{identityLabel}}</view>
+    <view class="profile-bio">{{user.bioLabel}}</view>
+
+    <view class="profile-stats">
+      <view class="profile-stat">
+        <view class="profile-stat-value">{{joinedAtDisplay}}</view>
+        <view class="profile-stat-label">{{text.joinedLabel}}</view>
+      </view>
+      <view class="profile-stat">
+        <view class="profile-stat-value">{{user.providerLabel}}</view>
+        <view class="profile-stat-label">{{text.providerLabel}}</view>
+      </view>
+    </view>
+
+    <view class="action-row">
+      <button class="primary-action" bindtap="goCompose">{{text.composeAction}}</button>
+      <button class="secondary-action" bindtap="refreshProfile">{{text.refreshAction}}</button>
+    </view>
+
+    <view class="profile-list">
+      <view class="profile-row">
+        <view class="profile-row-label">{{text.emailLabel}}</view>
+        <view class="profile-row-value">{{user.emailLabel}}</view>
+      </view>
+      <view class="profile-row">
+        <view class="profile-row-label">{{text.studentIdLabel}}</view>
+        <view class="profile-row-value">{{user.studentIdLabel}}</view>
+      </view>
+      <view class="profile-row">
+        <view class="profile-row-label">{{text.bioLabel}}</view>
+        <view class="profile-row-value">{{user.bioLabel}}</view>
+      </view>
+    </view>
+
+    <view class="action-row">
+      <button class="danger-action" bindtap="logout">{{text.logoutAction}}</button>
+    </view>
+  </view>
+
+  <view wx:else>
+    <view class="top-bar tight">
+      <view class="brand-lockup">
+        <view class="eyebrow">{{text.eyebrow}}</view>
+        <view class="app-title">{{text.title}}</view>
+        <view class="subtitle">{{text.subtitle}}</view>
+      </view>
+    </view>
+    <view class="empty-state flat">
+      <view class="empty-title">{{text.emptyTitle}}</view>
+      <view class="empty-copy">{{text.emptyCopy}}</view>
+      <view class="action-row">
+        <button class="primary-action" bindtap="goToLogin">{{text.loginAction}}</button>
+      </view>
+    </view>
+  </view>
+</view>

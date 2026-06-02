@@ -1,0 +1,93 @@
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  border-bottom-left-radius: 36rpx;
+  border-bottom-right-radius: 36rpx;
+  border-bottom: 1rpx solid rgba(229, 239, 227, 0.86);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(247, 250, 246, 0.86)),
+    rgba(255, 255, 255, 0.82);
+  box-shadow:
+    0 12rpx 34rpx rgba(30, 70, 40, 0.07),
+    inset 0 2rpx 0 rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(36rpx);
+  -webkit-backdrop-filter: blur(36rpx);
+  box-sizing: border-box;
+}
+
+.app-header-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 32rpx;
+  box-sizing: border-box;
+}
+
+.header-title {
+  position: absolute;
+  left: 36rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 0;
+  color: #142033;
+  font-size: 31rpx;
+  font-weight: 700;
+  letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.language-switch {
+  position: absolute;
+  top: 50%;
+  width: 104px;
+  height: 31px;
+  padding: 3px;
+  border: 1rpx solid rgba(229, 239, 227, 0.96);
+  border-radius: 999rpx;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  transform: translateY(-50%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(242, 247, 241, 0.78)),
+    rgba(255, 255, 255, 0.74);
+  box-shadow:
+    0 8rpx 20rpx rgba(30, 70, 40, 0.06),
+    inset 0 2rpx 0 rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(24rpx);
+  -webkit-backdrop-filter: blur(24rpx);
+  box-sizing: border-box;
+}
+
+.language-option {
+  min-width: 0;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6B7280;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1;
+  text-align: center;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.language-option.is-active {
+  color: #3D7A2E;
+  background: #FFFFFF;
+  box-shadow:
+    0 5rpx 14rpx rgba(30, 70, 40, 0.08),
+    inset 0 2rpx 0 rgba(255, 255, 255, 0.82);
+  transform: translateY(-1rpx);
+}

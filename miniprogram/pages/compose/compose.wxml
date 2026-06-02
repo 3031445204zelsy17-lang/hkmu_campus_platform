@@ -1,0 +1,58 @@
+<app-header bind:languagechange="handleLanguageChange" />
+
+<view class="page-shell">
+  <view class="top-bar tight">
+    <view class="brand-lockup">
+      <view class="eyebrow">{{text.eyebrow}}</view>
+      <view class="app-title compact">{{text.title}}</view>
+    </view>
+    <button class="top-action" loading="{{loading}}" bindtap="submitPost">{{text.publish}}</button>
+  </view>
+
+  <view class="composer-sheet">
+    <view class="composer-head">
+      <view class="avatar small">
+        <image wx:if="{{user && user.avatar_url}}" src="{{user.avatar_url}}" mode="aspectFill" />
+        <view wx:else>{{userInitial}}</view>
+      </view>
+      <view>
+        <view class="composer-name">{{displayName}}</view>
+        <view class="composer-scope">{{text.scope}}</view>
+      </view>
+    </view>
+
+    <view class="field-label">{{text.titleLabel}}</view>
+    <input
+      class="text-input"
+      maxlength="80"
+      placeholder="{{text.titlePlaceholder}}"
+      value="{{title}}"
+      data-field="title"
+      bindinput="updateField"
+    />
+
+    <view class="field-label">{{text.topicLabel}}</view>
+    <scroll-view scroll-x class="category-strip">
+      <view
+        wx:for="{{categories}}"
+        wx:key="key"
+        class="{{item.className}}"
+        data-category="{{item.key}}"
+        bindtap="selectCategory"
+      >
+        {{item.name}}
+      </view>
+    </scroll-view>
+
+    <view class="field-label">{{text.bodyLabel}}</view>
+    <textarea
+      class="text-area"
+      maxlength="2000"
+      placeholder="{{text.bodyPlaceholder}}"
+      value="{{content}}"
+      data-field="content"
+      bindinput="updateField"
+    />
+    <view class="helper-text">{{text.helperText}}</view>
+  </view>
+</view>

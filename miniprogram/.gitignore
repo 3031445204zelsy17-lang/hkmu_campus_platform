@@ -1,0 +1,7 @@
+.preview/
+project.private.config.json
+node_modules/
+miniprogram_npm/
+*.log
+.DS_Store
+Thumbs.db

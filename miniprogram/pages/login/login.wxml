@@ -1,0 +1,52 @@
+<app-header bind:languagechange="handleLanguageChange" />
+
+<view class="page-shell">
+  <view class="top-bar tight">
+    <view class="brand-lockup">
+      <view class="eyebrow">{{text.eyebrow}}</view>
+      <view class="app-title">{{text.title}}</view>
+      <view class="subtitle">{{text.subtitle}}</view>
+    </view>
+  </view>
+
+  <view class="form-sheet">
+    <view class="section-title">{{text.wechatTitle}}</view>
+    <view class="helper-text">{{text.wechatCopy}}</view>
+    <button class="wechat-action" loading="{{loading}}" bindtap="submitWechatLogin">
+      {{text.wechatButton}}
+    </button>
+  </view>
+
+  <view class="form-sheet">
+    <view class="section-title">{{text.accountTitle}}</view>
+    <view class="segmented flat">
+      <view class="{{usernameModeClass}}" data-mode="username" bindtap="switchMode">{{text.usernameMode}}</view>
+      <view class="{{emailModeClass}}" data-mode="email" bindtap="switchMode">{{text.emailMode}}</view>
+    </view>
+
+    <view class="field-label">{{modeLabel}}</view>
+    <input
+      class="text-input"
+      placeholder="{{accountPlaceholder}}"
+      value="{{account}}"
+      data-field="account"
+      bindinput="updateField"
+    />
+
+    <view class="field-label">{{text.passwordLabel}}</view>
+    <input
+      class="text-input"
+      password
+      placeholder="{{text.passwordPlaceholder}}"
+      value="{{password}}"
+      data-field="password"
+      bindinput="updateField"
+    />
+
+    <view class="action-row">
+      <button class="primary-action" loading="{{loading}}" bindtap="submitAccountLogin">
+        {{text.loginButton}}
+      </button>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,50 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/community/community",
+    "pages/planner/planner",
+    "pages/compose/compose",
+    "pages/news/news",
+    "pages/lostfound/lostfound",
+    "pages/profile/profile",
+    "pages/login/login"
+  ],
+  "window": {
+    "navigationBarTitleText": "HKMU Campus",
+    "navigationBarBackgroundColor": "#F7FAF6",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F7FAF6",
+    "backgroundTextStyle": "dark",
+    "navigationStyle": "custom"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#667085",
+    "selectedColor": "#3D7A2E",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "\u9996\u9875"
+      },
+      {
+        "pagePath": "pages/community/community",
+        "text": "\u793e\u533a"
+      },
+      {
+        "pagePath": "pages/planner/planner",
+        "text": "\u9009\u8bfe\u89c4\u5212"
+      },
+      {
+        "pagePath": "pages/news/news",
+        "text": "\u65b0\u95fb"
+      }
+    ]
+  },
+  "usingComponents": {
+    "app-header": "/components/app-header/app-header"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

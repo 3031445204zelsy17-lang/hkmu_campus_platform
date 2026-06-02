@@ -1,0 +1,314 @@
+.tabbar-shell {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 850;
+  padding: 0 44rpx calc(26rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.tabbar-pill {
+  position: relative;
+  width: 100%;
+  max-width: 704rpx;
+  height: 112rpx;
+  margin: 0 auto;
+  padding: 8rpx 0;
+  border: 1rpx solid rgba(229, 239, 227, 0.94);
+  border-radius: 46rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow:
+    0 18rpx 52rpx rgba(30, 70, 40, 0.10),
+    inset 0 2rpx 0 rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(36rpx);
+  -webkit-backdrop-filter: blur(36rpx);
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.tabbar-liquid-capsule {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  z-index: 0;
+  width: 118rpx;
+  height: 88rpx;
+  border: 1rpx solid rgba(127, 191, 77, 0.18);
+  border-radius: 36rpx;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(240, 247, 237, 0.86)),
+    rgba(127, 191, 77, 0.10);
+  box-shadow:
+    0 8rpx 22rpx rgba(30, 70, 40, 0.08),
+    inset 0 2rpx 0 rgba(255, 255, 255, 0.82);
+  transform: translate(-50%, -50%);
+  transition:
+    left 300ms ease-out,
+    transform 300ms ease-out,
+    box-shadow 300ms ease-out,
+    opacity 160ms ease;
+}
+
+.tabbar-liquid-capsule.is-pressed {
+  border-radius: 38rpx;
+  transform: translate(-50%, -50%) scale(1.035);
+  box-shadow:
+    0 10rpx 28rpx rgba(30, 70, 40, 0.10),
+    inset 0 2rpx 0 rgba(255, 255, 255, 0.84);
+}
+
+.tabbar-pill.is-hydrating .tabbar-liquid-capsule {
+  transition: none;
+}
+
+.tabbar-pill.is-dragging .tabbar-liquid-capsule {
+  transition:
+    left 75ms ease-out,
+    transform 75ms ease-out,
+    box-shadow 120ms ease,
+    opacity 120ms ease;
+}
+
+.tabbar-pill.is-switching .tabbar-liquid-capsule {
+  transition:
+    left 180ms cubic-bezier(0.2, 0.9, 0.18, 1),
+    transform 180ms cubic-bezier(0.2, 0.9, 0.18, 1),
+    box-shadow 150ms ease,
+    opacity 120ms ease;
+}
+
+.tabbar-item {
+  position: relative;
+  z-index: 1;
+  flex: 0 1 118rpx;
+  width: 118rpx;
+  min-width: 92rpx;
+  max-width: 118rpx;
+  height: 88rpx;
+  border-radius: 36rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #7E8B80;
+  font-weight: 650;
+  text-align: center;
+  transform: translateY(0) scale(1);
+  transition:
+    color 180ms ease,
+    opacity 180ms ease,
+    background 180ms ease,
+    transform 180ms cubic-bezier(0.2, 0.9, 0.18, 1.12);
+}
+
+.tabbar-item.is-active {
+  color: #3D7A2E;
+  transform: translateY(-1rpx) scale(1.02);
+}
+
+.tabbar-item.is-pressed {
+  background: rgba(127, 191, 77, 0.08);
+  transform: translateY(-3rpx) scale(1.035);
+}
+
+.tabbar-item.is-drag-target {
+  color: #3D7A2E;
+  transform: translateY(-4rpx) scale(1.06);
+}
+
+.tabbar-pill.is-dragging .tabbar-item:not(.is-drag-target) {
+  opacity: 0.54;
+  transform: translateY(1rpx) scale(0.94);
+}
+
+.tabbar-icon {
+  position: relative;
+  width: 36rpx;
+  height: 36rpx;
+  flex: 0 0 36rpx;
+  box-sizing: border-box;
+}
+
+.tabbar-label {
+  max-width: 100%;
+  margin-top: 4rpx;
+  padding: 0 2rpx;
+  font-size: 19rpx;
+  font-weight: 650;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.icon-piece {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.piece-c {
+  display: none;
+}
+
+.icon-home .piece-a {
+  display: block;
+  left: 10rpx;
+  top: 6rpx;
+  width: 22rpx;
+  height: 22rpx;
+  border-left: 4rpx solid currentColor;
+  border-top: 4rpx solid currentColor;
+  border-radius: 5rpx 0 0 0;
+  transform: rotate(45deg);
+}
+
+.icon-home .piece-b {
+  display: block;
+  left: 10rpx;
+  top: 19rpx;
+  width: 22rpx;
+  height: 18rpx;
+  border: 4rpx solid currentColor;
+  border-top: 0;
+  border-radius: 5rpx;
+}
+
+.icon-home .piece-c {
+  display: block;
+  left: 19rpx;
+  top: 28rpx;
+  width: 4rpx;
+  height: 9rpx;
+  border-radius: 99rpx 99rpx 0 0;
+  background: currentColor;
+}
+
+.icon-community .piece-a {
+  display: block;
+  left: 6rpx;
+  top: 6rpx;
+  width: 30rpx;
+  height: 26rpx;
+  border: 4rpx solid currentColor;
+  border-radius: 999rpx;
+}
+
+.icon-community .piece-b {
+  display: block;
+  left: 13rpx;
+  top: 27rpx;
+  width: 12rpx;
+  height: 12rpx;
+  border-left: 4rpx solid currentColor;
+  border-bottom: 4rpx solid currentColor;
+  transform: rotate(-18deg);
+}
+
+.icon-planner .piece-a {
+  display: block;
+  left: 7rpx;
+  top: 6rpx;
+  width: 28rpx;
+  height: 31rpx;
+  border: 4rpx solid currentColor;
+  border-radius: 7rpx;
+}
+
+.icon-planner .piece-b {
+  display: block;
+  left: 7rpx;
+  top: 15rpx;
+  width: 28rpx;
+  height: 4rpx;
+  border-radius: 999rpx;
+  background: currentColor;
+}
+
+.icon-planner .piece-c {
+  display: block;
+  left: 14rpx;
+  top: 23rpx;
+  width: 4rpx;
+  height: 4rpx;
+  border-radius: 999rpx;
+  background: currentColor;
+  box-shadow:
+    10rpx 0 0 currentColor,
+    0 8rpx 0 currentColor,
+    10rpx 8rpx 0 currentColor;
+}
+
+.icon-news .piece-a {
+  display: block;
+  left: 6rpx;
+  top: 5rpx;
+  width: 30rpx;
+  height: 32rpx;
+  border: 4rpx solid currentColor;
+  border-radius: 5rpx;
+  box-sizing: border-box;
+}
+
+.icon-news .piece-b {
+  display: block;
+  left: 14rpx;
+  top: 13rpx;
+  width: 15rpx;
+  height: 4rpx;
+  border-radius: 99rpx;
+  background: currentColor;
+  box-shadow:
+    0 9rpx 0 currentColor,
+    0 18rpx 0 currentColor;
+}
+
+.icon-news .piece-c {
+  display: block;
+  left: 10rpx;
+  top: 13rpx;
+  width: 4rpx;
+  height: 22rpx;
+  border-radius: 999rpx;
+  background: currentColor;
+}
+
+.icon-lostfound .piece-a {
+  display: block;
+  left: 6rpx;
+  top: 5rpx;
+  width: 25rpx;
+  height: 25rpx;
+  border: 4rpx solid currentColor;
+  border-radius: 999rpx;
+  box-sizing: border-box;
+}
+
+.icon-lostfound .piece-b {
+  display: block;
+  right: 4rpx;
+  bottom: 7rpx;
+  width: 16rpx;
+  height: 4rpx;
+  border-radius: 99rpx;
+  background: currentColor;
+  transform: rotate(45deg);
+}
+
+.icon-lostfound .piece-c {
+  display: block;
+  left: 17rpx;
+  top: 15rpx;
+  width: 4rpx;
+  height: 4rpx;
+  border-radius: 999rpx;
+  background: currentColor;
+}

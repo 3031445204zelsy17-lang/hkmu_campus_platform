@@ -1,0 +1,57 @@
+<app-header bind:languagechange="handleLanguageChange" />
+
+<view class="page-shell">
+  <view class="top-bar tight">
+    <view class="brand-lockup">
+      <view class="eyebrow">{{text.eyebrow}}</view>
+      <view class="app-title">{{text.title}}</view>
+      <view class="subtitle">{{text.subtitle}}</view>
+    </view>
+  </view>
+
+  <view class="search-dock flat">
+    <view class="search-mark">#</view>
+    <input
+      class="search-input"
+      placeholder="{{text.searchPlaceholder}}"
+      value="{{keyword}}"
+      confirm-type="search"
+      bindinput="updateKeyword"
+    />
+  </view>
+
+  <view class="segmented flat">
+    <view class="{{allTabClass}}" data-filter="all" bindtap="setTypeFilter">{{text.filters.all}}</view>
+    <view class="{{lostTabClass}}" data-filter="lost" bindtap="setTypeFilter">{{text.filters.lost}}</view>
+    <view class="{{foundTabClass}}" data-filter="found" bindtap="setTypeFilter">{{text.filters.found}}</view>
+  </view>
+
+  <view class="segmented flat">
+    <view class="{{activeStatusClass}}" data-status="active" bindtap="setStatusFilter">{{text.filters.active}}</view>
+    <view class="{{resolvedStatusClass}}" data-status="resolved" bindtap="setStatusFilter">{{text.filters.resolved}}</view>
+    <view class="{{allStatusClass}}" data-status="all" bindtap="setStatusFilter">{{text.filters.all}}</view>
+  </view>
+
+  <view wx:if="{{filteredItems.length === 0 && !loading}}" class="empty-state flat">
+    <view class="empty-title">{{text.emptyTitle}}</view>
+    <view class="empty-copy">{{text.emptyCopy}}</view>
+  </view>
+
+  <view wx:for="{{filteredItems}}" wx:key="id" class="utility-card">
+    <view class="feed-head">
+      <view class="avatar small">{{item.authorInitial}}</view>
+      <view class="feed-main">
+        <view class="utility-meta">
+          <view class="{{item.typeClass}}">{{item.typeLabel}}</view>
+          <view class="{{item.statusClass}}">{{item.statusLabel}}</view>
+          <view class="mini-pill">{{item.createdAtLabel}}</view>
+        </view>
+        <view class="utility-title">{{item.title}}</view>
+        <view class="utility-summary">{{item.description}}</view>
+        <view class="card-footer">{{item.category}} {{text.separator}} {{item.location}} {{text.separator}} {{item.author}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-line">{{text.loading}}</view>
+</view>
