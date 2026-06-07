@@ -103,12 +103,20 @@
     {
       "id": "C3",
       "phase": 8,
-      "title": "选课规划工具",
-      "description": "在现有课程规划器基础上增加学分统计和推荐功能。需确认 HKMU 学分规则",
+      "title": "选课规划工具（多专业支持 + 毕业仪表盘 + 智能推荐）",
+      "description": "多专业架构：programme selector、毕业进度仪表盘（分类学分追踪）、智能推荐（基于未满足分类+先修课）、后端 programme_code 字段。DSAI 完整实现，CS/Cyber 骨架占位",
       "module": "academic",
       "dependencies": [],
-      "passes": false,
-      "files": ["frontend/js/pages/academic.js"]
+      "passes": true,
+      "files": [
+        "frontend/js/data/programmes.js",
+        "frontend/js/pages/planner.js",
+        "frontend/js/utils/i18n.js",
+        "frontend/css/academic.css",
+        "backend/app/database.py",
+        "backend/app/models.py",
+        "backend/app/routers/users.py"
+      ]
     },
     {
       "id": "F2",
