@@ -12,6 +12,7 @@ let _progress = [];
 let _view = "overview";
 let _programmeCode = localStorage.getItem("hkmu_programme") || "BSCHDSAIJ";
 let _programme = PROGRAMMES[_programmeCode] || PROGRAMMES.BSCHDSAIJ;
+let _authHandler = null; // auth:changed listener, cleaned up on re-render
 
 const STATUS_LABELS = {
   not_started: () => t("planner.status_not_started"),
@@ -487,7 +488,7 @@ function _renderOverview(container) {
   // Description
   const desc = document.createElement("p");
   desc.className = "text-xl text-white/90 mb-8";
-  desc.textContent = t("planner.page_desc");
+  desc.textContent = t("planner.page_desc", { programme: programmeName(_programme, lang) });
   inner.appendChild(desc);
 
   // CTA buttons
@@ -1257,6 +1258,14 @@ export async function renderPlanner() {
 
   await _loadData();
   _render();
+
+  // Re-render on auth state change (login/logout) so login-gated UI updates
+  if (_authHandler) window.removeEventListener("auth:changed", _authHandler);
+  _authHandler = async () => {
+    await _loadData();
+    _render();
+  };
+  window.addEventListener("auth:changed", _authHandler);
 }
 
 function _render() {

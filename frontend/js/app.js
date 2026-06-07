@@ -240,6 +240,7 @@ window.handleGoogleSignIn = async (response) => {
 function _onAuthChange() {
   renderNav();
   if (isLoggedIn()) subscribePush();
+  window.dispatchEvent(new CustomEvent("auth:changed"));
 }
 
 // --- Event listeners ---
