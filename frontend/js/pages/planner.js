@@ -681,7 +681,7 @@ function _renderGraduationDashboard(container, grad) {
 
   const ringSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   ringSvg.setAttribute("viewBox", "0 0 120 120");
-  ringSvg.className = "w-full h-full transform -rotate-90";
+  ringSvg.setAttribute("class", "w-full h-full transform -rotate-90");
 
   // Background circle
   const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
