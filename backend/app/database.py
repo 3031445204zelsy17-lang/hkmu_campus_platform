@@ -1,229 +1,227 @@
-import aiosqlite
-from .config import DB_PATH
+import asyncpg
+from .config import DATABASE_URL, DB_POOL_MIN, DB_POOL_MAX
 
-_db: aiosqlite.Connection | None = None
+_pool: asyncpg.Pool | None = None
 
 
-async def get_db() -> aiosqlite.Connection:
-    """Yield the shared sqlite connection."""
-    global _db
-    if _db is None:
-        _db = await aiosqlite.connect(DB_PATH)
-        _db.row_factory = aiosqlite.Row
-        await _db.execute("PRAGMA journal_mode=WAL")
-        await _db.execute("PRAGMA foreign_keys=ON")
-    return _db
+class DbConnection:
+    """Context manager that acquires a connection from the pool."""
+
+    def __init__(self):
+        self._conn: asyncpg.Connection | None = None
+
+    async def __aenter__(self) -> asyncpg.Connection:
+        if _pool is None:
+            raise RuntimeError("Database pool not initialized. Call init_db() first.")
+        self._conn = await _pool.acquire()
+        return self._conn
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if self._conn is not None:
+            await _pool.release(self._conn)
+            self._conn = None
+
+
+def get_db():
+    """Return a context manager that yields a pooled connection.
+
+    Usage in routers::
+
+        async with get_db() as db:
+            row = await db.fetchrow("SELECT ...")
+    """
+    return DbConnection()
 
 
 async def close_db():
-    global _db
-    if _db:
-        await _db.close()
-        _db = None
+    global _pool
+    if _pool:
+        await _pool.close()
+        _pool = None
+
+
+# ── DDL: PostgreSQL schema ──────────────────────────────────────
+
+_DDL = """
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    student_id TEXT UNIQUE,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    nickname TEXT NOT NULL,
+    avatar_url TEXT,
+    bio TEXT DEFAULT '',
+    identity TEXT DEFAULT 'student',
+    email TEXT,
+    oauth_provider TEXT,
+    oauth_id TEXT,
+    email_verified BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS posts (
+    id SERIAL PRIMARY KEY,
+    author_id INTEGER NOT NULL REFERENCES users(id),
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    category TEXT NOT NULL,
+    likes_count INTEGER DEFAULT 0,
+    comments_count INTEGER DEFAULT 0,
+    parent_post_id INTEGER REFERENCES posts(id) ON DELETE SET NULL,
+    is_anonymous BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS post_likes (
+    user_id INTEGER REFERENCES users(id),
+    post_id INTEGER REFERENCES posts(id),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (user_id, post_id)
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+    id SERIAL PRIMARY KEY,
+    post_id INTEGER NOT NULL REFERENCES posts(id),
+    author_id INTEGER NOT NULL REFERENCES users(id),
+    content TEXT NOT NULL,
+    likes_count INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS courses (
+    id TEXT PRIMARY KEY,
+    code TEXT NOT NULL,
+    name TEXT NOT NULL,
+    credits INTEGER NOT NULL,
+    category TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    semester TEXT NOT NULL,
+    prerequisites TEXT DEFAULT '[]',
+    description TEXT
+);
+
+CREATE TABLE IF NOT EXISTS user_courses (
+    user_id INTEGER REFERENCES users(id),
+    course_id TEXT REFERENCES courses(id),
+    status TEXT DEFAULT 'not_started',
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (user_id, course_id)
+);
+
+CREATE TABLE IF NOT EXISTS course_reviews (
+    id SERIAL PRIMARY KEY,
+    course_id TEXT REFERENCES courses(id),
+    author_id INTEGER NOT NULL REFERENCES users(id),
+    rating INTEGER CHECK(rating BETWEEN 1 AND 5),
+    content TEXT NOT NULL,
+    helpful_count INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS news (
+    id SERIAL PRIMARY KEY,
+    author_id INTEGER REFERENCES users(id),
+    title TEXT NOT NULL,
+    summary TEXT,
+    image_url TEXT,
+    category TEXT,
+    source_url TEXT NOT NULL,
+    published_at TIMESTAMPTZ DEFAULT NOW(),
+    comments_count INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS news_comments (
+    id SERIAL PRIMARY KEY,
+    news_id INTEGER NOT NULL REFERENCES news(id),
+    author_id INTEGER NOT NULL REFERENCES users(id),
+    content TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS lostfound (
+    id SERIAL PRIMARY KEY,
+    author_id INTEGER NOT NULL REFERENCES users(id),
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    item_type TEXT NOT NULL,
+    category TEXT,
+    location TEXT,
+    image_url TEXT,
+    status TEXT DEFAULT 'active',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS messages (
+    id SERIAL PRIMARY KEY,
+    sender_id INTEGER NOT NULL REFERENCES users(id),
+    receiver_id INTEGER NOT NULL REFERENCES users(id),
+    content TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    token_hash TEXT UNIQUE NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    endpoint TEXT NOT NULL,
+    p256dh_key TEXT NOT NULL,
+    auth_key TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS email_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    token_hash TEXT UNIQUE NOT NULL,
+    token_type TEXT NOT NULL CHECK(token_type IN ('password_reset', 'email_verify')),
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author_id);
+CREATE INDEX IF NOT EXISTS idx_posts_category ON posts(category);
+CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id);
+CREATE INDEX IF NOT EXISTS idx_messages_participants ON messages(sender_id, receiver_id);
+CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_lostfound_status ON lostfound(status);
+CREATE INDEX IF NOT EXISTS idx_messages_receiver_read ON messages(receiver_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_posts_search_fts ON posts(title);
+CREATE INDEX IF NOT EXISTS idx_comments_author ON comments(author_id);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_push_sub_endpoint ON push_subscriptions(endpoint);
+CREATE INDEX IF NOT EXISTS idx_push_sub_user ON push_subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_news_comments_news ON news_comments(news_id);
+CREATE INDEX IF NOT EXISTS idx_news_comments_author ON news_comments(author_id);
+CREATE INDEX IF NOT EXISTS idx_email_tokens_user ON email_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_email_tokens_hash ON email_tokens(token_hash);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_oauth ON users(oauth_provider, oauth_id) WHERE oauth_provider IS NOT NULL;
+"""
 
 
 async def init_db():
-    db = await get_db()
-
-    await db.executescript("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            student_id TEXT UNIQUE,
-            username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            nickname TEXT NOT NULL,
-            avatar_url TEXT,
-            bio TEXT DEFAULT '',
-            identity TEXT DEFAULT 'student',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS posts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            author_id INTEGER NOT NULL REFERENCES users(id),
-            title TEXT NOT NULL,
-            content TEXT NOT NULL,
-            category TEXT NOT NULL,
-            likes_count INTEGER DEFAULT 0,
-            comments_count INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            parent_post_id INTEGER REFERENCES posts(id) ON DELETE SET NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS post_likes (
-            user_id INTEGER REFERENCES users(id),
-            post_id INTEGER REFERENCES posts(id),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (user_id, post_id)
-        );
-
-        CREATE TABLE IF NOT EXISTS comments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            post_id INTEGER NOT NULL REFERENCES posts(id),
-            author_id INTEGER NOT NULL REFERENCES users(id),
-            content TEXT NOT NULL,
-            likes_count INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS courses (
-            id TEXT PRIMARY KEY,
-            code TEXT NOT NULL,
-            name TEXT NOT NULL,
-            credits INTEGER NOT NULL,
-            category TEXT NOT NULL,
-            year INTEGER NOT NULL,
-            semester TEXT NOT NULL,
-            prerequisites TEXT DEFAULT '[]',
-            description TEXT
-        );
-
-        CREATE TABLE IF NOT EXISTS user_courses (
-            user_id INTEGER REFERENCES users(id),
-            course_id TEXT REFERENCES courses(id),
-            status TEXT DEFAULT 'not_started',
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (user_id, course_id)
-        );
-
-        CREATE TABLE IF NOT EXISTS course_reviews (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            course_id TEXT REFERENCES courses(id),
-            author_id INTEGER NOT NULL REFERENCES users(id),
-            rating INTEGER CHECK(rating BETWEEN 1 AND 5),
-            content TEXT NOT NULL,
-            helpful_count INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS news (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            author_id INTEGER REFERENCES users(id),
-            title TEXT NOT NULL,
-            summary TEXT,
-            image_url TEXT,
-            category TEXT,
-            source_url TEXT NOT NULL,
-            published_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            comments_count INTEGER DEFAULT 0
-        );
-
-        CREATE TABLE IF NOT EXISTS news_comments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            news_id INTEGER NOT NULL REFERENCES news(id),
-            author_id INTEGER NOT NULL REFERENCES users(id),
-            content TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS lostfound (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            author_id INTEGER NOT NULL REFERENCES users(id),
-            title TEXT NOT NULL,
-            description TEXT NOT NULL,
-            item_type TEXT NOT NULL,
-            category TEXT,
-            location TEXT,
-            image_url TEXT,
-            status TEXT DEFAULT 'active',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            sender_id INTEGER NOT NULL REFERENCES users(id),
-            receiver_id INTEGER NOT NULL REFERENCES users(id),
-            content TEXT NOT NULL,
-            is_read BOOLEAN DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE TABLE IF NOT EXISTS refresh_tokens (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL REFERENCES users(id),
-            token_hash TEXT UNIQUE NOT NULL,
-            expires_at TIMESTAMP NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author_id);
-        CREATE INDEX IF NOT EXISTS idx_posts_category ON posts(category);
-        CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at DESC);
-        CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id);
-        CREATE INDEX IF NOT EXISTS idx_messages_participants ON messages(sender_id, receiver_id);
-        CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(created_at DESC);
-        CREATE INDEX IF NOT EXISTS idx_lostfound_status ON lostfound(status);
-        CREATE INDEX IF NOT EXISTS idx_messages_receiver_read ON messages(receiver_id, is_read);
-        CREATE INDEX IF NOT EXISTS idx_posts_search_fts ON posts(title);
-        CREATE INDEX IF NOT EXISTS idx_comments_author ON comments(author_id);
-        CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
-
-        CREATE TABLE IF NOT EXISTS push_subscriptions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            endpoint TEXT NOT NULL,
-            p256dh_key TEXT NOT NULL,
-            auth_key TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_push_sub_endpoint
-            ON push_subscriptions(endpoint);
-        CREATE INDEX IF NOT EXISTS idx_push_sub_user
-            ON push_subscriptions(user_id);
-        CREATE INDEX IF NOT EXISTS idx_news_comments_news ON news_comments(news_id);
-        CREATE INDEX IF NOT EXISTS idx_news_comments_author ON news_comments(author_id);
-
-        CREATE TABLE IF NOT EXISTS email_tokens (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL REFERENCES users(id),
-            token_hash TEXT UNIQUE NOT NULL,
-            token_type TEXT NOT NULL CHECK(token_type IN ('password_reset', 'email_verify')),
-            expires_at TIMESTAMP NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
-        CREATE INDEX IF NOT EXISTS idx_email_tokens_user ON email_tokens(user_id);
-        CREATE INDEX IF NOT EXISTS idx_email_tokens_hash ON email_tokens(token_hash);
-    """)
-
-    # Migration: add OAuth / email columns if missing
-    cur = await db.execute("PRAGMA table_info(users)")
-    existing_cols = {row[1] for row in await cur.fetchall()}
-    if "email" not in existing_cols:
-        await db.execute("ALTER TABLE users ADD COLUMN email TEXT")
-    if "oauth_provider" not in existing_cols:
-        await db.execute("ALTER TABLE users ADD COLUMN oauth_provider TEXT")
-    if "oauth_id" not in existing_cols:
-        await db.execute("ALTER TABLE users ADD COLUMN oauth_id TEXT")
-    if "email_verified" not in existing_cols:
-        await db.execute("ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 1")
-    await db.execute(
-        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL"
-    )
-    await db.execute(
-        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_oauth ON users(oauth_provider, oauth_id) WHERE oauth_provider IS NOT NULL"
+    global _pool
+    _pool = await asyncpg.create_pool(
+        DATABASE_URL,
+        min_size=DB_POOL_MIN,
+        max_size=DB_POOL_MAX,
     )
 
-    # Migration: add author_id to news table
-    cur = await db.execute("PRAGMA table_info(news)")
-    news_cols = {row[1] for row in await cur.fetchall()}
-    if "author_id" not in news_cols:
-        await db.execute("ALTER TABLE news ADD COLUMN author_id INTEGER REFERENCES users(id)")
-    if "comments_count" not in news_cols:
-        await db.execute("ALTER TABLE news ADD COLUMN comments_count INTEGER DEFAULT 0")
-
-    # Migration: add parent_post_id to posts for repost/quote support
-    cur = await db.execute("PRAGMA table_info(posts)")
-    posts_cols = {row[1] for row in await cur.fetchall()}
-    if "parent_post_id" not in posts_cols:
-        await db.execute(
-            "ALTER TABLE posts ADD COLUMN parent_post_id INTEGER REFERENCES posts(id) ON DELETE SET NULL"
-        )
-    if "is_anonymous" not in posts_cols:
-        await db.execute("ALTER TABLE posts ADD COLUMN is_anonymous INTEGER DEFAULT 0")
-
-    await db.commit()
+    async with _pool.acquire() as conn:
+        # Execute DDL — split by semicolons for individual statements
+        for stmt in _DDL.strip().split(";"):
+            stmt = stmt.strip()
+            if stmt:
+                await conn.execute(stmt)

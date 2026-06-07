@@ -8,7 +8,9 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 2  # 2 hours
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
-DB_PATH = os.getenv("DATABASE_URL", "campus.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+DB_POOL_MIN = int(os.getenv("DB_POOL_MIN", "2"))
+DB_POOL_MAX = int(os.getenv("DB_POOL_MAX", "10"))
 
 API_PREFIX = "/api/v1"
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")

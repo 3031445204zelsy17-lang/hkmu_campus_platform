@@ -58,37 +58,34 @@ async def auth_config():
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 async def register(body: UserRegister):
     check_rate_limit(f"register:{body.username}", max_requests=5, window_seconds=60)
-    db = await get_db()
 
-    cur = await db.execute("SELECT id FROM users WHERE username = ?", (body.username,))
-    if await cur.fetchone():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Username already exists",
-        )
-
-    if body.student_id:
-        cur = await db.execute("SELECT id FROM users WHERE student_id = ?", (body.student_id,))
-        if await cur.fetchone():
+    async with get_db() as db:
+        if await db.fetchval("SELECT id FROM users WHERE username = $1", body.username):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Student ID already registered",
+                detail="Username already exists",
             )
 
-    safe = sanitize_dict(
-        {"username": body.username, "nickname": body.nickname, "student_id": body.student_id},
-        "username", "nickname", "student_id",
-    )
+        if body.student_id:
+            if await db.fetchval("SELECT id FROM users WHERE student_id = $1", body.student_id):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Student ID already registered",
+                )
 
-    now = datetime.now(timezone.utc).isoformat()
-    cur = await db.execute(
-        """INSERT INTO users (username, password_hash, nickname, student_id, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?)""",
-        (safe["username"], hash_password(body.password), safe["nickname"], safe["student_id"], now, now),
-    )
-    await db.commit()
+        safe = sanitize_dict(
+            {"username": body.username, "nickname": body.nickname, "student_id": body.student_id},
+            "username", "nickname", "student_id",
+        )
 
-    user_id = cur.lastrowid
+        now = datetime.now(timezone.utc).isoformat()
+        row = await db.fetchrow(
+            """INSERT INTO users (username, password_hash, nickname, student_id, created_at, updated_at)
+               VALUES ($1, $2, $3, $4, $5, $6) RETURNING id""",
+            safe["username"], hash_password(body.password), safe["nickname"], safe["student_id"], now, now,
+        )
+        user_id = row["id"]
+
     return UserOut(
         id=user_id,
         username=safe["username"],
@@ -105,12 +102,11 @@ async def login(body: UserLogin):
     check_rate_limit(f"login:{body.username}", max_requests=5, window_seconds=60)
     _check_lockout(f"login:{body.username}")
 
-    db = await get_db()
-    cur = await db.execute(
-        "SELECT id, username, password_hash, email_verified FROM users WHERE username = ?",
-        (body.username,),
-    )
-    row = await cur.fetchone()
+    async with get_db() as db:
+        row = await db.fetchrow(
+            "SELECT id, username, password_hash, email_verified FROM users WHERE username = $1",
+            body.username,
+        )
 
     if not row or not verify_password(body.password, row["password_hash"]):
         _record_failure(f"login:{body.username}")
@@ -133,9 +129,14 @@ async def login(body: UserLogin):
 
 @router.get("/me", response_model=UserOut)
 async def get_me(user: dict = Depends(get_current_user)):
-    db = await get_db()
-    cur = await db.execute("SELECT * FROM users WHERE id = ?", (user["id"],))
-    row = await cur.fetchone()
+    async with get_db() as db:
+        row = await db.fetchrow(
+            """SELECT id, username, nickname, student_id, avatar_url, bio, identity,
+                      email, oauth_provider,
+                      created_at::TEXT AS created_at
+               FROM users WHERE id = $1""",
+            user["id"],
+        )
 
     if not row:
         raise HTTPException(
@@ -174,46 +175,41 @@ async def google_login(body: GoogleLogin):
     google_sub = idinfo["sub"]
     google_email = idinfo.get("email", "")
 
-    db = await get_db()
-
-    # 1. Match by OAuth identity
-    cur = await db.execute(
-        "SELECT id, username FROM users WHERE oauth_provider = 'google' AND oauth_id = ?",
-        (google_sub,),
-    )
-    row = await cur.fetchone()
-    if row:
-        token = create_access_token({"sub": str(row["id"]), "username": row["username"]})
-        refresh = await create_refresh_token(row["id"])
-        return Token(access_token=token, refresh_token=refresh)
-
-    # 2. Match by email → link OAuth
-    if google_email:
-        cur = await db.execute("SELECT id, username FROM users WHERE email = ?", (google_email,))
-        row = await cur.fetchone()
+    async with get_db() as db:
+        # 1. Match by OAuth identity
+        row = await db.fetchrow(
+            "SELECT id, username FROM users WHERE oauth_provider = 'google' AND oauth_id = $1",
+            google_sub,
+        )
         if row:
-            await db.execute(
-                "UPDATE users SET oauth_provider = 'google', oauth_id = ? WHERE id = ?",
-                (google_sub, row["id"]),
-            )
-            await db.commit()
             token = create_access_token({"sub": str(row["id"]), "username": row["username"]})
             refresh = await create_refresh_token(row["id"])
             return Token(access_token=token, refresh_token=refresh)
 
-    # 3. Auto-create new user
-    base_name = re.sub(r'[^a-zA-Z0-9_]', '', google_email.split("@")[0])[:20] if google_email else "user"
-    username = f"{base_name}_{secrets.token_hex(3)}"
-    nickname = idinfo.get("name", base_name)[:30]
-    now = datetime.now(timezone.utc).isoformat()
+        # 2. Match by email → link OAuth
+        if google_email:
+            row = await db.fetchrow("SELECT id, username FROM users WHERE email = $1", google_email)
+            if row:
+                await db.execute(
+                    "UPDATE users SET oauth_provider = 'google', oauth_id = $1 WHERE id = $2",
+                    google_sub, row["id"],
+                )
+                token = create_access_token({"sub": str(row["id"]), "username": row["username"]})
+                refresh = await create_refresh_token(row["id"])
+                return Token(access_token=token, refresh_token=refresh)
 
-    cur = await db.execute(
-        """INSERT INTO users (username, password_hash, nickname, email, oauth_provider, oauth_id, created_at, updated_at)
-           VALUES (?, ?, ?, ?, 'google', ?, ?, ?)""",
-        (username, OAUTH_NO_PASSWORD, sanitize(nickname), google_email, google_sub, now, now),
-    )
-    await db.commit()
-    user_id = cur.lastrowid
+        # 3. Auto-create new user
+        base_name = re.sub(r'[^a-zA-Z0-9_]', '', google_email.split("@")[0])[:20] if google_email else "user"
+        username = f"{base_name}_{secrets.token_hex(3)}"
+        nickname = idinfo.get("name", base_name)[:30]
+        now = datetime.now(timezone.utc).isoformat()
+
+        new_row = await db.fetchrow(
+            """INSERT INTO users (username, password_hash, nickname, email, oauth_provider, oauth_id, created_at, updated_at)
+               VALUES ($1, $2, $3, $4, 'google', $5, $6, $7) RETURNING id""",
+            username, OAUTH_NO_PASSWORD, sanitize(nickname), google_email, google_sub, now, now,
+        )
+        user_id = new_row["id"]
 
     token = create_access_token({"sub": str(user_id), "username": username})
     refresh = await create_refresh_token(user_id)
@@ -225,31 +221,29 @@ async def google_login(body: GoogleLogin):
 @router.post("/email/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 async def email_register(body: EmailRegister):
     check_rate_limit(f"register:{body.email}", max_requests=5, window_seconds=60)
-    db = await get_db()
 
-    cur = await db.execute("SELECT id FROM users WHERE email = ?", (body.email,))
-    if await cur.fetchone():
-        raise HTTPException(status.HTTP_409_CONFLICT, "Email already registered")
+    async with get_db() as db:
+        if await db.fetchval("SELECT id FROM users WHERE email = $1", body.email):
+            raise HTTPException(status.HTTP_409_CONFLICT, "Email already registered")
 
-    # Auto-generate username from email prefix
-    base_name = re.sub(r'[^a-zA-Z0-9_]', '', body.email.split("@")[0])[:20]
-    username = f"{base_name}_{secrets.token_hex(3)}"
+        # Auto-generate username from email prefix
+        base_name = re.sub(r'[^a-zA-Z0-9_]', '', body.email.split("@")[0])[:20]
+        username = f"{base_name}_{secrets.token_hex(3)}"
 
-    safe_nick = sanitize(body.nickname)
-    now = datetime.now(timezone.utc).isoformat()
+        safe_nick = sanitize(body.nickname)
+        now = datetime.now(timezone.utc).isoformat()
 
-    cur = await db.execute(
-        """INSERT INTO users (username, password_hash, nickname, email, student_id, email_verified, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, 0, ?, ?)""",
-        (username, hash_password(body.password), safe_nick, body.email, body.student_id, now, now),
-    )
-    await db.commit()
+        new_row = await db.fetchrow(
+            """INSERT INTO users (username, password_hash, nickname, email, student_id, email_verified, created_at, updated_at)
+               VALUES ($1, $2, $3, $4, $5, FALSE, $6, $7) RETURNING id""",
+            username, hash_password(body.password), safe_nick, body.email, body.student_id, now, now,
+        )
+        user_id = new_row["id"]
 
-    user_id = cur.lastrowid
-    # Send verification email (non-blocking — SMTP may not be configured)
-    verify_token = await _create_email_token(user_id, "email_verify", ttl_hours=24)
-    verify_url = f"{FRONTEND_URL}/#/verify-email?token={verify_token}"
-    await send_verification_email(body.email, verify_url)
+        # Send verification email (non-blocking — SMTP may not be configured)
+        verify_token = await _create_email_token(user_id, "email_verify", ttl_hours=24, conn=db)
+        verify_url = f"{FRONTEND_URL}/#/verify-email?token={verify_token}"
+        await send_verification_email(body.email, verify_url)
 
     return UserOut(
         id=user_id,
@@ -266,12 +260,12 @@ async def email_register(body: EmailRegister):
 async def email_login(body: EmailLogin):
     check_rate_limit(f"login:{body.email}", max_requests=5, window_seconds=60)
     _check_lockout(f"login:{body.email}")
-    db = await get_db()
-    cur = await db.execute(
-        "SELECT id, username, password_hash, email, email_verified FROM users WHERE email = ?",
-        (body.email,),
-    )
-    row = await cur.fetchone()
+
+    async with get_db() as db:
+        row = await db.fetchrow(
+            "SELECT id, username, password_hash, email, email_verified FROM users WHERE email = $1",
+            body.email,
+        )
 
     if not row:
         _record_failure(f"login:{body.email}")
@@ -305,11 +299,12 @@ async def refresh_access(body: dict):
     if not raw:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Missing refresh_token")
     user_id = await verify_refresh_token(raw)
-    db = await get_db()
-    cur = await db.execute("SELECT username FROM users WHERE id = ?", (user_id,))
-    row = await cur.fetchone()
+
+    async with get_db() as db:
+        row = await db.fetchrow("SELECT username FROM users WHERE id = $1", user_id)
     if not row:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
+
     new_access = create_access_token({"sub": str(user_id), "username": row["username"]})
     new_refresh = await rotate_refresh_token(raw, user_id)
     return Token(access_token=new_access, refresh_token=new_refresh)
@@ -317,47 +312,59 @@ async def refresh_access(body: dict):
 
 # --- Password Reset ---
 
-async def _create_email_token(user_id: int, token_type: str, ttl_hours: int) -> str:
+async def _create_email_token(user_id: int, token_type: str, ttl_hours: int, conn=None) -> str:
     raw = secrets.token_hex(32)
     token_hash = hashlib.sha256(raw.encode()).hexdigest()
     expires = datetime.now(timezone.utc) + timedelta(hours=ttl_hours)
-    db = await get_db()
-    await db.execute(
-        "INSERT INTO email_tokens (user_id, token_hash, token_type, expires_at) VALUES (?, ?, ?, ?)",
-        (user_id, token_hash, token_type, expires.isoformat()),
-    )
-    await db.commit()
+
+    async def _insert(db):
+        await db.execute(
+            "INSERT INTO email_tokens (user_id, token_hash, token_type, expires_at) VALUES ($1, $2, $3, $4)",
+            user_id, token_hash, token_type, expires.isoformat(),
+        )
+
+    if conn:
+        await _insert(conn)
+    else:
+        async with get_db() as db:
+            await _insert(db)
     return raw
 
 
-async def _consume_email_token(raw: str, token_type: str) -> int | None:
+async def _consume_email_token(raw: str, token_type: str, conn=None) -> int | None:
     token_hash = hashlib.sha256(raw.encode()).hexdigest()
-    db = await get_db()
-    cur = await db.execute(
-        "SELECT user_id, expires_at FROM email_tokens WHERE token_hash = ? AND token_type = ?",
-        (token_hash, token_type),
-    )
-    row = await cur.fetchone()
-    if not row:
-        return None
-    expires = datetime.fromisoformat(row["expires_at"])
-    if expires.tzinfo is None:
-        expires = expires.replace(tzinfo=timezone.utc)
-    await db.execute("DELETE FROM email_tokens WHERE token_hash = ?", (token_hash,))
-    await db.commit()
-    if expires < datetime.now(timezone.utc):
-        return None
-    return row["user_id"]
+
+    async def _do(db):
+        async with db.transaction():
+            row = await db.fetchrow(
+                "SELECT user_id, expires_at::TEXT AS expires_at FROM email_tokens WHERE token_hash = $1 AND token_type = $2",
+                token_hash, token_type,
+            )
+            if not row:
+                return None
+            expires = datetime.fromisoformat(row["expires_at"])
+            if expires.tzinfo is None:
+                expires = expires.replace(tzinfo=timezone.utc)
+            await db.execute("DELETE FROM email_tokens WHERE token_hash = $1", token_hash)
+            if expires < datetime.now(timezone.utc):
+                return None
+            return row["user_id"]
+
+    if conn:
+        return await _do(conn)
+    else:
+        async with get_db() as db:
+            return await _do(db)
 
 
 @router.post("/forgot-password")
 async def forgot_password(body: ForgotPassword):
     check_rate_limit(f"forgot:{body.email}", max_requests=3, window_seconds=300)
-    db = await get_db()
-    cur = await db.execute(
-        "SELECT id, username, password_hash FROM users WHERE email = ?", (body.email,),
-    )
-    row = await cur.fetchone()
+
+    async with get_db() as db:
+        row = await db.fetchrow(
+            "SELECT id, username, password_hash FROM users WHERE email = $1", body.email,
+        )
     # Always return success to avoid email enumeration
     if not row or is_oauth_only(row["password_hash"]):
         return {"message": "If that email is registered, a reset link has been sent."}
@@ -371,19 +378,20 @@ async def forgot_password(body: ForgotPassword):
 @router.post("/reset-password")
 async def reset_password(body: ResetPassword):
     check_rate_limit("reset-password", max_requests=5, window_seconds=60)
-    user_id = await _consume_email_token(body.token, "password_reset")
-    if user_id is None:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or expired reset token")
 
-    db = await get_db()
-    await db.execute(
-        "UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?",
-        (hash_password(body.new_password), datetime.now(timezone.utc).isoformat(), user_id),
-    )
-    await db.commit()
-    # Invalidate all refresh tokens for security
-    await db.execute("DELETE FROM refresh_tokens WHERE user_id = ?", (user_id,))
-    await db.commit()
+    async with get_db() as db:
+        async with db.transaction():
+            user_id = await _consume_email_token(body.token, "password_reset", conn=db)
+            if user_id is None:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or expired reset token")
+
+            await db.execute(
+                "UPDATE users SET password_hash = $1, updated_at = $2 WHERE id = $3",
+                hash_password(body.new_password), datetime.now(timezone.utc).isoformat(), user_id,
+            )
+            # Invalidate all refresh tokens for security
+            await db.execute("DELETE FROM refresh_tokens WHERE user_id = $1", user_id)
+
     return {"message": "Password has been reset successfully."}
 
 
@@ -391,26 +399,25 @@ async def reset_password(body: ResetPassword):
 
 @router.post("/verify-email")
 async def verify_email(body: VerifyEmail):
-    user_id = await _consume_email_token(body.token, "email_verify")
-    if user_id is None:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or expired verification token")
+    async with get_db() as db:
+        user_id = await _consume_email_token(body.token, "email_verify", conn=db)
+        if user_id is None:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or expired verification token")
 
-    db = await get_db()
-    await db.execute(
-        "UPDATE users SET email_verified = 1 WHERE id = ?", (user_id,),
-    )
-    await db.commit()
+        await db.execute(
+            "UPDATE users SET email_verified = TRUE WHERE id = $1", user_id,
+        )
     return {"message": "Email verified successfully."}
 
 
 @router.post("/resend-verification")
 async def resend_verification(body: ForgotPassword):
     check_rate_limit(f"resend:{body.email}", max_requests=3, window_seconds=300)
-    db = await get_db()
-    cur = await db.execute(
-        "SELECT id, email_verified FROM users WHERE email = ?", (body.email,),
-    )
-    row = await cur.fetchone()
+
+    async with get_db() as db:
+        row = await db.fetchrow(
+            "SELECT id, email_verified FROM users WHERE email = $1", body.email,
+        )
     if not row or row["email_verified"]:
         return {"message": "If that email needs verification, a new link has been sent."}
 
