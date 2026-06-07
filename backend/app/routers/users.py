@@ -10,16 +10,27 @@ from ..services.sanitizer import sanitize
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+
+async def _require_admin(user: dict) -> None:
+    """Raise 403 if the current user is not an admin."""
+    async with get_db() as db:
+        row = await db.fetchrow("SELECT identity FROM users WHERE id = $1", user["id"])
+    if not row or row["identity"] != "admin":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Admin only")
+
 ALLOWED_UPLOAD_EXT = {"jpg", "jpeg", "png", "gif", "webp"}
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "frontend", "assets", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 _USER_COLS = """id, username, nickname, student_id, avatar_url, bio, identity,
-    created_at::TEXT AS created_at, email, oauth_provider"""
+    created_at, email, oauth_provider"""
 
 
 def _user_out(row, include_email: bool = True) -> UserOut:
     """Convert an asyncpg Record to UserOut."""
+    created_at = row["created_at"]
+    if isinstance(created_at, datetime):
+        created_at = created_at.isoformat()
     kw = dict(
         id=row["id"],
         username=row["username"],
@@ -28,7 +39,7 @@ def _user_out(row, include_email: bool = True) -> UserOut:
         avatar_url=row["avatar_url"],
         bio=row["bio"] or "",
         identity=row["identity"],
-        created_at=row["created_at"],
+        created_at=created_at,
     )
     if include_email:
         kw["email"] = row["email"]
@@ -64,7 +75,7 @@ async def update_me(
     if not updates:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "No fields to update")
 
-    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+    updates["updated_at"] = datetime.now(timezone.utc)
     set_clause = ", ".join(f"{k} = ${i+1}" for i, k in enumerate(updates.keys()))
     where_n = len(updates) + 1
 
@@ -102,7 +113,7 @@ async def upload_avatar(
         f.write(content)
 
     avatar_url = f"/assets/uploads/{filename}"
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
 
     async with get_db() as db:
         await db.execute(
@@ -139,3 +150,35 @@ async def get_user(user_id: int):
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
         return _user_out(row)
+
+
+# ── Admin endpoints ─────────────────────────────────────────────────────────
+
+
+@router.get("/admin/list", response_model=list[UserOut])
+async def list_all_users(
+    user: dict = Depends(get_current_user),
+):
+    """List all users (admin only)."""
+    await _require_admin(user)
+    async with get_db() as db:
+        rows = await db.fetch(f"SELECT {_USER_COLS} FROM users ORDER BY id")
+        return [_user_out(r) for r in rows]
+
+
+@router.put("/admin/{user_id}/role")
+async def set_user_role(
+    user_id: int,
+    role: str = Query(..., pattern=r"^(admin|student)$"),
+    user: dict = Depends(get_current_user),
+):
+    """Promote or demote a user (admin only)."""
+    await _require_admin(user)
+    async with get_db() as db:
+        result = await db.execute(
+            "UPDATE users SET identity = $1 WHERE id = $2",
+            role, user_id,
+        )
+        if result.endswith("0"):
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+    return {"message": f"User {user_id} role set to {role}"}

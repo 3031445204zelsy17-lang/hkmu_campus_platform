@@ -18,14 +18,14 @@ _optional_oauth2 = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_erro
 router = APIRouter(prefix="/posts", tags=["posts"])
 
 
-# ── Column selectors (with ::TEXT cast for timestamps) ────────────────────────
+# ── Column selectors ────────────────────────────────────────────────────────
 
 _POST_COLS = """p.id, p.author_id, p.title, p.content, p.category,
     p.likes_count, p.comments_count, p.parent_post_id, p.is_anonymous,
-    p.created_at::TEXT AS created_at, p.updated_at::TEXT AS updated_at"""
+    p.created_at, p.updated_at"""
 
 _COMMENT_COLS = """c.id, c.post_id, c.author_id, c.content,
-    c.likes_count, c.created_at::TEXT AS created_at"""
+    c.likes_count, c.created_at"""
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -48,6 +48,13 @@ async def _is_admin(user_id: int) -> bool:
         return row is not None and row["identity"] == "admin"
 
 
+def _fmt_ts(val):
+    """Convert a datetime or string to ISO format string."""
+    if isinstance(val, datetime):
+        return val.isoformat()
+    return val
+
+
 def _post_row_to_out(row, liked_set: set[int] | None = None,
                      viewer_id: int | None = None, is_admin: bool = False) -> PostOut:
     quoted = None
@@ -57,7 +64,7 @@ def _post_row_to_out(row, liked_set: set[int] | None = None,
             author_nickname=row["parent_author"] if "parent_author" in row.keys() else None,
             title=row["parent_title"],
             content_preview=(row["parent_content"] or "")[:150],
-            created_at=row["parent_created"] if "parent_created" in row.keys() else None,
+            created_at=_fmt_ts(row["parent_created"]) if "parent_created" in row.keys() else None,
         )
     is_anon = bool(row["is_anonymous"]) if "is_anonymous" in row.keys() else False
     show_author = True
@@ -71,8 +78,8 @@ def _post_row_to_out(row, liked_set: set[int] | None = None,
         category=row["category"],
         likes_count=row["likes_count"],
         comments_count=row["comments_count"],
-        created_at=row["created_at"],
-        updated_at=row["updated_at"],
+        created_at=_fmt_ts(row["created_at"]),
+        updated_at=_fmt_ts(row["updated_at"]),
         author_nickname=row["author_nickname"] if show_author else None,
         author_avatar=row["avatar_url"] if show_author else None,
         is_liked=row["id"] in liked_set if liked_set else False,
@@ -146,7 +153,7 @@ async def list_posts(
         rows = await db.fetch(
             f"""SELECT {_POST_COLS}, u.nickname AS author_nickname, u.avatar_url,
                    pp.id AS parent_id, pp.title AS parent_title,
-                   pp.content AS parent_content, pp.created_at::TEXT AS parent_created,
+                   pp.content AS parent_content, pp.created_at AS parent_created,
                    pu.nickname AS parent_author
                 FROM posts p
                 JOIN users u ON u.id = p.author_id
@@ -179,7 +186,7 @@ async def get_post(post_id: int, user: dict | None = Depends(_get_optional_user)
         row = await db.fetchrow(
             f"""SELECT {_POST_COLS}, u.nickname AS author_nickname, u.avatar_url,
                    pp.id AS parent_id, pp.title AS parent_title,
-                   pp.content AS parent_content, pp.created_at::TEXT AS parent_created,
+                   pp.content AS parent_content, pp.created_at AS parent_created,
                    pu.nickname AS parent_author
                FROM posts p
                JOIN users u ON u.id = p.author_id
@@ -209,7 +216,7 @@ async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
             {"title": body.title, "content": body.content, "category": body.category},
             "title", "content", "category",
         )
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(timezone.utc)
 
         is_anonymous = body.is_anonymous
         if body.category == "treehole":
@@ -226,7 +233,7 @@ async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
         row = await db.fetchrow(
             f"""SELECT {_POST_COLS}, u.nickname AS author_nickname, u.avatar_url,
                    pp.id AS parent_id, pp.title AS parent_title,
-                   pp.content AS parent_content, pp.created_at::TEXT AS parent_created,
+                   pp.content AS parent_content, pp.created_at AS parent_created,
                    pu.nickname AS parent_author
                FROM posts p
                JOIN users u ON u.id = p.author_id
@@ -263,7 +270,7 @@ async def update_post(
         if not updates:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "No fields to update")
 
-        updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+        updates["updated_at"] = datetime.now(timezone.utc)
         set_clause = ", ".join(f"{k} = ${i+1}" for i, k in enumerate(updates.keys()))
         where_n = len(updates) + 1
         await db.execute(
@@ -274,7 +281,7 @@ async def update_post(
         row = await db.fetchrow(
             f"""SELECT {_POST_COLS}, u.nickname AS author_nickname, u.avatar_url,
                    pp.id AS parent_id, pp.title AS parent_title,
-                   pp.content AS parent_content, pp.created_at::TEXT AS parent_created,
+                   pp.content AS parent_content, pp.created_at AS parent_created,
                    pu.nickname AS parent_author
                FROM posts p JOIN users u ON u.id = p.author_id
                LEFT JOIN posts pp ON pp.id = p.parent_post_id
@@ -341,7 +348,7 @@ async def toggle_like(post_id: int, user: dict = Depends(get_current_user)):
         row = await db.fetchrow(
             f"""SELECT {_POST_COLS}, u.nickname AS author_nickname, u.avatar_url,
                    pp.id AS parent_id, pp.title AS parent_title,
-                   pp.content AS parent_content, pp.created_at::TEXT AS parent_created,
+                   pp.content AS parent_content, pp.created_at AS parent_created,
                    pu.nickname AS parent_author
                FROM posts p JOIN users u ON u.id = p.author_id
                LEFT JOIN posts pp ON pp.id = p.parent_post_id
@@ -392,7 +399,7 @@ async def list_comments(
                 author_id=r["author_id"],
                 content=r["content"],
                 likes_count=r["likes_count"],
-                created_at=r["created_at"],
+                created_at=_fmt_ts(r["created_at"]),
                 author_nickname=r["author_nickname"],
                 author_avatar=r["author_avatar"],
             ).model_dump()
@@ -423,7 +430,7 @@ async def create_comment(
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Post not found")
 
         safe_content = sanitize(body.content)
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(timezone.utc)
 
         async with db.transaction():
             new_row = await db.fetchrow(
@@ -451,7 +458,7 @@ async def create_comment(
         author_id=r["author_id"],
         content=r["content"],
         likes_count=r["likes_count"],
-        created_at=r["created_at"],
+        created_at=_fmt_ts(r["created_at"]),
         author_nickname=r["author_nickname"],
         author_avatar=r["author_avatar"],
     )

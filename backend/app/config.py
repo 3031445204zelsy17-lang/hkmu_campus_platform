@@ -30,3 +30,6 @@ VAPID_CLAIMS = {"sub": f"mailto:{os.getenv('VAPID_EMAIL', 'noreply@hkmu-campus.e
 # Hot sort algorithm tuning
 HOT_GRAVITY = float(os.getenv("HOT_GRAVITY", "48"))   # hours per 1-point decay
 HOT_SEED = float(os.getenv("HOT_SEED", "1.0"))         # baseline score for new posts
+
+# Admin setup: comma-separated usernames to auto-promote on startup
+ADMIN_USERNAMES = [u.strip() for u in os.getenv("ADMIN_USERNAMES", "").split(",") if u.strip()]

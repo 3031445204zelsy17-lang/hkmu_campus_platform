@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from google.oauth2 import id_token as google_id_token
 from google.auth.transport import requests as google_requests
 
-from ..config import GOOGLE_CLIENT_ID, FRONTEND_URL
+from ..config import GOOGLE_CLIENT_ID, FRONTEND_URL, ADMIN_USERNAMES
 from ..database import get_db
 from ..models import (
     UserRegister, UserLogin, GoogleLogin, EmailRegister, EmailLogin,
@@ -78,7 +78,7 @@ async def register(body: UserRegister):
             "username", "nickname", "student_id",
         )
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(timezone.utc)
         row = await db.fetchrow(
             """INSERT INTO users (username, password_hash, nickname, student_id, created_at, updated_at)
                VALUES ($1, $2, $3, $4, $5, $6) RETURNING id""",
@@ -91,7 +91,7 @@ async def register(body: UserRegister):
         username=safe["username"],
         nickname=safe["nickname"],
         student_id=safe["student_id"],
-        created_at=now,
+        created_at=now.isoformat(),
         email=None,
         oauth_provider=None,
     )
@@ -122,6 +122,15 @@ async def login(body: UserLogin):
         )
 
     _clear_failures(f"login:{body.username}")
+
+    # Auto-promote configured admin users on login
+    if ADMIN_USERNAMES and body.username in ADMIN_USERNAMES:
+        async with get_db() as db:
+            await db.execute(
+                "UPDATE users SET identity = 'admin' WHERE id = $1 AND identity != 'admin'",
+                row["id"],
+            )
+
     token = create_access_token({"sub": str(row["id"]), "username": row["username"]})
     refresh = await create_refresh_token(row["id"])
     return Token(access_token=token, refresh_token=refresh)
@@ -132,8 +141,7 @@ async def get_me(user: dict = Depends(get_current_user)):
     async with get_db() as db:
         row = await db.fetchrow(
             """SELECT id, username, nickname, student_id, avatar_url, bio, identity,
-                      email, oauth_provider,
-                      created_at::TEXT AS created_at
+                      email, oauth_provider, created_at
                FROM users WHERE id = $1""",
             user["id"],
         )
@@ -144,6 +152,10 @@ async def get_me(user: dict = Depends(get_current_user)):
             detail="User not found",
         )
 
+    created_at = row["created_at"]
+    if isinstance(created_at, datetime):
+        created_at = created_at.isoformat()
+
     return UserOut(
         id=row["id"],
         username=row["username"],
@@ -152,7 +164,7 @@ async def get_me(user: dict = Depends(get_current_user)):
         avatar_url=row["avatar_url"],
         bio=row["bio"] or "",
         identity=row["identity"],
-        created_at=row["created_at"],
+        created_at=created_at,
         email=row["email"],
         oauth_provider=row["oauth_provider"],
     )
@@ -202,7 +214,7 @@ async def google_login(body: GoogleLogin):
         base_name = re.sub(r'[^a-zA-Z0-9_]', '', google_email.split("@")[0])[:20] if google_email else "user"
         username = f"{base_name}_{secrets.token_hex(3)}"
         nickname = idinfo.get("name", base_name)[:30]
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(timezone.utc)
 
         new_row = await db.fetchrow(
             """INSERT INTO users (username, password_hash, nickname, email, oauth_provider, oauth_id, created_at, updated_at)
@@ -231,7 +243,7 @@ async def email_register(body: EmailRegister):
         username = f"{base_name}_{secrets.token_hex(3)}"
 
         safe_nick = sanitize(body.nickname)
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(timezone.utc)
 
         new_row = await db.fetchrow(
             """INSERT INTO users (username, password_hash, nickname, email, student_id, email_verified, created_at, updated_at)
@@ -250,7 +262,7 @@ async def email_register(body: EmailRegister):
         username=username,
         nickname=safe_nick,
         student_id=body.student_id,
-        created_at=now,
+        created_at=now.isoformat(),
         email=body.email,
         oauth_provider=None,
     )
@@ -320,7 +332,7 @@ async def _create_email_token(user_id: int, token_type: str, ttl_hours: int, con
     async def _insert(db):
         await db.execute(
             "INSERT INTO email_tokens (user_id, token_hash, token_type, expires_at) VALUES ($1, $2, $3, $4)",
-            user_id, token_hash, token_type, expires.isoformat(),
+            user_id, token_hash, token_type, expires,
         )
 
     if conn:
@@ -337,12 +349,12 @@ async def _consume_email_token(raw: str, token_type: str, conn=None) -> int | No
     async def _do(db):
         async with db.transaction():
             row = await db.fetchrow(
-                "SELECT user_id, expires_at::TEXT AS expires_at FROM email_tokens WHERE token_hash = $1 AND token_type = $2",
+                "SELECT user_id, expires_at FROM email_tokens WHERE token_hash = $1 AND token_type = $2",
                 token_hash, token_type,
             )
             if not row:
                 return None
-            expires = datetime.fromisoformat(row["expires_at"])
+            expires = row["expires_at"]
             if expires.tzinfo is None:
                 expires = expires.replace(tzinfo=timezone.utc)
             await db.execute("DELETE FROM email_tokens WHERE token_hash = $1", token_hash)
@@ -387,7 +399,7 @@ async def reset_password(body: ResetPassword):
 
             await db.execute(
                 "UPDATE users SET password_hash = $1, updated_at = $2 WHERE id = $3",
-                hash_password(body.new_password), datetime.now(timezone.utc).isoformat(), user_id,
+                hash_password(body.new_password), datetime.now(timezone.utc), user_id,
             )
             # Invalidate all refresh tokens for security
             await db.execute("DELETE FROM refresh_tokens WHERE user_id = $1", user_id)

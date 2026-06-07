@@ -43,7 +43,7 @@ async def list_conversations(user: dict = Depends(get_current_user)):
                 u.nickname AS partner_nickname,
                 u.avatar_url AS partner_avatar,
                 m.content AS last_message,
-                m.created_at::TEXT AS last_time,
+                m.created_at AS last_time,
                 COALESCE(ud.cnt, 0) AS unread_count
             FROM latest l
             JOIN users u ON u.id = l.partner_id
@@ -59,7 +59,7 @@ async def list_conversations(user: dict = Depends(get_current_user)):
                 partner_nickname=r["partner_nickname"],
                 partner_avatar=r["partner_avatar"],
                 last_message=r["last_message"],
-                last_time=r["last_time"],
+                last_time=r["last_time"].isoformat() if isinstance(r["last_time"], datetime) else r["last_time"],
                 unread_count=r["unread_count"],
             )
             for r in rows
@@ -85,7 +85,7 @@ async def get_history(
             rows = await db.fetch(
                 """
                 SELECT id, sender_id, receiver_id, content, is_read,
-                       created_at::TEXT AS created_at
+                       created_at
                 FROM messages
                 WHERE (sender_id = $1 AND receiver_id = $2)
                    OR (sender_id = $3 AND receiver_id = $4)
@@ -102,7 +102,7 @@ async def get_history(
                     receiver_id=r["receiver_id"],
                     content=r["content"],
                     is_read=bool(r["is_read"]),
-                    created_at=r["created_at"],
+                    created_at=r["created_at"].isoformat() if isinstance(r["created_at"], datetime) else r["created_at"],
                 )
                 for r in rows
             ]
@@ -124,7 +124,8 @@ async def send_message(
 ):
     check_rate_limit(f"msg:{user['id']}", max_requests=30, window_seconds=60)
 
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
+    now_iso = now.isoformat()
 
     async with get_db() as db:
         # Verify partner exists
@@ -149,7 +150,7 @@ async def send_message(
         receiver_id=partner_id,
         content=body.content,
         is_read=False,
-        created_at=now,
+        created_at=now_iso,
     )
 
     # Push via WebSocket if partner is online
@@ -160,7 +161,7 @@ async def send_message(
         "receiver_id": partner_id,
         "content": body.content,
         "is_read": False,
-        "created_at": now,
+        "created_at": now_iso,
     })
 
     # Also send back to sender for multi-tab sync
@@ -171,7 +172,7 @@ async def send_message(
         "receiver_id": partner_id,
         "content": body.content,
         "is_read": False,
-        "created_at": now,
+        "created_at": now_iso,
     })
 
     # Web Push notification if partner is offline
@@ -256,7 +257,8 @@ async def ws_endpoint(ws: WebSocket):
                         await manager.send_to_user(user_id, {"type": "error", "detail": "Missing fields"})
                         continue
 
-                    now = datetime.now(timezone.utc).isoformat()
+                    now = datetime.now(timezone.utc)
+                    now_iso = now.isoformat()
                     row = await db.fetchrow(
                         """INSERT INTO messages (sender_id, receiver_id, content, created_at)
                            VALUES ($1, $2, $3, $4)
@@ -272,7 +274,7 @@ async def ws_endpoint(ws: WebSocket):
                         "receiver_id": receiver_id,
                         "content": content,
                         "is_read": False,
-                        "created_at": now,
+                        "created_at": now_iso,
                     }
                     await manager.send_to_user(receiver_id, chat_msg)
                     await manager.send_to_user(user_id, chat_msg)

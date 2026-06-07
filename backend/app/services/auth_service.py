@@ -74,7 +74,7 @@ async def create_refresh_token(user_id: int, conn=None) -> str:
     async def _insert(db):
         await db.execute(
             "INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)",
-            user_id, token_hash, expires.isoformat(),
+            user_id, token_hash, expires,
         )
 
     if conn:
@@ -89,12 +89,12 @@ async def verify_refresh_token(raw: str) -> int:
     token_hash = hashlib.sha256(raw.encode()).hexdigest()
     async with get_db() as db:
         row = await db.fetchrow(
-            "SELECT user_id, expires_at::TEXT AS expires_at FROM refresh_tokens WHERE token_hash = $1",
+            "SELECT user_id, expires_at FROM refresh_tokens WHERE token_hash = $1",
             token_hash,
         )
         if not row:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid refresh token")
-        expires = datetime.fromisoformat(row["expires_at"])
+        expires = row["expires_at"]
         if expires.tzinfo is None:
             expires = expires.replace(tzinfo=timezone.utc)
         if expires < datetime.now(timezone.utc):

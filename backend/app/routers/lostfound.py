@@ -13,17 +13,20 @@ router = APIRouter(prefix="/lostfound", tags=["lostfound"])
 
 _LF_COLS = """lf.id, lf.author_id, lf.title, lf.description, lf.item_type,
     lf.category, lf.location, lf.image_url, lf.status,
-    lf.created_at::TEXT AS created_at,
+    lf.created_at,
     u.nickname AS author_nickname"""
 
 
 def _row_to_out(r) -> LostFoundOut:
+    created_at = r["created_at"]
+    if isinstance(created_at, datetime):
+        created_at = created_at.isoformat()
     return LostFoundOut(
         id=r["id"], author_id=r["author_id"], title=r["title"],
         description=r["description"], item_type=r["item_type"],
         category=r["category"], location=r["location"],
         image_url=r["image_url"], status=r["status"],
-        created_at=r["created_at"], author_nickname=r["author_nickname"],
+        created_at=created_at, author_nickname=r["author_nickname"],
     )
 
 
@@ -99,7 +102,7 @@ async def create_item(
     user: dict = Depends(get_current_user),
 ):
     check_rate_limit(f"lostfound:{user['id']}", max_requests=10, window_seconds=60)
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
 
     async with get_db() as db:
         row = await db.fetchrow(

@@ -10,10 +10,10 @@ from ..services.sanitizer import sanitize
 router = APIRouter(prefix="/news", tags=["news"])
 
 _NEWS_COLS = """id, author_id, title, summary, image_url, category,
-    source_url, published_at::TEXT AS published_at, comments_count"""
+    source_url, published_at, comments_count"""
 
 _COMMENT_COLS = """nc.id, nc.news_id, nc.author_id, nc.content,
-    nc.created_at::TEXT AS created_at,
+    nc.created_at,
     u.nickname AS author_nickname, u.avatar_url AS author_avatar"""
 
 
@@ -62,7 +62,7 @@ async def list_news(
                 image_url=r["image_url"],
                 category=r["category"],
                 source_url=r["source_url"],
-                published_at=r["published_at"],
+                published_at=r["published_at"].isoformat() if isinstance(r["published_at"], datetime) else r["published_at"],
                 comments_count=r["comments_count"] if "comments_count" in r.keys() else 0,
             ).model_dump()
             for r in rows
@@ -83,7 +83,7 @@ async def create_news(
     if not await _is_admin(user["id"]):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Admin only")
 
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
 
     async with get_db() as db:
         row = await db.fetchrow(
@@ -98,10 +98,13 @@ async def create_news(
         r = await db.fetchrow(
             f"SELECT {_NEWS_COLS} FROM news WHERE id = $1", news_id,
         )
+        published_at = r["published_at"]
+        if isinstance(published_at, datetime):
+            published_at = published_at.isoformat()
         return NewsOut(
             id=r["id"], author_id=r["author_id"], title=r["title"], summary=r["summary"],
             image_url=r["image_url"], category=r["category"],
-            source_url=r["source_url"], published_at=r["published_at"],
+            source_url=r["source_url"], published_at=published_at,
             comments_count=r["comments_count"],
         )
 
@@ -158,7 +161,7 @@ async def list_news_comments(
                 news_id=r["news_id"],
                 author_id=r["author_id"],
                 content=r["content"],
-                created_at=r["created_at"],
+                created_at=r["created_at"].isoformat() if isinstance(r["created_at"], datetime) else r["created_at"],
                 author_nickname=r["author_nickname"],
                 author_avatar=r["author_avatar"],
             ).model_dump()
@@ -184,7 +187,7 @@ async def create_news_comment(
     check_rate_limit(f"news_comment:{user['id']}", max_requests=15, window_seconds=60)
 
     safe_content = sanitize(body.content)
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
 
     async with get_db() as db:
         async with db.transaction():
@@ -212,12 +215,15 @@ async def create_news_comment(
                     WHERE nc.id = $1""",
                 comment_id,
             )
+            created_at = r["created_at"]
+            if isinstance(created_at, datetime):
+                created_at = created_at.isoformat()
             return NewsCommentOut(
                 id=r["id"],
                 news_id=r["news_id"],
                 author_id=r["author_id"],
                 content=r["content"],
-                created_at=r["created_at"],
+                created_at=created_at,
                 author_nickname=r["author_nickname"],
                 author_avatar=r["author_avatar"],
             )

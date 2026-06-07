@@ -1,5 +1,6 @@
+import ssl as _ssl
 import asyncpg
-from .config import DATABASE_URL, DB_POOL_MIN, DB_POOL_MAX
+from .config import DATABASE_URL, DB_POOL_MIN, DB_POOL_MAX, ADMIN_USERNAMES
 
 _pool: asyncpg.Pool | None = None
 
@@ -213,10 +214,18 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_oauth ON users(oauth_provider, oauth
 
 async def init_db():
     global _pool
+    # Auto-detect SSL: remote hosts need it, local socket/TCP does not
+    _ssl_ctx = None
+    if not DATABASE_URL.startswith("postgresql:///"):
+        _ssl_ctx = _ssl.create_default_context()
+        _ssl_ctx.check_hostname = False
+        _ssl_ctx.verify_mode = _ssl.CERT_NONE
+
     _pool = await asyncpg.create_pool(
         DATABASE_URL,
         min_size=DB_POOL_MIN,
         max_size=DB_POOL_MAX,
+        ssl=_ssl_ctx,
     )
 
     async with _pool.acquire() as conn:
@@ -225,3 +234,15 @@ async def init_db():
             stmt = stmt.strip()
             if stmt:
                 await conn.execute(stmt)
+
+    # Auto-promote configured admin users
+    if ADMIN_USERNAMES:
+        async with _pool.acquire() as conn:
+            for username in ADMIN_USERNAMES:
+                result = await conn.execute(
+                    "UPDATE users SET identity = 'admin' WHERE username = $1 AND identity != 'admin'",
+                    username,
+                )
+                if result.endswith("1"):
+                    import logging
+                    logging.getLogger("app").info(f"Auto-promoted '{username}' to admin")

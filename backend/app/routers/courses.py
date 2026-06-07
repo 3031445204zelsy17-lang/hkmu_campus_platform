@@ -35,6 +35,9 @@ def _course_row_to_out(row) -> CourseOut:
 
 
 def _review_row_to_out(row) -> CourseReviewOut:
+    created_at = row["created_at"]
+    if isinstance(created_at, datetime):
+        created_at = created_at.isoformat()
     return CourseReviewOut(
         id=row["id"],
         course_id=row["course_id"],
@@ -42,13 +45,13 @@ def _review_row_to_out(row) -> CourseReviewOut:
         rating=row["rating"],
         content=row["content"],
         helpful_count=row["helpful_count"],
-        created_at=row["created_at"],
+        created_at=created_at,
         author_nickname=row["author_nickname"],
     )
 
 
 _REVIEW_COLS = """cr.id, cr.course_id, cr.author_id, cr.rating, cr.content,
-    cr.helpful_count, cr.created_at::TEXT AS created_at,
+    cr.helpful_count, cr.created_at,
     u.nickname AS author_nickname"""
 
 
@@ -124,14 +127,14 @@ async def get_course(course_id: str):
 async def get_my_progress(user: dict = Depends(get_current_user)):
     async with get_db() as db:
         rows = await db.fetch(
-            "SELECT course_id, status, updated_at::TEXT AS updated_at FROM user_courses WHERE user_id = $1",
+            "SELECT course_id, status, updated_at FROM user_courses WHERE user_id = $1",
             user["id"],
         )
         return [
             UserCourseOut(
                 course_id=r["course_id"],
                 status=r["status"],
-                updated_at=r["updated_at"],
+                updated_at=r["updated_at"].isoformat() if isinstance(r["updated_at"], datetime) else r["updated_at"],
             )
             for r in rows
         ]
@@ -148,7 +151,7 @@ async def upsert_progress(
         if not exists:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Course not found")
 
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(timezone.utc)
         await db.execute(
             """INSERT INTO user_courses (user_id, course_id, status, updated_at)
                VALUES ($1, $2, $3, $4)
@@ -158,7 +161,7 @@ async def upsert_progress(
             user["id"], body.course_id, body.status, now,
         )
 
-    return UserCourseOut(course_id=body.course_id, status=body.status, updated_at=now)
+    return UserCourseOut(course_id=body.course_id, status=body.status, updated_at=now.isoformat())
 
 
 @router.post("/progress/batch", response_model=list[UserCourseOut])
@@ -166,7 +169,8 @@ async def batch_upsert_progress(
     body: BatchProgressUpdate,
     user: dict = Depends(get_current_user),
 ):
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
+    now_iso = now.isoformat()
     results = []
 
     async with get_db() as db:
@@ -184,7 +188,7 @@ async def batch_upsert_progress(
                            updated_at = excluded.updated_at""",
                     user["id"], item.course_id, item.status, now,
                 )
-                results.append(UserCourseOut(course_id=item.course_id, status=item.status, updated_at=now))
+                results.append(UserCourseOut(course_id=item.course_id, status=item.status, updated_at=now_iso))
 
     return results
 
@@ -248,7 +252,7 @@ async def create_review(
     body: CourseReviewCreate,
     user: dict = Depends(get_current_user),
 ):
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
     safe_content = sanitize(body.content)
 
     async with get_db() as db:
