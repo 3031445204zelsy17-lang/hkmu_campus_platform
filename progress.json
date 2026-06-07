@@ -5,18 +5,54 @@
   "completed_in_review": {
     "note": "以下任务在 T01-T26 开发中已实现，无需重复",
     "tasks": [
-      {"id": "A1", "reason": "登录/注册已完整实现，含表单验证、JWT、错误提示、Google OAuth"},
-      {"id": "A3", "reason": "Google 登录已集成到 app.js，含 renderButton()"},
-      {"id": "C1", "reason": "课程页面已完整，含 4 视图、DSAI 模板、进度追踪"},
-      {"id": "D1", "reason": "私信页面已完整，含 WebSocket + 轮询降级"},
-      {"id": "D2", "reason": "未读消息角标已实现，导航栏支持"},
-      {"id": "D3", "reason": "WebSocket 前端已对接，含自动重连"},
-      {"id": "E1", "reason": "新闻已是独立模块，有独立路由和页面"},
-      {"id": "E3", "reason": "新闻分类筛选已实现"},
-      {"id": "B4", "reason": "搜索功能后端已实现（title+content 搜索），前端需确认"},
-      {"id": "G2", "reason": "用户设置已有头像上传、昵称、bio 编辑"},
-      {"id": "A4", "reason": "邮箱验证后端已实现，前端有 verify 页面"},
-      {"id": "H1", "reason": "i18n 三语系统已完整覆盖主要页面"}
+      {
+        "id": "A1",
+        "reason": "登录/注册已完整实现，含表单验证、JWT、错误提示、Google OAuth"
+      },
+      {
+        "id": "A3",
+        "reason": "Google 登录已集成到 app.js，含 renderButton()"
+      },
+      {
+        "id": "C1",
+        "reason": "课程页面已完整，含 4 视图、DSAI 模板、进度追踪"
+      },
+      {
+        "id": "D1",
+        "reason": "私信页面已完整，含 WebSocket + 轮询降级"
+      },
+      {
+        "id": "D2",
+        "reason": "未读消息角标已实现，导航栏支持"
+      },
+      {
+        "id": "D3",
+        "reason": "WebSocket 前端已对接，含自动重连"
+      },
+      {
+        "id": "E1",
+        "reason": "新闻已是独立模块，有独立路由和页面"
+      },
+      {
+        "id": "E3",
+        "reason": "新闻分类筛选已实现"
+      },
+      {
+        "id": "B4",
+        "reason": "搜索功能后端已实现（title+content 搜索），前端需确认"
+      },
+      {
+        "id": "G2",
+        "reason": "用户设置已有头像上传、昵称、bio 编辑"
+      },
+      {
+        "id": "A4",
+        "reason": "邮箱验证后端已实现，前端有 verify 页面"
+      },
+      {
+        "id": "H1",
+        "reason": "i18n 三语系统已完整覆盖主要页面"
+      }
     ]
   },
   "tasks": [
@@ -38,7 +74,10 @@
       "module": "lostfound",
       "dependencies": [],
       "passes": true,
-      "files": ["frontend/js/pages/lostfound.js", "frontend/css/lostfound.css"]
+      "files": [
+        "frontend/js/pages/lostfound.js",
+        "frontend/css/lostfound.css"
+      ]
     },
     {
       "id": "B3",
@@ -48,7 +87,10 @@
       "module": "community",
       "dependencies": [],
       "passes": true,
-      "files": ["backend/app/routers/posts.py", "frontend/js/pages/community.js"]
+      "files": [
+        "backend/app/routers/posts.py",
+        "frontend/js/pages/community.js"
+      ]
     },
     {
       "id": "A2",
@@ -58,7 +100,10 @@
       "module": "auth",
       "dependencies": [],
       "passes": true,
-      "files": ["frontend/js/router.js", "frontend/js/app.js"]
+      "files": [
+        "frontend/js/router.js",
+        "frontend/js/app.js"
+      ]
     },
     {
       "id": "E2",
@@ -68,7 +113,10 @@
       "module": "news",
       "dependencies": [],
       "passes": true,
-      "files": ["frontend/js/pages/news.js", "backend/app/routers/news.py"]
+      "files": [
+        "frontend/js/pages/news.js",
+        "backend/app/routers/news.py"
+      ]
     },
     {
       "id": "C2",
@@ -76,9 +124,13 @@
       "title": "课程预览（未登录）",
       "description": "游客可查看课程基本信息，点击详情/操作时引导登录。依赖 A2 游客模式",
       "module": "academic",
-      "dependencies": ["A2"],
+      "dependencies": [
+        "A2"
+      ],
       "passes": true,
-      "files": ["frontend/js/pages/planner.js"]
+      "files": [
+        "frontend/js/pages/planner.js"
+      ]
     },
     {
       "id": "B5",
@@ -88,7 +140,10 @@
       "module": "community",
       "dependencies": [],
       "passes": true,
-      "files": ["frontend/js/pages/community.js", "backend/app/routers/posts.py"]
+      "files": [
+        "frontend/js/pages/community.js",
+        "backend/app/routers/posts.py"
+      ]
     },
     {
       "id": "B6",
@@ -98,7 +153,10 @@
       "module": "community",
       "dependencies": [],
       "passes": true,
-      "files": ["frontend/js/pages/community.js", "backend/app/routers/posts.py"]
+      "files": [
+        "frontend/js/pages/community.js",
+        "backend/app/routers/posts.py"
+      ]
     },
     {
       "id": "C3",
@@ -122,11 +180,16 @@
       "id": "F2",
       "phase": 8,
       "title": "图片上传 + 预览",
-      "description": "失物招领支持上传图片，带预览功能。决策：云存储（Railway 不持久化本地文件，实现时选 Cloudflare R2 或 AWS S3）",
+      "description": "通用图片上传基础设施 (Supabase Storage) + 可复用前端组件 + 失物招领接入。其他模块 (posts/avatars/news) 可零成本接入",
       "module": "lostfound",
-      "dependencies": ["F1"],
-      "passes": false,
-      "files": ["frontend/js/pages/lostfound.js", "backend/app/routers/lostfound.py"]
+      "dependencies": [
+        "F1"
+      ],
+      "passes": true,
+      "files": [
+        "frontend/js/pages/lostfound.js",
+        "backend/app/routers/lostfound.py"
+      ]
     },
     {
       "id": "H2",
@@ -136,7 +199,11 @@
       "module": "i18n",
       "dependencies": [],
       "passes": true,
-      "files": ["frontend/js/utils/i18n.js", "frontend/js/pages/planner.js", "frontend/js/pages/messages.js"]
+      "files": [
+        "frontend/js/utils/i18n.js",
+        "frontend/js/pages/planner.js",
+        "frontend/js/pages/messages.js"
+      ]
     },
     {
       "id": "I3",
@@ -146,7 +213,18 @@
       "module": "shared",
       "dependencies": [],
       "passes": true,
-      "files": ["frontend/js/utils/analytics.js", "frontend/js/app.js", "frontend/index.html", "frontend/js/router.js", "frontend/js/pages/community.js", "frontend/js/pages/planner.js", "frontend/js/pages/news.js", "frontend/js/pages/messages.js", "frontend/js/pages/profile.js", "frontend/sw.js"]
+      "files": [
+        "frontend/js/utils/analytics.js",
+        "frontend/js/app.js",
+        "frontend/index.html",
+        "frontend/js/router.js",
+        "frontend/js/pages/community.js",
+        "frontend/js/pages/planner.js",
+        "frontend/js/pages/news.js",
+        "frontend/js/pages/messages.js",
+        "frontend/js/pages/profile.js",
+        "frontend/sw.js"
+      ]
     },
     {
       "id": "I4",
@@ -156,7 +234,10 @@
       "module": "shared",
       "dependencies": [],
       "passes": true,
-      "files": ["frontend/sw.js", "backend/app/main.py"]
+      "files": [
+        "frontend/sw.js",
+        "backend/app/main.py"
+      ]
     },
     {
       "id": "DB1",
@@ -166,7 +247,12 @@
       "module": "shared",
       "dependencies": [],
       "passes": true,
-      "files": ["backend/requirements.txt", "backend/app/config.py", "backend/app/database.py", "backend/.env"]
+      "files": [
+        "backend/requirements.txt",
+        "backend/app/config.py",
+        "backend/app/database.py",
+        "backend/.env"
+      ]
     },
     {
       "id": "DB2",
@@ -174,9 +260,13 @@
       "title": "迁移 auth_service.py（?→$N, conn 传递）",
       "description": "auth_service.py: 5 处 ?→$N，cursor→conn API，移除 commit，rotate_refresh_token 需接收 conn 参数，2 处事务包裹",
       "module": "auth",
-      "dependencies": ["DB1"],
+      "dependencies": [
+        "DB1"
+      ],
       "passes": true,
-      "files": ["backend/app/services/auth_service.py"]
+      "files": [
+        "backend/app/services/auth_service.py"
+      ]
     },
     {
       "id": "DB3",
@@ -184,9 +274,13 @@
       "title": "迁移 auth.py（lastrowid→RETURNING id, helper 重构）",
       "description": "auth.py: 24 处 ?→$N，3 处 lastrowid→RETURNING id，2 个 helper 函数改为接收 conn 参数，~8 处移除 commit，reset_password 和 _consume_email_token 需事务包裹，时间戳 ::TEXT 转换",
       "module": "auth",
-      "dependencies": ["DB2"],
+      "dependencies": [
+        "DB2"
+      ],
       "passes": true,
-      "files": ["backend/app/routers/auth.py"]
+      "files": [
+        "backend/app/routers/auth.py"
+      ]
     },
     {
       "id": "DB4",
@@ -194,9 +288,13 @@
       "title": "迁移 posts.py（JULIANDAY, 动态 SQL, lastrowid）",
       "description": "posts.py: 34 处 ?→$N，JULIANDAY→EXTRACT(EPOCH), MAX→GREATEST，2 处 lastrowid→RETURNING id，3 处动态 SQL（IN/WHERE/SET）改为 $N 计数器，3 处事务包裹（delete_post/toggle_like/create_comment），时间戳 ::TEXT",
       "module": "community",
-      "dependencies": ["DB1"],
+      "dependencies": [
+        "DB1"
+      ],
       "passes": true,
-      "files": ["backend/app/routers/posts.py"]
+      "files": [
+        "backend/app/routers/posts.py"
+      ]
     },
     {
       "id": "DB5",
@@ -204,9 +302,13 @@
       "title": "迁移 users.py（动态 SET 子句）",
       "description": "users.py: 8 处 ?→$N，动态 SET 子句 ?→$N 带计数器，~2 处移除 commit，时间戳 ::TEXT",
       "module": "shared",
-      "dependencies": ["DB1"],
+      "dependencies": [
+        "DB1"
+      ],
       "passes": true,
-      "files": ["backend/app/routers/users.py"]
+      "files": [
+        "backend/app/routers/users.py"
+      ]
     },
     {
       "id": "DB6",
@@ -214,9 +316,13 @@
       "title": "迁移 courses.py（lastrowid, 动态 WHERE, 批量 upsert 事务）",
       "description": "courses.py: 22 处 ?→$N，1 处 lastrowid→RETURNING id，动态 WHERE/LIMIT $N 计数器，batch_upsert_progress 事务包裹，~5 处移除 commit，ON CONFLICT 已兼容无需改",
       "module": "academic",
-      "dependencies": ["DB1"],
+      "dependencies": [
+        "DB1"
+      ],
       "passes": true,
-      "files": ["backend/app/routers/courses.py"]
+      "files": [
+        "backend/app/routers/courses.py"
+      ]
     },
     {
       "id": "DB7",
@@ -224,9 +330,13 @@
       "title": "迁移 messages.py（WebSocket 长连接, lastrowid）",
       "description": "messages.py: 15 处 ?→$N，2 处 lastrowid→RETURNING id，WebSocket 端点需 async with get_db() 包裹整个循环，get_history 事务包裹，CTE CASE/WHEN 参数化，时间戳 ::TEXT",
       "module": "shared",
-      "dependencies": ["DB1"],
+      "dependencies": [
+        "DB1"
+      ],
       "passes": true,
-      "files": ["backend/app/routers/messages.py"]
+      "files": [
+        "backend/app/routers/messages.py"
+      ]
     },
     {
       "id": "DB8",
@@ -234,9 +344,13 @@
       "title": "迁移 news.py（lastrowid, 动态 WHERE, 评论事务）",
       "description": "news.py: 15 处 ?→$N，2 处 lastrowid→RETURNING id，动态 WHERE/LIMIT，create_news_comment 事务包裹，时间戳 ::TEXT",
       "module": "news",
-      "dependencies": ["DB1"],
+      "dependencies": [
+        "DB1"
+      ],
       "passes": true,
-      "files": ["backend/app/routers/news.py"]
+      "files": [
+        "backend/app/routers/news.py"
+      ]
     },
     {
       "id": "DB9",
@@ -244,9 +358,13 @@
       "title": "迁移 lostfound.py（lastrowid, 动态 SET+WHERE）",
       "description": "lostfound.py: 13 处 ?→$N，1 处 lastrowid→RETURNING id，动态 SET + WHERE $N 计数器，~3 处移除 commit，时间戳 ::TEXT",
       "module": "lostfound",
-      "dependencies": ["DB1"],
+      "dependencies": [
+        "DB1"
+      ],
       "passes": true,
-      "files": ["backend/app/routers/lostfound.py"]
+      "files": [
+        "backend/app/routers/lostfound.py"
+      ]
     },
     {
       "id": "DB10",
@@ -254,9 +372,13 @@
       "title": "迁移 push_service.py（lastrowid, 动态 IN）",
       "description": "push_service.py: 5 处 ?→$N，1 处 lastrowid→RETURNING id（ON CONFLICT 场景），动态 IN 子句 $N 计数器，ON CONFLICT 已兼容，~4 处移除 commit",
       "module": "shared",
-      "dependencies": ["DB1"],
+      "dependencies": [
+        "DB1"
+      ],
       "passes": true,
-      "files": ["backend/app/services/push_service.py"]
+      "files": [
+        "backend/app/services/push_service.py"
+      ]
     },
     {
       "id": "DB11",
@@ -264,9 +386,14 @@
       "title": "迁移 seed_courses.py + 更新 .env",
       "description": "seed_courses.py: aiosqlite→asyncpg, INSERT OR IGNORE→ON CONFLICT DO NOTHING, ?→$N。.env: DATABASE_URL 改为 Supabase pooler 连接串",
       "module": "shared",
-      "dependencies": ["DB1"],
+      "dependencies": [
+        "DB1"
+      ],
       "passes": true,
-      "files": ["scripts/seed_courses.py", "backend/.env"]
+      "files": [
+        "scripts/seed_courses.py",
+        "backend/.env"
+      ]
     },
     {
       "id": "DB12",
@@ -274,7 +401,19 @@
       "title": "全量验证：本地启动 + 逐模块 API 测试",
       "description": "更新 .env 指向 Supabase，启动服务，逐模块验证：注册→登录→发帖→评论→课程→私信→新闻→失物招领→推送。确认所有接口正常返回，时间戳格式正确",
       "module": "shared",
-      "dependencies": ["DB1", "DB2", "DB3", "DB4", "DB5", "DB6", "DB7", "DB8", "DB9", "DB10", "DB11"],
+      "dependencies": [
+        "DB1",
+        "DB2",
+        "DB3",
+        "DB4",
+        "DB5",
+        "DB6",
+        "DB7",
+        "DB8",
+        "DB9",
+        "DB10",
+        "DB11"
+      ],
       "passes": true,
       "files": []
     },
@@ -284,7 +423,9 @@
       "title": "Azure 部署：后端 Container Apps + 前端 Static Web Apps",
       "description": "后端部署到 Azure Container Apps（Docker + 环境变量注入），前端部署到 Azure Static Web Apps（SPA fallback），配置 CORS，验证生产环境可访问",
       "module": "shared",
-      "dependencies": ["DB12"],
+      "dependencies": [
+        "DB12"
+      ],
       "passes": false,
       "files": []
     }
