@@ -10,7 +10,7 @@ import os
 
 from .database import init_db, close_db
 from .config import API_PREFIX, SECRET_KEY
-from .routers import auth, posts, courses, users, news, lostfound, messages, push
+from .routers import auth, posts, courses, users, news, lostfound, messages, push, upload
 
 
 @asynccontextmanager
@@ -98,6 +98,7 @@ app.include_router(news.router, prefix=API_PREFIX)
 app.include_router(lostfound.router, prefix=API_PREFIX)
 app.include_router(messages.router, prefix=API_PREFIX)
 app.include_router(push.router, prefix=API_PREFIX)
+app.include_router(upload.router, prefix=API_PREFIX)
 
 
 @app.get("/api/health")

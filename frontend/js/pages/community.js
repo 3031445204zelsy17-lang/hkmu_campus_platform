@@ -4,6 +4,7 @@ import { openModal, closeModal } from "../components/modal.js";
 import { t } from "../utils/i18n.js";
 import { skeletonCard, errorState } from "../components/skeleton.js";
 import { track } from "../utils/analytics.js";
+import { createImageUploader } from "../components/image_upload.js";
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -1231,6 +1232,16 @@ function _LostFoundCard(item) {
   const card = document.createElement("div");
   card.className = "lf-card card-hover";
 
+  // Image (if present)
+  if (item.image_url) {
+    const img = document.createElement("img");
+    img.src = item.image_url;
+    img.alt = item.title;
+    img.className = "lf-card-img";
+    img.loading = "lazy";
+    card.appendChild(img);
+  }
+
   const typeBadge = document.createElement("span");
   typeBadge.className = "lf-type-badge " + item.item_type;
   typeBadge.textContent = item.item_type === "lost" ? t("lostfound.lost_label") : t("lostfound.found_label");
@@ -1390,6 +1401,9 @@ function _showLostFoundModal() {
   descInput.className = "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 resize-none";
   descInput.setAttribute("aria-label", t("lostfound.field_desc"));
 
+  // Image upload component
+  const imageUploader = createImageUploader({ module: "lostfound" });
+
   const errDiv = document.createElement("div");
   errDiv.id = "lf-create-error";
   errDiv.className = "text-red-500 text-xs hidden";
@@ -1403,6 +1417,7 @@ function _showLostFoundModal() {
   form.appendChild(titleInput);
   form.appendChild(locationInput);
   form.appendChild(descInput);
+  form.appendChild(imageUploader.el);
   form.appendChild(errDiv);
   form.appendChild(submitBtn);
 
@@ -1420,6 +1435,7 @@ function _showLostFoundModal() {
         description: fd.get("description"),
         item_type: fd.get("item_type"),
         location: fd.get("location") || null,
+        image_url: imageUploader.getUrl(),
       });
       showToast(t("lostfound.report_submitted"), "success");
       track("lost_found_reported", { item_type: fd.get("item_type") });

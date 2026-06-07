@@ -785,3 +785,78 @@
     display: none;
   }
 }
+
+/* ── Image Upload Component ────────────────────────────────────────── */
+
+.img-upload-wrap {
+  margin-top: 0.25rem;
+}
+
+.img-upload-dropzone {
+  border: 2px dashed #cbd5e1;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  background: rgba(255,255,255,0.5);
+}
+.img-upload-dropzone:hover,
+.img-upload-dropzone.dragover {
+  border-color: #3b82f6;
+  background: rgba(59,130,246,0.06);
+}
+
+.img-upload-hint {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.img-upload-preview {
+  position: relative;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.img-upload-preview.hidden {
+  display: none;
+}
+
+.img-upload-preview-img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 0.5rem;
+  object-fit: contain;
+  border: 1px solid #e2e8f0;
+}
+
+.img-upload-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 24px;
+  text-align: center;
+  transition: background 0.2s;
+}
+.img-upload-remove:hover {
+  background: #ef4444;
+}
+
+/* ── LostFound Card with Image ─────────────────────────────────────── */
+
+.lf-card-img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 0.5rem 0.5rem 0 0;
+}

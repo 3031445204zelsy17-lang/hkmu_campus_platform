@@ -235,11 +235,18 @@ async def init_db():
     )
 
     async with _pool.acquire() as conn:
-        # Execute DDL — split by semicolons for individual statements
-        for stmt in _DDL.strip().split(";"):
-            stmt = stmt.strip()
-            if stmt:
-                await conn.execute(stmt)
+        # Execute DDL — split by ; but keep DO $$ ... $$ blocks together
+        parts = _DDL.strip().split(";")
+        buffer = []
+        dollar_depth = 0
+        for part in parts:
+            buffer.append(part)
+            dollar_depth += part.count("$$")
+            if dollar_depth % 2 == 0:
+                stmt = ";".join(buffer).strip()
+                if stmt:
+                    await conn.execute(stmt)
+                buffer = []
 
     # Auto-promote configured admin users
     if ADMIN_USERNAMES:
