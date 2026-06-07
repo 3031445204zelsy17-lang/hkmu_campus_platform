@@ -187,7 +187,7 @@
       "description": "posts.py: 34 处 ?→$N，JULIANDAY→EXTRACT(EPOCH), MAX→GREATEST，2 处 lastrowid→RETURNING id，3 处动态 SQL（IN/WHERE/SET）改为 $N 计数器，3 处事务包裹（delete_post/toggle_like/create_comment），时间戳 ::TEXT",
       "module": "community",
       "dependencies": ["DB1"],
-      "passes": false,
+      "passes": true,
       "files": ["backend/app/routers/posts.py"]
     },
     {
