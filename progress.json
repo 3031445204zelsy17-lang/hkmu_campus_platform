@@ -149,6 +149,136 @@
       "dependencies": [],
       "passes": true,
       "files": ["frontend/sw.js", "backend/app/main.py"]
+    },
+    {
+      "id": "DB1",
+      "phase": 11,
+      "title": "基础设施：asyncpg 依赖 + config + database.py 重写",
+      "description": "核心迁移第一步。1) requirements.txt 移除 aiosqlite 添加 asyncpg；2) config.py 新增 DB_POOL_MIN/MAX，DATABASE_URL 改为 PG 连接串；3) database.py 完整重写：连接池、DDL 翻译（AUTOINCREMENT→SERIAL, TIMESTAMP→TIMESTAMPTZ, BOOLEAN）、PRAGMA→information_schema 迁移逻辑、get_db() 改为 async context manager",
+      "module": "shared",
+      "dependencies": [],
+      "passes": true,
+      "files": ["backend/requirements.txt", "backend/app/config.py", "backend/app/database.py", "backend/.env"]
+    },
+    {
+      "id": "DB2",
+      "phase": 11,
+      "title": "迁移 auth_service.py（?→$N, conn 传递）",
+      "description": "auth_service.py: 5 处 ?→$N，cursor→conn API，移除 commit，rotate_refresh_token 需接收 conn 参数，2 处事务包裹",
+      "module": "auth",
+      "dependencies": ["DB1"],
+      "passes": true,
+      "files": ["backend/app/services/auth_service.py"]
+    },
+    {
+      "id": "DB3",
+      "phase": 11,
+      "title": "迁移 auth.py（lastrowid→RETURNING id, helper 重构）",
+      "description": "auth.py: 24 处 ?→$N，3 处 lastrowid→RETURNING id，2 个 helper 函数改为接收 conn 参数，~8 处移除 commit，reset_password 和 _consume_email_token 需事务包裹，时间戳 ::TEXT 转换",
+      "module": "auth",
+      "dependencies": ["DB2"],
+      "passes": true,
+      "files": ["backend/app/routers/auth.py"]
+    },
+    {
+      "id": "DB4",
+      "phase": 11,
+      "title": "迁移 posts.py（JULIANDAY, 动态 SQL, lastrowid）",
+      "description": "posts.py: 34 处 ?→$N，JULIANDAY→EXTRACT(EPOCH), MAX→GREATEST，2 处 lastrowid→RETURNING id，3 处动态 SQL（IN/WHERE/SET）改为 $N 计数器，3 处事务包裹（delete_post/toggle_like/create_comment），时间戳 ::TEXT",
+      "module": "community",
+      "dependencies": ["DB1"],
+      "passes": false,
+      "files": ["backend/app/routers/posts.py"]
+    },
+    {
+      "id": "DB5",
+      "phase": 11,
+      "title": "迁移 users.py（动态 SET 子句）",
+      "description": "users.py: 8 处 ?→$N，动态 SET 子句 ?→$N 带计数器，~2 处移除 commit，时间戳 ::TEXT",
+      "module": "shared",
+      "dependencies": ["DB1"],
+      "passes": false,
+      "files": ["backend/app/routers/users.py"]
+    },
+    {
+      "id": "DB6",
+      "phase": 11,
+      "title": "迁移 courses.py（lastrowid, 动态 WHERE, 批量 upsert 事务）",
+      "description": "courses.py: 22 处 ?→$N，1 处 lastrowid→RETURNING id，动态 WHERE/LIMIT $N 计数器，batch_upsert_progress 事务包裹，~5 处移除 commit，ON CONFLICT 已兼容无需改",
+      "module": "academic",
+      "dependencies": ["DB1"],
+      "passes": false,
+      "files": ["backend/app/routers/courses.py"]
+    },
+    {
+      "id": "DB7",
+      "phase": 11,
+      "title": "迁移 messages.py（WebSocket 长连接, lastrowid）",
+      "description": "messages.py: 15 处 ?→$N，2 处 lastrowid→RETURNING id，WebSocket 端点需 async with get_db() 包裹整个循环，get_history 事务包裹，CTE CASE/WHEN 参数化，时间戳 ::TEXT",
+      "module": "shared",
+      "dependencies": ["DB1"],
+      "passes": false,
+      "files": ["backend/app/routers/messages.py"]
+    },
+    {
+      "id": "DB8",
+      "phase": 11,
+      "title": "迁移 news.py（lastrowid, 动态 WHERE, 评论事务）",
+      "description": "news.py: 15 处 ?→$N，2 处 lastrowid→RETURNING id，动态 WHERE/LIMIT，create_news_comment 事务包裹，时间戳 ::TEXT",
+      "module": "news",
+      "dependencies": ["DB1"],
+      "passes": false,
+      "files": ["backend/app/routers/news.py"]
+    },
+    {
+      "id": "DB9",
+      "phase": 11,
+      "title": "迁移 lostfound.py（lastrowid, 动态 SET+WHERE）",
+      "description": "lostfound.py: 13 处 ?→$N，1 处 lastrowid→RETURNING id，动态 SET + WHERE $N 计数器，~3 处移除 commit，时间戳 ::TEXT",
+      "module": "lostfound",
+      "dependencies": ["DB1"],
+      "passes": false,
+      "files": ["backend/app/routers/lostfound.py"]
+    },
+    {
+      "id": "DB10",
+      "phase": 11,
+      "title": "迁移 push_service.py（lastrowid, 动态 IN）",
+      "description": "push_service.py: 5 处 ?→$N，1 处 lastrowid→RETURNING id（ON CONFLICT 场景），动态 IN 子句 $N 计数器，ON CONFLICT 已兼容，~4 处移除 commit",
+      "module": "shared",
+      "dependencies": ["DB1"],
+      "passes": false,
+      "files": ["backend/app/services/push_service.py"]
+    },
+    {
+      "id": "DB11",
+      "phase": 11,
+      "title": "迁移 seed_courses.py + 更新 .env",
+      "description": "seed_courses.py: aiosqlite→asyncpg, INSERT OR IGNORE→ON CONFLICT DO NOTHING, ?→$N。.env: DATABASE_URL 改为 Supabase pooler 连接串",
+      "module": "shared",
+      "dependencies": ["DB1"],
+      "passes": false,
+      "files": ["scripts/seed_courses.py", "backend/.env"]
+    },
+    {
+      "id": "DB12",
+      "phase": 11,
+      "title": "全量验证：本地启动 + 逐模块 API 测试",
+      "description": "更新 .env 指向 Supabase，启动服务，逐模块验证：注册→登录→发帖→评论→课程→私信→新闻→失物招领→推送。确认所有接口正常返回，时间戳格式正确",
+      "module": "shared",
+      "dependencies": ["DB1", "DB2", "DB3", "DB4", "DB5", "DB6", "DB7", "DB8", "DB9", "DB10", "DB11"],
+      "passes": false,
+      "files": []
+    },
+    {
+      "id": "DB13",
+      "phase": 12,
+      "title": "Azure 部署：后端 Container Apps + 前端 Static Web Apps",
+      "description": "后端部署到 Azure Container Apps（Docker + 环境变量注入），前端部署到 Azure Static Web Apps（SPA fallback），配置 CORS，验证生产环境可访问",
+      "module": "shared",
+      "dependencies": ["DB12"],
+      "passes": false,
+      "files": []
     }
   ]
 }
