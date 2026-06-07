@@ -1,12 +1,15 @@
 """Seed courses table with DSAI programme data and create test account."""
 import asyncio
-import aiosqlite
+import asyncpg
 import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
 from passlib.context import CryptContext
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", "backend", ".env"))
 
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -58,40 +61,48 @@ COURSES = [
 
 
 async def seed():
-    db_path = os.getenv("DATABASE_URL", "campus.db")
-    db = await aiosqlite.connect(db_path)
-    db.row_factory = aiosqlite.Row
+    database_url = os.getenv("DATABASE_URL", "")
+    if not database_url:
+        print("ERROR: DATABASE_URL not set")
+        return
 
-    # Insert courses
-    inserted = 0
-    for c in COURSES:
-        try:
-            await db.execute(
-                "INSERT OR IGNORE INTO courses (id, code, name, credits, category, year, semester, prerequisites, description) VALUES (?,?,?,?,?,?,?,?,?)",
-                (c["id"], c["code"], c["name"], c["credits"], c["category"], c["year"], c["semester"], str(c["prerequisites"]), c["description"]),
-            )
-            inserted += 1
-        except Exception as e:
-            print(f"  skip {c['id']}: {e}")
+    conn = await asyncpg.connect(database_url)
 
-    # Create test user
-    test_pw = pwd_ctx.hash("test123456")
     try:
-        await db.execute(
-            "INSERT OR IGNORE INTO users (username, password_hash, nickname, student_id, identity) VALUES (?,?,?,?,?)",
-            ("testuser", test_pw, "Test User", "12345678", "student"),
-        )
-    except Exception as e:
-        print(f"  skip test user: {e}")
+        # Insert courses
+        inserted = 0
+        for c in COURSES:
+            try:
+                await conn.execute(
+                    """INSERT INTO courses (id, code, name, credits, category, year, semester, prerequisites, description)
+                       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                       ON CONFLICT (id) DO NOTHING""",
+                    c["id"], c["code"], c["name"], c["credits"], c["category"],
+                    c["year"], c["semester"], str(c["prerequisites"]), c["description"],
+                )
+                inserted += 1
+            except Exception as e:
+                print(f"  skip {c['id']}: {e}")
 
-    await db.commit()
+        # Create test user
+        test_pw = pwd_ctx.hash("test123456")
+        try:
+            await conn.execute(
+                """INSERT INTO users (username, password_hash, nickname, student_id, identity)
+                   VALUES ($1, $2, $3, $4, $5)
+                   ON CONFLICT (username) DO NOTHING""",
+                "testuser", test_pw, "Test User", "12345678", "student",
+            )
+        except Exception as e:
+            print(f"  skip test user: {e}")
 
-    # Verify
-    count = (await (await db.execute("SELECT COUNT(*) FROM courses")).fetchone())[0]
-    user_count = (await (await db.execute("SELECT COUNT(*) FROM users")).fetchone())[0]
-    print(f"Seeded {inserted} courses ({count} in DB), {user_count} users")
+        # Verify
+        count = await conn.fetchval("SELECT COUNT(*) FROM courses")
+        user_count = await conn.fetchval("SELECT COUNT(*) FROM users")
+        print(f"Seeded {inserted} courses ({count} in DB), {user_count} users")
 
-    await db.close()
+    finally:
+        await conn.close()
 
 
 if __name__ == "__main__":

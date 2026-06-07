@@ -14,16 +14,13 @@ ALLOWED_UPLOAD_EXT = {"jpg", "jpeg", "png", "gif", "webp"}
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "frontend", "assets", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+_USER_COLS = """id, username, nickname, student_id, avatar_url, bio, identity,
+    created_at::TEXT AS created_at, email, oauth_provider"""
 
-@router.get("/me", response_model=UserOut)
-async def get_me(user: dict = Depends(get_current_user)):
-    db = await get_db()
-    cur = await db.execute("SELECT * FROM users WHERE id = ?", (user["id"],))
-    row = await cur.fetchone()
-    if not row:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
-    return UserOut(
+def _user_out(row, include_email: bool = True) -> UserOut:
+    """Convert an asyncpg Record to UserOut."""
+    kw = dict(
         id=row["id"],
         username=row["username"],
         nickname=row["nickname"],
@@ -32,9 +29,23 @@ async def get_me(user: dict = Depends(get_current_user)):
         bio=row["bio"] or "",
         identity=row["identity"],
         created_at=row["created_at"],
-        email=row["email"],
-        oauth_provider=row["oauth_provider"],
     )
+    if include_email:
+        kw["email"] = row["email"]
+        kw["oauth_provider"] = row["oauth_provider"]
+    return UserOut(**kw)
+
+
+@router.get("/me", response_model=UserOut)
+async def get_me(user: dict = Depends(get_current_user)):
+    async with get_db() as db:
+        row = await db.fetchrow(
+            f"SELECT {_USER_COLS} FROM users WHERE id = $1",
+            user["id"],
+        )
+        if not row:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+        return _user_out(row)
 
 
 @router.put("/me", response_model=UserOut)
@@ -42,8 +53,6 @@ async def update_me(
     body: UserUpdate,
     user: dict = Depends(get_current_user),
 ):
-    db = await get_db()
-
     updates = {}
     if body.nickname is not None:
         updates["nickname"] = sanitize(body.nickname)
@@ -56,27 +65,19 @@ async def update_me(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "No fields to update")
 
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
-    set_clause = ", ".join(f"{k} = ?" for k in updates)
-    await db.execute(
-        f"UPDATE users SET {set_clause} WHERE id = ?",
-        list(updates.values()) + [user["id"]],
-    )
-    await db.commit()
+    set_clause = ", ".join(f"{k} = ${i+1}" for i, k in enumerate(updates.keys()))
+    where_n = len(updates) + 1
 
-    cur = await db.execute("SELECT * FROM users WHERE id = ?", (user["id"],))
-    row = await cur.fetchone()
-    return UserOut(
-        id=row["id"],
-        username=row["username"],
-        nickname=row["nickname"],
-        student_id=row["student_id"],
-        avatar_url=row["avatar_url"],
-        bio=row["bio"] or "",
-        identity=row["identity"],
-        created_at=row["created_at"],
-        email=row["email"],
-        oauth_provider=row["oauth_provider"],
-    )
+    async with get_db() as db:
+        await db.execute(
+            f"UPDATE users SET {set_clause} WHERE id = ${where_n}",
+            *list(updates.values()), user["id"],
+        )
+        row = await db.fetchrow(
+            f"SELECT {_USER_COLS} FROM users WHERE id = $1",
+            user["id"],
+        )
+        return _user_out(row)
 
 
 @router.post("/me/avatar", response_model=UserOut)
@@ -103,27 +104,16 @@ async def upload_avatar(
     avatar_url = f"/assets/uploads/{filename}"
     now = datetime.now(timezone.utc).isoformat()
 
-    db = await get_db()
-    await db.execute(
-        "UPDATE users SET avatar_url = ?, updated_at = ? WHERE id = ?",
-        (avatar_url, now, user["id"]),
-    )
-    await db.commit()
-
-    cur = await db.execute("SELECT * FROM users WHERE id = ?", (user["id"],))
-    row = await cur.fetchone()
-    return UserOut(
-        id=row["id"],
-        username=row["username"],
-        nickname=row["nickname"],
-        student_id=row["student_id"],
-        avatar_url=row["avatar_url"],
-        bio=row["bio"] or "",
-        identity=row["identity"],
-        created_at=row["created_at"],
-        email=row["email"],
-        oauth_provider=row["oauth_provider"],
-    )
+    async with get_db() as db:
+        await db.execute(
+            "UPDATE users SET avatar_url = $1, updated_at = $2 WHERE id = $3",
+            avatar_url, now, user["id"],
+        )
+        row = await db.fetchrow(
+            f"SELECT {_USER_COLS} FROM users WHERE id = $1",
+            user["id"],
+        )
+        return _user_out(row)
 
 
 @router.get("/search", response_model=list[UserOut])
@@ -131,44 +121,21 @@ async def search_users(
     q: str = Query(..., min_length=1, max_length=50),
     user: dict = Depends(get_current_user),
 ):
-    db = await get_db()
-    cur = await db.execute(
-        "SELECT * FROM users WHERE (username LIKE ? OR nickname LIKE ?) AND id != ? LIMIT 20",
-        (f"%{q}%", f"%{q}%", user["id"]),
-    )
-    rows = await cur.fetchall()
-    return [
-        UserOut(
-            id=r["id"],
-            username=r["username"],
-            nickname=r["nickname"],
-            student_id=r["student_id"],
-            avatar_url=r["avatar_url"],
-            bio=r["bio"] or "",
-            identity=r["identity"],
-            created_at=r["created_at"],
+    async with get_db() as db:
+        rows = await db.fetch(
+            f"SELECT {_USER_COLS} FROM users WHERE (username LIKE $1 OR nickname LIKE $2) AND id != $3 LIMIT 20",
+            f"%{q}%", f"%{q}%", user["id"],
         )
-        for r in rows
-    ]
+        return [_user_out(r, include_email=False) for r in rows]
 
 
 @router.get("/{user_id}", response_model=UserOut)
 async def get_user(user_id: int):
-    db = await get_db()
-    cur = await db.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-    row = await cur.fetchone()
-    if not row:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
-
-    return UserOut(
-        id=row["id"],
-        username=row["username"],
-        nickname=row["nickname"],
-        student_id=row["student_id"],
-        avatar_url=row["avatar_url"],
-        bio=row["bio"] or "",
-        identity=row["identity"],
-        created_at=row["created_at"],
-        email=row["email"],
-        oauth_provider=row["oauth_provider"],
-    )
+    async with get_db() as db:
+        row = await db.fetchrow(
+            f"SELECT {_USER_COLS} FROM users WHERE id = $1",
+            user_id,
+        )
+        if not row:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+        return _user_out(row)

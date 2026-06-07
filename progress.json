@@ -197,7 +197,7 @@
       "description": "users.py: 8 处 ?→$N，动态 SET 子句 ?→$N 带计数器，~2 处移除 commit，时间戳 ::TEXT",
       "module": "shared",
       "dependencies": ["DB1"],
-      "passes": false,
+      "passes": true,
       "files": ["backend/app/routers/users.py"]
     },
     {
@@ -207,7 +207,7 @@
       "description": "courses.py: 22 处 ?→$N，1 处 lastrowid→RETURNING id，动态 WHERE/LIMIT $N 计数器，batch_upsert_progress 事务包裹，~5 处移除 commit，ON CONFLICT 已兼容无需改",
       "module": "academic",
       "dependencies": ["DB1"],
-      "passes": false,
+      "passes": true,
       "files": ["backend/app/routers/courses.py"]
     },
     {
@@ -217,7 +217,7 @@
       "description": "messages.py: 15 处 ?→$N，2 处 lastrowid→RETURNING id，WebSocket 端点需 async with get_db() 包裹整个循环，get_history 事务包裹，CTE CASE/WHEN 参数化，时间戳 ::TEXT",
       "module": "shared",
       "dependencies": ["DB1"],
-      "passes": false,
+      "passes": true,
       "files": ["backend/app/routers/messages.py"]
     },
     {
@@ -227,7 +227,7 @@
       "description": "news.py: 15 处 ?→$N，2 处 lastrowid→RETURNING id，动态 WHERE/LIMIT，create_news_comment 事务包裹，时间戳 ::TEXT",
       "module": "news",
       "dependencies": ["DB1"],
-      "passes": false,
+      "passes": true,
       "files": ["backend/app/routers/news.py"]
     },
     {
@@ -237,7 +237,7 @@
       "description": "lostfound.py: 13 处 ?→$N，1 处 lastrowid→RETURNING id，动态 SET + WHERE $N 计数器，~3 处移除 commit，时间戳 ::TEXT",
       "module": "lostfound",
       "dependencies": ["DB1"],
-      "passes": false,
+      "passes": true,
       "files": ["backend/app/routers/lostfound.py"]
     },
     {
@@ -247,7 +247,7 @@
       "description": "push_service.py: 5 处 ?→$N，1 处 lastrowid→RETURNING id（ON CONFLICT 场景），动态 IN 子句 $N 计数器，ON CONFLICT 已兼容，~4 处移除 commit",
       "module": "shared",
       "dependencies": ["DB1"],
-      "passes": false,
+      "passes": true,
       "files": ["backend/app/services/push_service.py"]
     },
     {
@@ -257,7 +257,7 @@
       "description": "seed_courses.py: aiosqlite→asyncpg, INSERT OR IGNORE→ON CONFLICT DO NOTHING, ?→$N。.env: DATABASE_URL 改为 Supabase pooler 连接串",
       "module": "shared",
       "dependencies": ["DB1"],
-      "passes": false,
+      "passes": true,
       "files": ["scripts/seed_courses.py", "backend/.env"]
     },
     {
