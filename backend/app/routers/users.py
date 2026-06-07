@@ -23,7 +23,7 @@ UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "frontend
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 _USER_COLS = """id, username, nickname, student_id, avatar_url, bio, identity,
-    created_at, email, oauth_provider"""
+    created_at, email, oauth_provider, programme_code"""
 
 
 def _user_out(row, include_email: bool = True) -> UserOut:
@@ -44,6 +44,7 @@ def _user_out(row, include_email: bool = True) -> UserOut:
     if include_email:
         kw["email"] = row["email"]
         kw["oauth_provider"] = row["oauth_provider"]
+    kw["programme_code"] = row.get("programme_code")
     return UserOut(**kw)
 
 
@@ -71,6 +72,8 @@ async def update_me(
         updates["bio"] = sanitize(body.bio)
     if body.avatar_url is not None:
         updates["avatar_url"] = body.avatar_url
+    if body.programme_code is not None:
+        updates["programme_code"] = body.programme_code
 
     if not updates:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "No fields to update")

@@ -124,6 +124,39 @@
 
 /* ── Mobile responsive ── */
 
+/* Programme selector dropdown */
+[data-page="planner"] .programme-selector {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2rem;
+  cursor: pointer;
+}
+[data-page="planner"] .programme-selector option {
+  color: #333;
+  background: #fff;
+}
+
+/* Graduation dashboard */
+[data-page="planner"] .graduation-dashboard {
+  padding: 1.5rem;
+}
+
+/* Category progress row */
+[data-page="planner"] .category-progress-row {
+  padding: 0;
+}
+
+/* Recommendation card */
+[data-page="planner"] .recommendation-card {
+  padding: 1.25rem;
+  border-left: 3px solid var(--color-primary);
+}
+
+/* ── Mobile responsive ── */
+
 @media (max-width: 768px) {
   [data-page="planner"] .planner-tabs-wrap {
     overflow-x: auto;

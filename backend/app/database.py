@@ -209,6 +209,12 @@ CREATE INDEX IF NOT EXISTS idx_email_tokens_user ON email_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_email_tokens_hash ON email_tokens(token_hash);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_oauth ON users(oauth_provider, oauth_id) WHERE oauth_provider IS NOT NULL;
+
+-- Add programme_code column for course planner (safe for existing DBs)
+DO $$ BEGIN
+    ALTER TABLE users ADD COLUMN programme_code TEXT;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
 """
 
 

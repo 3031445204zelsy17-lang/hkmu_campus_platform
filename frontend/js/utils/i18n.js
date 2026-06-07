@@ -160,6 +160,15 @@ const translations = {
     "planner.all_courses": "All Courses",
     "planner.browse_desc": "Browse the complete DSAI curriculum.",
     "planner.no_courses_loaded": "No courses loaded.",
+    "planner.select_programme": "Programme",
+    "planner.graduation_requirements": "Graduation Requirements",
+    "planner.pick_courses": "Pick {pick} of {total}",
+    "planner.recommended_next": "Recommended Next Steps",
+    "planner.total_courses": "Total Courses",
+    "planner.total_credits": "Total Credits",
+    "planner.credits_earned": "Credits Earned",
+    "planner.coming_soon_title": "Coming Soon",
+    "planner.coming_soon_desc": "Course data for this programme is being prepared. Stay tuned!",
     "messages.new_conversation": "New Conversation",
 
     // News
@@ -452,6 +461,15 @@ const translations = {
     "planner.all_courses": "全部课程",
     "planner.browse_desc": "浏览完整的 DSAI 课程体系。",
     "planner.no_courses_loaded": "暂无课程数据。",
+    "planner.select_programme": "专业",
+    "planner.graduation_requirements": "毕业要求",
+    "planner.pick_courses": "选 {pick}/{total} 门",
+    "planner.recommended_next": "推荐下一步",
+    "planner.total_courses": "总课程数",
+    "planner.total_credits": "总学分",
+    "planner.credits_earned": "已获学分",
+    "planner.coming_soon_title": "即将推出",
+    "planner.coming_soon_desc": "此专业课程数据正在准备中，敬请期待！",
     "messages.new_conversation": "新对话",
 
     // News
@@ -742,6 +760,15 @@ const translations = {
     "planner.all_courses": "全部課程",
     "planner.browse_desc": "瀏覽完整的 DSAI 課程體系。",
     "planner.no_courses_loaded": "暫無課程資料。",
+    "planner.select_programme": "專業",
+    "planner.graduation_requirements": "畢業要求",
+    "planner.pick_courses": "選 {pick}/{total} 門",
+    "planner.recommended_next": "推薦下一步",
+    "planner.total_courses": "總課程數",
+    "planner.total_credits": "總學分",
+    "planner.credits_earned": "已獲學分",
+    "planner.coming_soon_title": "即將推出",
+    "planner.coming_soon_desc": "此專業課程數據正在準備中，敬請期待！",
     "messages.new_conversation": "新對話",
 
     // News

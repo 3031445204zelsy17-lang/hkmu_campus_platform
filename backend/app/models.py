@@ -99,12 +99,14 @@ class UserOut(BaseModel):
     created_at: Optional[str] = None
     email: Optional[str] = None
     oauth_provider: Optional[str] = None
+    programme_code: Optional[str] = None
 
 
 class UserUpdate(BaseModel):
     nickname: Optional[str] = Field(None, max_length=30)
     bio: Optional[str] = Field(None, max_length=300)
     avatar_url: Optional[str] = None
+    programme_code: Optional[str] = None
 
 
 # --- Posts ---

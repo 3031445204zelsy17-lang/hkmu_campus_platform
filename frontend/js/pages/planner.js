@@ -3,28 +3,15 @@ import { showToast } from "../components/toast.js";
 import { t } from "../utils/i18n.js";
 import { skeletonCard, errorState } from "../components/skeleton.js";
 import { track } from "../utils/analytics.js";
+import { PROGRAMMES, programmeName } from "../data/programmes.js";
 
 // ── State ────────────────────────────────────────────────────────────────────
 
 let _courses = [];
 let _progress = [];
 let _view = "overview";
-
-const DSAI_TEMPLATE = {
-  COMP1080SEF: "completed",
-  IT1020SEF: "completed",
-  MATH1410SEF: "completed",
-  ENGL1101AEF: "completed",
-  GEN001: "completed",
-  UNI1002ABW: "completed",
-  UNI1012ABW: "completed",
-  COMP2090SEF: "in_progress",
-  IT1030SEF: "in_progress",
-  STAT1510SEF: "in_progress",
-  STAT2610SEF: "in_progress",
-  ENGL1202EEF: "in_progress",
-  GEN002: "in_progress",
-};
+let _programmeCode = localStorage.getItem("hkmu_programme") || "BSCHDSAIJ";
+let _programme = PROGRAMMES[_programmeCode] || PROGRAMMES.BSCHDSAIJ;
 
 const STATUS_LABELS = {
   not_started: () => t("planner.status_not_started"),
@@ -46,23 +33,145 @@ const STATUS_ICONS = {
 
 const SEMESTER_ORDER = { autumn: 0, spring: 1, summer: 2 };
 
-const CATEGORY_LABELS = {
-  core: () => t("planner.cat_core"),
-  elective: () => t("planner.cat_elective"),
-  "general-ed": () => t("planner.cat_general"),
-  english: () => t("planner.cat_english"),
-  "university-core": () => t("planner.cat_university"),
-  project: () => t("planner.cat_project"),
+// ── Programme-aware helpers ──────────────────────────────────────────────────
+
+const _TAILWIND_COLORS = {
+  blue:   "bg-blue-100 text-blue-800",
+  purple: "bg-purple-100 text-purple-800",
+  amber:  "bg-amber-100 text-amber-800",
+  emerald:"bg-emerald-100 text-emerald-800",
+  pink:   "bg-pink-100 text-pink-800",
+  indigo: "bg-indigo-100 text-indigo-800",
 };
 
-const CATEGORY_COLORS = {
-  core: "bg-blue-100 text-blue-800",
-  elective: "bg-purple-100 text-purple-800",
-  "general-ed": "bg-pink-100 text-pink-800",
-  english: "bg-emerald-100 text-emerald-800",
-  "university-core": "bg-indigo-100 text-indigo-800",
-  project: "bg-amber-100 text-amber-800",
+const _FILL_COLORS = {
+  blue:   "bg-blue-500",
+  purple: "bg-purple-500",
+  amber:  "bg-amber-500",
+  emerald:"bg-emerald-500",
+  pink:   "bg-pink-500",
+  indigo: "bg-indigo-500",
 };
+
+function _getCategoryLabel(catKey) {
+  const key = `planner.cat_${catKey.replace(/-/g, "_").replace(/^cat_/, "")}`;
+  // Try known i18n keys
+  const known = {
+    core: "planner.cat_core",
+    elective: "planner.cat_elective",
+    "general-ed": "planner.cat_general",
+    english: "planner.cat_english",
+    "university-core": "planner.cat_university",
+    project: "planner.cat_project",
+  };
+  return t(known[catKey] || catKey);
+}
+
+function _getCategoryColor(catKey) {
+  const cat = _programme.categories[catKey];
+  if (cat) return _TAILWIND_COLORS[cat.color] || "bg-gray-100 text-gray-600";
+  return "bg-gray-100 text-gray-600";
+}
+
+function _getCategoryFillColor(catKey) {
+  const cat = _programme.categories[catKey];
+  if (cat) return _FILL_COLORS[cat.color] || "bg-gray-500";
+  return "bg-gray-500";
+}
+
+/** All course IDs belonging to current programme */
+function _getProgrammeCourseIds() {
+  const ids = new Set();
+  for (const cat of Object.values(_programme.categories)) {
+    cat.courses.forEach((id) => ids.add(id));
+  }
+  return ids;
+}
+
+/** Course objects filtered to current programme */
+function _getProgrammeCourses() {
+  const ids = _getProgrammeCourseIds();
+  return _courses.filter((c) => ids.has(c.id));
+}
+
+/** Calculate earned & required credits for a category */
+function _calcCategoryCredits(catKey) {
+  const cat = _programme.categories[catKey];
+  if (!cat) return { earned: 0, required: 0 };
+
+  let earned = 0;
+  let completedCount = 0;
+
+  for (const courseId of cat.courses) {
+    const course = _courses.find((c) => c.id === courseId);
+    if (!course) continue;
+    if (_getProgress(courseId) === "completed") {
+      earned += course.credits;
+      completedCount++;
+    }
+  }
+
+  return { earned, required: cat.minCredits, completedCount, totalCourses: cat.courses.length, pickN: cat.pickN };
+}
+
+/** Overall graduation progress */
+function _calcGraduationProgress() {
+  let totalEarned = 0;
+  let totalRequired = 0;
+  const categories = [];
+
+  for (const [catKey, cat] of Object.entries(_programme.categories)) {
+    const info = _calcCategoryCredits(catKey);
+    totalEarned += info.earned;
+    totalRequired += cat.minCredits;
+    categories.push({ key: catKey, ...info, color: cat.color, courses: cat.courses, pickN: cat.pickN });
+  }
+
+  return {
+    totalEarned,
+    totalRequired: _programme.totalCredits,
+    pct: _programme.totalCredits > 0 ? Math.min(100, (totalEarned / _programme.totalCredits) * 100) : 0,
+    categories,
+  };
+}
+
+/** Get recommended courses for the user */
+function _getRecommendations(maxResults = 3) {
+  const recs = [];
+  const grad = _calcGraduationProgress();
+
+  for (const cat of grad.categories) {
+    if (cat.earned >= cat.required) continue;
+
+    // Find not-started courses in this category whose prereqs are met
+    for (const courseId of cat.courses) {
+      const course = _courses.find((c) => c.id === courseId);
+      if (!course) continue;
+
+      const status = _getProgress(courseId);
+      if (status === "completed" || status === "in_progress") continue;
+
+      const prereqs = _parsePrereqs(course.prerequisites);
+      if (prereqs.length > 0 && !_prereqsMet(prereqs)) continue;
+
+      recs.push({ course, catKey: cat.key, needed: cat.required - cat.earned });
+      if (recs.length >= maxResults) return recs;
+    }
+  }
+  return recs;
+}
+
+/** Change the active programme */
+function _setProgramme(code) {
+  if (!PROGRAMMES[code]) return;
+  _programmeCode = code;
+  _programme = PROGRAMMES[code];
+  localStorage.setItem("hkmu_programme", code);
+  if (isLoggedIn()) {
+    api.put("/users/me", { programme_code: code }).catch(() => {});
+  }
+  _render();
+}
 
 // ── Icon helpers ──────────────────────────────────────────────────────────────
 
@@ -98,7 +207,7 @@ function ViewTab(label, viewId, iconName, requiresAuth = false) {
   return btn;
 }
 
-function ProgressBar(pct, label, size = "sm") {
+function ProgressBar(pct, label, size = "sm", fillColor) {
   const wrap = document.createElement("div");
   wrap.className = "mb-3";
 
@@ -119,7 +228,7 @@ function ProgressBar(pct, label, size = "sm") {
   const track = document.createElement("div");
   track.className = `progress-bar-track ${size === "sm" ? "progress-bar-track-sm" : ""} relative overflow-hidden rounded-full bg-gray-200`;
   const fill = document.createElement("div");
-  fill.className = "progress-bar-fill absolute top-0 left-0 h-full rounded-full";
+  fill.className = `progress-bar-fill absolute top-0 left-0 h-full rounded-full ${fillColor || ""}`;
   fill.style.width = `${pct}%`;
   track.appendChild(fill);
   wrap.appendChild(track);
@@ -161,8 +270,8 @@ function CourseCard(course, showStatus = false) {
   badges.className = "flex items-center gap-2 mb-3";
 
   const catBadge = document.createElement("span");
-  catBadge.className = `text-xs px-2 py-1 rounded-full ${CATEGORY_COLORS[course.category] || "bg-gray-100 text-gray-600"}`;
-  catBadge.textContent = CATEGORY_LABELS[course.category] ? CATEGORY_LABELS[course.category]() : course.category;
+  catBadge.className = `text-xs px-2 py-1 rounded-full ${_getCategoryColor(course.category)}`;
+  catBadge.textContent = _getCategoryLabel(course.category);
   badges.appendChild(catBadge);
 
   const credits = document.createElement("span");
@@ -298,14 +407,50 @@ function _renderLoginPrompt(container) {
   container.appendChild(msg);
 }
 
+/** Programme selector dropdown — returns a DOM element */
+function _renderProgrammeSelector() {
+  const wrap = document.createElement("div");
+  wrap.className = "inline-flex items-center gap-2";
+
+  const label = document.createElement("span");
+  label.className = "text-sm text-white/80";
+  label.textContent = t("planner.select_programme");
+  wrap.appendChild(label);
+
+  const select = document.createElement("select");
+  select.className = "programme-selector bg-white/20 text-white border border-white/30 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/50";
+
+  for (const [code, prog] of Object.entries(PROGRAMMES)) {
+    const opt = document.createElement("option");
+    opt.value = code;
+    // Use English name for the dropdown (option elements don't support rich content)
+    opt.textContent = prog.name.en;
+    opt.selected = code === _programmeCode;
+    if (prog.comingSoon) opt.textContent += " (Coming Soon)";
+    select.appendChild(opt);
+  }
+
+  select.addEventListener("change", () => {
+    _setProgramme(select.value);
+  });
+
+  // Style selected option text color for dark background
+  select.style.color = "#fff";
+  select.addEventListener("focus", () => { select.style.color = "#333"; });
+  select.addEventListener("blur", () => { select.style.color = "#fff"; });
+
+  wrap.appendChild(select);
+  return wrap;
+}
+
 function _renderOverview(container) {
-  const total = _courses.length;
-  const completed = _progress.filter((p) => p.status === "completed").length;
-  const inProgress = _progress.filter((p) => p.status === "in_progress").length;
-  const totalCredits = _courses.reduce((sum, c) => sum + c.credits, 0);
-  const completedCredits = _courses
-    .filter((c) => _getProgress(c.id) === "completed")
-    .reduce((sum, c) => sum + c.credits, 0);
+  const progCourses = _getProgrammeCourses();
+  const total = progCourses.length;
+  const completed = progCourses.filter((c) => _getProgress(c.id) === "completed").length;
+  const inProgress = progCourses.filter((c) => _getProgress(c.id) === "in_progress").length;
+  const totalCredits = _programme.totalCredits;
+  const grad = _calcGraduationProgress();
+  const completedCredits = grad.totalEarned;
   const pct = total > 0 ? (completed / total) * 100 : 0;
 
   // ── 1. Hero section ──────────────────────────────────────────────────────
@@ -326,19 +471,17 @@ function _renderOverview(container) {
   const inner = document.createElement("div");
   inner.className = "max-w-3xl mx-auto text-center py-16 px-4 relative z-10";
 
-  // Sparkle pill label
-  const pill = document.createElement("span");
-  pill.className = "inline-flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full text-white text-sm font-medium mb-6";
-  pill.appendChild(LucideIcon("sparkles", "w-4 h-4"));
-  const pillText = document.createElement("span");
-  pillText.textContent = t("planner.program_title");
-  pill.appendChild(pillText);
-  inner.appendChild(pill);
+  // Programme selector
+  const selectorWrap = document.createElement("div");
+  selectorWrap.className = "flex justify-center mb-6";
+  selectorWrap.appendChild(_renderProgrammeSelector());
+  inner.appendChild(selectorWrap);
 
-  // Title
+  // Title — show localised programme name
   const h1 = document.createElement("h1");
   h1.className = "text-4xl sm:text-5xl font-bold text-white mb-6";
-  h1.textContent = t("planner.page_title");
+  const lang = localStorage.getItem("hkmu_lang") || "en";
+  h1.textContent = programmeName(_programme, lang);
   inner.appendChild(h1);
 
   // Description
@@ -399,16 +542,29 @@ function _renderOverview(container) {
   const statsGrid = document.createElement("div");
   const statsCols = isLoggedIn() ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2";
   statsGrid.className = `grid ${statsCols} gap-6`;
-  statsGrid.appendChild(StatCard("Total Courses", total, "text-blue-600", "book-open"));
-  statsGrid.appendChild(StatCard("Total Credits", totalCredits, "text-green-600", "award"));
+  statsGrid.appendChild(StatCard(t("planner.total_courses"), total, "text-blue-600", "book-open"));
+  statsGrid.appendChild(StatCard(t("planner.total_credits"), totalCredits, "text-green-600", "award"));
   if (isLoggedIn()) {
-    statsGrid.appendChild(StatCard("Completed", completed, "text-green-500", "check-circle"));
-    statsGrid.appendChild(StatCard("Credits Earned", `${completedCredits}/${totalCredits}`, "text-blue-600", "graduation-cap"));
+    statsGrid.appendChild(StatCard(t("planner.completed"), completed, "text-green-500", "check-circle"));
+    statsGrid.appendChild(StatCard(t("planner.credits_earned"), `${completedCredits}/${totalCredits}`, "text-blue-600", "graduation-cap"));
   }
   statsSection.appendChild(statsGrid);
   container.appendChild(statsSection);
 
-  // ── 3. Feature cards ─────────────────────────────────────────────────────
+  // ── 3. Graduation dashboard (logged in only) ─────────────────────────────
+  if (isLoggedIn() && !_programme.comingSoon) {
+    _renderGraduationDashboard(container, grad);
+  }
+
+  // ── 4. Smart recommendations (logged in only) ────────────────────────────
+  if (isLoggedIn() && !_programme.comingSoon) {
+    const recs = _getRecommendations(3);
+    if (recs.length > 0) {
+      _renderRecommendations(container, recs);
+    }
+  }
+
+  // ── 5. Feature cards ─────────────────────────────────────────────────────
   const featureSection = document.createElement("div");
   featureSection.className = "py-8";
   const featureTitle = document.createElement("h2");
@@ -425,50 +581,50 @@ function _renderOverview(container) {
   featureSection.appendChild(featureGrid);
   container.appendChild(featureSection);
 
-  // ── 4. Year-by-year progress ─────────────────────────────────────────────
+  // ── 6. Year-by-year progress ─────────────────────────────────────────────
   if (isLoggedIn()) {
-  const yearSection = document.createElement("div");
-  yearSection.className = "py-8";
+    const yearSection = document.createElement("div");
+    yearSection.className = "py-8";
 
-  const yearTitle = document.createElement("h2");
-  yearTitle.className = "text-2xl font-bold mb-6";
-  yearTitle.textContent = t("planner.yearly_progress");
-  yearSection.appendChild(yearTitle);
+    const yearTitle = document.createElement("h2");
+    yearTitle.className = "text-2xl font-bold mb-6";
+    yearTitle.textContent = t("planner.yearly_progress");
+    yearSection.appendChild(yearTitle);
 
-  [1, 2, 3, 4].forEach((y) => {
-    const yearCourses = _courses.filter((c) => c.year === y);
-    if (yearCourses.length === 0) return;
+    [1, 2, 3, 4].forEach((y) => {
+      const yearCourses = progCourses.filter((c) => c.year === y);
+      if (yearCourses.length === 0) return;
 
-    const yearCompleted = yearCourses.filter((c) => _getProgress(c.id) === "completed").length;
-    const yearPct = yearCourses.length > 0 ? (yearCompleted / yearCourses.length) * 100 : 0;
-    const yearCredits = yearCourses.reduce((s, c) => s + c.credits, 0);
-    const completedYearCredits = yearCourses
-      .filter((c) => _getProgress(c.id) === "completed")
-      .reduce((s, c) => s + c.credits, 0);
+      const yearCompleted = yearCourses.filter((c) => _getProgress(c.id) === "completed").length;
+      const yearPct = yearCourses.length > 0 ? (yearCompleted / yearCourses.length) * 100 : 0;
+      const yearCredits = yearCourses.reduce((s, c) => s + c.credits, 0);
+      const completedYearCredits = yearCourses
+        .filter((c) => _getProgress(c.id) === "completed")
+        .reduce((s, c) => s + c.credits, 0);
 
-    const yearCard = document.createElement("div");
-    yearCard.className = "section-card";
+      const yearCard = document.createElement("div");
+      yearCard.className = "section-card";
 
-    const yearHeader = document.createElement("div");
-    yearHeader.className = "flex justify-between items-center mb-4";
-    const yearLabel = document.createElement("h3");
-    yearLabel.className = "text-lg font-bold";
-    yearLabel.textContent = t("planner.year", {n: y});
-    const yearCreditsLabel = document.createElement("span");
-    yearCreditsLabel.className = "text-sm text-gray-500";
-    yearCreditsLabel.textContent = t("planner.credits_progress", {done: completedYearCredits, total: yearCredits});
-    yearHeader.appendChild(yearLabel);
-    yearHeader.appendChild(yearCreditsLabel);
-    yearCard.appendChild(yearHeader);
+      const yearHeader = document.createElement("div");
+      yearHeader.className = "flex justify-between items-center mb-4";
+      const yearLabel = document.createElement("h3");
+      yearLabel.className = "text-lg font-bold";
+      yearLabel.textContent = t("planner.year", {n: y});
+      const yearCreditsLabel = document.createElement("span");
+      yearCreditsLabel.className = "text-sm text-gray-500";
+      yearCreditsLabel.textContent = t("planner.credits_progress", {done: completedYearCredits, total: yearCredits});
+      yearHeader.appendChild(yearLabel);
+      yearHeader.appendChild(yearCreditsLabel);
+      yearCard.appendChild(yearHeader);
 
-    yearCard.appendChild(ProgressBar(yearPct, t("planner.courses_progress", {done: yearCompleted, total: yearCourses.length})));
-    yearSection.appendChild(yearCard);
-  });
-  container.appendChild(yearSection);
+      yearCard.appendChild(ProgressBar(yearPct, t("planner.courses_progress", {done: yearCompleted, total: yearCourses.length})));
+      yearSection.appendChild(yearCard);
+    });
+    container.appendChild(yearSection);
   } // end isLoggedIn() year-by-year
 
-  // ── 5. DSAI template tip ─────────────────────────────────────────────────
-  if (isLoggedIn() && _progress.length === 0) {
+  // ── 7. Template tip ──────────────────────────────────────────────────────
+  if (isLoggedIn() && _progress.length === 0 && _programme.template && Object.keys(_programme.template).length > 0) {
     const tip = document.createElement("div");
     tip.className = "template-tip mt-6";
 
@@ -492,11 +648,178 @@ function _renderOverview(container) {
     const loadBtnText = document.createElement("span");
     loadBtnText.textContent = t("planner.load_template");
     loadBtn.appendChild(loadBtnText);
-    loadBtn.addEventListener("click", _loadDSAITemplate);
+    loadBtn.addEventListener("click", _loadTemplate);
     tip.appendChild(loadBtn);
 
     container.appendChild(tip);
   }
+}
+
+/** Graduation requirements dashboard */
+function _renderGraduationDashboard(container, grad) {
+  const section = document.createElement("div");
+  section.className = "py-8";
+
+  const title = document.createElement("h2");
+  title.className = "text-2xl font-bold mb-6 flex items-center gap-3";
+  title.appendChild(LucideIcon("graduation-cap", "w-6 h-6 text-blue-600"));
+  const titleText = document.createElement("span");
+  titleText.textContent = t("planner.graduation_requirements");
+  title.appendChild(titleText);
+  section.appendChild(title);
+
+  // Overall progress ring + credit summary
+  const overviewCard = document.createElement("div");
+  overviewCard.className = "graduation-dashboard section-card mb-6";
+
+  const overviewRow = document.createElement("div");
+  overviewRow.className = "flex flex-col md:flex-row items-center gap-8";
+
+  // Circular progress indicator
+  const ringWrap = document.createElement("div");
+  ringWrap.className = "relative w-36 h-36 flex-shrink-0";
+
+  const ringSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  ringSvg.setAttribute("viewBox", "0 0 120 120");
+  ringSvg.className = "w-full h-full transform -rotate-90";
+
+  // Background circle
+  const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  bgCircle.setAttribute("cx", "60");
+  bgCircle.setAttribute("cy", "60");
+  bgCircle.setAttribute("r", "52");
+  bgCircle.setAttribute("fill", "none");
+  bgCircle.setAttribute("stroke", "#E5E7EB");
+  bgCircle.setAttribute("stroke-width", "8");
+  ringSvg.appendChild(bgCircle);
+
+  // Progress arc
+  const circumference = 2 * Math.PI * 52;
+  const progCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  progCircle.setAttribute("cx", "60");
+  progCircle.setAttribute("cy", "60");
+  progCircle.setAttribute("r", "52");
+  progCircle.setAttribute("fill", "none");
+  progCircle.setAttribute("stroke", "url(#gradGradient)");
+  progCircle.setAttribute("stroke-width", "8");
+  progCircle.setAttribute("stroke-linecap", "round");
+  progCircle.setAttribute("stroke-dasharray", `${circumference}`);
+  progCircle.setAttribute("stroke-dashoffset", `${circumference * (1 - grad.pct / 100)}`);
+  ringSvg.appendChild(progCircle);
+
+  // Gradient definition
+  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+  const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+  gradient.setAttribute("id", "gradGradient");
+  gradient.setAttribute("x1", "0%"); gradient.setAttribute("y1", "0%");
+  gradient.setAttribute("x2", "100%"); gradient.setAttribute("y2", "0%");
+  const stop1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+  stop1.setAttribute("offset", "0%"); stop1.setAttribute("stop-color", "#3B82F6");
+  const stop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+  stop2.setAttribute("offset", "100%"); stop2.setAttribute("stop-color", "#10B981");
+  gradient.appendChild(stop1); gradient.appendChild(stop2);
+  defs.appendChild(gradient);
+  ringSvg.appendChild(defs);
+
+  ringWrap.appendChild(ringSvg);
+
+  // Center text
+  const centerLabel = document.createElement("div");
+  centerLabel.className = "absolute inset-0 flex flex-col items-center justify-center";
+  const pctLabel = document.createElement("span");
+  pctLabel.className = "text-2xl font-bold text-gray-800";
+  pctLabel.textContent = `${Math.round(grad.pct)}%`;
+  centerLabel.appendChild(pctLabel);
+  const crLabel = document.createElement("span");
+  crLabel.className = "text-xs text-gray-500";
+  crLabel.textContent = t("planner.credits_progress", { done: grad.totalEarned, total: grad.totalRequired });
+  centerLabel.appendChild(crLabel);
+  ringWrap.appendChild(centerLabel);
+
+  overviewRow.appendChild(ringWrap);
+
+  // Category breakdown
+  const catList = document.createElement("div");
+  catList.className = "flex-1 space-y-3 w-full";
+
+  for (const cat of grad.categories) {
+    const row = document.createElement("div");
+    row.className = "category-progress-row";
+
+    const rowHeader = document.createElement("div");
+    rowHeader.className = "flex justify-between items-center mb-1";
+
+    const catLabel = document.createElement("span");
+    catLabel.className = "text-sm font-medium text-gray-700";
+    catLabel.textContent = _getCategoryLabel(cat.key);
+    rowHeader.appendChild(catLabel);
+
+    const creditLabel = document.createElement("span");
+    creditLabel.className = "text-sm text-gray-500";
+    if (cat.pickN) {
+      creditLabel.textContent = t("planner.pick_courses", { pick: cat.pickN, total: cat.totalCourses }) + ` — ${cat.earned}/${cat.required}`;
+    } else {
+      creditLabel.textContent = `${cat.earned}/${cat.required} cr`;
+    }
+    rowHeader.appendChild(creditLabel);
+
+    row.appendChild(rowHeader);
+
+    const catPct = cat.required > 0 ? Math.min(100, (cat.earned / cat.required) * 100) : 0;
+    const fillColor = _getCategoryFillColor(cat.key);
+    row.appendChild(ProgressBar(catPct, null, "sm", fillColor));
+    catList.appendChild(row);
+  }
+
+  overviewRow.appendChild(catList);
+  overviewCard.appendChild(overviewRow);
+  section.appendChild(overviewCard);
+  container.appendChild(section);
+}
+
+/** Smart recommendations */
+function _renderRecommendations(container, recs) {
+  const section = document.createElement("div");
+  section.className = "py-4 mb-4";
+
+  const title = document.createElement("h3");
+  title.className = "text-lg font-bold mb-4 flex items-center gap-2";
+  title.appendChild(LucideIcon("lightbulb", "w-5 h-5 text-amber-500"));
+  const titleText = document.createElement("span");
+  titleText.textContent = t("planner.recommended_next");
+  title.appendChild(titleText);
+  section.appendChild(title);
+
+  const grid = document.createElement("div");
+  grid.className = "grid grid-cols-1 md:grid-cols-3 gap-4";
+
+  for (const rec of recs) {
+    const card = document.createElement("div");
+    card.className = "recommendation-card section-card cursor-pointer hover:shadow-lg transition-shadow";
+
+    const catBadge = document.createElement("span");
+    catBadge.className = `text-xs px-2 py-1 rounded-full ${_getCategoryColor(rec.catKey)} inline-block mb-2`;
+    catBadge.textContent = _getCategoryLabel(rec.catKey);
+    card.appendChild(catBadge);
+
+    const courseName = document.createElement("div");
+    courseName.className = "font-semibold text-gray-800";
+    courseName.textContent = rec.course.name;
+    card.appendChild(courseName);
+
+    const courseCode = document.createElement("div");
+    courseCode.className = "text-sm text-gray-500 mt-1";
+    courseCode.textContent = `${rec.course.code} · ${rec.course.credits} cr`;
+    card.appendChild(courseCode);
+
+    card.addEventListener("click", () => {
+      _onCourseClick(rec.course);
+    });
+    grid.appendChild(card);
+  }
+
+  section.appendChild(grid);
+  container.appendChild(section);
 }
 
 function _renderProgress(container) {
@@ -505,7 +828,27 @@ function _renderProgress(container) {
     return;
   }
 
-  if (_courses.length === 0) {
+  const progCourses = _getProgrammeCourses();
+
+  if (progCourses.length === 0) {
+    if (_programme.comingSoon) {
+      const msg = document.createElement("div");
+      msg.className = "text-center py-16";
+      const icon = document.createElement("div");
+      icon.className = "w-20 h-20 bg-gradient-to-br from-blue-100 to-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6";
+      icon.appendChild(LucideIcon("construction", "w-10 h-10 text-blue-500"));
+      msg.appendChild(icon);
+      const h = document.createElement("h3");
+      h.className = "text-xl font-bold text-gray-800 mb-2";
+      h.textContent = t("planner.coming_soon_title");
+      msg.appendChild(h);
+      const p = document.createElement("p");
+      p.className = "text-gray-500";
+      p.textContent = t("planner.coming_soon_desc");
+      msg.appendChild(p);
+      container.appendChild(msg);
+      return;
+    }
     const empty = document.createElement("p");
     empty.className = "text-gray-400 text-center py-8";
     empty.textContent = t("planner.no_courses_loaded");
@@ -531,7 +874,7 @@ function _renderProgress(container) {
   [1, 2, 3, 4].forEach((y) => {
     const semesters = ["autumn", "spring", "summer"];
     semesters.forEach((sem) => {
-      const courses = _courses.filter((c) => c.year === y && c.semester === sem);
+      const courses = progCourses.filter((c) => c.year === y && c.semester === sem);
       if (courses.length === 0) return;
       grid.appendChild(SemesterGroup(y, sem, courses));
     });
@@ -541,6 +884,8 @@ function _renderProgress(container) {
 }
 
 function _renderBrowse(container) {
+  const progCourses = _getProgrammeCourses();
+
   const heading = document.createElement("div");
   heading.className = "mb-6";
   const h1 = document.createElement("h1");
@@ -590,7 +935,7 @@ function _renderBrowse(container) {
   yearGroup.appendChild(yearFilter);
   filterGrid.appendChild(yearGroup);
 
-  // Category filter
+  // Category filter — dynamic from current programme
   const catGroup = document.createElement("div");
   const catLabel = document.createElement("label");
   catLabel.className = "block text-sm font-medium text-gray-500 mb-2";
@@ -599,8 +944,11 @@ function _renderBrowse(container) {
   catGroup.appendChild(catLabel);
   const catFilter = document.createElement("select");
   catFilter.className = "w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
-  catFilter.innerHTML = '<option value="">All Categories</option>' +
-    Object.entries(CATEGORY_LABELS).map(([k, v]) => `<option value="${k}">${v()}</option>`).join("");
+  let catOpts = '<option value="">All Categories</option>';
+  for (const catKey of Object.keys(_programme.categories)) {
+    catOpts += `<option value="${catKey}">${_getCategoryLabel(catKey)}</option>`;
+  }
+  catFilter.innerHTML = catOpts;
   catFilter.id = "course-cat-filter";
   catGroup.appendChild(catFilter);
   filterGrid.appendChild(catGroup);
@@ -619,7 +967,7 @@ function _renderBrowse(container) {
     const yr = yearFilter.value;
     const cat = catFilter.value;
 
-    let filtered = _courses;
+    let filtered = progCourses;
     if (q) filtered = filtered.filter((c) => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q));
     if (yr) filtered = filtered.filter((c) => c.year === parseInt(yr));
     if (cat) filtered = filtered.filter((c) => c.category === cat);
@@ -648,6 +996,8 @@ function _renderPlan(container) {
     return;
   }
 
+  const progCourses = _getProgrammeCourses();
+
   // Heading
   const heading = document.createElement("div");
   heading.className = "mb-6";
@@ -662,8 +1012,8 @@ function _renderPlan(container) {
   container.appendChild(heading);
 
   // Summary bar
-  const totalCompleted = _progress.filter((p) => p.status === "completed").length;
-  const totalInProgress = _progress.filter((p) => p.status === "in_progress").length;
+  const totalCompleted = progCourses.filter((c) => _getProgress(c.id) === "completed").length;
+  const totalInProgress = progCourses.filter((c) => _getProgress(c.id) === "in_progress").length;
   const summaryBar = document.createElement("div");
   summaryBar.className = "grid grid-cols-3 gap-4 mb-6";
 
@@ -712,7 +1062,7 @@ function _renderPlan(container) {
   const sumLeftText = document.createElement("div");
   const sumLeftVal = document.createElement("div");
   sumLeftVal.className = "text-xl font-bold text-gray-800";
-  sumLeftVal.textContent = Math.max(0, _courses.length - totalCompleted - totalInProgress);
+  sumLeftVal.textContent = Math.max(0, progCourses.length - totalCompleted - totalInProgress);
   sumLeftText.appendChild(sumLeftVal);
   const sumLeftLbl = document.createElement("div");
   sumLeftLbl.className = "text-xs text-gray-500";
@@ -745,7 +1095,8 @@ function _renderPlan(container) {
 
   semesters.forEach((sem) => {
     const isActive = _selectedSem.year === sem.year && _selectedSem.semester === sem.semester;
-    const semCourses = _courses.filter((c) => c.year === sem.year && c.semester === sem.semester);
+    const semCourses = progCourses.filter((c) => c.year === sem.year && c.semester === sem.semester);
+    if (semCourses.length === 0) return; // skip empty semesters
     const semDone = semCourses.filter((c) => _getProgress(c.id) === "completed").length;
     const hasProgress = semDone > 0;
 
@@ -777,20 +1128,14 @@ function _renderPlan(container) {
     tab.addEventListener("click", () => {
       _selectedSem = sem;
       // Re-render tabs
-      tabs.querySelectorAll("button").forEach((b, i) => {
-        const s = semesters[i];
-        const active = s.year === _selectedSem.year && s.semester === _selectedSem.semester;
-        const sCourses = _courses.filter((c) => c.year === s.year && c.semester === s.semester);
-        const sDone = sCourses.filter((c) => _getProgress(c.id) === "completed").length;
-        const sHasProgress = sDone > 0;
+      tabs.querySelectorAll("button").forEach((b) => {
         b.className = `px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
-          active
+          false
             ? "bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-md"
-            : sHasProgress
-              ? "bg-green-50 text-green-700 hover:bg-green-100"
-              : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+            : "bg-gray-50 text-gray-600 hover:bg-gray-100"
         }`;
       });
+      tab.className = `px-4 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2 bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-md`;
       renderSemesterCourses();
       _refreshIcons();
     });
@@ -811,7 +1156,7 @@ function _renderPlan(container) {
   container.appendChild(semGrid);
 
   function renderSemesterCourses() {
-    const courses = _courses.filter(
+    const courses = progCourses.filter(
       (c) => c.year === _selectedSem.year && c.semester === _selectedSem.semester
     );
 
@@ -950,6 +1295,17 @@ async function _loadData() {
       } catch {
         _progress = [];
       }
+      // Load user's programme preference from backend
+      try {
+        const user = await api.get("/users/me");
+        if (user.programme_code && PROGRAMMES[user.programme_code]) {
+          _programmeCode = user.programme_code;
+          _programme = PROGRAMMES[_programmeCode];
+          localStorage.setItem("hkmu_programme", _programmeCode);
+        }
+      } catch {
+        // Use localStorage default
+      }
     } else {
       _progress = [];
     }
@@ -1002,15 +1358,18 @@ function _onCourseClick(course) {
   _render();
 }
 
-// ── DSAI Template ─────────────────────────────────────────────────────────────
+// ── Template loader (programme-aware) ────────────────────────────────────────
 
-async function _loadDSAITemplate() {
+async function _loadTemplate() {
   if (!isLoggedIn()) {
     window.dispatchEvent(new CustomEvent("auth:show-login"));
     return;
   }
 
-  const items = Object.entries(DSAI_TEMPLATE).map(([course_id, status]) => ({
+  const template = _programme.template;
+  if (!template || Object.keys(template).length === 0) return;
+
+  const items = Object.entries(template).map(([course_id, status]) => ({
     course_id,
     status,
   }));
@@ -1018,7 +1377,7 @@ async function _loadDSAITemplate() {
   try {
     _progress = await api.post("/courses/progress/batch", { items });
     showToast(t("planner.template_loaded"), "success");
-    track("template_loaded");
+    track("template_loaded", { programme: _programmeCode });
     _render();
   } catch (err) {
     showToast(t("planner.template_failed") + " " + err.message, "error");
