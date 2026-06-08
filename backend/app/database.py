@@ -232,6 +232,7 @@ async def init_db():
         min_size=DB_POOL_MIN,
         max_size=DB_POOL_MAX,
         ssl=_ssl_ctx,
+        statement_cache_size=0,  # required for pgbouncer / Supabase pooler (transaction mode)
     )
 
     async with _pool.acquire() as conn:

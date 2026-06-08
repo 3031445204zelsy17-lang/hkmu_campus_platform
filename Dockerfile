@@ -13,9 +13,7 @@ COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 COPY scripts/ ./scripts/
 
-COPY .env.example .env
-
 EXPOSE 8000
 
-# Railway injects a dynamic PORT env var — use it, fallback to 8000
-CMD uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Use shell form to allow $PORT env var expansion
+CMD ["sh", "-c", "uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
