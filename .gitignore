@@ -230,3 +230,12 @@ Thumbs.db
 
 # PWA
 frontend/workbox-*.js
+
+# Claude Code local config
+.claude/
+
+# Test output
+test-results/
+
+# Supabase CLI temp files (contains project refs, pooler URLs)
+supabase/.temp/
