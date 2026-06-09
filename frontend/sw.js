@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hkmu-campus-v8';
+const CACHE_NAME = 'hkmu-campus-v9';
 const STATIC_CACHE = `${CACHE_NAME}-static`;
 const DYNAMIC_CACHE = `${CACHE_NAME}-dynamic`;
 
