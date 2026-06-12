@@ -1,4 +1,5 @@
 import ssl as _ssl
+from urllib.parse import urlparse
 import asyncpg
 from .config import DATABASE_URL, DB_POOL_MIN, DB_POOL_MAX, ADMIN_USERNAMES
 
@@ -220,9 +221,11 @@ END $$;
 
 async def init_db():
     global _pool
-    # Auto-detect SSL: remote hosts need it, local socket/TCP does not
+    # Auto-detect SSL: remote hosts need it, local CI/dev databases do not.
     _ssl_ctx = None
-    if not DATABASE_URL.startswith("postgresql:///"):
+    parsed_url = urlparse(DATABASE_URL)
+    local_hosts = {"", "localhost", "127.0.0.1", "::1"}
+    if parsed_url.hostname not in local_hosts and not DATABASE_URL.startswith("postgresql:///"):
         _ssl_ctx = _ssl.create_default_context()
         _ssl_ctx.check_hostname = False
         _ssl_ctx.verify_mode = _ssl.CERT_NONE
