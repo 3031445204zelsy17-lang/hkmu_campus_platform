@@ -61,15 +61,22 @@ async def no_cache_dev(request: Request, call_next):
 # CSRF double-submit cookie
 CSRF_COOKIE = "csrf_token"
 CSRF_HEADER = "X-CSRF-Token"
+CLIENT_PLATFORM_HEADER = "X-Client-Platform"
+CSRF_BYPASS_CLIENTS = {"wechat-miniprogram"}
 SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
 
 
 @app.middleware("http")
 async def csrf_protect(request: Request, call_next):
-    # Set CSRF cookie on every response if not present
-    response: Response = await call_next(request)
+    if request.url.path.startswith(API_PREFIX):
+        return await call_next(request)
+
+    client_platform = request.headers.get(CLIENT_PLATFORM_HEADER, "").strip().lower()
+    if client_platform in CSRF_BYPASS_CLIENTS:
+        return await call_next(request)
 
     if request.method in SAFE_METHODS:
+        response: Response = await call_next(request)
         cookie_val = request.cookies.get(CSRF_COOKIE)
         if not cookie_val:
             response.set_cookie(
@@ -87,7 +94,7 @@ async def csrf_protect(request: Request, call_next):
     if not cookie_val or not header_val or not secrets.compare_digest(cookie_val, header_val):
         return JSONResponse({"detail": "CSRF token missing or invalid"}, status_code=403)
 
-    return response
+    return await call_next(request)
 
 
 app.include_router(auth.router, prefix=API_PREFIX)

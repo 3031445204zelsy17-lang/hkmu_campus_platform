@@ -9,6 +9,23 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+      SECRET_KEY: ci-secret-key
+      DB_POOL_MIN: 1
+      DB_POOL_MAX: 5
     steps:
       - uses: actions/checkout@v4
 
@@ -44,7 +61,12 @@ jobs:
       - name: Verify Docker build
         run: |
           docker build -t hkmu-campus .
-          docker run -d --name test-container -p 8001:8000 hkmu-campus
+          docker run -d --name test-container --network host \
+            -e DATABASE_URL="$DATABASE_URL" \
+            -e SECRET_KEY="$SECRET_KEY" \
+            -e DB_POOL_MIN="$DB_POOL_MIN" \
+            -e DB_POOL_MAX="$DB_POOL_MAX" \
+            hkmu-campus
           sleep 5
-          curl -f http://localhost:8001/api/health
+          curl -f http://localhost:8000/api/health
           docker stop test-container
