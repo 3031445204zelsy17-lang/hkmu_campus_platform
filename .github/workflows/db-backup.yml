@@ -20,13 +20,15 @@ jobs:
         env:
           # Direct connection (db.<ref>.supabase.com:5432) — Supabase's
           # recommended mode for pg_dump (session-level, not pooler).
-          # Set in repo Settings → Secrets and variables → Actions as
-          # SUPABASE_DB_URL_BACKUP =
+          # Set in repo Settings → Secrets as SUPABASE_DB_URL_BACKUP
+          # (legacy name "MUCP" also accepted as fallback):
           # postgresql://postgres.sizuuojtadkntjjibxuv:<DB_PASSWORD>@db.sizuuojtadkntjjibxuv.supabase.com:5432/postgres
-          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL_BACKUP }}
+          PRIMARY_URL: ${{ secrets.SUPABASE_DB_URL_BACKUP }}
+          FALLBACK_URL: ${{ secrets.MUCP }}
         run: |
+          DATABASE_URL="${PRIMARY_URL:-$FALLBACK_URL}"
           if [ -z "$DATABASE_URL" ]; then
-            echo "::warning::SUPABASE_DB_URL_BACKUP secret not set — skipping. Add it in repo Settings → Secrets."
+            echo "::warning::No DB URL secret set (SUPABASE_DB_URL_BACKUP or MUCP) — skipping."
             exit 0
           fi
           STAMP=$(date -u +%Y%m%d)
