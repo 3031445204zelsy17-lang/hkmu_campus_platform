@@ -49,6 +49,8 @@ const translations = {
     "home.cat_english": "English Enhancement",
     "home.cat_general": "General Education",
     "home.cat_university": "University Core",
+    "home.year_courses": "Year {n} Courses",
+    "home.courses_count": "{n} courses",
 
     // Community
     "community.title": "Community",
@@ -169,6 +171,10 @@ const translations = {
     "planner.credits_earned": "Credits Earned",
     "planner.coming_soon_title": "Coming Soon",
     "planner.coming_soon_desc": "Course data for this programme is being prepared. Stay tuned!",
+    "planner.tab_overview": "Overview",
+    "planner.tab_progress": "My Progress",
+    "planner.tab_browse": "Browse",
+    "planner.tab_plan": "Plan",
     "messages.new_conversation": "New Conversation",
 
     // News
@@ -350,6 +356,8 @@ const translations = {
     "home.cat_english": "英语强化",
     "home.cat_general": "通识教育",
     "home.cat_university": "大学核心",
+    "home.year_courses": "第 {n} 年课程",
+    "home.courses_count": "{n} 门课程",
 
     // Community
     "community.title": "社区",
@@ -470,6 +478,10 @@ const translations = {
     "planner.credits_earned": "已获学分",
     "planner.coming_soon_title": "即将推出",
     "planner.coming_soon_desc": "此专业课程数据正在准备中，敬请期待！",
+    "planner.tab_overview": "概览",
+    "planner.tab_progress": "我的进度",
+    "planner.tab_browse": "浏览课程",
+    "planner.tab_plan": "学习计划",
     "messages.new_conversation": "新对话",
 
     // News
@@ -649,6 +661,8 @@ const translations = {
     "home.cat_english": "英語強化",
     "home.cat_general": "通識教育",
     "home.cat_university": "大學核心",
+    "home.year_courses": "第 {n} 年課程",
+    "home.courses_count": "{n} 門課程",
 
     // Community
     "community.title": "社群",
@@ -769,6 +783,10 @@ const translations = {
     "planner.credits_earned": "已獲學分",
     "planner.coming_soon_title": "即將推出",
     "planner.coming_soon_desc": "此專業課程數據正在準備中，敬請期待！",
+    "planner.tab_overview": "概覽",
+    "planner.tab_progress": "我的進度",
+    "planner.tab_browse": "瀏覽課程",
+    "planner.tab_plan": "學習計畫",
     "messages.new_conversation": "新對話",
 
     // News

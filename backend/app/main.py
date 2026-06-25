@@ -110,7 +110,19 @@ app.include_router(upload.router, prefix=API_PREFIX)
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok"}
+    """Liveness + DB readiness probe. Returns 503 when the database is
+    unreachable, so monitoring reflects real availability instead of a
+    hardcoded ok (which previously masked a paused Supabase project)."""
+    try:
+        from .database import get_db
+        async with get_db() as db:
+            await db.fetchval("SELECT 1")
+        return {"status": "ok", "database": "up"}
+    except Exception as e:
+        return JSONResponse(
+            {"status": "degraded", "database": "down", "detail": str(e)},
+            status_code=503,
+        )
 
 
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")

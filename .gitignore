@@ -239,3 +239,6 @@ test-results/
 
 # Supabase CLI temp files (contains project refs, pooler URLs)
 supabase/.temp/
+
+# Internal handover doc (held plaintext secrets; sanitized, keep out of git)
+docs/ops/后端接手信息.md

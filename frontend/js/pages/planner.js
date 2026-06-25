@@ -1239,10 +1239,10 @@ export async function renderPlanner() {
   // View tabs — underline style
   const tabBar = document.createElement("div");
   tabBar.className = "flex border-b border-gray-200 mb-6 planner-tabs-wrap";
-  tabBar.appendChild(ViewTab("Overview", "overview", "layout-dashboard"));
-  tabBar.appendChild(ViewTab("My Progress", "progress", "bar-chart-2", true));
-  tabBar.appendChild(ViewTab("Browse", "browse", "book-open"));
-  tabBar.appendChild(ViewTab("Plan", "plan", "git-branch", true));
+  tabBar.appendChild(ViewTab(t("planner.tab_overview"), "overview", "layout-dashboard"));
+  tabBar.appendChild(ViewTab(t("planner.tab_progress"), "progress", "bar-chart-2", true));
+  tabBar.appendChild(ViewTab(t("planner.tab_browse"), "browse", "book-open"));
+  tabBar.appendChild(ViewTab(t("planner.tab_plan"), "plan", "git-branch", true));
   container.appendChild(tabBar);
 
   // Content area — show skeleton loading while fetching

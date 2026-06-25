@@ -3,7 +3,7 @@ import secrets
 import hashlib
 import time
 from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from google.oauth2 import id_token as google_id_token
 from google.auth.transport import requests as google_requests
 
@@ -21,6 +21,11 @@ from ..services.auth_service import (
 from ..services.sanitizer import sanitize_dict, sanitize
 from ..services.rate_limiter import check_rate_limit
 from ..services.email_service import send_password_reset_email, send_verification_email
+from ..services.wechat_service import (
+    WechatMiniProgramAuthError,
+    WechatMiniProgramConfigError,
+    exchange_code_for_session,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -222,6 +227,84 @@ async def google_login(body: GoogleLogin):
             username, OAUTH_NO_PASSWORD, sanitize(nickname), google_email, google_sub, now, now,
         )
         user_id = new_row["id"]
+
+    token = create_access_token({"sub": str(user_id), "username": username})
+    refresh = await create_refresh_token(user_id)
+    return Token(access_token=token, refresh_token=refresh)
+
+
+async def _generate_unique_wechat_username(db, openid: str) -> str:
+    """Generate a unique 'wx_<openid8>' username. Must be called within the
+    caller's `async with get_db() as db:` block — `db` is the live connection."""
+    base_name = f"wx_{openid[:8]}"
+    username = base_name
+    while True:
+        if not await db.fetchval("SELECT 1 FROM users WHERE username = $1", username):
+            return username
+        username = f"{base_name}_{secrets.token_hex(2)}"
+
+
+# --- WeChat Mini Program ---
+
+@router.post("/wechat/miniprogram", response_model=Token)
+async def wechat_miniprogram_login(body: dict, request: Request):
+    check_rate_limit(
+        f"wechat:{request.client.host if request.client else 'unknown'}",
+        max_requests=10, window_seconds=60,
+    )
+
+    code = str(body.get("code") or "").strip()
+    nickname = str(body.get("nickname") or "").strip()
+    avatar_url = str(body.get("avatar_url") or "").strip() or None
+
+    if not code:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Missing code")
+
+    try:
+        session = await exchange_code_for_session(code)
+    except WechatMiniProgramConfigError as exc:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(exc))
+    except WechatMiniProgramAuthError as exc:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, str(exc))
+
+    safe_nickname = sanitize(nickname)[:30] if nickname else None
+
+    async with get_db() as db:
+        # 1. Match by WeChat openid
+        row = await db.fetchrow(
+            "SELECT id, username FROM users WHERE oauth_provider = 'wechat_miniprogram' AND oauth_id = $1",
+            session.openid,
+        )
+
+        if row:
+            # 2. Update nickname/avatar if provided
+            updates = {}
+            if safe_nickname:
+                updates["nickname"] = safe_nickname
+            if avatar_url:
+                updates["avatar_url"] = avatar_url
+            if updates:
+                updates["updated_at"] = datetime.now(timezone.utc)
+                set_clause = ", ".join(f"{k} = ${i + 1}" for i, k in enumerate(updates.keys()))
+                await db.execute(
+                    f"UPDATE users SET {set_clause} WHERE id = ${len(updates) + 1}",
+                    *list(updates.values()), row["id"],
+                )
+            user_id = row["id"]
+            username = row["username"]
+        else:
+            # 3. Auto-create new user
+            username = await _generate_unique_wechat_username(db, session.openid)
+            display_name = safe_nickname or f"微信用户{secrets.randbelow(9000) + 1000}"
+            now = datetime.now(timezone.utc)
+            new_row = await db.fetchrow(
+                """INSERT INTO users (username, password_hash, nickname, avatar_url,
+                                      oauth_provider, oauth_id, created_at, updated_at)
+                   VALUES ($1, $2, $3, $4, 'wechat_miniprogram', $5, $6, $7) RETURNING id""",
+                username, OAUTH_NO_PASSWORD, display_name, avatar_url,
+                session.openid, now, now,
+            )
+            user_id = new_row["id"]
 
     token = create_access_token({"sub": str(user_id), "username": username})
     refresh = await create_refresh_token(user_id)

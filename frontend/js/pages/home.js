@@ -268,7 +268,7 @@ export async function renderHome() {
   const yearList = document.createElement("div");
   yearList.className = "space-y-2";
   [1, 2, 3, 4].forEach((y) => {
-    yearList.appendChild(_quickLinkItem(y, `Year ${y} Courses`, `${y === 1 ? '13' : y === 2 ? '9' : y === 3 ? '11' : '10'} courses`, `#/planner`));
+    yearList.appendChild(_quickLinkItem(y, t("home.year_courses", { n: y }), t("home.courses_count", { n: y === 1 ? 13 : y === 2 ? 9 : y === 3 ? 11 : 10 }), `#/planner`));
   });
   yearCard.appendChild(yearList);
   linksGrid.appendChild(yearCard);

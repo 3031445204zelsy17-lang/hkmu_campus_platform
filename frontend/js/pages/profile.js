@@ -261,13 +261,13 @@ function _showEditModal() {
   const avatarLabel = document.createElement("label");
   avatarLabel.className = "block text-sm font-medium text-gray-700";
   avatarLabel.textContent = t("profile.field_avatar");
-  avatarInput.id = "avatar-upload";
   avatarLabel.setAttribute("for", "avatar-upload");
 
   const avatarInput = document.createElement("input");
   avatarInput.type = "file";
   avatarInput.name = "avatar";
   avatarInput.accept = "image/*";
+  avatarInput.id = "avatar-upload";
   avatarInput.className = "block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100";
 
   avatarSection.appendChild(avatarLabel);

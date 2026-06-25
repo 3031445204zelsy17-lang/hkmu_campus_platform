@@ -1,0 +1,26 @@
+name: Keepalive
+
+# Keeps the Supabase database warm so the free-tier project is not auto-paused
+# after ~7 days of inactivity. Pings a DB-backed endpoint every 10 minutes.
+# The offset (3,13,...) avoids the :00/:30 fleet pile-up.
+
+on:
+  schedule:
+    - cron: "3,13,23,33,43,53 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping production DB-backed endpoint
+        run: |
+          set -u
+          URL="https://hkmu-campus-sea.azurewebsites.net/api/v1/courses"
+          code=$(curl -s -o /dev/null -w "%{http_code}" -m 30 "$URL")
+          echo "GET $URL -> HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "::warning::Endpoint returned $code — Supabase project may be paused (check dashboard and restore)."
+            exit 1
+          fi
+          echo "OK — database is warm."

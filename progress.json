@@ -426,7 +426,7 @@
       "dependencies": [
         "DB12"
       ],
-      "passes": false,
+      "passes": true,
       "files": []
     }
   ]
