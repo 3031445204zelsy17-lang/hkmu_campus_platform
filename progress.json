@@ -429,5 +429,20 @@
       "passes": true,
       "files": []
     }
-  ]
+  ],
+  "post_db13_ops": {
+    "_doc": "DB13 部署后的运营稳定性加固 + 微信登录移植（2026-06-25 会话）",
+    "wechat_login_port": {
+      "status": "merged via PR#5 (commit 410de4e)",
+      "what": "从司徒 [手机端] 分支只 cherry-pick 微信登录：wechat_service.py 原样 + auth.py /wechat/miniprogram 端点（SQLite ? → asyncpg $N 改写）",
+      "pending": "生产 Azure 部署 + 配 WECHAT AppID/Secret"
+    },
+    "stability_hardening": {
+      "keepalive": "done — .github/workflows/keepalive.yml，每10分钟 ping 防 Supabase pause",
+      "health_probe": "code in main, pending deploy — /api/health 真实 SELECT 1 探活",
+      "monitoring": "done — UptimeRobot 监控 /api/v1/courses（用户配置）",
+      "db_backup": "done via PR#6 (64c666d) — .github/workflows/db-backup.yml 每天 pg_dump（postgres:17 docker + pooler IPv4，secret 名 MUCP），artifact 14天"
+    },
+    "next_step": "微信公众平台注册小程序拿 AppID → 配 Azure 环境变量 → 开 Docker Desktop 部署（让微信登录 + health 探活在生产生效）"
+  }
 }
