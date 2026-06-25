@@ -464,11 +464,19 @@
       },
       "phase1_connect_apis": {
         "status": "pending",
-        "what": "帖子配图(upload?module=posts + posts.image_url) → 评论(/posts/{id}/comments) → 资料编辑(PUT /users/me + upload avatars) → 注册入口(/auth/email/register)"
+        "what": "帖子配图 → 评论 → 资料编辑 → 注册入口（详细步骤见 steps）",
+        "steps": [
+          "① 抽公共代码：home/community 的 normalizePost/compactNumber/avatarUrl → utils/post.js（Phase 0 carryover；帖子配图要改 normalizePost 加 imageUrl，正好这时抽）",
+          "② 帖子配图：后端 posts 加 image_url 字段(models+posts.py+database.py+ALTER TABLE) → compose.js 接 wx.uploadFile + 帖子卡显示图",
+          "③ 评论：community 接 /posts/{id}/comments（展开+发表）",
+          "④ 资料编辑：profile 接 PUT /users/me + upload avatars",
+          "⑤ 注册入口：login 加注册 → /auth/email/register",
+          "⑥ 顺带 carryover：page_size 常量化(抽代码时)、lostfound onShow 加 syncTabBar(碰 lostfound 时)、logout 调后端 revoke(auth 模块时)"
+        ]
       },
       "phase2_c3": {
         "status": "pending (方案B)",
-        "what": "后端新增 GET /courses/programmes + /courses/graduation-status；planner.js 重写接端点。仅 DSAI 有数据，CS/网安占位"
+        "what": "后端新增 GET /courses/programmes + /courses/graduation-status；planner.js 重写接端点。仅 DSAI 有数据，CS/网安占位。顺带 carryover：planner.reminderCopy mock 文案改真实描述"
       },
       "phase3_messages": {
         "status": "pending",
