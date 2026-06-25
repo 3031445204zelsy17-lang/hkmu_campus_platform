@@ -13,26 +13,30 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
-      - name: Install postgresql-client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
-      - name: Dump Supabase database
+      - name: Dump Supabase via postgres:17 container
         env:
-          # Direct connection (db.<ref>.supabase.com:5432) — Supabase's
-          # recommended mode for pg_dump (session-level, not pooler).
-          # Set in repo Settings → Secrets and variables → Actions as
-          # SUPABASE_DB_URL_BACKUP =
-          # postgresql://postgres.sizuuojtadkntjjibxuv:<DB_PASSWORD>@db.sizuuojtadkntjjibxuv.supabase.com:5432/postgres
-          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL_BACKUP }}
+          # Use the Supabase POOLER (IPv4, reachable from GitHub Actions).
+          # Direct host db.<ref>.supabase.co is IPv6-only and unreachable here.
+          # Set in repo Settings → Secrets as SUPABASE_DB_URL_BACKUP
+          # (legacy name "MUCP" also accepted as fallback):
+          # postgresql://postgres.sizuuojtadkntjjibxuv:<DB_PASSWORD>@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres
+          PRIMARY_URL: ${{ secrets.SUPABASE_DB_URL_BACKUP }}
+          FALLBACK_URL: ${{ secrets.MUCP }}
         run: |
+          DATABASE_URL="${PRIMARY_URL:-$FALLBACK_URL}"
           if [ -z "$DATABASE_URL" ]; then
-            echo "::warning::SUPABASE_DB_URL_BACKUP secret not set — skipping. Add it in repo Settings → Secrets."
+            echo "::warning::No DB URL secret set (SUPABASE_DB_URL_BACKUP or MUCP) — skipping."
             exit 0
           fi
           STAMP=$(date -u +%Y%m%d)
-          echo "Backing up to backup-${STAMP}.dump / .sql"
-          pg_dump "$DATABASE_URL" --no-owner --no-acl --format=custom -f "backup-${STAMP}.dump"
-          pg_dump "$DATABASE_URL" --no-owner --no-acl > "backup-${STAMP}.sql"
+          mkdir -p backups
+          # postgres:17 ships pg_dump 17 (exact match for Supabase PG 17.6).
+          # Pass DATABASE_URL explicitly — `-e VAR` alone won't read a
+          # non-exported shell variable.
+          docker run --rm --env "DATABASE_URL=$DATABASE_URL" -v "$PWD/backups:/backups" postgres:17 \
+            sh -c 'pg_dump "$DATABASE_URL" --no-owner --no-acl --format=custom -f /backups/backup.dump && pg_dump "$DATABASE_URL" --no-owner --no-acl > /backups/backup.sql'
+          mv backups/backup.dump "backup-${STAMP}.dump"
+          mv backups/backup.sql "backup-${STAMP}.sql"
           ls -lh backup-${STAMP}.*
 
       - name: Upload backup artifact
