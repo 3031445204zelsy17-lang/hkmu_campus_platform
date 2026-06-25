@@ -13,16 +13,22 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
-      - name: Install postgresql-client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Install postgresql-client 17 (match Supabase PG 17)
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+          pg_dump --version
 
       - name: Dump Supabase database
         env:
-          # Direct connection (db.<ref>.supabase.com:5432) — Supabase's
-          # recommended mode for pg_dump (session-level, not pooler).
+          # Use the Supabase POOLER (IPv4, reachable from GitHub Actions).
+          # Direct host db.<ref>.supabase.co is IPv6-only and unreachable here.
           # Set in repo Settings → Secrets as SUPABASE_DB_URL_BACKUP
           # (legacy name "MUCP" also accepted as fallback):
-          # postgresql://postgres.sizuuojtadkntjjibxuv:<DB_PASSWORD>@db.sizuuojtadkntjjibxuv.supabase.com:5432/postgres
+          # postgresql://postgres.sizuuojtadkntjjibxuv:<DB_PASSWORD>@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres
           PRIMARY_URL: ${{ secrets.SUPABASE_DB_URL_BACKUP }}
           FALLBACK_URL: ${{ secrets.MUCP }}
         run: |
