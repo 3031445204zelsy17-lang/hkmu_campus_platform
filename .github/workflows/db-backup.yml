@@ -30,9 +30,10 @@ jobs:
           fi
           STAMP=$(date -u +%Y%m%d)
           mkdir -p backups
-          # postgres:17 ships pg_dump 17 — exact match for Supabase PG 17.6,
-          # no apt source needed.
-          docker run --rm -e DATABASE_URL -v "$PWD/backups:/backups" postgres:17 \
+          # postgres:17 ships pg_dump 17 (exact match for Supabase PG 17.6).
+          # Pass DATABASE_URL explicitly — `-e VAR` alone won't read a
+          # non-exported shell variable.
+          docker run --rm --env "DATABASE_URL=$DATABASE_URL" -v "$PWD/backups:/backups" postgres:17 \
             sh -c 'pg_dump "$DATABASE_URL" --no-owner --no-acl --format=custom -f /backups/backup.dump && pg_dump "$DATABASE_URL" --no-owner --no-acl > /backups/backup.sql'
           mv backups/backup.dump "backup-${STAMP}.dump"
           mv backups/backup.sql "backup-${STAMP}.sql"
