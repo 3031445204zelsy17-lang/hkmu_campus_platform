@@ -106,11 +106,15 @@ Page({
       auth: true,
     })
       .then(() => {
+        const app = getApp();
+        if (app.globalData) {
+          app.globalData.postsNeedRefresh = true;
+        }
         wx.showToast({
           title: this.data.text.success,
           icon: "success",
         });
-        wx.switchTab({ url: "/pages/home/home" });
+        wx.switchTab({ url: "/pages/community/community" });
       })
       .catch((error) => {
         wx.showToast({

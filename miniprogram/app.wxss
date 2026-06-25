@@ -1,3 +1,5 @@
+@import "styles/tokens.wxss";
+
 page {
   min-height: 100%;
   background: #f4f2ec;
@@ -719,6 +721,12 @@ textarea {
   color: #73766b;
   font-size: 23rpx;
 }
+
+/* ====== ⚠️ 死代码层开始（行 723-1898）====== */
+/* 以下 5 层（glass / web parity / liquid glass / balanced / active HKMU）
+   均已被行 1899+ 的 Premium campus refresh 层覆盖，新增样式禁止引用这里的值。
+   注意：部分 class（feed-main/profile-stats/planner-shell/course-row 等）的
+   最终定义只在本区间，wxml 仍在用，删本区间会破坏样式。详见 styles/tokens.wxss。 */
 
 /* UI preview refresh: align native Mini Program with the web glass design. */
 page {
@@ -1895,6 +1903,10 @@ page {
 .spotlight-footer {
   color: #effbe9;
 }
+
+/* ====== ✅ 当前生效层开始（行 1899-2389，Premium campus refresh）====== */
+/* 本层覆盖前面所有死代码层，是最终生效样式。新增样式优先复用本层 class，
+   或用 styles/tokens.wxss 的 var(--xxx) token。 */
 
 /* Premium campus refresh: quiet, light, international app UI. */
 page {

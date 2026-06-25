@@ -131,6 +131,12 @@ Page({
     this.applyLocale(getLocale());
     syncTabBar(this, 1);
 
+    const app = getApp();
+    if (app.globalData && app.globalData.postsNeedRefresh) {
+      app.globalData.postsNeedRefresh = false;
+      this._hasLoadedPosts = false;
+    }
+
     auth.bootstrapSession().then((user) => {
       this.setData({ user: user || null });
       if (!this._hasLoadedPosts) {

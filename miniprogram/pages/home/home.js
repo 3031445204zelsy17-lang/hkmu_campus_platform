@@ -75,6 +75,12 @@ Page({
     this.applyLocale(getLocale());
     syncTabBar(this, 0);
 
+    const app = getApp();
+    if (app.globalData && app.globalData.postsNeedRefresh) {
+      app.globalData.postsNeedRefresh = false;
+      this._hasLoadedPosts = false;
+    }
+
     auth.bootstrapSession().then((user) => {
       this.setData({
         user: user || null,
