@@ -1,6 +1,7 @@
 const auth = require("../../utils/auth");
 const { request } = require("../../utils/request");
 const { getLocale, getTexts } = require("../../utils/i18n");
+const { uploadImage } = require("../../utils/upload");
 
 const CATEGORY_KEYS = ["campus", "course", "life", "activity", "help"];
 
@@ -19,6 +20,7 @@ Page({
     categoryKey: "campus",
     content: "",
     displayName: getTexts("compose").defaultDisplayName,
+    imageTempPath: "",
     loading: false,
     locale: getLocale(),
     text: getTexts("compose"),
@@ -77,6 +79,25 @@ Page({
     });
   },
 
+  chooseImage() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ["image"],
+      sourceType: ["album", "camera"],
+      sizeType: ["compressed"],
+      success: (res) => {
+        const file = res.tempFiles && res.tempFiles[0];
+        if (file) {
+          this.setData({ imageTempPath: file.tempFilePath });
+        }
+      },
+    });
+  },
+
+  removeImage() {
+    this.setData({ imageTempPath: "" });
+  },
+
   submitPost() {
     if (this.data.loading) {
       return;
@@ -95,35 +116,53 @@ Page({
 
     this.setData({ loading: true });
 
-    request({
-      method: "POST",
-      path: "/posts",
-      data: {
-        category: this.data.category,
-        content,
-        title,
-      },
-      auth: true,
-    })
-      .then(() => {
-        const app = getApp();
-        if (app.globalData) {
-          app.globalData.postsNeedRefresh = true;
-        }
-        wx.showToast({
-          title: this.data.text.success,
-          icon: "success",
-        });
-        wx.switchTab({ url: "/pages/community/community" });
+    const finalize = (imageUrl) => {
+      request({
+        method: "POST",
+        path: "/posts",
+        data: {
+          category: this.data.category,
+          content,
+          title,
+          image_url: imageUrl,
+        },
+        auth: true,
       })
-      .catch((error) => {
-        wx.showToast({
-          title: error.message || this.data.text.fail,
-          icon: "none",
+        .then(() => {
+          const app = getApp();
+          if (app.globalData) {
+            app.globalData.postsNeedRefresh = true;
+          }
+          wx.showToast({
+            title: this.data.text.success,
+            icon: "success",
+          });
+          wx.switchTab({ url: "/pages/community/community" });
+        })
+        .catch((error) => {
+          wx.showToast({
+            title: error.message || this.data.text.fail,
+            icon: "none",
+          });
+        })
+        .finally(() => {
+          this.setData({ loading: false });
         });
-      })
-      .finally(() => {
-        this.setData({ loading: false });
-      });
+    };
+
+    if (this.data.imageTempPath) {
+      uploadImage({ filePath: this.data.imageTempPath, module: "posts" })
+        .then((url) => finalize(url))
+        .catch((error) => {
+          // Upload failed — abort submit, keep the picked image so the user can retry.
+          wx.showToast({
+            title: error.message || this.data.text.fail,
+            icon: "none",
+          });
+          this.setData({ loading: false });
+        });
+    } else {
+      finalize(null);
+    }
   },
 });

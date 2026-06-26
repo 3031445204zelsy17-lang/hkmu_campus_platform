@@ -54,5 +54,16 @@
       bindinput="updateField"
     />
     <view class="helper-text">{{text.helperText}}</view>
+
+    <view class="compose-image-row">
+      <view wx:if="{{!imageTempPath}}" class="compose-image-add" bindtap="chooseImage">
+        <text class="compose-image-add-glyph">+</text>
+        <text class="compose-image-add-label">{{text.addImage}}</text>
+      </view>
+      <view wx:else class="compose-image-preview">
+        <image class="compose-image-thumb" src="{{imageTempPath}}" mode="aspectFill" />
+        <view class="compose-image-remove" catchtap="removeImage">✕</view>
+      </view>
+    </view>
   </view>
 </view>

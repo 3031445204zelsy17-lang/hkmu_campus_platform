@@ -115,6 +115,7 @@ const DICTIONARY = {
     }),
     compose: {
       eyebrow: "NEW POST",
+      addImage: "\u6dfb\u52a0\u56fe\u7247",
       title: "\u53d1\u5e03\u6821\u56ed\u52a8\u6001",
       publish: "\u53d1\u5e03",
       scope: "\u53d1\u5e03\u5230\u6821\u56ed\u516c\u5171\u52a8\u6001\u6d41",
@@ -300,6 +301,7 @@ DICTIONARY["zh-Hant"] = {
   }),
   compose: {
     eyebrow: "NEW POST",
+    addImage: "\u6dfb\u52a0\u5716\u7247",
     title: "\u767c\u5e03\u6821\u5712\u52d5\u614b",
     publish: "\u767c\u5e03",
     scope: "\u767c\u5e03\u5230\u6821\u5712\u516c\u5171\u52d5\u614b\u6d41",
@@ -473,6 +475,7 @@ DICTIONARY.en = {
   }),
   compose: {
     eyebrow: "NEW POST",
+    addImage: "Add image",
     title: "Post Campus Update",
     publish: "Post",
     scope: "Post to the public campus feed",
