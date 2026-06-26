@@ -450,7 +450,7 @@
     "strategy_doc": "docs/ops/小程序对齐-优化策略.md",
     "decisions": {
       "c3": "方案 B — 后端新增聚合端点（SYF 是 owner，无协调成本）",
-      "post_image": "选 a — 给 posts 加 image_url 字段（单图/多图待定，倾向 JSONB 多图）",
+      "post_image": "定 a — 单图 image_url TEXT（与 lostfound 一致，2026-06-26 定；多图 JSONB 延后）",
       "data_ops": "已授权连生产 Supabase（补 seed + 清垃圾帖）",
       "app_wxss": "轻量隔离（建 tokens.wxss + 死层注释，不删死层）"
     },
@@ -463,16 +463,23 @@
         "deferred": "home/community 公共代码抽取 → 延到 Phase 1 改 normalizePost 时局部抽"
       },
       "phase1_connect_apis": {
-        "status": "pending",
-        "what": "帖子配图 → 评论 → 资料编辑 → 注册入口（详细步骤见 steps）",
-        "steps": [
-          "① 抽公共代码：home/community 的 normalizePost/compactNumber/avatarUrl → utils/post.js（Phase 0 carryover；帖子配图要改 normalizePost 加 imageUrl，正好这时抽）",
-          "② 帖子配图：后端 posts 加 image_url 字段(models+posts.py+database.py+ALTER TABLE) → compose.js 接 wx.uploadFile + 帖子卡显示图",
+        "status": "in_progress (①② done 2026-06-26)",
+        "what": "帖子配图 → 评论 → 资料编辑 → 注册入口（详细步骤见 done/pending）",
+        "done": [
+          "① 抽公共代码：home/community 的 normalizePost/compactNumber/avatarUrl → utils/post.js（含 imageUrl）；avatarUrl 改名 resolveUrl 复用给图片。commit 2b55dfd",
+          "② 帖子配图（单图 image_url TEXT）：后端 posts 加字段(models PostCreate/Out + posts.py _POST_COLS/INSERT/_post_row_to_out + database.py DO$$幂等迁移) commit 7eb2391；小程序 compose wx.chooseMedia + 新建 utils/upload.js(wx.uploadFile,Bearer,JSON.parse res.data) + home/community 帖子卡 feed-image commit 2b55dfd；web _showPostEditor 新建模式挂 createImageUploader({module:posts}) + PostBody 渲染 post-card-img commit ad23503。上传基建沿用 POST /api/v1/upload?module=posts（已就绪，无需新建端点）"
+        ],
+        "pending": [
           "③ 评论：community 接 /posts/{id}/comments（展开+发表）",
-          "④ 资料编辑：profile 接 PUT /users/me + upload avatars",
+          "④ 资料编辑：profile 接 PUT /users/me + upload avatars（可复用 utils/upload.js）",
           "⑤ 注册入口：login 加注册 → /auth/email/register",
-          "⑥ 顺带 carryover：page_size 常量化(抽代码时)、lostfound onShow 加 syncTabBar(碰 lostfound 时)、logout 调后端 revoke(auth 模块时)"
-        ]
+          "⑥ 顺带 carryover：page_size 常量化（本次未做，仍欠）、lostfound onShow 加 syncTabBar、logout 调后端 revoke"
+        ],
+        "deferred": [
+          "PostUpdate.image_url（编辑帖子改图）—— web 编辑模式暂不挂 uploader",
+          "多图 JSONB —— 本轮定为单图，将来升级再 ALTER"
+        ],
+        "verification_gap": "本地无 PG（.env 指 /tmp2 socket 未起）+ Supabase 被 VPN 挡，未跑 live round-trip；部署后 init_db 自愈加 image_url 列即生效。py_compile + node --check + ES module 解析均通过；发图全流程待微信开发者工具/浏览器手动验证"
       },
       "phase2_c3": {
         "status": "pending (方案B)",
@@ -487,6 +494,6 @@
         "what": "补 news/lostfound seed + 清测试垃圾帖(asd/qwe、E2E Bot、WeChat User 1232)"
       }
     },
-    "next_step": "Phase 1 起步：帖子配图——后端 posts 加 image_url 字段(models.py PostCreate/Out + posts.py SQL + database.py DDL + 生产 ALTER TABLE) → 小程序 compose.js 接 wx.uploadFile 上传 + 帖子卡显示图。下次 /project-start 接着做"
+    "next_step": "Phase 1 ③：评论——小程序 community 接 /posts/{id}/comments（展开列表 + 发表）。下次 /project-start 接着做"
   }
 }
