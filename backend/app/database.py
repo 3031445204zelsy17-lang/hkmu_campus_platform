@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS posts (
     comments_count INTEGER DEFAULT 0,
     parent_post_id INTEGER REFERENCES posts(id) ON DELETE SET NULL,
     is_anonymous BOOLEAN DEFAULT FALSE,
+    image_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -214,6 +215,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_oauth ON users(oauth_provider, oauth
 -- Add programme_code column for course planner (safe for existing DBs)
 DO $$ BEGIN
     ALTER TABLE users ADD COLUMN programme_code TEXT;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
+-- Add image_url column for post images (safe for existing DBs)
+DO $$ BEGIN
+    ALTER TABLE posts ADD COLUMN image_url TEXT;
 EXCEPTION WHEN duplicate_column THEN NULL;
 END $$;
 """
