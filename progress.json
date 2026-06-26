@@ -468,18 +468,20 @@
         "done": [
           "① 抽公共代码：home/community 的 normalizePost/compactNumber/avatarUrl → utils/post.js（含 imageUrl）；avatarUrl 改名 resolveUrl 复用给图片。commit 2b55dfd",
           "② 帖子配图（单图 image_url TEXT）：后端 posts 加字段(models PostCreate/Out + posts.py _POST_COLS/INSERT/_post_row_to_out + database.py DO$$幂等迁移) commit 7eb2391；小程序 compose wx.chooseMedia + 新建 utils/upload.js(wx.uploadFile,Bearer,JSON.parse res.data) + home/community 帖子卡 feed-image commit 2b55dfd；web _showPostEditor 新建模式挂 createImageUploader({module:posts}) + PostBody 渲染 post-card-img commit ad23503。上传基建沿用 POST /api/v1/upload?module=posts（已就绪，无需新建端点）",
-          "③ 评论（community 接 /posts/{id}/comments）：community.js 加 normalizeComment + commentState map（独立于 posts 防 rebuild 冲掉）+ toggleComments/loadComments/updateCommentDraft/submitComment/_bumpCommentsCount（乐观更新 comments_count 复刻 toggleLike）；wxml 评论按钮 openComments→toggleComments+data-id、post-actions 后加 comment-section（列表 wx:for-item=comment + 登录才显输入 composer 回车即发）；wxss 评论样式全用 tokens var、页面级不动 app.wxss；i18n 三语加 commentLoading/Empty/Placeholder/Send/Sent（失败复用 actionFail/loadFail；commentsSoon 保留 home.js:217 仍用）。GET /posts/3/comments 已 live 验证；POST 待开发者工具。commit 06a27cc"
+          "③ 评论（community 接 /posts/{id}/comments）：community.js 加 normalizeComment + commentState map（独立于 posts 防 rebuild 冲掉）+ toggleComments/loadComments/updateCommentDraft/submitComment/_bumpCommentsCount（乐观更新 comments_count 复刻 toggleLike）；wxml 评论按钮 openComments→toggleComments+data-id、post-actions 后加 comment-section（列表 wx:for-item=comment + 登录才显输入 composer 回车即发）；wxss 评论样式全用 tokens var、页面级不动 app.wxss；i18n 三语加 commentLoading/Empty/Placeholder/Send/Sent（失败复用 actionFail/loadFail；commentsSoon 保留 home.js:217 仍用）。GET /posts/3/comments 已 live 验证；POST 已 curl 闭环验证（syf_review_test 号：create_comment+count+1+字段契约全通，测试评论已清；开发者工具手动 UI 验证仍待用户）。评论为 inline 展开（feed-card 内，占视野不符社交媒体习惯），⑦ 帖子详情页会将其迁到详情页。commit 06a27cc"
         ],
         "pending": [
           "④ 资料编辑：profile 接 PUT /users/me + upload avatars（可复用 utils/upload.js）",
           "⑤ 注册入口：login 加注册 → /auth/email/register",
-          "⑥ 顺带 carryover：page_size 常量化（本次未做，仍欠）、lostfound onShow 加 syncTabBar、logout 调后端 revoke"
+          "⑥ 顺带 carryover：page_size 常量化（本次未做，仍欠）、lostfound onShow 加 syncTabBar、logout 调后端 revoke",
+          "⑦ 帖子详情页（pages/post-detail）：点 feed-card 帖子主体/评论按钮 → 跳详情（帖子全文 + 完整评论列表 + 输入框）；③ 的 inline 评论逻辑（normalizeComment/commentState/loadComments/submitComment）从 community 迁到 post-detail，community 评论按钮改跳详情。依赖 ③（done）；需先确认后端有无 GET /posts/{id} 单帖端点（无则从列表取或加端点）。不插队，排 ④⑤⑥ 之后"
         ],
         "deferred": [
           "PostUpdate.image_url（编辑帖子改图）—— web 编辑模式暂不挂 uploader",
           "多图 JSONB —— 本轮定为单图，将来升级再 ALTER"
         ],
-        "verification_gap": "③ 已 live 验证 GET /posts/3/comments（SEA 生产，{items,total,page,page_size,has_next} 与 PaginatedResponse 契约一致）；POST 发评论待微信开发者工具（评论无删除端点+需 auth，不 curl 污染生产）。①② 仍欠 live（本地无 PG；Azure/Supabase 受 VPN 节点影响，见 memory vpn-azure-https-block）"
+        "verification_gap": "③ 已 live 验证：GET /posts/3/comments + POST 评论 curl 闭环（syf_review_test 号，create_comment+count+1+字段契约全通，测试评论已清；开发者工具手动 UI 验证仍待用户）。①② 仍欠 live。Azure/Supabase HTTPS 受 VPN 节点影响见 memory vpn-azure-https-block"
+
       },
       "phase2_c3": {
         "status": "pending (方案B)",
