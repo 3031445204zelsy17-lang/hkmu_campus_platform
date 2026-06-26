@@ -117,6 +117,7 @@ class PostCreate(BaseModel):
     category: str = Field(min_length=1, max_length=30)
     parent_post_id: Optional[int] = None
     is_anonymous: bool = False
+    image_url: Optional[str] = None
 
 
 class PostUpdate(BaseModel):
@@ -149,6 +150,7 @@ class PostOut(BaseModel):
     parent_post_id: Optional[int] = None
     quoted_post: Optional[QuotedPostOut] = None
     is_anonymous: bool = False
+    image_url: Optional[str] = None
 
 
 # --- Comments ---

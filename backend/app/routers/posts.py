@@ -22,7 +22,7 @@ router = APIRouter(prefix="/posts", tags=["posts"])
 
 _POST_COLS = """p.id, p.author_id, p.title, p.content, p.category,
     p.likes_count, p.comments_count, p.parent_post_id, p.is_anonymous,
-    p.created_at, p.updated_at"""
+    p.image_url, p.created_at, p.updated_at"""
 
 _COMMENT_COLS = """c.id, c.post_id, c.author_id, c.content,
     c.likes_count, c.created_at"""
@@ -86,6 +86,7 @@ def _post_row_to_out(row, liked_set: set[int] | None = None,
         parent_post_id=row["parent_post_id"],
         quoted_post=quoted,
         is_anonymous=is_anon,
+        image_url=row["image_url"] if "image_url" in row.keys() else None,
     )
 
 
@@ -223,10 +224,10 @@ async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
             is_anonymous = True
 
         new_row = await db.fetchrow(
-            """INSERT INTO posts (author_id, title, content, category, parent_post_id, is_anonymous, created_at, updated_at)
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id""",
+            """INSERT INTO posts (author_id, title, content, category, parent_post_id, is_anonymous, image_url, created_at, updated_at)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id""",
             user["id"], safe["title"], safe["content"], safe["category"],
-            body.parent_post_id, is_anonymous, now, now,
+            body.parent_post_id, is_anonymous, body.image_url, now, now,
         )
         post_id = new_row["id"]
 
