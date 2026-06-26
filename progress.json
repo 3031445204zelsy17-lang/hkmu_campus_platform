@@ -463,17 +463,17 @@
         "deferred": "home/community 公共代码抽取 → 延到 Phase 1 改 normalizePost 时局部抽"
       },
       "phase1_connect_apis": {
-        "status": "in_progress (①②③④⑤ done 2026-06-26)",
+        "status": "in_progress (①②③④⑤⑥ done 2026-06-26；⑦ pending)",
         "what": "帖子配图 → 评论 → 资料编辑 → 注册入口（详细步骤见 done/pending）",
         "done": [
           "① 抽公共代码：home/community 的 normalizePost/compactNumber/avatarUrl → utils/post.js（含 imageUrl）；avatarUrl 改名 resolveUrl 复用给图片。commit 2b55dfd",
           "② 帖子配图（单图 image_url TEXT）：后端 posts 加字段(models PostCreate/Out + posts.py _POST_COLS/INSERT/_post_row_to_out + database.py DO$$幂等迁移) commit 7eb2391；小程序 compose wx.chooseMedia + 新建 utils/upload.js(wx.uploadFile,Bearer,JSON.parse res.data) + home/community 帖子卡 feed-image commit 2b55dfd；web _showPostEditor 新建模式挂 createImageUploader({module:posts}) + PostBody 渲染 post-card-img commit ad23503。上传基建沿用 POST /api/v1/upload?module=posts（已就绪，无需新建端点）",
           "③ 评论（community 接 /posts/{id}/comments）：community.js 加 normalizeComment + commentState map（独立于 posts 防 rebuild 冲掉）+ toggleComments/loadComments/updateCommentDraft/submitComment/_bumpCommentsCount（乐观更新 comments_count 复刻 toggleLike）；wxml 评论按钮 openComments→toggleComments+data-id、post-actions 后加 comment-section（列表 wx:for-item=comment + 登录才显输入 composer 回车即发）；wxss 评论样式全用 tokens var、页面级不动 app.wxss；i18n 三语加 commentLoading/Empty/Placeholder/Send/Sent（失败复用 actionFail/loadFail；commentsSoon 保留 home.js:217 仍用）。GET /posts/3/comments 已 live 验证；POST 已 curl 闭环验证（syf_review_test 号：create_comment+count+1+字段契约全通，测试评论已清；开发者工具手动 UI 验证仍待用户）。评论为 inline 展开（feed-card 内，占视野不符社交媒体习惯），⑦ 帖子详情页会将其迁到详情页。commit 06a27cc",
           "④ 资料编辑：profile.js 重写编辑态（enterEdit/cancelEdit/updateDraft/chooseAvatar/saveProfile）；chooseAvatar 复用 utils/upload.js(module:avatars) 预览，saveProfile diff 变更字段→PUT /users/me→refreshProfile 回刷存储+全局用户；profile.wxml 视图/编辑双态（头像可点+昵称+简介+保存/取消；视图态「刷新」按钮换「编辑资料」，刷新保留下拉）；新建 profile.wxss（头像编辑块+＋徽章，全 tokens var，不动 app.wxss）；i18n 三语 +12 key；昵称空值前端拦截。commit fd81d79。⚠️ 实装后发现 profile 是孤立页（全项目 0 跳转引用、不在 tabbar）→ ④ 不可达，已补「我的」第 5 tab 入口（app.json tabBar.list + i18n TABBAR_ROUTES/三语 + custom-tab-bar icon-profile + profile.js syncTabBar(4)，commit 805cf15）。开发者工具编译/截图 + live PUT/上传 + 5-tab 胶囊布局仍待用户",
-          "⑤ 注册入口：login.js 加 isRegister 模式 + toggleRegister/submitRegister（前端校验镜像后端：email 正则 + 密码≥8 含大小写数字 + 昵称非空）；POST /auth/email/register 成功 → 回邮箱登录态保留 email，不自动登录（后端 /auth/email/login 拦截未验证邮箱，需用户邮箱点验证链接 web URL 后再登录）。login.wxml 注册/登录双态 + 底部 text-link 切换；新建 login.wxss(.form-toggle)；i18n 三语 +15 key。commit 70d1e28。开发者工具编译/截图 + live 注册闭环（含邮箱验证链路）仍待用户"
+          "⑤ 注册入口：login.js 加 isRegister 模式 + toggleRegister/submitRegister（前端校验镜像后端：email 正则 + 密码≥8 含大小写数字 + 昵称非空）；POST /auth/email/register 成功 → 回邮箱登录态保留 email，不自动登录（后端 /auth/email/login 拦截未验证邮箱，需用户邮箱点验证链接 web URL 后再登录）。login.wxml 注册/登录双态 + 底部 text-link 切换；新建 login.wxss(.form-toggle)；i18n 三语 +15 key。commit 70d1e28。开发者工具编译/截图 + live 注册闭环（含邮箱验证链路）仍待用户",
+          "⑥ carryover（2026-06-26 done，commit e7757e2+702f16f）：⑥a page_size 常量化（utils/config.js PAGE_SIZE={feed:2,list:12,comments:50}，5 处替换值不动；用户开发者工具已确认行为一致）；⑥c logout 调后端 revoke（后端 revoke_refresh_token: sha256→DELETE...RETURNING 幂等 + POST /auth/logout RFC7009 不强制 auth 始终200；前端 logout() 同步清本地 + 后台 best-effort POST /auth/logout，catch 兜底不阻塞）。⚠️⑥c 生产生效需 Azure 重新部署（同批上线微信登录 PR#5 + health probe）。⑥b 跳过：lostfound 非 tab 页，syncTabBar 为 no-op（getTabBar 返 null）；onShow 数据刷新留作观察项"
         ],
         "pending": [
-          "⑥ 顺带 carryover：page_size 常量化（本次未做，仍欠）、lostfound onShow 加 syncTabBar、logout 调后端 revoke",
           "⑦ 帖子详情页（pages/post-detail）：点 feed-card 帖子主体/评论按钮 → 跳详情（帖子全文 + 完整评论列表 + 输入框）；③ 的 inline 评论逻辑（normalizeComment/commentState/loadComments/submitComment）从 community 迁到 post-detail，community 评论按钮改跳详情。依赖 ③（done）；需先确认后端有无 GET /posts/{id} 单帖端点（无则从列表取或加端点）。不插队，排 ④⑤⑥ 之后"
         ],
         "deferred": [
@@ -496,6 +496,6 @@
         "what": "补 news/lostfound seed + 清测试垃圾帖(asd/qwe、E2E Bot、WeChat User 1232)"
       }
     },
-    "next_step": "Phase 1 ⑥：carryover 小项——page_size 常量化、lostfound onShow 加 syncTabBar、logout 调后端 revoke。下次 /project-start 接着做"
+    "next_step": "Phase 1 ⑦ 帖子详情页（pages/post-detail）：点 feed-card→跳详情（全文+完整评论+输入框）；③ 的 inline 评论逻辑（normalizeComment/commentState/loadComments/submitComment）从 community 迁到 post-detail，community 评论按钮改跳详情。先确认后端有无 GET /posts/{id} 单帖端点（无则从列表取或加端点）。⚠️⑥c 待 Azure 部署方在生产生效（同批微信登录 PR#5 + health probe）。下次 /project-start 接着做"
   }
 }
