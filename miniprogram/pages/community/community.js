@@ -4,6 +4,7 @@ const { syncTabBar } = require("../../utils/tabbar");
 const { getLocale, getTexts } = require("../../utils/i18n");
 const { formatDate, getInitial } = require("../../utils/format");
 const { normalizePost, resolveUrl } = require("../../utils/post");
+const { PAGE_SIZE } = require("../../utils/config");
 
 const FEED_TAB_KEYS = ["newest", "hot"];
 const COMMUNITY_BOARD_KEYS = [
@@ -213,7 +214,7 @@ Page({
     }
 
     const nextPage = reset ? 1 : this.data.page;
-    const query = [`page=${nextPage}`, "page_size=2", `sort=${this.data.sort}`];
+    const query = [`page=${nextPage}`, `page_size=${PAGE_SIZE.feed}`, `sort=${this.data.sort}`];
     const keyword = this.data.keyword.trim();
 
     if (keyword) {
@@ -332,7 +333,7 @@ Page({
 
   loadComments(postId) {
     return request({
-      path: `/posts/${postId}/comments?page=1&page_size=50`,
+      path: `/posts/${postId}/comments?page=1&page_size=${PAGE_SIZE.comments}`,
       auth: !!this.data.user,
     })
       .then((data) => {

@@ -1,6 +1,7 @@
 const { request } = require("../../utils/request");
 const { formatDate, getInitial } = require("../../utils/format");
 const { getLocale, getTexts } = require("../../utils/i18n");
+const { PAGE_SIZE } = require("../../utils/config");
 
 function normalizeItems(items, text = getTexts("lostfound")) {
   return items.map((item) => {
@@ -146,7 +147,7 @@ Page({
     }
 
     const nextPage = reset ? 1 : this.data.page;
-    const query = [`page=${nextPage}`, "page_size=12"];
+    const query = [`page=${nextPage}`, `page_size=${PAGE_SIZE.list}`];
 
     if (this.data.typeFilter !== "all") {
       query.push(`item_type=${this.data.typeFilter}`);
