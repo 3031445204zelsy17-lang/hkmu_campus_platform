@@ -119,8 +119,24 @@ function loginWithAccount({ mode, account, password }) {
 }
 
 function logout() {
+  const { refreshToken } = requestStore.getSession();
+
+  // Clear local state synchronously (preserves prior behavior), then revoke
+  // the refresh token server-side as best-effort — never block logout on the
+  // network; a failed revoke just leaves a stale row that expires on its own.
   requestStore.clearSession();
   setGlobalUser(null);
+
+  if (refreshToken) {
+    requestStore
+      .request({
+        method: "POST",
+        path: "/auth/logout",
+        data: { refresh_token: refreshToken },
+        auth: false,
+      })
+      .catch(() => {});
+  }
 }
 
 function getStoredUser() {

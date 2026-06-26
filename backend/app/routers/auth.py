@@ -16,6 +16,7 @@ from ..models import (
 from ..services.auth_service import (
     hash_password, verify_password, create_access_token, get_current_user,
     create_refresh_token, verify_refresh_token, rotate_refresh_token,
+    revoke_refresh_token,
     OAUTH_NO_PASSWORD, is_oauth_only,
 )
 from ..services.sanitizer import sanitize_dict, sanitize
@@ -403,6 +404,23 @@ async def refresh_access(body: dict):
     new_access = create_access_token({"sub": str(user_id), "username": row["username"]})
     new_refresh = await rotate_refresh_token(raw, user_id)
     return Token(access_token=new_access, refresh_token=new_refresh)
+
+
+# --- Logout ---
+
+@router.post("/logout")
+async def logout(body: dict):
+    """Revoke the caller's refresh token.
+
+    Unauthenticated (RFC 7009 token-revocation style): whoever holds the
+    refresh token may revoke it — and revoking only harms the holder, so no
+    identity check is needed. Idempotent: always returns 200, so a flaky
+    network never blocks the client from clearing its local session.
+    """
+    raw = body.get("refresh_token", "")
+    if raw:
+        await revoke_refresh_token(raw)
+    return {"message": "Logged out"}
 
 
 # --- Password Reset ---

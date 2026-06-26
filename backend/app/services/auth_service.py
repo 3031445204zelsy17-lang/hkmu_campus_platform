@@ -108,3 +108,22 @@ async def rotate_refresh_token(raw: str, user_id: int) -> str:
     async with get_db() as db:
         await db.execute("DELETE FROM refresh_tokens WHERE token_hash = $1", token_hash)
         return await create_refresh_token(user_id, conn=db)
+
+
+async def revoke_refresh_token(raw: str) -> bool:
+    """Delete the refresh-token row matching ``raw``.
+
+    Idempotent — returns True if a row was deleted, False if the token was
+    already absent (or empty). Mirrors the hash + DELETE pattern used by
+    ``verify_refresh_token`` / ``rotate_refresh_token``; no blacklist needed
+    since refresh tokens are DB rows, not stateless JWTs.
+    """
+    if not raw:
+        return False
+    token_hash = hashlib.sha256(raw.encode()).hexdigest()
+    async with get_db() as db:
+        row = await db.fetchrow(
+            "DELETE FROM refresh_tokens WHERE token_hash = $1 RETURNING user_id",
+            token_hash,
+        )
+    return row is not None
