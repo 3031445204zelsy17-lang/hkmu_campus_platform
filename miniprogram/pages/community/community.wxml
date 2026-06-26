@@ -76,12 +76,40 @@
               <text class="{{item.likeIconClass}}">{{item.likeIcon}}</text>
               <text class="post-action-count">{{item.likeLabel}}</text>
             </view>
-            <view class="post-action comment-action" catchtap="openComments" hover-class="post-action-press">
+            <view class="post-action comment-action" data-id="{{item.id}}" catchtap="toggleComments" hover-class="post-action-press">
               <view class="post-comment-icon">
                 <view class="post-comment-bubble"></view>
                 <view class="post-comment-tail"></view>
               </view>
               <text class="post-action-count">{{item.commentsLabel}}</text>
+            </view>
+          </view>
+
+          <view wx:if="{{commentState[item.id] && commentState[item.id].expanded}}" class="comment-section">
+            <view wx:if="{{commentState[item.id].loading}}" class="comment-status">{{text.commentLoading}}</view>
+            <block wx:else>
+              <view wx:if="{{commentState[item.id].list.length === 0}}" class="comment-status">{{text.commentEmpty}}</view>
+              <view wx:for="{{commentState[item.id].list}}" wx:for-item="comment" wx:key="id" class="comment-item">
+                <view class="comment-avatar">{{comment.authorInitial}}</view>
+                <view class="comment-main">
+                  <view class="comment-author">{{comment.authorName}}</view>
+                  <view class="comment-content">{{comment.content}}</view>
+                  <view class="comment-meta">{{comment.createdAtLabel}}</view>
+                </view>
+              </view>
+            </block>
+            <view wx:if="{{user}}" class="comment-composer">
+              <input
+                class="comment-input"
+                placeholder="{{text.commentPlaceholder}}"
+                value="{{commentState[item.id].draft}}"
+                data-id="{{item.id}}"
+                maxlength="300"
+                bindinput="updateCommentDraft"
+                confirm-type="send"
+                bindconfirm="submitComment"
+              />
+              <view class="comment-send {{commentState[item.id].submitting ? 'is-busy' : ''}}" data-id="{{item.id}}" catchtap="submitComment">{{text.commentSend}}</view>
             </view>
           </view>
         </view>
