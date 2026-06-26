@@ -11,6 +11,7 @@ const TABBAR_ROUTES = [
   { key: "community", pagePath: "/pages/community/community" },
   { key: "planner", pagePath: "/pages/planner/planner" },
   { key: "news", pagePath: "/pages/news/news" },
+  { key: "profile", pagePath: "/pages/profile/profile" },
 ];
 
 const COMMON_ZH_HANS = {
@@ -63,6 +64,7 @@ const DICTIONARY = {
       planner: "\u9009\u8bfe\u89c4\u5212",
       news: "\u65b0\u95fb",
       lostfound: "\u5931\u7269\u62db\u9886",
+      profile: "\u6211\u7684",
     },
     home: Object.assign({}, COMMON_ZH_HANS, {
       brand: "HKMU CAMPUS",
@@ -265,6 +267,7 @@ DICTIONARY["zh-Hant"] = {
     planner: "\u9078\u8ab2\u898f\u5283",
     news: "\u65b0\u805e",
     lostfound: "\u5931\u7269\u62db\u9818",
+    profile: "\u6211\u7684",
   },
   home: Object.assign({}, COMMON_ZH_HANT, {
     brand: "HKMU CAMPUS",
@@ -455,6 +458,7 @@ DICTIONARY.en = {
     planner: "Planner",
     news: "News",
     lostfound: "Lost & Found",
+    profile: "Profile",
   },
   home: Object.assign({}, COMMON_EN, {
     brand: "HKMU CAMPUS",

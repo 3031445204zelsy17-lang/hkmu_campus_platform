@@ -39,6 +39,10 @@
       {
         "pagePath": "pages/news/news",
         "text": "\u65b0\u95fb"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "\u6211\u7684"
       }
     ]
   },

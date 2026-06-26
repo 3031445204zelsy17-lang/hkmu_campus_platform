@@ -312,3 +312,24 @@
   border-radius: 999rpx;
   background: currentColor;
 }
+
+.icon-profile .piece-a {
+  display: block;
+  left: 11rpx;
+  top: 4rpx;
+  width: 14rpx;
+  height: 14rpx;
+  border: 4rpx solid currentColor;
+  border-radius: 999rpx;
+}
+
+.icon-profile .piece-b {
+  display: block;
+  left: 5rpx;
+  top: 21rpx;
+  width: 26rpx;
+  height: 15rpx;
+  border: 4rpx solid currentColor;
+  border-top: 0;
+  border-radius: 0 0 999rpx 999rpx;
+}

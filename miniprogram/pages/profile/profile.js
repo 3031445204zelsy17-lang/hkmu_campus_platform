@@ -4,6 +4,7 @@ const { API_ORIGIN } = require("../../utils/config");
 const { uploadImage } = require("../../utils/upload");
 const { formatDate } = require("../../utils/format");
 const { getLocale, getTexts } = require("../../utils/i18n");
+const { syncTabBar } = require("../../utils/tabbar");
 
 function identityLabel(identity, text = getTexts("profile")) {
   if (!identity || identity === "student") {
@@ -38,6 +39,8 @@ Page({
 
   onShow() {
     this.applyLocale(getLocale());
+    syncTabBar(this, 4);
+
     this.refreshProfile();
   },
 
