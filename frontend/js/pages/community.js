@@ -225,6 +225,15 @@ function PostBody(post) {
   el.appendChild(headerRow);
   el.appendChild(content);
 
+  if (post.image_url) {
+    const img = document.createElement("img");
+    img.src = post.image_url;
+    img.alt = post.title;
+    img.className = "post-card-img";
+    img.loading = "lazy";
+    el.appendChild(img);
+  }
+
   if (post.quoted_post) {
     const qCard = document.createElement("div");
     qCard.className = "quoted-post-card";
@@ -1040,10 +1049,15 @@ function _showPostEditor(post = null) {
   submitBtn.className = "w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium";
   submitBtn.textContent = isEdit ? t("community.update") : t("community.publish");
 
+  // Image upload is only available when creating a new post (editing the image
+  // of an existing post is not supported yet — PostUpdate has no image_url).
+  const imageUploader = isEdit ? null : createImageUploader({ module: "posts" });
+
   form.appendChild(titleInput);
   form.appendChild(select);
   form.appendChild(anonWrapper);
   form.appendChild(textarea);
+  if (imageUploader) form.appendChild(imageUploader.el);
   form.appendChild(errDiv);
   form.appendChild(submitBtn);
 
@@ -1057,6 +1071,7 @@ function _showPostEditor(post = null) {
       content: fd.get("content"),
       category: fd.get("category"),
       is_anonymous: fd.get("is_anonymous") === "on",
+      image_url: imageUploader ? imageUploader.getUrl() : null,
     };
 
     const errEl = document.getElementById("post-editor-error");
