@@ -1,0 +1,39 @@
+/* Profile edit mode — page-level styles only, all via tokens.wxss var().
+   View-mode styling lives in app.wxss (profile-card / avatar / action-row …). */
+
+.avatar-edit-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 0;
+}
+
+/* inline-block so the wrap shrink-wraps the 128rpx avatar; otherwise the
+   absolutely-positioned badge would anchor to the full card width. */
+.avatar-edit-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.avatar-edit-badge {
+  position: absolute;
+  right: -6rpx;
+  bottom: -6rpx;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: var(--radius-pill);
+  background: var(--accent-blue);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  line-height: 1;
+  box-shadow: var(--shadow-btn-primary);
+}
+
+.avatar-hint {
+  margin-top: 16rpx;
+  color: var(--text-secondary);
+  font-size: var(--fs-link);
+}
