@@ -533,8 +533,15 @@
         "verification_gap": "静态全绿(node --check ×16 + app.json 12 pages/5 tab + i18n 三语×3 scope parity + token var 全合法 + WXML 平衡 + require 无环 auth→messages 单向)。生产端点 curl 探活受本地 VPN 挡(TLS handshake 卡 198.18.0.137,memory vpn-azure-https-block,非代码问题;端点 prior 已 live 验证)。IDE/automator/真实两账号收发仍待用户"
       },
       "phase4_data": {
-        "status": "pending (已授权)",
-        "what": "补 news/lostfound seed + 清测试垃圾帖(asd/qwe、E2E Bot、WeChat User 1232)"
+        "status": "done (2026-06-27)",
+        "what": "补 news/lostfound seed + 清测试垃圾帖(asd/qwe、E2E Bot、WeChat User 1232)",
+        "done": [
+          "news 0→8 条(覆盖 academic×2/event×2/announcement×2/career×1/other×1;内容取 HKMU 真实新闻线索[发展蓝图/DSAI报名/中乐团粤剧/AI低空经济峰会/医学实验室/选课/招聘会/粤语酒后语音检测];source_url 指向真实栏目 https://www.hkmu.edu.hk/latest-news-and-events/;author_id=1(admin);published_at 分散过去 40 天)",
+          "lostfound 1→8 条(新增 7:U盘/学生证/雨伞/水杯/耳机/课本/钥匙串;lost/found + active/resolved 混合;author 轮换 id 1/9/10;category 中文自由文本[电子产品/证件/雨具/生活用品/书籍/钥匙]与现有「钱包」风格一致)",
+          "清垃圾帖:posts 4→2(删 id=2 E2E Bot 测试帖 + id=3 asd/qwe 帖);按外键 NO ACTION 顺序级联清 comments 3→2 + post_likes 3→1 再删 posts;只删帖不删号(删号超范围)",
+          "脚本:scripts/phase4_inspect.py(只读探查,零写入)+ scripts/phase4_seed.py(默认 dry-run/--apply 写,单事务失败回滚,垃圾帖 SQL 动态识别不硬编码 id);连生产 Supabase pooler aws-1:6543(asyncpg 0.31 + SSL check_hostname=False/CERT_NONE + statement_cache_size=0 兼容 pgbouncer transaction mode)"
+        ],
+        "verification": "复跑 inspect 终态:news 8 / lostfound 8 / posts 2 / comments 2 / post_likes 1 / 垃圾帖候选 0;news 5 分类全覆盖;有每日 db-backup.yml pg_dump 兜底"
       },
       "phase5_social_coldstart": {
         "status": "plan approved (2026-06-27);待 Phase 3 live 验证后启动",
@@ -552,6 +559,6 @@
         ]
       }
     },
-    "next_step": "Phase 3 私信代码完成(3.1-3.8,commit 67f84b0→82b9314,branch feature/miniprogram-phase3-messages;静态全绿)。✅ 用户已测开发者工具冒烟(2026-06-27);待用户:automator + 真实两账号收发(用户说稍后)+ 共享文件群通知 + home.js 合并前司徒 review。Phase 5 社交冷启动(P0 同校+P1 邀请)方案已批准,见 docs/ops/小程序社交冷启动-C方案.md,8 步(C.1-C.8),待 Phase 3 live 验证后启动(说「开始 C.1」即动)。⑦ 仍待用户开发者工具验证。✅⑥c 已上线 cc19d3a8"
+    "next_step": "✅ Phase 4 数据运维 done(2026-06-27):news 0→8/lostfound 1→8/清 2 垃圾帖(见 phase4_data)。Phase 3 私信代码完成(3.1-3.8,commit 67f84b0→82b9314,branch feature/miniprogram-phase3-messages;静态全绿)。✅ 用户已测开发者工具冒烟(2026-06-27);待用户:automator + 真实两账号收发(用户说稍后)+ 共享文件群通知 + home.js 合并前司徒 review。Phase 5 社交冷启动(P0 同校+P1 邀请)方案已批准,见 docs/ops/小程序社交冷启动-C方案.md,8 步(C.1-C.8),待 Phase 3 live 验证后启动(说「开始 C.1」即动)。⑦ 仍待用户开发者工具验证。✅⑥c 已上线 cc19d3a8"
   }
 }
