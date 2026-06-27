@@ -1,5 +1,56 @@
-<app-header title="私信" />
-<view class="stub">
-  <view class="stub-title">私信</view>
-  <view class="stub-copy">收件箱接入中(Phase 3.3)</view>
+<app-header title="{{text.headerTitle}}" bind:languagechange="handleLanguageChange" />
+
+<view wx:if="{{!loggedIn}}" class="gate">
+  <view class="gate-title">{{text.loginPrompt}}</view>
+  <button class="gate-btn" bindtap="goToLogin">{{text.loginAction}}</button>
+</view>
+
+<view wx:else class="messages">
+  <view class="msgs-toolbar">
+    <input
+      class="msgs-search"
+      value="{{searchKw}}"
+      placeholder="{{text.searchPlaceholder}}"
+      confirm-type="search"
+      bindinput="onSearchInput"
+    />
+    <view class="msgs-new" bindtap="openNewChat">+</view>
+  </view>
+
+  <view wx:if="{{loading && conversations.length === 0}}" class="msgs-state">{{text.loading}}</view>
+
+  <view wx:elif="{{visibleConversations.length === 0}}" class="msgs-state">
+    <view class="state-emoji">✉️</view>
+    <view class="state-title">{{text.emptyTitle}}</view>
+    <view class="state-copy">{{text.emptyCopy}}</view>
+    <button class="state-btn" bindtap="goToCommunity">{{text.emptyAction}}</button>
+  </view>
+
+  <view wx:else class="conv-list">
+    <view
+      wx:for="{{visibleConversations}}"
+      wx:key="partnerId"
+      class="conv {{item.isUnread ? 'is-unread' : ''}}"
+      data-partner-id="{{item.partnerId}}"
+      data-name="{{item.name}}"
+      data-avatar="{{item.avatar}}"
+      bindtap="openConversation"
+    >
+      <view class="conv-avatar">
+        <image wx:if="{{item.avatar}}" class="conv-avatar-img" src="{{item.avatar}}" mode="aspectFill" />
+        <view wx:else class="conv-avatar-fallback">{{item.initial}}</view>
+        <view wx:if="{{item.isUnread}}" class="conv-dot"></view>
+      </view>
+      <view class="conv-main">
+        <view class="conv-row1">
+          <text class="conv-name">{{item.name}}</text>
+          <text class="conv-time">{{item.time}}</text>
+        </view>
+        <view class="conv-row2">
+          <text class="conv-preview">{{item.preview}}</text>
+          <view wx:if="{{item.isUnread}}" class="conv-badge">{{item.unreadLabel}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
 </view>
