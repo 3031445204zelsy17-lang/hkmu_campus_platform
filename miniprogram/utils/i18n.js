@@ -97,6 +97,13 @@ const DICTIONARY = {
       today: "今天",
       yesterday: "昨天",
     }),
+    newChat: Object.assign({}, COMMON_ZH_HANS, {
+      headerTitle: "新私信",
+      searchPlaceholder: "搜索昵称或用户名",
+      hint: "输入昵称或用户名找同学",
+      noResults: "没有找到",
+      loading: "搜索中...",
+    }),
     home: Object.assign({}, COMMON_ZH_HANS, {
       brand: "HKMU CAMPUS",
       title: "\u52a8\u6001",
@@ -401,6 +408,13 @@ DICTIONARY["zh-Hant"] = {
     today: "今天",
     yesterday: "昨天",
   }),
+  newChat: Object.assign({}, COMMON_ZH_HANT, {
+    headerTitle: "新私訊",
+    searchPlaceholder: "搜尋暱稱或用戶名",
+    hint: "輸入暱稱或用戶名找同學",
+    noResults: "沒有找到",
+    loading: "搜尋中...",
+  }),
   home: Object.assign({}, COMMON_ZH_HANT, {
     brand: "HKMU CAMPUS",
     title: "\u52d5\u614b",
@@ -692,6 +706,13 @@ DICTIONARY.en = {
     loginAction: "Log in",
     today: "Today",
     yesterday: "Yesterday",
+  }),
+  newChat: Object.assign({}, COMMON_EN, {
+    headerTitle: "New message",
+    searchPlaceholder: "Search by name or username",
+    hint: "Type a name or username to find someone",
+    noResults: "No results",
+    loading: "Searching...",
   }),
   home: Object.assign({}, COMMON_EN, {
     brand: "HKMU CAMPUS",

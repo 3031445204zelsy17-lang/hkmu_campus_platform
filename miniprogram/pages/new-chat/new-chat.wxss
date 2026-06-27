@@ -1,13 +1,82 @@
-.stub {
-  padding: 96rpx 48rpx;
+.nc {
+  padding: 0 var(--pad-shell) calc(var(--shell-bottom) + env(safe-area-inset-bottom));
 }
-.stub-title {
-  font-size: 44rpx;
+
+.nc-searchbar {
+  padding: 18rpx 0 22rpx;
+}
+.nc-search {
+  height: 80rpx;
+  padding: 0 28rpx;
+  background: var(--surface);
+  border: 1rpx solid var(--border-hair);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-search);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-card);
+}
+.nc-ph {
+  color: var(--text-secondary);
+}
+
+.nc-hint {
+  padding: 96rpx 0;
+  text-align: center;
+  font-size: var(--fs-body);
+  color: var(--text-secondary);
+}
+
+.nc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+.nc-user {
+  display: flex;
+  align-items: center;
+  gap: 22rpx;
+  padding: 22rpx;
+  background: var(--surface);
+  border: 1rpx solid var(--border-hair);
+  border-radius: var(--radius-card-md);
+  box-shadow: var(--shadow-card);
+}
+.nc-avatar {
+  flex: 0 0 auto;
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--pill-green-bg);
+  box-shadow: var(--shadow-avatar);
+}
+.nc-avatar-img {
+  width: 100%;
+  height: 100%;
+}
+.nc-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--green-deep);
+  font-size: 34rpx;
   font-weight: 700;
-  color: #1F2A24;
 }
-.stub-copy {
-  margin-top: 14rpx;
-  font-size: 26rpx;
-  color: #7E8B80;
+.nc-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+.nc-name {
+  font-size: var(--fs-subtitle);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.nc-handle {
+  font-size: var(--fs-feed-meta);
+  color: var(--text-secondary);
 }
