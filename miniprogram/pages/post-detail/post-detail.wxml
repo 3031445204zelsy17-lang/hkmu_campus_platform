@@ -1,0 +1,67 @@
+<app-header show-back="{{true}}" title="{{text.headerTitle}}" bind:languagechange="handleLanguageChange" />
+
+<view class="page-shell detail-shell">
+  <view wx:if="{{loading}}" class="loading-line">{{text.loading}}</view>
+
+  <view wx:elif="{{notFound}}" class="empty-state">
+    <view class="empty-title">{{text.notFoundTitle}}</view>
+    <view class="empty-copy">{{text.notFoundCopy}}</view>
+  </view>
+
+  <block wx:elif="{{post}}">
+    <view class="feed-card detail-card">
+      <view class="feed-head">
+        <view class="avatar">{{post.authorInitial}}</view>
+        <view class="feed-main">
+          <view class="feed-author-row">
+            <view>
+              <view class="feed-author">{{post.authorName}}</view>
+              <view class="feed-meta">{{post.handle}} {{text.feedMetaSeparator}} {{post.createdAtLabel}}</view>
+            </view>
+            <view class="{{post.topicClass}}">{{post.category}}</view>
+          </view>
+          <view class="feed-title">{{post.title}}</view>
+          <image wx:if="{{post.imageUrl}}" class="feed-image" src="{{post.imageUrl}}" mode="widthFix" />
+          <view class="feed-body">{{post.content}}</view>
+          <view class="post-actions">
+            <view class="{{post.likeClass}}" catchtap="toggleLike" hover-class="post-action-press">
+              <text class="{{post.likeIconClass}}">{{post.likeIcon}}</text>
+              <text class="post-action-count">{{post.likeLabel}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="comment-section">
+      <view class="comment-header">{{text.commentCountLabel}} · {{commentsTotal}}</view>
+
+      <view wx:if="{{commentsLoading}}" class="comment-status">{{text.commentLoading}}</view>
+      <block wx:else>
+        <view wx:if="{{comments.length === 0}}" class="comment-status">{{text.commentEmpty}}</view>
+        <view wx:for="{{comments}}" wx:key="id" class="comment-item">
+          <view class="comment-avatar">{{item.authorInitial}}</view>
+          <view class="comment-main">
+            <view class="comment-author">{{item.authorName}}</view>
+            <view class="comment-content">{{item.content}}</view>
+            <view class="comment-meta">{{item.createdAtLabel}}</view>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <view wx:if="{{user}}" class="comment-composer detail-composer">
+      <textarea
+        class="comment-textarea"
+        placeholder="{{text.commentPlaceholder}}"
+        value="{{draft}}"
+        maxlength="500"
+        auto-height
+        show-confirm-bar="{{false}}"
+        bindinput="updateDraft"
+      />
+      <view class="comment-send {{submitting ? 'is-busy' : ''}}" catchtap="submitComment">{{text.commentSend}}</view>
+    </view>
+    <view wx:else class="login-prompt" catchtap="goLogin">{{text.loginPrompt}}</view>
+  </block>
+</view>

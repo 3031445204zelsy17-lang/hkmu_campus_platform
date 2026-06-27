@@ -2,6 +2,7 @@
   "pages": [
     "pages/home/home",
     "pages/community/community",
+    "pages/post-detail/post-detail",
     "pages/planner/planner",
     "pages/compose/compose",
     "pages/news/news",

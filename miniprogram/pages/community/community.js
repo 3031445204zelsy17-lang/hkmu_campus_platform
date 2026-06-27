@@ -2,8 +2,7 @@ const auth = require("../../utils/auth");
 const { request } = require("../../utils/request");
 const { syncTabBar } = require("../../utils/tabbar");
 const { getLocale, getTexts } = require("../../utils/i18n");
-const { formatDate, getInitial } = require("../../utils/format");
-const { normalizePost, resolveUrl } = require("../../utils/post");
+const { normalizePost } = require("../../utils/post");
 const { PAGE_SIZE } = require("../../utils/config");
 
 const FEED_TAB_KEYS = ["newest", "hot"];
@@ -74,24 +73,9 @@ function buildVisiblePosts(rawPosts, text, activeBoard) {
   return posts.filter((item) => item.sectionKey === activeBoard);
 }
 
-// Map a backend CommentOut row into the view shape used by community.wxml.
-function normalizeComment(comment, text) {
-  const authorName = comment.author_nickname || text.defaultAuthor;
-
-  return {
-    id: comment.id,
-    authorInitial: getInitial(authorName),
-    authorName,
-    authorAvatar: resolveUrl(comment.author_avatar),
-    content: String(comment.content || "").trim(),
-    createdAtLabel: formatDate(comment.created_at) || text.justNow,
-  };
-}
-
 Page({
   data: {
     categoryFilter: "all",
-    commentState: {},
     communityBoards: buildCommunityBoards("all"),
     feedTabs: buildTabs("newest"),
     hasNext: true,
@@ -309,127 +293,12 @@ Page({
       });
   },
 
-  toggleComments(event) {
-    if (!this.data.user) {
-      wx.navigateTo({ url: "/pages/login/login" });
+  openDetail(event) {
+    const id = event.currentTarget.dataset.id;
+    if (!id) {
       return;
     }
-
-    const postId = Number(event.currentTarget.dataset.id);
-    const prev = this.data.commentState[postId] || {};
-    const willExpand = !prev.expanded;
-
-    this.setData({
-      [`commentState.${postId}.expanded`]: willExpand,
-      [`commentState.${postId}.loading`]: willExpand && !prev.list,
-      [`commentState.${postId}.list`]: prev.list || [],
-      [`commentState.${postId}.draft`]: prev.draft || "",
-    });
-
-    if (willExpand && !prev.list) {
-      this.loadComments(postId);
-    }
-  },
-
-  loadComments(postId) {
-    return request({
-      path: `/posts/${postId}/comments?page=1&page_size=${PAGE_SIZE.comments}`,
-      auth: !!this.data.user,
-    })
-      .then((data) => {
-        const list = (data.items || []).map((comment) =>
-          normalizeComment(comment, this.data.text),
-        );
-        this.setData({
-          [`commentState.${postId}.list`]: list,
-          [`commentState.${postId}.total`]: data.total || list.length,
-          [`commentState.${postId}.loading`]: false,
-        });
-      })
-      .catch((error) => {
-        this.setData({
-          [`commentState.${postId}.loading`]: false,
-        });
-        wx.showToast({
-          title: error.message || this.data.text.loadFail,
-          icon: "none",
-        });
-      });
-  },
-
-  updateCommentDraft(event) {
-    const postId = Number(event.currentTarget.dataset.id);
-    this.setData({
-      [`commentState.${postId}.draft`]: event.detail.value,
-    });
-  },
-
-  submitComment(event) {
-    if (!this.data.user) {
-      wx.navigateTo({ url: "/pages/login/login" });
-      return;
-    }
-
-    const postId = Number(event.currentTarget.dataset.id);
-    const state = this.data.commentState[postId] || {};
-    const content = (state.draft || "").trim();
-
-    if (!content || state.submitting) {
-      return;
-    }
-
-    this.setData({
-      [`commentState.${postId}.submitting`]: true,
-    });
-
-    request({
-      method: "POST",
-      path: `/posts/${postId}/comments`,
-      data: { content },
-      auth: true,
-    })
-      .then((comment) => {
-        const list = (state.list || []).concat(
-          normalizeComment(comment, this.data.text),
-        );
-        this._bumpCommentsCount(postId, 1);
-        this.setData({
-          [`commentState.${postId}.list`]: list,
-          [`commentState.${postId}.total`]: (state.total || 0) + 1,
-          [`commentState.${postId}.draft`]: "",
-          [`commentState.${postId}.submitting`]: false,
-        });
-        wx.showToast({
-          title: this.data.text.commentSent,
-          icon: "success",
-        });
-      })
-      .catch((error) => {
-        this.setData({
-          [`commentState.${postId}.submitting`]: false,
-        });
-        wx.showToast({
-          title: error.message || this.data.text.actionFail,
-          icon: "none",
-        });
-      });
-  },
-
-  _bumpCommentsCount(postId, delta) {
-    const index = this.data.rawPosts.findIndex((post) => post.id === postId);
-    if (index < 0) {
-      return;
-    }
-    const rawPosts = this.data.rawPosts.slice();
-    const previous = rawPosts[index] || {};
-    rawPosts[index] = {
-      ...previous,
-      comments_count: Math.max(0, Number(previous.comments_count || 0) + delta),
-    };
-    this.setData({
-      rawPosts,
-      posts: buildVisiblePosts(rawPosts, this.data.text, this.data.categoryFilter),
-    });
+    wx.navigateTo({ url: `/pages/post-detail/post-detail?id=${id}` });
   },
 
   goCompose() {
