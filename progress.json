@@ -486,8 +486,26 @@
 
       },
       "phase2_c3": {
-        "status": "pending (方案B)",
-        "what": "后端新增 GET /courses/programmes + /courses/graduation-status；planner.js 重写接端点。仅 DSAI 有数据，CS/网安占位。顺带 carryover：planner.reminderCopy mock 文案改真实描述"
+        "status": "done (2026-06-27 代码 cbf0aad + 静态验证；待部署 + 开发者工具 live 验证)",
+        "what": "方案B 聚合端点：后端新增 GET /courses/programmes + /courses/graduation-status；miniprogram planner 全重写接端点。仅 DSAI 有数据，CS/网安 comingSoon 占位",
+        "done": [
+          "后端 data/programmes.py（web programmes.js 的 Python 镜像，后端单一事实来源；DSAI 完整 + CS/Cyber comingSoon）+ data/__init__.py",
+          "GET /courses/programmes（公开）：专业目录 code/name三语/school/totalCredits/comingSoon/categories{minCredits,color,pickN,courses[]}",
+          "GET /courses/graduation-status（auth）：query programme_code > user.programme_code > default；逐行复刻 web 毕业 math（每分类 earned=已完成学分和、totalEarned 求和、pct=min(100,...)、推荐=未满足分类里未开始且先修满足的前3）",
+          "两单段静态路由插在 /{course_id} 之前，避免被 path-param 吞",
+          "miniprogram planner.js 全重写：原 100% mock（3 假课 + 硬编码 68%）→ 接 /programmes + /graduation-status；picker 专业选择器 + 毕业仪表盘(分类进度条) + 智能推荐 + 登录闸门；切专业 PUT /users/me programme_code 持久化 + best-effort 重算",
+          "planner.wxml 单滚动 4 态（loading / comingSoon / 未登录静态学分要求 / 仪表盘）；planner.wxss 纯 token var + 6 分类色作页面局部 var（不动共享 tokens.wxss）",
+          "i18n planner scope 三语全重写（18 key + 6 分类标签），删 mock reminderCopy/statuses/termPreview（页面已真实 → 满足 carryover）"
+        ],
+        "pending": [
+          "部署生产 SEA（本地 buildx amd64 push ACR + az webapp config container set）后 curl 验证 /courses/programmes + /graduation-status",
+          "开发者工具编译/截图 + live GET /programmes + /graduation-status 闭环（登录态仪表盘 + 推荐）"
+        ],
+        "deferred": [
+          "web programmes.js → 改接 /courses/programmes 端点去重（当前 web 仍客户端 programmes.js，后端 Python 镜像独立）",
+          "CS/网安 comingSoon 占位 → 接 docs/ops/选课选课 4768 行官方课程补全（扩 scope 独立任务）"
+        ],
+        "verification_gap": "后端已 py_compile + 路由顺序 + 毕业数学单测（mock 用户 earned33 / core30-84 / 3 推荐 / 27.5%）；miniprogram node --check×2 + i18n 三语 18key parity + WXML 标签平衡 + text.* key 全存在。生产 SEA 仍 404（未部署）→ 小程序 live 测被阻塞。本地无 PG（.env 指 /tmp2 socket）无法 boot 全量验证"
       },
       "phase3_messages": {
         "status": "pending",
@@ -498,6 +516,6 @@
         "what": "补 news/lostfound seed + 清测试垃圾帖(asd/qwe、E2E Bot、WeChat User 1232)"
       }
     },
-    "next_step": "Phase 1 全部完成（①-⑦ + 失物招领完整功能）。下一步 Phase 2 C3 选课规划（方案B：后端新增 GET /courses/programmes + /courses/graduation-status，planner.js 重写接端点；仅 DSAI 有数据，CS/网安占位；顺带 planner.reminderCopy mock 文案改真实描述）。⑦ 仍待用户：开发者工具编译/截图 + live GET 单帖/评论闭环。✅⑥c 已上线生产 cc19d3a8。下次 /project-start 接着做"
+    "next_step": "Phase 2 C3 done（代码 cbf0aad + 静态验证；待部署生产 SEA + 开发者工具 live 验证）。下一步 Phase 3 私信（新建 pages/messages + wx.connectSocket + 未读角标；后端 messages.py + WS 现成）。⑦ 仍待用户开发者工具验证。✅⑥c 已上线 cc19d3a8。下次 /project-start 接着做"
   }
 }
