@@ -262,6 +262,10 @@ class LostFoundUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[str] = Field(None, pattern=r"^(active|resolved)$")
+    item_type: Optional[str] = Field(None, pattern=r"^(lost|found)$")
+    category: Optional[str] = None
+    location: Optional[str] = None
+    image_url: Optional[str] = None
 
 
 class LostFoundOut(BaseModel):
