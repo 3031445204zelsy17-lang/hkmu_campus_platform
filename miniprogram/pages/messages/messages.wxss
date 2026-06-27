@@ -1,0 +1,13 @@
+.stub {
+  padding: 96rpx 48rpx;
+}
+.stub-title {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #1F2A24;
+}
+.stub-copy {
+  margin-top: 14rpx;
+  font-size: 26rpx;
+  color: #7E8B80;
+}

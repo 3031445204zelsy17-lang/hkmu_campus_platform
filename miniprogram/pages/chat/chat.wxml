@@ -1,0 +1,4 @@
+<app-header show-back="{{true}}" title="聊天" />
+<view class="stub">
+  <view class="stub-copy">聊天页接入中(Phase 3.4)</view>
+</view>

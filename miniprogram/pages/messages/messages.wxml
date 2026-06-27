@@ -1,0 +1,5 @@
+<app-header title="私信" />
+<view class="stub">
+  <view class="stub-title">私信</view>
+  <view class="stub-copy">收件箱接入中(Phase 3.3)</view>
+</view>

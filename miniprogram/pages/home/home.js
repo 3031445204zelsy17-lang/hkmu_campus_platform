@@ -238,7 +238,7 @@ Page({
   },
 
   goNews() {
-    wx.switchTab({ url: "/pages/news/news" });
+    wx.navigateTo({ url: "/pages/news/news" });
   },
 
   goPlanner() {

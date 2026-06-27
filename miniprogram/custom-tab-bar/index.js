@@ -53,6 +53,7 @@ Component({
     pressedIndex: -1,
     pillStyle: navVisualState.pillStyle,
     switching: false,
+    unread: 0,
     list: getTabBarItems(),
   },
 

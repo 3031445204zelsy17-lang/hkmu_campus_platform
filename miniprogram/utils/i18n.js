@@ -9,8 +9,8 @@ const LANGUAGE_OPTIONS = [
 const TABBAR_ROUTES = [
   { key: "home", pagePath: "/pages/home/home" },
   { key: "community", pagePath: "/pages/community/community" },
+  { key: "messages", pagePath: "/pages/messages/messages" },
   { key: "planner", pagePath: "/pages/planner/planner" },
-  { key: "news", pagePath: "/pages/news/news" },
   { key: "profile", pagePath: "/pages/profile/profile" },
 ];
 
@@ -61,6 +61,7 @@ const DICTIONARY = {
     tabbar: {
       home: "\u9996\u9875",
       community: "\u793e\u533a",
+      messages: "\u79c1\u4fe1",
       planner: "\u9009\u8bfe\u89c4\u5212",
       news: "\u65b0\u95fb",
       lostfound: "\u5931\u7269\u62db\u9886",
@@ -334,6 +335,7 @@ DICTIONARY["zh-Hant"] = {
   tabbar: {
     home: "\u9996\u9801",
     community: "\u793e\u5340",
+    messages: "\u79c1\u8a0a",
     planner: "\u9078\u8ab2\u898f\u5283",
     news: "\u65b0\u805e",
     lostfound: "\u5931\u7269\u62db\u9818",
@@ -595,6 +597,7 @@ DICTIONARY.en = {
   tabbar: {
     home: "Home",
     community: "Community",
+    messages: "Messages",
     planner: "Planner",
     news: "News",
     lostfound: "Lost & Found",

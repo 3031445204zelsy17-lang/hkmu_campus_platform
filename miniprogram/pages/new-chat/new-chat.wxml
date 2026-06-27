@@ -1,0 +1,4 @@
+<app-header show-back="{{true}}" title="新私信" />
+<view class="stub">
+  <view class="stub-copy">搜索用户接入中(Phase 3.5)</view>
+</view>

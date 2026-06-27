@@ -21,6 +21,7 @@
         <view class="icon-piece piece-b"></view>
         <view class="icon-piece piece-c"></view>
       </view>
+      <view wx:if="{{item.key === 'messages' && unread > 0}}" class="tabbar-badge">{{unread > 99 ? '99+' : unread}}</view>
       <view class="tabbar-label">{{item.text}}</view>
     </view>
   </view>

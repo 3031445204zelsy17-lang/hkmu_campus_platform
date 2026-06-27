@@ -164,11 +164,7 @@ Page({
     }
 
     if (route) {
-      if (key === "campusNews") {
-        wx.switchTab({ url: route });
-      } else {
-        wx.navigateTo({ url: route });
-      }
+      wx.navigateTo({ url: route });
       return;
     }
 

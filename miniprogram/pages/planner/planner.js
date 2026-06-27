@@ -47,7 +47,7 @@ Page({
   // ── 生命周期 ──────────────────────────────────────────────────────────
 
   onShow() {
-    syncTabBar(this, 2);
+    syncTabBar(this, 3);
     this._locale = getLocale();
     // 只有首次（无 catalogue）才显示 loading 占位；之后切回都用缓存瞬间渲染
     this._loading = !this._catalogue;
@@ -61,7 +61,7 @@ Page({
 
   handleLanguageChange(event) {
     this._locale = event.detail.locale;
-    syncTabBar(this, 2);
+    syncTabBar(this, 3);
     this._emit(); // 仅本地重算三语，一次 setData，不发请求
   },
 
