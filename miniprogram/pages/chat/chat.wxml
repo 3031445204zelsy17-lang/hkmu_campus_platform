@@ -1,4 +1,61 @@
-<app-header show-back="{{true}}" title="聊天" />
-<view class="stub">
-  <view class="stub-copy">聊天页接入中(Phase 3.4)</view>
+<app-header show-back="{{true}}" title="{{partnerName || text.headerTitle}}" bind:languagechange="handleLanguageChange" />
+
+<view wx:if="{{!loggedIn}}" class="gate">
+  <view class="gate-title">{{text.loginPrompt}}</view>
+  <button class="gate-btn" bindtap="goToLogin">{{text.loginAction}}</button>
+</view>
+
+<view wx:elif="{{isSelf}}" class="bigstate">
+  <view class="big-emoji">🙃</view>
+  <view class="big-copy">{{text.selfDMWarning}}</view>
+</view>
+
+<view wx:elif="{{notFound}}" class="bigstate">
+  <view class="big-emoji">🔍</view>
+  <view class="big-title">{{text.notFoundTitle}}</view>
+</view>
+
+<view wx:else class="chat-body">
+  <scroll-view class="chat-scroll" scroll-y scroll-into-view="{{toView}}" scroll-with-animation>
+    <view wx:if="{{hasMore && messages.length > 0}}" class="load-older" bindtap="loadOlder">{{text.loadEarlier}}</view>
+    <view wx:if="{{messages.length === 0 && !loading}}" class="chat-empty">{{text.emptyChat}}</view>
+
+    <view wx:for="{{messages}}" wx:key="id" class="msg-block" id="{{item.id}}">
+      <view wx:if="{{item.dateLabel}}" class="date-sep">{{item.dateLabel}}</view>
+      <view class="bubble-row {{item.mine ? 'mine' : 'theirs'}}">
+        <view wx:if="{{!item.mine}}" class="bubble-avatar">
+          <image wx:if="{{partnerAvatar}}" src="{{partnerAvatar}}" mode="aspectFill" class="bubble-avatar-img" />
+          <view wx:else class="bubble-avatar-fallback">{{partnerInitial}}</view>
+        </view>
+        <view class="bubble {{item.mine ? 'bubble-mine' : 'bubble-theirs'}} {{item.status === 'failed' ? 'is-failed' : ''}}">
+          <text user-select-auto class="bubble-text">{{item.content}}</text>
+        </view>
+      </view>
+      <view class="bubble-meta {{item.mine ? 'mine' : 'theirs'}}">
+        <text wx:if="{{item.status === 'pending'}}" class="meta-status">{{text.sending}}</text>
+        <text wx:elif="{{item.status === 'failed'}}" class="meta-status failed" data-id="{{item.id}}" catchtap="retrySend">{{text.retry}}</text>
+        <text wx:elif="{{item.mine && item.isRead}}" class="meta-status">{{text.read}}</text>
+        <text class="meta-time">{{item.timeLabel}}</text>
+      </view>
+    </view>
+    <view id="msg-bottom" class="msg-bottom"></view>
+  </scroll-view>
+
+  <view class="composer">
+    <textarea
+      class="composer-input"
+      value="{{draft}}"
+      placeholder="{{text.inputPlaceholder}}"
+      placeholder-class="composer-ph"
+      auto-height
+      maxlength="2000"
+      show-confirm-bar="{{false}}"
+      adjust-position="{{true}}"
+      cursor-spacing="20"
+      bindinput="onDraftInput"
+      bindconfirm="send"
+      confirm-type="send"
+    />
+    <view class="composer-send {{draft ? 'active' : ''}}" bindtap="send">{{text.send}}</view>
+  </view>
 </view>

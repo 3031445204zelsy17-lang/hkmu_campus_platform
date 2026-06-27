@@ -1,13 +1,219 @@
-.stub {
-  padding: 96rpx 48rpx;
+page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
-.stub-title {
-  font-size: 44rpx;
+
+/* 登录闸 */
+.gate {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pad-shell);
+}
+.gate-title {
+  font-size: var(--fs-feed-title);
+  color: var(--text-primary);
   font-weight: 700;
-  color: #1F2A24;
+  margin-bottom: 36rpx;
 }
-.stub-copy {
-  margin-top: 14rpx;
-  font-size: 26rpx;
-  color: #7E8B80;
+.gate-btn {
+  display: inline-block;
+  padding: 18rpx 56rpx;
+  background: var(--accent-blue);
+  color: #ffffff;
+  font-size: var(--fs-btn);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-btn-primary);
+}
+
+/* 大状态(self / not found) */
+.bigstate {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pad-shell);
+}
+.big-emoji {
+  font-size: 96rpx;
+  margin-bottom: 24rpx;
+}
+.big-title {
+  font-size: var(--fs-feed-title);
+  color: var(--text-primary);
+  font-weight: 700;
+}
+.big-copy {
+  font-size: var(--fs-body);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* 聊天主体 */
+.chat-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.chat-scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 8rpx var(--pad-shell) 24rpx;
+  box-sizing: border-box;
+}
+
+.load-older {
+  text-align: center;
+  padding: 18rpx 0;
+  font-size: var(--fs-feed-meta);
+  color: var(--accent-blue);
+}
+.chat-empty {
+  text-align: center;
+  padding: 96rpx 0;
+  font-size: var(--fs-body);
+  color: var(--text-secondary);
+}
+
+.msg-block {
+  margin-top: 18rpx;
+}
+.date-sep {
+  text-align: center;
+  margin: 12rpx 0 18rpx;
+  font-size: var(--fs-feed-meta);
+  color: var(--text-secondary);
+}
+
+.bubble-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14rpx;
+}
+.bubble-row.mine {
+  justify-content: flex-end;
+}
+.bubble-row.theirs {
+  justify-content: flex-start;
+}
+
+.bubble-avatar {
+  flex: 0 0 auto;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--pill-green-bg);
+}
+.bubble-avatar-img {
+  width: 100%;
+  height: 100%;
+}
+.bubble-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--green-deep);
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.bubble {
+  max-width: 70%;
+  padding: 18rpx 24rpx;
+  border-radius: 28rpx;
+  font-size: var(--fs-body);
+  line-height: 1.45;
+  word-break: break-word;
+}
+.bubble-mine {
+  background: var(--green-deep);
+  color: #ffffff;
+  border-bottom-right-radius: 8rpx;
+  box-shadow: var(--shadow-card);
+}
+.bubble-theirs {
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1rpx solid var(--border-hair);
+  border-bottom-left-radius: 8rpx;
+  box-shadow: var(--shadow-card);
+}
+.bubble.is-failed {
+  opacity: 0.7;
+  border: 1rpx dashed var(--danger-text);
+}
+.bubble-text {
+  display: inline;
+}
+
+.bubble-meta {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-top: 6rpx;
+  font-size: var(--fs-feed-meta);
+  color: var(--text-secondary);
+}
+.bubble-meta.mine {
+  justify-content: flex-end;
+}
+.bubble-meta.theirs {
+  justify-content: flex-start;
+  padding-left: 70rpx;
+}
+.meta-status.failed {
+  color: var(--danger-text);
+}
+
+.msg-bottom {
+  height: 8rpx;
+}
+
+/* 输入栏 */
+.composer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 16rpx;
+  padding: 16rpx var(--pad-shell) calc(20rpx + env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-top: 1rpx solid var(--border-hair);
+}
+.composer-input {
+  flex: 1;
+  min-height: 64rpx;
+  max-height: 240rpx;
+  padding: 16rpx 24rpx;
+  background: var(--page-bg);
+  border: 1rpx solid var(--border-hair);
+  border-radius: 28rpx;
+  font-size: var(--fs-body);
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+.composer-ph {
+  color: var(--text-secondary);
+}
+.composer-send {
+  flex: 0 0 auto;
+  padding: 16rpx 32rpx;
+  border-radius: var(--radius-pill);
+  background: var(--segmented-bg);
+  color: var(--text-secondary);
+  font-size: var(--fs-btn);
+  font-weight: 700;
+}
+.composer-send.active {
+  background: var(--accent-blue);
+  color: #ffffff;
+  box-shadow: var(--shadow-btn-primary);
 }
