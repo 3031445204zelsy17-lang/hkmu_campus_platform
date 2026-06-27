@@ -486,7 +486,7 @@
 
       },
       "phase2_c3": {
-        "status": "done (2026-06-27 代码 cbf0aad + 静态验证；待部署 + 开发者工具 live 验证)",
+        "status": "done (2026-06-27 代码 cbf0aad + 部署 cec1cf7 已上线 live 验证；开发者工具 UI 验证待用户)",
         "what": "方案B 聚合端点：后端新增 GET /courses/programmes + /courses/graduation-status；miniprogram planner 全重写接端点。仅 DSAI 有数据，CS/网安 comingSoon 占位",
         "done": [
           "后端 data/programmes.py（web programmes.js 的 Python 镜像，后端单一事实来源；DSAI 完整 + CS/Cyber comingSoon）+ data/__init__.py",
@@ -495,17 +495,17 @@
           "两单段静态路由插在 /{course_id} 之前，避免被 path-param 吞",
           "miniprogram planner.js 全重写：原 100% mock（3 假课 + 硬编码 68%）→ 接 /programmes + /graduation-status；picker 专业选择器 + 毕业仪表盘(分类进度条) + 智能推荐 + 登录闸门；切专业 PUT /users/me programme_code 持久化 + best-effort 重算",
           "planner.wxml 单滚动 4 态（loading / comingSoon / 未登录静态学分要求 / 仪表盘）；planner.wxss 纯 token var + 6 分类色作页面局部 var（不动共享 tokens.wxss）",
-          "i18n planner scope 三语全重写（18 key + 6 分类标签），删 mock reminderCopy/statuses/termPreview（页面已真实 → 满足 carryover）"
+          "i18n planner scope 三语全重写（18 key + 6 分类标签），删 mock reminderCopy/statuses/termPreview（页面已真实 → 满足 carryover）",
+          "✅ 部署生产 SEA cec1cf7：/courses/programmes 200（catalogue 正确）+ /graduation-status 401（auth gate）+ /api/health ok；prod DB 43 门 DSAI 课 id 与 programmes.py 全匹配"
         ],
         "pending": [
-          "部署生产 SEA（本地 buildx amd64 push ACR + az webapp config container set）后 curl 验证 /courses/programmes + /graduation-status",
           "开发者工具编译/截图 + live GET /programmes + /graduation-status 闭环（登录态仪表盘 + 推荐）"
         ],
         "deferred": [
           "web programmes.js → 改接 /courses/programmes 端点去重（当前 web 仍客户端 programmes.js，后端 Python 镜像独立）",
           "CS/网安 comingSoon 占位 → 接 docs/ops/选课选课 4768 行官方课程补全（扩 scope 独立任务）"
         ],
-        "verification_gap": "后端已 py_compile + 路由顺序 + 毕业数学单测（mock 用户 earned33 / core30-84 / 3 推荐 / 27.5%）；miniprogram node --check×2 + i18n 三语 18key parity + WXML 标签平衡 + text.* key 全存在。生产 SEA 仍 404（未部署）→ 小程序 live 测被阻塞。本地无 PG（.env 指 /tmp2 socket）无法 boot 全量验证"
+        "verification_gap": "后端 py_compile + 路由顺序 + 毕业数学单测（mock earned33 / core30-84 / 3 推荐 / 27.5%）；miniprogram node --check×2 + i18n 三语 18key parity + WXML 平衡 + text.* key 全存在。✅ 生产 SEA cec1cf7 已 live：/courses/programmes 200 + /graduation-status 401(auth gate) + /api/health ok；prod DB 43 门 DSAI 课 id 全匹配（早先 search=COMP1080 返 0 是 search 只查 code/name 不查 id 的误报，非缺数据）。剩：开发者工具登录态仪表盘/推荐 UI 验证（待用户）。本地无 PG 无法 boot 全量"
       },
       "phase3_messages": {
         "status": "pending",
