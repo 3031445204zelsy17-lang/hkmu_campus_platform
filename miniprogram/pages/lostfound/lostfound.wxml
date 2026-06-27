@@ -1,4 +1,4 @@
-<app-header bind:languagechange="handleLanguageChange" />
+<app-header show-back="{{true}}" bind:languagechange="handleLanguageChange" />
 
 <view class="page-shell">
   <view class="top-bar tight">
