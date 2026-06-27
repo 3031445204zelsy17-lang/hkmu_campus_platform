@@ -81,11 +81,21 @@ Page({
             this._loadError = error.message;
           });
 
-    return catDone
-      .then(() => {
-        this._emit();
-        return auth.bootstrapSession();
-      })
+    return catDone.then(() => {
+      this._emit();
+      // 暖路径：本会话已解析过 user → 跳过 bootstrapSession（省 /users/me 一跳），
+      // 直接刷 status。request 层遇 401 会自动刷新 access token；若最终失败则
+      // fallback 回完整 bootstrap 重新校验登录态（也会捕获在别处登出的情况）。
+      if (this._user) {
+        return this._loadStatus().catch(() => this._bootstrapAndLoad());
+      }
+      return this._bootstrapAndLoad();
+    });
+  },
+
+  _bootstrapAndLoad() {
+    return auth
+      .bootstrapSession()
       .then((user) => {
         this._user = user;
         this._userProgrammeCode = (user && user.programme_code) || null;
