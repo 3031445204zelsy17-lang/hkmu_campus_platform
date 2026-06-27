@@ -9,28 +9,110 @@
     </view>
   </view>
 
+  <!-- 专业选择 -->
+  <view class="web-panel planner-selector">
+    <view class="field-label">{{text.selectProgramme}}</view>
+    <picker
+      mode="selector"
+      range="{{programmeOptions}}"
+      range-key="label"
+      value="{{programmeIndex}}"
+      bindchange="onProgrammeChange"
+    >
+      <view class="selector-display">
+        <text class="selector-text">{{programmeOptions[programmeIndex].label}}</text>
+        <text class="selector-caret">▾</text>
+      </view>
+    </picker>
+  </view>
+
+  <!-- Hero：专业名 + 总进度 -->
   <view class="planner-hero">
     <view>
-      <view class="planner-kicker">{{text.termPreview}}</view>
-      <view class="planner-title">{{text.heroTitle}}</view>
-      <view class="planner-copy">{{text.heroCopy}}</view>
-    </view>
-    <view class="planner-score">68%</view>
-  </view>
-
-  <view class="web-panel">
-    <view class="section-title">{{text.planTitle}}</view>
-    <view wx:for="{{courses}}" wx:key="code" class="course-row">
-      <view>
-        <view class="course-code">{{item.code}}</view>
-        <view class="course-name">{{item.name}}</view>
+      <view class="planner-kicker">{{programmeSchool}}</view>
+      <view class="planner-title">{{programmeName}}</view>
+      <view class="planner-copy">
+        <block wx:if="{{loggedIn && !comingSoon}}">{{creditsSummary}}</block>
+        <block wx:elif="{{comingSoon}}">{{text.comingSoonCopy}}</block>
+        <block wx:else>{{text.heroCopy}}</block>
       </view>
-      <view class="{{item.className}}">{{item.status}}</view>
+    </view>
+    <view wx:if="{{loggedIn && !comingSoon}}" class="planner-score">{{percent}}%</view>
+  </view>
+
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="web-panel">
+    <view class="panel-copy">{{text.loading}}</view>
+  </view>
+
+  <!-- 敬请期待（占位专业） -->
+  <view wx:elif="{{comingSoon}}" class="web-panel">
+    <view class="section-title">{{text.comingSoonTitle}}</view>
+    <view class="panel-copy">{{text.comingSoonCopy}}</view>
+  </view>
+
+  <!-- 未登录 -->
+  <view wx:elif="{{!loggedIn}}" class="web-panel planner-login">
+    <view class="section-title">{{text.loginPromptTitle}}</view>
+    <view class="panel-copy">{{text.loginPromptCopy}}</view>
+    <view class="planner-cta" bindtap="goLogin">{{text.loginAction}}</view>
+
+    <view wx:if="{{categoriesView.length}}" class="section-title planner-subtitle">{{text.categoriesTitle}}</view>
+    <view
+      wx:for="{{categoriesView}}"
+      wx:key="key"
+      class="category-row"
+    >
+      <view class="category-head">
+        <text class="category-name">{{item.label}}</text>
+        <text class="category-credits">{{text.requiredCredits}}{{item.required}} cr</text>
+      </view>
+      <view class="progress-track">
+        <view class="progress-fill" style="width: 0%"></view>
+      </view>
     </view>
   </view>
 
-  <view class="web-panel">
-    <view class="section-title">{{text.reminderTitle}}</view>
-    <view class="panel-copy">{{text.reminderCopy}}</view>
-  </view>
+  <!-- 已登录：毕业仪表盘 -->
+  <block wx:else>
+    <view class="web-panel">
+      <view class="section-title">{{text.progressTitle}}</view>
+      <view class="credits-summary">{{creditsSummary}}</view>
+      <view class="progress-track progress-track-lg">
+        <view class="progress-fill" style="width: {{percent}}%"></view>
+      </view>
+    </view>
+
+    <view class="web-panel">
+      <view class="section-title">{{text.categoriesTitle}}</view>
+      <view
+        wx:for="{{categoriesView}}"
+        wx:key="key"
+        class="category-row"
+      >
+        <view class="category-head">
+          <text class="category-name">{{item.label}}</text>
+          <text class="category-credits">{{item.earned}}/{{item.required}} cr</text>
+        </view>
+        <view class="progress-track">
+          <view class="progress-fill cat-{{item.color}}" style="width: {{item.pct}}%"></view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{recommendations.length}}" class="web-panel">
+      <view class="section-title">{{text.recommendTitle}}</view>
+      <view
+        wx:for="{{recommendations}}"
+        wx:key="course_id"
+        class="course-row"
+      >
+        <view class="course-main">
+          <view class="course-code">{{item.code}}</view>
+          <view class="course-name">{{item.name}} · {{item.credits}}cr</view>
+        </view>
+        <view class="mini-pill green">{{item.categoryLabel}}</view>
+      </view>
+    </view>
+  </block>
 </view>
