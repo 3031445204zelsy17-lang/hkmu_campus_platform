@@ -508,14 +508,35 @@
         "verification_gap": "后端 py_compile + 路由顺序 + 毕业数学单测（mock earned33 / core30-84 / 3 推荐 / 27.5%）；miniprogram node --check×2 + i18n 三语 18key parity + WXML 平衡 + text.* key 全存在。✅ 生产 SEA cec1cf7 已 live：/courses/programmes 200 + /graduation-status 401(auth gate) + /api/health ok；prod DB 43 门 DSAI 课 id 全匹配（早先 search=COMP1080 返 0 是 search 只查 code/name 不查 id 的误报，非缺数据）。✅ 用户 2026-06-27 真机/模拟器实测：planner 切 tab 无 jank、暖路径秒出。本地无 PG 无法 boot 全量"
       },
       "phase3_messages": {
-        "status": "pending",
-        "what": "新建 pages/messages + wx.connectSocket + 未读角标（后端 messages.py + WS 现成）"
+        "status": "code done (3.1-3.8, 2026-06-27);静态全绿;待 IDE/automator/live",
+        "what": "IG/X 式私信:新闻降级为子页腾 tab → 私信 tab + 收件箱 + 聊天 + new-chat 搜索 + 头像点按 DM + 全局未读红点。后端零改动(WS ?token= + REST + /users/search 现成)",
+        "done": [
+          "3.1 tab 重构:tabBar home/community/messages/planner/profile(去 news);news 留 pages 作 navigateTo 子页;community campusNews + home goNews switchTab→navigateTo;planner syncTabBar 2→3;custom-tab-bar icon-messages + 红点 wxml/wxss/data 管线。共享文件 app.json/i18n.js/custom-tab-bar(home.js 跨司徒模块)",
+          "3.2 utils/messages.js:WS 单例(connect/ensureConnected/disconnect + 状态机)+ 心跳 30s/pong 超时重连/指数退避 5→30s/轮询降级/id 去重 + 事件总线(chat/unread/open/close)+ REST 封装(conversations/history/postMessage/markRead/unread-count);WS 鉴权 ?token= 派生自 API_ORIGIN;auth.js 登录回调 ensureConnected + logout disconnect(无环);onAppShow 重连",
+          "3.3 收件箱 pages/messages:登录闸 + fetchConversations + normalize(头像/昵称/预览/相对时间/未读);列表未读加粗+红点+数字(>99 显 99+);搜索框 + 「+」new-chat 入口;空态 CTA + 下拉刷新;WS chat 节流 800ms 合并刷新。format.js +formatChatTime;i18n messages scope 三语",
+          "3.4 聊天 pages/chat:onLoad 收 user_id(GET /users/{pid} 拉资料)+ GET history(自动 mark read);气泡收左灰/发右绿+小头像+日期分隔;toView 滚底;查看更早分页;乐观发送 pending→WS 回显按 content 匹配确认/WS 不通或 6s 超时 REST 兜底/失败重试/id 去重;已读态;self/未登录/notFound/429 守卫;page 级 flex。i18n chat scope 三语(16 key)",
+          "3.5 new-chat pages/new-chat:搜索框→GET /users/search?q=→列表→点选 navigateTo chat(首条 POST 即建会话);300ms 防抖;三态。i18n newChat scope 三语",
+          "3.6 红点全局:custom-tab-bar refreshBadge 读 messages.getUnread + 订阅 unread(attached/detached/show)",
+          "3.7 头像→DM(全加):utils/dm.js openDMWith(self/未登录/无 uid 守卫);post.js normalizePost +authorId(覆盖 home/community/post-detail feed);post-detail normalizeComment + lostfound normalize + authorId;5 处头像(home/community feed、post-detail 作者+评论者、lostfound)catchtap openDM + data-author-id",
+          "3.8 i18n 三语 parity 审计(8/12/5 key 全 OK)+ token var 合法性 + WXML 平衡 全过"
+        ],
+        "pending": [
+          "用户:WeChat 开发者工具编译/截图 + 5 tab 切换(含私信)+ 收件箱/聊天/new-chat 渲染 + 新闻 navigateTo 带返回",
+          "用户:automator switchTab 到 messages 无 jank + page.data 验证",
+          "用户:真实两账号 A 发→B 收(B 红点亮)→B 进会话已读红点灭→A 静态已读 闭环",
+          "共享文件改动(app.json/i18n.js/custom-tab-bar)群通知 + home.js(goNews/openDM)合并前司徒 review"
+        ],
+        "deferred": [
+          "WS-first 发送优化(当前 REST 兜底为主,WS 回显确认已实现)",
+          "parity 增强:正在输入/实时已读/在线绿点/反应/图片 DM/消息请求/编辑撤回/群聊(均需后端扩展)"
+        ],
+        "verification_gap": "静态全绿(node --check ×16 + app.json 12 pages/5 tab + i18n 三语×3 scope parity + token var 全合法 + WXML 平衡 + require 无环 auth→messages 单向)。生产端点 curl 探活受本地 VPN 挡(TLS handshake 卡 198.18.0.137,memory vpn-azure-https-block,非代码问题;端点 prior 已 live 验证)。IDE/automator/真实两账号收发仍待用户"
       },
       "phase4_data": {
         "status": "pending (已授权)",
         "what": "补 news/lostfound seed + 清测试垃圾帖(asd/qwe、E2E Bot、WeChat User 1232)"
       }
     },
-    "next_step": "Phase 2 C3 done（代码 cbf0aad + 静态验证；待部署生产 SEA + 开发者工具 live 验证）。下一步 Phase 3 私信（新建 pages/messages + wx.connectSocket + 未读角标；后端 messages.py + WS 现成）。⑦ 仍待用户开发者工具验证。✅⑥c 已上线 cc19d3a8。下次 /project-start 接着做"
+    "next_step": "Phase 3 私信代码完成(3.1-3.8,commit 67f84b0→cefd2e1;静态全绿)。待用户:WeChat 开发者工具编译/截图 + automator switchTab + 真实两账号 A 发 B 收闭环;共享文件(app.json/i18n.js/custom-tab-bar)群通知 + home.js 合并前司徒 review。下一步可转 Phase 4 data(补 news/lostfound seed + 清测试垃圾帖)。⑦ 仍待用户开发者工具验证。✅⑥c 已上线 cc19d3a8"
   }
 }
