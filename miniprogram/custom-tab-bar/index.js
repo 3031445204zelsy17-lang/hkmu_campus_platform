@@ -1,4 +1,5 @@
 const { getLocale, getTabBarItems } = require("../utils/i18n");
+const messages = require("../utils/messages");
 
 const SWITCH_LOCK_MS = 1200;
 const SWITCH_COMMIT_DELAY_MS = 180;
@@ -66,6 +67,9 @@ Component({
         pillStyle: navVisualState.pillStyle,
       });
       this.applyLocale();
+      this.refreshBadge();
+      this._badgeHandler = (n) => this.setData({ unread: n });
+      messages.on("unread", this._badgeHandler);
       this.syncSelected();
       this.clearHydration();
       this._hydrationTimer = setTimeout(() => {
@@ -75,6 +79,10 @@ Component({
     },
     detached() {
       this._pendingTouchStart = false;
+      if (this._badgeHandler) {
+        messages.off("unread", this._badgeHandler);
+        this._badgeHandler = null;
+      }
       this.clearHydration();
       this.clearPendingSwitch();
       this.clearDragSafety();
@@ -85,6 +93,7 @@ Component({
   pageLifetimes: {
     show() {
       this.syncSelected();
+      this.refreshBadge();
     },
     hide() {
       this.clearTransientInteraction();
@@ -99,6 +108,10 @@ Component({
       this.setData({
         list: getTabBarItems(locale),
       }, () => this.measureCapsule(this.data.displaySelected));
+    },
+
+    refreshBadge() {
+      this.setData({ unread: messages.getUnread() });
     },
 
     currentRouteIndex() {
