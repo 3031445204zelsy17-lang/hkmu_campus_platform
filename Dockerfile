@@ -2,10 +2,8 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install build deps for bcrypt/cryptography, then clean up
-RUN apt-get update && apt-get install -y --no-install-recommends gcc libffi-dev && \
-    rm -rf /var/lib/apt/lists/*
-
+# All requirements ship manylinux wheels (bcrypt/cryptography/asyncpg/pydantic-core),
+# so no build tools needed — and this avoids the apt/deb.debian.org layer entirely.
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
