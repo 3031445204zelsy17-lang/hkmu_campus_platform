@@ -4,6 +4,7 @@ const { syncTabBar } = require("../../utils/tabbar");
 const { getLocale, getTexts } = require("../../utils/i18n");
 const { normalizePost } = require("../../utils/post");
 const { PAGE_SIZE } = require("../../utils/config");
+const { openDMWith } = require("../../utils/dm");
 
 const FEED_TAB_KEYS = ["newest", "hot"];
 
@@ -243,5 +244,9 @@ Page({
 
   goPlanner() {
     wx.switchTab({ url: "/pages/planner/planner" });
+  },
+
+  openDM(event) {
+    openDMWith(event.currentTarget.dataset.authorId);
   },
 });

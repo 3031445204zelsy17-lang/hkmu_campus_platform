@@ -4,6 +4,7 @@ const { syncTabBar } = require("../../utils/tabbar");
 const { getLocale, getTexts } = require("../../utils/i18n");
 const { normalizePost } = require("../../utils/post");
 const { PAGE_SIZE } = require("../../utils/config");
+const { openDMWith } = require("../../utils/dm");
 
 const FEED_TAB_KEYS = ["newest", "hot"];
 const COMMUNITY_BOARD_KEYS = [
@@ -304,5 +305,9 @@ Page({
     }
 
     wx.navigateTo({ url: "/pages/compose/compose" });
+  },
+
+  openDM(event) {
+    openDMWith(event.currentTarget.dataset.authorId);
   },
 });

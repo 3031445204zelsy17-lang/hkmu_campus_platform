@@ -4,6 +4,7 @@ const { getLocale, getTexts } = require("../../utils/i18n");
 const { PAGE_SIZE } = require("../../utils/config");
 const auth = require("../../utils/auth");
 const { uploadImage } = require("../../utils/upload");
+const { openDMWith } = require("../../utils/dm");
 
 function normalizeItems(items, text = getTexts("lostfound"), currentUserId = null) {
   return items.map((item) => {
@@ -13,6 +14,7 @@ function normalizeItems(items, text = getTexts("lostfound"), currentUserId = nul
 
     return {
       author,
+      authorId: item.author_id,
       authorInitial: getInitial(author),
       category: item.category || text.uncategorized,
       createdAtLabel: formatDate(item.created_at) || text.justNow,
@@ -106,6 +108,10 @@ Page({
 
   handleLanguageChange(event) {
     this.applyLocale(event.detail.locale);
+  },
+
+  openDM(event) {
+    openDMWith(event.currentTarget.dataset.authorId);
   },
 
   applyLocale(locale = getLocale()) {

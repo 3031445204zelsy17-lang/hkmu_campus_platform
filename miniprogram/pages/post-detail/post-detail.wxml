@@ -11,7 +11,7 @@
   <block wx:elif="{{post}}">
     <view class="feed-card detail-card">
       <view class="feed-head">
-        <view class="avatar">{{post.authorInitial}}</view>
+        <view class="avatar" data-author-id="{{post.authorId}}" catchtap="openDM">{{post.authorInitial}}</view>
         <view class="feed-main">
           <view class="feed-author-row">
             <view>
@@ -40,7 +40,7 @@
       <block wx:else>
         <view wx:if="{{comments.length === 0}}" class="comment-status">{{text.commentEmpty}}</view>
         <view wx:for="{{comments}}" wx:key="id" class="comment-item">
-          <view class="comment-avatar">{{item.authorInitial}}</view>
+          <view class="comment-avatar" data-author-id="{{item.authorId}}" catchtap="openDM">{{item.authorInitial}}</view>
           <view class="comment-main">
             <view class="comment-author">{{item.authorName}}</view>
             <view class="comment-content">{{item.content}}</view>

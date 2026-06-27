@@ -54,7 +54,7 @@
   <view class="feed-list">
     <view wx:for="{{posts}}" wx:key="id" class="feed-card">
       <view class="feed-head">
-        <view class="avatar">
+        <view class="avatar" data-author-id="{{item.authorId}}" catchtap="openDM">
           <image wx:if="{{item.authorAvatar}}" src="{{item.authorAvatar}}" mode="aspectFill" />
           <view wx:else>{{item.authorInitial}}</view>
         </view>

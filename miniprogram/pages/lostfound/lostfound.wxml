@@ -40,7 +40,7 @@
 
   <view wx:for="{{filteredItems}}" wx:key="id" class="utility-card">
     <view class="feed-head">
-      <view class="avatar small">{{item.authorInitial}}</view>
+      <view class="avatar small" data-author-id="{{item.authorId}}" catchtap="openDM">{{item.authorInitial}}</view>
       <view class="feed-main">
         <view class="utility-meta">
           <view class="{{item.typeClass}}">{{item.typeLabel}}</view>

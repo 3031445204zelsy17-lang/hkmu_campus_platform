@@ -59,7 +59,7 @@
   <view class="feed-list">
     <view wx:for="{{posts}}" wx:key="id" class="feed-card">
       <view class="feed-head">
-        <view class="avatar">{{item.authorInitial}}</view>
+        <view class="avatar" data-author-id="{{item.authorId}}" catchtap="openDM">{{item.authorInitial}}</view>
         <view class="feed-main" data-id="{{item.id}}" catchtap="openDetail">
           <view class="feed-author-row">
             <view>

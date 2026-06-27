@@ -3,6 +3,7 @@ const { request } = require("../../utils/request");
 const { getLocale, getTexts } = require("../../utils/i18n");
 const { formatDate, getInitial } = require("../../utils/format");
 const { normalizePost, resolveUrl } = require("../../utils/post");
+const { openDMWith } = require("../../utils/dm");
 const { PAGE_SIZE } = require("../../utils/config");
 
 // Map a backend CommentOut row into the view shape used by post-detail.wxml.
@@ -13,6 +14,7 @@ function normalizeComment(comment, text) {
 
   return {
     id: comment.id,
+    authorId: comment.author_id,
     authorInitial: getInitial(authorName),
     authorName,
     authorAvatar: resolveUrl(comment.author_avatar),
@@ -59,6 +61,10 @@ Page({
 
   handleLanguageChange(event) {
     this.applyLocale(event.detail.locale);
+  },
+
+  openDM(event) {
+    openDMWith(event.currentTarget.dataset.authorId);
   },
 
   applyLocale(locale = getLocale()) {

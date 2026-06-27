@@ -33,6 +33,7 @@ function normalizePost(item, text, opts) {
 
   const out = {
     authorAvatar: resolveUrl(item.author_avatar),
+    authorId: item.author_id,
     authorInitial: getInitial(authorName),
     authorName,
     category: item.category || text.defaultCategory,
