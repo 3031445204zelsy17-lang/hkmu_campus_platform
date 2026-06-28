@@ -544,7 +544,7 @@
         "verification": "终态:news 8(保留) / lostfound 1(黑色钱包,seed 已撤回) / posts 2 / comments 2 / post_likes 1 / 垃圾帖候选 0;news 5 分类全覆盖;每日 db-backup.yml pg_dump 兜底"
       },
       "phase5_social_coldstart": {
-        "status": "C.1 done (2026-06-28, branch feature/miniprogram-phase5-social 基于 d78aac7);C.2 next",
+        "status": "C.1+C.2 done (2026-06-28, branch feature/miniprogram-phase5-social);C.3 next — invite-code/suggest/friendships 端点",
         "doc": "docs/ops/小程序社交冷启动-C方案.md",
         "what": "P0 HKMU 邮箱验证层 + 同学推荐;P1 邀请码分享 → 自动双向好友 → DM。微信好友关系链不可用(memory wechat-friend-graph-unavailable),走自有关系图",
         "c1": {
@@ -563,9 +563,24 @@
             "POST /friendships/invite 用 ON CONFLICT (user_id,friend_id) DO NOTHING 幂等(依赖 UNIQUE 约束)"
           ]
         },
+        "c2": {
+          "status": "done — 代码层验证全绿;live import/请求待部署(本地缺 aiosmtplib)",
+          "what": "auth_service.py 加 is_hkmu_email(@hkmu.edu.hk 教职员 / @live.hkmu.edu.hk 学生)+ derive_student_id(学生邮箱前缀去 s 回填学号 s1234567→1234567)。auth.py verify-email 扩展:消费 token 后查 user.email,若 HKMU 域 → 置 hkmu_verified=TRUE + COALESCE(student_id, derived) 回填(register 和 bind 共用统一逻辑)。users.py 新增 POST /me/bind-email(已登录用户补绑 HKMU 邮箱,方案 C 复用 register 先写 email 后验证模式)",
+          "decisions": [
+            "bind-email 方案 C(沿用 register 先写 users.email 后验证)非方案 A(email_tokens 加 email 列)— 不动 C.1 刚建的 schema,改动最小;v1 仅允许 email 未验证/为空的用户 bind(防覆盖已验证 email)",
+            "bind-email 挂 users.router(/me/bind-email 路径自然)非 auth.py — 方案文档写 auth.py 但路径 /users/me/* 挂 users 更顺;复用 auth._create_email_token + email_service.send_verification_email(跨 router import 私有 helper,无循环)",
+            "verify-email 统一判 HKMU 域(register + bind 共用,不区分 token 来源)",
+            "student_id 回填用 COALESCE(student_id, derived)— 不覆盖用户已填值;derive 仅学生邮箱(@live.hkmu.edu.hk 前缀 s+数字)生效"
+          ],
+          "verification": "py_compile ✅ + is_hkmu_email/derive_student_id 6 case 全过(学生/教职员/非HKMU/大小写/前缀异常/空)✅ + 无循环 import(auth.py 不 import users grep 确认)✅ + 端点/helper 接线 grep 确认(bind-email users.py:67 / verify-email 扩展 auth.py:525 / _create_email_token 复用 users.py:13,99)✅;待 live import+路由注册+curl 请求(本地缺 aiosmtplib==3.0.2,生产 requirements 已含,部署 Azure 自动装)",
+          "todo_v2": [
+            "换绑(已有验证 email 换 HKMU)→ 升级方案 A:email_tokens 加 email 列,_create/_consume_email_token 加 email 参数,verify 按 token.email 落库(users.email verify 前不变)",
+            "前端 C.5:profile 未验证 → bind-email 入口(输 HKMU 邮箱 → 后端发验证 → toast)"
+          ]
+        },
         "steps": [
           "C.1 后端 schema(hkmu_verified/invite_code/friendships 表)+ models ✅ done",
-          "C.2 HKMU 域判定 + verify 置 hkmu_verified + 学生邮箱推 student_id + bind-email",
+          "C.2 HKMU 域判定 + verify 置 hkmu_verified + 学生邮箱推 student_id + bind-email ✅ done",
           "C.3 invite-code/suggest/friendships 端点(自邀拦截+幂等双向)",
           "C.4 app.js 读 query.inv + utils/social.js",
           "C.5 profile 验证入口+邀请分享",

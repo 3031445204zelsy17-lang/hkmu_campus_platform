@@ -3,10 +3,14 @@ import uuid
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, status
 
+from ..config import FRONTEND_URL
 from ..database import get_db
-from ..models import UserOut, UserUpdate
-from ..services.auth_service import get_current_user
+from ..models import UserOut, UserUpdate, BindEmail
+from ..services.auth_service import get_current_user, is_hkmu_email
+from ..services.email_service import send_verification_email
+from ..services.rate_limiter import check_rate_limit
 from ..services.sanitizer import sanitize
+from .auth import _create_email_token
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -58,6 +62,44 @@ async def get_me(user: dict = Depends(get_current_user)):
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
         return _user_out(row)
+
+
+@router.post("/me/bind-email")
+async def bind_email(body: BindEmail, user: dict = Depends(get_current_user)):
+    """Phase 5 P0: bind an HKMU email to an existing account (e.g. OAuth-only user) to unlock the hkmu_verified tier.
+
+    Method C (reuse register's write-email-then-verify pattern, no schema change):
+    v1 only allows bind when current email is unverified or empty (avoid clobbering a verified email);
+    writes the new email with email_verified=FALSE, sends verification, and the verify-email endpoint
+    unlocks hkmu_verified + backfills student_id on confirm. Re-binding a verified email is a v2 concern
+    (would need email_tokens.email column, method A).
+    """
+    check_rate_limit(f"bind-email:{user['id']}", max_requests=3, window_seconds=300)
+    if not is_hkmu_email(body.email):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Only HKMU email is allowed")
+    async with get_db() as db:
+        current = await db.fetchrow(
+            "SELECT email, email_verified FROM users WHERE id = $1", user["id"],
+        )
+        if not current:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+        if current["email_verified"]:
+            raise HTTPException(status.HTTP_409_CONFLICT, "Email already verified")
+        # new email must not belong to another user
+        owner = await db.fetchval(
+            "SELECT id FROM users WHERE email = $1 AND id <> $2", body.email, user["id"],
+        )
+        if owner is not None:
+            raise HTTPException(status.HTTP_409_CONFLICT, "Email already in use")
+        now = datetime.now(timezone.utc)
+        await db.execute(
+            "UPDATE users SET email = $1, email_verified = FALSE, updated_at = $2 WHERE id = $3",
+            body.email, now, user["id"],
+        )
+        token = await _create_email_token(user["id"], "email_verify", ttl_hours=24, conn=db)
+        verify_url = f"{FRONTEND_URL}/#/verify-email?token={token}"
+    await send_verification_email(body.email, verify_url)
+    return {"message": "Verification email sent"}
 
 
 @router.put("/me", response_model=UserOut)
