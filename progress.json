@@ -544,7 +544,7 @@
         "verification": "终态:news 8(保留) / lostfound 1(黑色钱包,seed 已撤回) / posts 2 / comments 2 / post_likes 1 / 垃圾帖候选 0;news 5 分类全覆盖;每日 db-backup.yml pg_dump 兜底"
       },
       "phase5_social_coldstart": {
-        "status": "C.1+C.2 done (2026-06-28, branch feature/miniprogram-phase5-social);C.3 next — invite-code/suggest/friendships 端点",
+        "status": "C.1+C.2+C.3 done (2026-06-28, branch feature/miniprogram-phase5-social);后端 P0+P1 齐活,C.4 起转前端",
         "doc": "docs/ops/小程序社交冷启动-C方案.md",
         "what": "P0 HKMU 邮箱验证层 + 同学推荐;P1 邀请码分享 → 自动双向好友 → DM。微信好友关系链不可用(memory wechat-friend-graph-unavailable),走自有关系图",
         "c1": {
@@ -578,10 +578,30 @@
             "前端 C.5:profile 未验证 → bind-email 入口(输 HKMU 邮箱 → 后端发验证 → toast)"
           ]
         },
+        "c3": {
+          "status": "done — 代码层验证全绿;live curl 待部署",
+          "what": "users.py 加 4 端点 + 兑现 C.1 todo_c3。GET /me/invite-code(懒生成 base62 8 位 invite_code + share_path /pages/home/home?inv=);GET /suggest(HKMU 已验证 + 排除好友 + 排除 DM partner + 同 programme 优先,reason 是 i18n 信号 same_programme/hkmu_peer);GET /me/friends(accepted 好友 FriendshipOut[],两步查避 JOIN id 歧义);POST /me/friends(InviteAccept body,自邀 no-op + 双向 INSERT ON CONFLICT DO NOTHING 幂等)。_USER_COLS+_user_out 接 hkmu_verified/invite_code(6 端点受益);models 补 InviteAccept",
+          "decisions": [
+            "路径 /friendships → /me/friends(GET 列表 + POST 加好友)— RESTful 且挂 users.router 自然(方案 /friendships 独立路径挂载复杂);social.js(C.4)对齐",
+            "reason 是 i18n 信号(same_programme/hkmu_peer)非文案 — 前端 C.6 三语翻译",
+            "invite_code 懒生成:base62 8 位 + UPDATE...WHERE IS NULL + UniqueViolationError 重试(并发安全,partial unique index C.1 就位)",
+            "friends 两步查(先 friend_id 列表再 ANY(int[]) 批量 SELECT)— 避免 JOIN 时 f.id 与 u.id 列名歧义",
+            "自邀拦截 inviter==me → {created: False} no-op(前后端双拦)",
+            "双向 INSERT VALUES (...,...),(...,...) ON CONFLICT (user_id,friend_id) DO NOTHING — 幂等,created = not result.endswith(0)"
+          ],
+          "verification": "py_compile ✅ + invite_code 生成(8 位 base62 alphabet 62)+ SuggestOut/InviteCodeOut/FriendshipOut/InviteAccept 构造与校验 ✅ + 4 端点定义确认(/me/invite-code:144 /suggest:152 /me/friends:189 GET /220 POST)+ 路由顺序 /suggest(152) < /{user_id}(328)✅ + _USER_COLS 含新字段 ✅;待 live curl(本地缺 aiosmtplib,部署 Azure 验证 + Supabase SELECT friendships 表)",
+          "todo_frontend": [
+            "C.4 utils/social.js:getInviteCode/buildSharePath/consumeInvite/fetchFriends/fetchSuggest + app.js 读 query.inv",
+            "C.5 profile:未验证 → bind-email 入口 + 邀请分享(<button open-type=share> + onShareAppMessage path=buildSharePath)",
+            "C.6 new-chat:我的好友段(fetchFriends)+ 可能认识的同学段(fetchSuggest 按 reason i18n)→ 点选 openUser → chat",
+            "C.7 home:onShow 消费 pendingInvite → consumeInvite → toast/跳 chat + i18n social scope",
+            "前端路径对齐:GET /users/me/invite-code + /users/suggest + /users/me/friends(GET/POST);friendships 用 /me/friends 非方案 /friendships"
+          ]
+        },
         "steps": [
           "C.1 后端 schema(hkmu_verified/invite_code/friendships 表)+ models ✅ done",
           "C.2 HKMU 域判定 + verify 置 hkmu_verified + 学生邮箱推 student_id + bind-email ✅ done",
-          "C.3 invite-code/suggest/friendships 端点(自邀拦截+幂等双向)",
+          "C.3 invite-code/suggest/friendships 端点(自邀拦截+幂等双向) ✅ done",
           "C.4 app.js 读 query.inv + utils/social.js",
           "C.5 profile 验证入口+邀请分享",
           "C.6 new-chat 好友+推荐两段",
