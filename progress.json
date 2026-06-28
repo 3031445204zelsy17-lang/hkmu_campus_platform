@@ -544,7 +544,7 @@
         "verification": "终态:news 8(保留) / lostfound 1(黑色钱包,seed 已撤回) / posts 2 / comments 2 / post_likes 1 / 垃圾帖候选 0;news 5 分类全覆盖;每日 db-backup.yml pg_dump 兜底"
       },
       "phase5_social_coldstart": {
-        "status": "C.1+C.2+C.3+C.4 done (2026-06-28, branch feature/miniprogram-phase5-social);前端传输层就绪,C.5 profile",
+        "status": "C.1-C.5 done (2026-06-28, branch feature/miniprogram-phase5-social);profile 就绪,C.6 new-chat",
         "doc": "docs/ops/小程序社交冷启动-C方案.md",
         "what": "P0 HKMU 邮箱验证层 + 同学推荐;P1 邀请码分享 → 自动双向好友 → DM。微信好友关系链不可用(memory wechat-friend-graph-unavailable),走自有关系图",
         "c1": {
@@ -615,12 +615,29 @@
             "app.js 共享文件改动需群通知(改动小:onShow+pendingInvite+_captureInvite)"
           ]
         },
+        "c5": {
+          "status": "done — 代码层验证全绿;待 IDE 编译 + live",
+          "what": "profile 视图模式加 hkmu_verified 徽章(name 旁)+ 未验证→bind-email 入口(wx.showModal editable 输 HKMU 邮箱 → social.bindEmail)+ 邀请好友分享按钮(<button open-type=share> + onShareAppMessage 返回 sharePath)。social.js 补 bindEmail(C.4 漏)。refreshProfile 后预取 invite_code → sharePath(onShareAppMessage 同步返回,分享时 path 须提前就绪;失败 fallback 默认 path)。i18n profile scope +9 key 三语",
+          "decisions": [
+            "bind-email UX 用 wx.showModal editable(轻量,不改编辑态表单)— 输邮箱 → social.bindEmail → 后端发验证 → toast",
+            "分享异步:onShareAppMessage 同步返回,故 refreshProfile 后预取 invite_code 懒生成 sharePath;预取失败 fallback /pages/home/home",
+            "hkmu_verified 透传确认:decorateUser 用 Object.assign({}, user, {...}) spread 原始 UserOut,bootstrapSession 返回的 user 含 hkmu_verified",
+            "徽章样式加 profile.wxss(页面级,不动共享 app.wxss)用 token var",
+            "social.js 补 bindEmail(C.4 方案列表漏)— 传输层完整覆盖 Phase 5 全部端点",
+            "bind-email 验证邮件链路经 web /#/verify-email(微信内置浏览器可打开,非小程序阻塞)"
+          ],
+          "verification": "node --check social.js/profile.js/i18n.js ✅ + i18n 9 key × 3 语言 parity 全 3 ✅ + WXML <view> 50/50 平衡 ✅ + 新 text.* key(hkmuVerifiedBadge/bindEmailAction/inviteAction)都在 profile scope ✅;待 IDE 编译截图 + live(预取 invite_code / bind-email 发邮件闭环经 web verify)",
+          "todo_c6_c7": [
+            "C.6 new-chat:我的好友段(fetchFriends)+ 可能认识的同学段(fetchSuggest 按 reason i18n same_programme/hkmu_peer)→ 点选 openUser → chat",
+            "C.7 home:onShow 消费 pendingInvite(已登录)→ consumeInvite → toast + 可选跳 chat;清暂存 + i18n social scope"
+          ]
+        },
         "steps": [
           "C.1 后端 schema(hkmu_verified/invite_code/friendships 表)+ models ✅ done",
           "C.2 HKMU 域判定 + verify 置 hkmu_verified + 学生邮箱推 student_id + bind-email ✅ done",
           "C.3 invite-code/suggest/friendships 端点(自邀拦截+幂等双向) ✅ done",
           "C.4 app.js 读 query.inv + utils/social.js ✅ done",
-          "C.5 profile 验证入口+邀请分享",
+          "C.5 profile 验证入口+邀请分享 ✅ done",
           "C.6 new-chat 好友+推荐两段",
           "C.7 home 消费邀请 + i18n",
           "C.8 静态+live 验证"

@@ -10,7 +10,10 @@
         <image wx:if="{{user.avatar_url}}" src="{{user.avatar_url}}" mode="aspectFill" />
         <view wx:else>{{user.initial}}</view>
       </view>
-      <view class="profile-name">{{user.displayName}}</view>
+      <view class="profile-name">
+        {{user.displayName}}
+        <view wx:if="{{user.hkmu_verified}}" class="verified-badge">{{text.hkmuVerifiedBadge}}</view>
+      </view>
       <view class="profile-handle">@{{user.username}} {{text.separator}} {{identityLabel}}</view>
       <view class="profile-bio">{{user.bioLabel}}</view>
 
@@ -28,6 +31,12 @@
       <view class="action-row">
         <button class="primary-action" bindtap="goCompose">{{text.composeAction}}</button>
         <button class="secondary-action" bindtap="enterEdit">{{text.editAction}}</button>
+      </view>
+
+      <!-- Phase 5: 社交冷启动(同校验证 + 邀请好友)-->
+      <view class="action-row">
+        <button wx:if="{{!user.hkmu_verified}}" class="secondary-action" bindtap="startBindEmail">{{text.bindEmailAction}}</button>
+        <button class="secondary-action" open-type="share">{{text.inviteAction}}</button>
       </view>
 
       <view class="profile-list">

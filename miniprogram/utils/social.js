@@ -42,10 +42,21 @@ function fetchSuggest(limit) {
   return request({ method: "GET", path: `/users/suggest${query}`, auth: true });
 }
 
+// POST /users/me/bind-email — 已登录用户补绑 HKMU 邮箱(后端发验证邮件,verify 后解锁 hkmu_verified)
+function bindEmail(email) {
+  return request({
+    method: "POST",
+    path: "/users/me/bind-email",
+    data: { email },
+    auth: true,
+  });
+}
+
 module.exports = {
   getInviteCode,
   buildSharePath,
   consumeInvite,
   fetchFriends,
   fetchSuggest,
+  bindEmail,
 };
