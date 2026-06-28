@@ -346,3 +346,7 @@ class FriendshipOut(BaseModel):
 
 class SuggestOut(UserOut):
     reason: Optional[str] = None
+
+
+class InviteAccept(BaseModel):
+    invite_code: str = Field(min_length=1, max_length=64)

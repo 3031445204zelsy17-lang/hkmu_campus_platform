@@ -1,11 +1,18 @@
 import os
+import secrets
+import string
 import uuid
 from datetime import datetime, timezone
+
+from asyncpg.exceptions import UniqueViolationError
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, status
 
 from ..config import FRONTEND_URL
 from ..database import get_db
-from ..models import UserOut, UserUpdate, BindEmail
+from ..models import (
+    UserOut, UserUpdate, BindEmail,
+    SuggestOut, InviteCodeOut, FriendshipOut, InviteAccept,
+)
 from ..services.auth_service import get_current_user, is_hkmu_email
 from ..services.email_service import send_verification_email
 from ..services.rate_limiter import check_rate_limit
@@ -27,7 +34,7 @@ UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "frontend
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 _USER_COLS = """id, username, nickname, student_id, avatar_url, bio, identity,
-    created_at, email, oauth_provider, programme_code"""
+    created_at, email, oauth_provider, programme_code, hkmu_verified, invite_code"""
 
 
 def _user_out(row, include_email: bool = True) -> UserOut:
@@ -49,6 +56,8 @@ def _user_out(row, include_email: bool = True) -> UserOut:
         kw["email"] = row["email"]
         kw["oauth_provider"] = row["oauth_provider"]
     kw["programme_code"] = row.get("programme_code")
+    kw["hkmu_verified"] = row.get("hkmu_verified", False)
+    kw["invite_code"] = row.get("invite_code")
     return UserOut(**kw)
 
 
@@ -100,6 +109,137 @@ async def bind_email(body: BindEmail, user: dict = Depends(get_current_user)):
         verify_url = f"{FRONTEND_URL}/#/verify-email?token={token}"
     await send_verification_email(body.email, verify_url)
     return {"message": "Verification email sent"}
+
+
+# ── Phase 5: invite / suggest / friendships ──────────────────────────────────
+
+_INVITE_CODE_LEN = 8
+_INVITE_ALPHABET = string.ascii_letters + string.digits  # base62
+
+
+async def _ensure_invite_code(conn, user_id: int) -> str:
+    """Lazily mint a unique invite_code (concurrency-safe via the partial unique index)."""
+    existing = await conn.fetchval("SELECT invite_code FROM users WHERE id = $1", user_id)
+    if existing:
+        return existing
+    for _ in range(5):
+        code = "".join(secrets.choice(_INVITE_ALPHABET) for _ in range(_INVITE_CODE_LEN))
+        try:
+            result = await conn.execute(
+                "UPDATE users SET invite_code = $1, updated_at = $2 "
+                "WHERE id = $3 AND invite_code IS NULL",
+                code, datetime.now(timezone.utc), user_id,
+            )
+            if result.endswith("1"):
+                return code
+        except UniqueViolationError:
+            continue  # code collision (62^8 ≈ 2e14, astronomically rare) — try another
+        # 0 rows updated — a concurrent request likely just minted one
+        existing = await conn.fetchval("SELECT invite_code FROM users WHERE id = $1", user_id)
+        if existing:
+            return existing
+    raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to generate invite code")
+
+
+@router.get("/me/invite-code", response_model=InviteCodeOut)
+async def get_my_invite_code(user: dict = Depends(get_current_user)):
+    """P1: lazily mint the current user's invite code + mini-program share path."""
+    async with get_db() as db:
+        code = await _ensure_invite_code(db, user["id"])
+    return InviteCodeOut(invite_code=code, share_path=f"/pages/home/home?inv={code}")
+
+
+@router.get("/suggest", response_model=list[SuggestOut])
+async def suggest_users(
+    limit: int = Query(10, ge=1, le=50),
+    user: dict = Depends(get_current_user),
+):
+    """P0: recommend HKMU-verified peers (same programme first), excluding friends and prior DM partners.
+
+    `reason` is an i18n signal for the frontend ("same_programme" | "hkmu_peer"), not display copy.
+    """
+    me = user["id"]
+    async with get_db() as db:
+        rows = await db.fetch(
+            f"""
+            SELECT {_USER_COLS},
+                   (programme_code = (SELECT programme_code FROM users WHERE id = $1)) AS same_programme
+            FROM users
+            WHERE hkmu_verified = TRUE
+              AND id <> $1
+              AND id NOT IN (SELECT friend_id FROM friendships WHERE user_id = $1)
+              AND id NOT IN (
+                  SELECT receiver_id FROM messages WHERE sender_id = $1
+                  UNION
+                  SELECT sender_id FROM messages WHERE receiver_id = $1
+              )
+            ORDER BY same_programme DESC, id
+            LIMIT $2
+            """,
+            me, limit,
+        )
+        results = []
+        for r in rows:
+            base = _user_out(r, include_email=False).model_dump()
+            base["reason"] = "same_programme" if r["same_programme"] else "hkmu_peer"
+            results.append(SuggestOut(**base))
+        return results
+
+
+@router.get("/me/friends", response_model=list[FriendshipOut])
+async def list_my_friends(user: dict = Depends(get_current_user)):
+    """Accepted friendships (bidirectional storage — query only WHERE user_id = me)."""
+    async with get_db() as db:
+        frows = await db.fetch(
+            "SELECT id, friend_id, source, created_at FROM friendships "
+            "WHERE user_id = $1 AND status = 'accepted' ORDER BY created_at DESC",
+            user["id"],
+        )
+        if not frows:
+            return []
+        friend_ids = [r["friend_id"] for r in frows]
+        urows = await db.fetch(
+            f"SELECT {_USER_COLS} FROM users WHERE id = ANY($1::int[])",
+            friend_ids,
+        )
+        user_map = {r["id"]: _user_out(r, include_email=False) for r in urows}
+        results = []
+        for fr in frows:
+            friend = user_map.get(fr["friend_id"])
+            if not friend:
+                continue
+            created = fr["created_at"]
+            if isinstance(created, datetime):
+                created = created.isoformat()
+            results.append(FriendshipOut(
+                id=fr["id"], friend=friend, source=fr["source"], created_at=created,
+            ))
+        return results
+
+
+@router.post("/me/friends")
+async def add_friend_by_invite(body: InviteAccept, user: dict = Depends(get_current_user)):
+    """P1: redeem an invite code — auto-bidirectional friend (ON CONFLICT idempotent); self-invite is a no-op."""
+    code = body.invite_code.strip()
+    async with get_db() as db:
+        async with db.transaction():
+            inviter = await db.fetchrow(
+                f"SELECT {_USER_COLS} FROM users WHERE invite_code = $1", code,
+            )
+            if not inviter:
+                raise HTTPException(status.HTTP_404_NOT_FOUND, "Invalid invite code")
+            inviter_id = inviter["id"]
+            if inviter_id == user["id"]:
+                # self-invite: no-op (also guarded client-side)
+                return {"friend": _user_out(inviter).model_dump(), "created": False}
+            result = await db.execute(
+                "INSERT INTO friendships (user_id, friend_id, status, source) "
+                "VALUES ($1, $2, 'accepted', 'invite'), ($2, $1, 'accepted', 'invite') "
+                "ON CONFLICT (user_id, friend_id) DO NOTHING",
+                user["id"], inviter_id,
+            )
+            created = not result.endswith("0")
+            return {"friend": _user_out(inviter).model_dump(), "created": created}
 
 
 @router.put("/me", response_model=UserOut)
