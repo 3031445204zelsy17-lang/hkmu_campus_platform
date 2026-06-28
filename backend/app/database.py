@@ -224,10 +224,9 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_column THEN NULL;
 END $$;
 
--- Add lang column for news (trilingual foundation; default zh-hant).
--- The UNIQUE(lang, source_url) index is created by scripts/sync_news.py AFTER
--- purging legacy seed rows (several share the same source_url). Creating it here
--- would fail on the existing duplicate seed data and crash app startup.
+-- Add lang column for news. UNIQUE(lang, source_url) index is created by
+-- sync_news.py (not here) to avoid failing on legacy seed rows that share
+-- a source_url value
 DO $$ BEGIN
     ALTER TABLE news ADD COLUMN lang TEXT NOT NULL DEFAULT 'zh-hant';
 EXCEPTION WHEN duplicate_column THEN NULL;
