@@ -80,3 +80,34 @@
   font-size: var(--fs-feed-meta);
   color: var(--text-secondary);
 }
+
+/* ── C.6 发现区:好友 + 推荐 两段 ── */
+.nc-section {
+  margin-top: 26rpx;
+}
+.nc-section-title {
+  padding: 0 6rpx 14rpx;
+  font-size: var(--fs-feed-meta);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+.nc-section-hint {
+  padding: 2rpx 6rpx;
+  font-size: var(--fs-feed-meta);
+  color: var(--text-secondary);
+}
+.nc-section-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+/* 推荐理由标签:靠右,绿底胶囊(复用 avatar 同款 token) */
+.nc-reason {
+  flex: 0 0 auto;
+  align-self: center;
+  padding: 6rpx 16rpx;
+  font-size: var(--fs-feed-meta);
+  color: var(--green-deep);
+  background: var(--pill-green-bg);
+  border-radius: var(--radius-pill);
+}

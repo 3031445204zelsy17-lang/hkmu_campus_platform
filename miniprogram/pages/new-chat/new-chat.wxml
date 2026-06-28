@@ -13,28 +13,55 @@
     />
   </view>
 
+  <!-- 搜索中 -->
   <view wx:if="{{loading}}" class="nc-hint">{{text.loading}}</view>
-  <view wx:elif="{{!searched}}" class="nc-hint">{{text.hint}}</view>
-  <view wx:elif="{{results.length === 0}}" class="nc-hint">{{text.noResults}}</view>
-
-  <view wx:else class="nc-list">
-    <view
-      wx:for="{{results}}"
-      wx:key="id"
-      class="nc-user"
-      data-id="{{item.id}}"
-      data-name="{{item.name}}"
-      data-avatar="{{item.avatar}}"
-      bindtap="openUser"
-    >
-      <view class="nc-avatar">
-        <image wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" class="nc-avatar-img" />
-        <view wx:else class="nc-avatar-fallback">{{item.initial}}</view>
-      </view>
-      <view class="nc-info">
-        <text class="nc-name">{{item.name}}</text>
-        <text wx:if="{{item.handle}}" class="nc-handle">{{item.handle}}</text>
-      </view>
+  <!-- 已搜索,无结果 -->
+  <view wx:elif="{{searched && results.length === 0}}" class="nc-hint">{{text.noResults}}</view>
+  <!-- 已搜索,结果列表 -->
+  <view wx:elif="{{searched}}" class="nc-list">
+    <view wx:for="{{results}}" wx:key="id">
+      <template is="ncUserCard" data="{{...item}}" />
     </view>
   </view>
+  <!-- 未搜索且已登录:发现区(我的好友 + 可能认识的同学) -->
+  <block wx:elif="{{loggedIn}}">
+    <view class="nc-section">
+      <view class="nc-section-title">{{text.friendsTitle}}</view>
+      <view wx:if="{{!friendsLoaded}}" class="nc-section-hint">{{text.loadingHint}}</view>
+      <view wx:elif="{{friends.length === 0}}" class="nc-section-hint">{{text.friendsEmpty}}</view>
+      <view wx:else class="nc-section-list">
+        <view wx:for="{{friends}}" wx:key="id">
+          <template is="ncUserCard" data="{{...item}}" />
+        </view>
+      </view>
+    </view>
+
+    <view class="nc-section">
+      <view class="nc-section-title">{{text.suggestTitle}}</view>
+      <view wx:if="{{!suggestLoaded}}" class="nc-section-hint">{{text.loadingHint}}</view>
+      <view wx:elif="{{suggest.length === 0}}" class="nc-section-hint">{{text.suggestEmpty}}</view>
+      <view wx:else class="nc-section-list">
+        <view wx:for="{{suggest}}" wx:key="id">
+          <template is="ncUserCard" data="{{...item}}" />
+        </view>
+      </view>
+    </view>
+  </block>
+  <!-- 未登录兜底 -->
+  <view wx:else class="nc-hint">{{text.hint}}</view>
 </view>
+
+<!-- 用户卡片:results / friends / suggest 共用;suggest 项带 reason 标签 -->
+<template name="ncUserCard">
+  <view class="nc-user" data-id="{{id}}" data-name="{{name}}" data-avatar="{{avatar}}" bindtap="openUser">
+    <view class="nc-avatar">
+      <image wx:if="{{avatar}}" src="{{avatar}}" mode="aspectFill" class="nc-avatar-img" />
+      <view wx:else class="nc-avatar-fallback">{{initial}}</view>
+    </view>
+    <view class="nc-info">
+      <text class="nc-name">{{name}}</text>
+      <text wx:if="{{handle}}" class="nc-handle">{{handle}}</text>
+    </view>
+    <view wx:if="{{reason}}" class="nc-reason">{{reason}}</view>
+  </view>
+</template>
