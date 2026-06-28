@@ -219,6 +219,7 @@ class NewsCreate(BaseModel):
     image_url: Optional[str] = None
     category: Optional[str] = None
     source_url: str
+    lang: Optional[str] = None  # defaults to zh-hant server-side; trilingual hook
 
 
 class NewsOut(BaseModel):
@@ -231,6 +232,7 @@ class NewsOut(BaseModel):
     source_url: str
     published_at: Optional[str] = None
     comments_count: int = 0
+    lang: Optional[str] = None
 
 
 class NewsCommentCreate(BaseModel):

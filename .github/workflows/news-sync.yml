@@ -1,0 +1,50 @@
+name: News Sync
+
+# Periodically sync REAL HKMU news from the official WordPress RSS feed into the
+# production `news` table. Phase 6a ships Traditional (zh-hant) only; the script's
+# FEEDS dict is the trilingual hook (see progress.json phase6b_news_trilingual).
+#
+# Reuses the db-backup.yml secret + Supabase pooler pattern.
+# Compliant: robots.txt allows all; stores excerpt + canonical link only, never
+# full article text; UA-identified; low frequency (daily).
+
+on:
+  schedule:
+    - cron: "7 6 * * *"   # UTC 06:07 daily (~14:07 Beijing), offset from db-backup's 18:17
+  workflow_dispatch:
+    inputs:
+      purge:
+        description: "Purge existing news before sync (FIRST RUN ONLY — clears Phase 4 seed)"
+        type: boolean
+        default: false
+      pages:
+        description: "Feed pages to backfill (1 page ≈ 10 items)"
+        default: "1"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install feedparser httpx asyncpg
+
+      - name: Sync HKMU news → production
+        env:
+          # Reuse the same pooler connection string as db-backup.yml.
+          # The script normalizes port 5432 → 6543 (transaction-mode pooler) and
+          # sets statement_cache_size=0 for pgbouncer compatibility.
+          PROD_DB_URL: ${{ secrets.SUPABASE_DB_URL_BACKUP }}
+        run: |
+          # cron triggers pass empty inputs (workflow_dispatch defaults don't apply) → fall back
+          PAGES="${{ inputs.pages }}"
+          [ -z "$PAGES" ] && PAGES="1"
+          ARGS=""
+          [ "${{ inputs.purge }}" = "true" ] && ARGS="$ARGS --purge"
+          echo "::notice::Running sync_news.py pages=$PAGES purge=${ARGS:+yes}"
+          python scripts/sync_news.py --pages "$PAGES" $ARGS

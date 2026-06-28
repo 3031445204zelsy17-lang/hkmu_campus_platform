@@ -10,7 +10,7 @@ from ..services.sanitizer import sanitize
 router = APIRouter(prefix="/news", tags=["news"])
 
 _NEWS_COLS = """id, author_id, title, summary, image_url, category,
-    source_url, published_at, comments_count"""
+    source_url, published_at, comments_count, lang"""
 
 _COMMENT_COLS = """nc.id, nc.news_id, nc.author_id, nc.content,
     nc.created_at,
@@ -28,12 +28,21 @@ async def list_news(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=50),
     category: str | None = None,
+    lang: str | None = None,
 ):
     offset = (page - 1) * page_size
 
     conditions = []
     params: list = []
     n = 1
+
+    # Filter by language. Defaults to zh-hant (Phase 6a ships Traditional only;
+    # the ?lang param is the hook for the deferred trilingual rollout — see
+    # progress.json phase6b_news_trilingual). Guarantees callers without ?lang
+    # never see mixed or duplicate rows across languages.
+    conditions.append(f"lang = ${n}")
+    params.append(lang if lang else "zh-hant")
+    n += 1
 
     if category:
         conditions.append(f"category = ${n}")
@@ -64,6 +73,7 @@ async def list_news(
                 source_url=r["source_url"],
                 published_at=r["published_at"].isoformat() if isinstance(r["published_at"], datetime) else r["published_at"],
                 comments_count=r["comments_count"] if "comments_count" in r.keys() else 0,
+                lang=r["lang"],
             ).model_dump()
             for r in rows
         ]
@@ -87,11 +97,12 @@ async def create_news(
 
     async with get_db() as db:
         row = await db.fetchrow(
-            """INSERT INTO news (author_id, title, summary, image_url, category, source_url, published_at)
-               VALUES ($1, $2, $3, $4, $5, $6, $7)
+            """INSERT INTO news (author_id, title, summary, image_url, category, source_url, published_at, lang)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                RETURNING id""",
             user["id"], sanitize(body.title), body.summary, body.image_url,
             body.category, sanitize(body.source_url), now,
+            body.lang if body.lang else "zh-hant",
         )
         news_id = row["id"]
 
@@ -105,7 +116,7 @@ async def create_news(
             id=r["id"], author_id=r["author_id"], title=r["title"], summary=r["summary"],
             image_url=r["image_url"], category=r["category"],
             source_url=r["source_url"], published_at=published_at,
-            comments_count=r["comments_count"],
+            comments_count=r["comments_count"], lang=r["lang"],
         )
 
 
