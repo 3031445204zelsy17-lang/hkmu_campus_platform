@@ -544,11 +544,27 @@
         "verification": "终态:news 8(保留) / lostfound 1(黑色钱包,seed 已撤回) / posts 2 / comments 2 / post_likes 1 / 垃圾帖候选 0;news 5 分类全覆盖;每日 db-backup.yml pg_dump 兜底"
       },
       "phase5_social_coldstart": {
-        "status": "plan approved (2026-06-27);待 Phase 3 live 验证后启动",
+        "status": "C.1 done (2026-06-28, branch feature/miniprogram-phase5-social 基于 d78aac7);C.2 next",
         "doc": "docs/ops/小程序社交冷启动-C方案.md",
         "what": "P0 HKMU 邮箱验证层 + 同学推荐;P1 邀请码分享 → 自动双向好友 → DM。微信好友关系链不可用(memory wechat-friend-graph-unavailable),走自有关系图",
+        "c1": {
+          "status": "done — 代码层验证全绿;init_db live 建表待部署/SELECT 核对",
+          "what": "database.py:users 加 hkmu_verified BOOLEAN DEFAULT FALSE + invite_code TEXT 两列(均 DO$$ 幂等块);partial unique index idx_users_invite_code(WHERE invite_code IS NOT NULL,照抄 idx_users_email 模式,多 NULL 安全);friendships 表(id SERIAL PK + user_id/friend_id 双 FK ON DELETE CASCADE + status DEFAULT accepted + source DEFAULT invite + UNIQUE(user_id,friend_id))+ idx_friendships_user_status + idx_friendships_friend。models.py:UserOut 加 hkmu_verified/invite_code + 4 新 model(BindEmail/InviteCodeOut/FriendshipOut/SuggestOut)",
+          "decisions": [
+            "invite_code 用 partial unique index(WHERE IS NOT NULL)非普通 UNIQUE — 多 NULL 安全 + 照抄 idx_users_email",
+            "SuggestOut(UserOut) 继承非组合 — 扁平 JSON 复用 new-chat nc-user 渲染(已运行时验证 model_dump 扁平)",
+            "status DEFAULT accepted(P1 自动好友);枚举留口子备将来 friend-request",
+            "friendships 双向存储两行(WHERE user_id=me 单向查询)"
+          ],
+          "verification": "py_compile ✅ + init_db splitter 程序化复刻(42=36+6 语句 bad=0 红线过关)✅ + Pydantic 继承/嵌套 import+实例化+SuggestOut.model_dump 扁平+BindEmail pattern 拦截 运行时 ✅;待 init_db live 建表(Azure 重启自动跑 或 Supabase SQL editor SELECT information_schema.columns/pg_indexes 核对)",
+          "todo_c3": [
+            "_USER_COLS + _user_out(routers/users.py:25/29)接 hkmu_verified/invite_code — C.1 后字段是默认值 False/None,C.3 才 SELECT 填充",
+            "invite_code 懒生成需 ON CONFLICT 重试防并发竞争(partial unique index 已就位)",
+            "POST /friendships/invite 用 ON CONFLICT (user_id,friend_id) DO NOTHING 幂等(依赖 UNIQUE 约束)"
+          ]
+        },
         "steps": [
-          "C.1 后端 schema(hkmu_verified/invite_code/friendships 表)+ models",
+          "C.1 后端 schema(hkmu_verified/invite_code/friendships 表)+ models ✅ done",
           "C.2 HKMU 域判定 + verify 置 hkmu_verified + 学生邮箱推 student_id + bind-email",
           "C.3 invite-code/suggest/friendships 端点(自邀拦截+幂等双向)",
           "C.4 app.js 读 query.inv + utils/social.js",

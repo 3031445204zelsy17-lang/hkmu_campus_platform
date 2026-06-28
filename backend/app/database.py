@@ -231,6 +231,38 @@ DO $$ BEGIN
     ALTER TABLE news ADD COLUMN lang TEXT NOT NULL DEFAULT 'zh-hant';
 EXCEPTION WHEN duplicate_column THEN NULL;
 END $$;
+
+-- Add hkmu_verified column for HKMU email verification tier (safe for existing DBs)
+DO $$ BEGIN
+    ALTER TABLE users ADD COLUMN hkmu_verified BOOLEAN DEFAULT FALSE;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
+-- Add invite_code column for invite-share flow, lazily generated, NULL by default
+DO $$ BEGIN
+    ALTER TABLE users ADD COLUMN invite_code TEXT;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
+-- Partial unique index invite_code non-NULL unique multiple NULLs allowed matches idx_users_email
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_invite_code ON users(invite_code) WHERE invite_code IS NOT NULL;
+
+-- friendships table for invite-based auto-friend and future friend-request flow
+CREATE TABLE IF NOT EXISTS friendships (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    friend_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'accepted',
+    source TEXT DEFAULT 'invite',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, friend_id)
+);
+
+-- Index for WHERE user_id = me AND status = accepted queries
+CREATE INDEX IF NOT EXISTS idx_friendships_user_status ON friendships(user_id, status);
+
+-- friend_id index defensive for CASCADE row lookup redundant under bidirectional storage
+CREATE INDEX IF NOT EXISTS idx_friendships_friend ON friendships(friend_id);
 """
 
 
