@@ -36,15 +36,20 @@ jobs:
 
       - name: Sync HKMU news → production
         env:
-          # Reuse the same pooler connection string as db-backup.yml.
-          # The script normalizes port 5432 → 6543 (transaction-mode pooler) and
-          # sets statement_cache_size=0 for pgbouncer compatibility.
-          PROD_DB_URL: ${{ secrets.SUPABASE_DB_URL_BACKUP }}
+          # Reuse the db-backup.yml secret pattern. Repo currently sets MUCP;
+          # SUPABASE_DB_URL_BACKUP is the preferred name (falls back to MUCP).
+          PRIMARY_URL: ${{ secrets.SUPABASE_DB_URL_BACKUP }}
+          FALLBACK_URL: ${{ secrets.MUCP }}
         run: |
           # cron triggers pass empty inputs (workflow_dispatch defaults don't apply) → fall back
           PAGES="${{ inputs.pages }}"
           [ -z "$PAGES" ] && PAGES="1"
           ARGS=""
           [ "${{ inputs.purge }}" = "true" ] && ARGS="$ARGS --purge"
+          export PROD_DB_URL="${PRIMARY_URL:-$FALLBACK_URL}"
+          if [ -z "$PROD_DB_URL" ]; then
+            echo "::error::No DB URL secret set (SUPABASE_DB_URL_BACKUP or MUCP)"
+            exit 1
+          fi
           echo "::notice::Running sync_news.py pages=$PAGES purge=${ARGS:+yes}"
           python scripts/sync_news.py --pages "$PAGES" $ARGS
