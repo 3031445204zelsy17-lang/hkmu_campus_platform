@@ -18,6 +18,7 @@ from ..services.auth_service import (
     create_refresh_token, verify_refresh_token, rotate_refresh_token,
     revoke_refresh_token,
     OAUTH_NO_PASSWORD, is_oauth_only,
+    is_hkmu_email, derive_student_id,
 )
 from ..services.sanitizer import sanitize_dict, sanitize
 from ..services.rate_limiter import check_rate_limit
@@ -517,9 +518,21 @@ async def verify_email(body: VerifyEmail):
         if user_id is None:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or expired verification token")
 
-        await db.execute(
-            "UPDATE users SET email_verified = TRUE WHERE id = $1", user_id,
-        )
+        # Phase 5 P0: HKMU email tier — verify also unlocks hkmu_verified and backfills student_id.
+        # Works for both register and bind-email flows (method C: email already in users.email).
+        row = await db.fetchrow("SELECT email, student_id FROM users WHERE id = $1", user_id)
+        now = datetime.now(timezone.utc)
+        if is_hkmu_email(row["email"] if row else None):
+            await db.execute(
+                "UPDATE users SET email_verified = TRUE, hkmu_verified = TRUE, "
+                "student_id = COALESCE(student_id, $2), updated_at = $3 WHERE id = $1",
+                user_id, derive_student_id(row["email"]), now,
+            )
+        else:
+            await db.execute(
+                "UPDATE users SET email_verified = TRUE, updated_at = $2 WHERE id = $1",
+                user_id, now,
+            )
     return {"message": "Email verified successfully."}
 
 

@@ -15,6 +15,26 @@ OAUTH_NO_PASSWORD = "!oauth_no_password"
 
 def is_oauth_only(password_hash: str) -> bool:
     return password_hash == OAUTH_NO_PASSWORD
+
+
+def is_hkmu_email(email: str) -> bool:
+    """HKMU faculty (@hkmu.edu.hk) or student (@live.hkmu.edu.hk) email."""
+    if not email:
+        return False
+    lowered = email.lower()
+    return lowered.endswith("@hkmu.edu.hk") or lowered.endswith("@live.hkmu.edu.hk")
+
+
+def derive_student_id(email: str) -> str | None:
+    """HKMU student email s1234567@live.hkmu.edu.hk -> student_id 1234567 (strip leading s)."""
+    if not email:
+        return None
+    local = email.split("@")[0]
+    if len(local) >= 2 and local[0].lower() == "s" and local[1:].isdigit():
+        return local[1:]
+    return None
+
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
