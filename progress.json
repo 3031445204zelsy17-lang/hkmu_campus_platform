@@ -544,7 +544,7 @@
         "verification": "终态:news 8(保留) / lostfound 1(黑色钱包,seed 已撤回) / posts 2 / comments 2 / post_likes 1 / 垃圾帖候选 0;news 5 分类全覆盖;每日 db-backup.yml pg_dump 兜底"
       },
       "phase5_social_coldstart": {
-        "status": "C.1-C.5 done (2026-06-28, branch feature/miniprogram-phase5-social);profile 就绪,C.6 new-chat",
+        "status": "C.1-C.5 done (2026-06-28, branch feature/miniprogram-phase5-social);后端 C.1-C.3 已部署生产镜像 c5906ee(init_db 建表 OK + automator 端到端验证 user.hkmu_verified/invite_code/sharePath 全通);C.6 new-chat",
         "doc": "docs/ops/小程序社交冷启动-C方案.md",
         "what": "P0 HKMU 邮箱验证层 + 同学推荐;P1 邀请码分享 → 自动双向好友 → DM。微信好友关系链不可用(memory wechat-friend-graph-unavailable),走自有关系图",
         "c1": {
