@@ -37,3 +37,15 @@
   color: var(--text-secondary);
   font-size: var(--fs-link);
 }
+
+/* Phase 5: HKMU 已验证徽章(视图模式,name 旁)— 页面级,不动 app.wxss */
+.verified-badge {
+  display: inline-block;
+  margin-left: 12rpx;
+  padding: 2rpx 14rpx;
+  border-radius: var(--radius-pill);
+  background: var(--accent-blue);
+  color: #ffffff;
+  font-size: var(--fs-link);
+  vertical-align: middle;
+}
