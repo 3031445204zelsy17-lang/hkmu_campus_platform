@@ -2,9 +2,10 @@ const auth = require("../../utils/auth");
 const { request } = require("../../utils/request");
 const { syncTabBar } = require("../../utils/tabbar");
 const { getLocale, getTexts } = require("../../utils/i18n");
-const { normalizePost } = require("../../utils/post");
+const { normalizePost, resolveUrl } = require("../../utils/post");
 const { PAGE_SIZE } = require("../../utils/config");
 const { openDMWith } = require("../../utils/dm");
+const social = require("../../utils/social");
 
 const FEED_TAB_KEYS = ["newest", "hot"];
 
@@ -51,6 +52,7 @@ Page({
         this._hasLoadedPosts = true;
         this.loadPosts(true);
       }
+      this._consumePendingInvite(user || null); // C.7 消费邀请码
     });
   },
 
@@ -248,5 +250,52 @@ Page({
 
   openDM(event) {
     openDMWith(event.currentTarget.dataset.authorId);
+  },
+
+  // C.7: 消费 app.js 暂存的邀请码(?inv=xxx) → 自动双向好友 → 提示 + 可选跳 chat。
+  // 未登录时保留 pendingInvite,等登录后 home onShow 再次触发时消费。
+  _consumePendingInvite(user) {
+    const app = getApp();
+    const code = app.globalData && app.globalData.pendingInvite;
+    if (!code) return;
+    if (!user) return; // 未登录:留待登录后再消费
+    // 立即清暂存,防 onShow 多次触发重复消费
+    app.globalData.pendingInvite = null;
+
+    const text = getTexts("social");
+    wx.showLoading({ title: text.inviteLoading, mask: true });
+    social
+      .consumeInvite(code)
+      .then((res) => {
+        wx.hideLoading();
+        const friend = (res && res.friend) || null;
+        const created = !!(res && res.created);
+        const name =
+          (friend && (friend.nickname || friend.username)) || text.defaultAuthor;
+        if (created && friend) {
+          wx.showModal({
+            title: text.inviteAddedTitle,
+            content: text.inviteAddedDesc.replace("{name}", name),
+            confirmText: text.inviteGoChat,
+            cancelText: text.inviteDismiss,
+            success: (m) => {
+              if (m.confirm) {
+                const params =
+                  `user_id=${friend.id}` +
+                  `&name=${encodeURIComponent(name)}` +
+                  `&avatar=${encodeURIComponent(resolveUrl(friend.avatar_url) || "")}`;
+                wx.navigateTo({ url: `/pages/chat/chat?${params}` });
+              }
+            },
+          });
+        } else {
+          // 已是好友 / 自邀(后端 created=false)
+          wx.showToast({ title: text.inviteAlreadyFriend, icon: "none" });
+        }
+      })
+      .catch(() => {
+        wx.hideLoading();
+        wx.showToast({ title: text.inviteFail, icon: "none" });
+      });
   },
 });
