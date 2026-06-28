@@ -544,7 +544,7 @@
         "verification": "终态:news 8(保留) / lostfound 1(黑色钱包,seed 已撤回) / posts 2 / comments 2 / post_likes 1 / 垃圾帖候选 0;news 5 分类全覆盖;每日 db-backup.yml pg_dump 兜底"
       },
       "phase5_social_coldstart": {
-        "status": "C.1-C.5 done (2026-06-28, branch feature/miniprogram-phase5-social);后端 C.1-C.3 已部署生产镜像 c5906ee(init_db 建表 OK + automator 端到端验证 user.hkmu_verified/invite_code/sharePath 全通);C.6 new-chat",
+        "status": "C.1-C.7 done (2026-06-28, branch feature/miniprogram-phase5-social;代码 c68a85d);后端 C.1-C.3 已部署生产镜像 c5906ee(init_db 建表 OK + automator 端到端验证 user.hkmu_verified/invite_code/sharePath 全通);C.6 new-chat 好友+推荐段 + C.7 home 消费邀请闭环 done(静态全绿);剩 C.8 live 两账号端到端验证",
         "doc": "docs/ops/小程序社交冷启动-C方案.md",
         "what": "P0 HKMU 邮箱验证层 + 同学推荐;P1 邀请码分享 → 自动双向好友 → DM。微信好友关系链不可用(memory wechat-friend-graph-unavailable),走自有关系图",
         "c1": {
@@ -627,9 +627,38 @@
             "bind-email 验证邮件链路经 web /#/verify-email(微信内置浏览器可打开,非小程序阻塞)"
           ],
           "verification": "node --check social.js/profile.js/i18n.js ✅ + i18n 9 key × 3 语言 parity 全 3 ✅ + WXML <view> 50/50 平衡 ✅ + 新 text.* key(hkmuVerifiedBadge/bindEmailAction/inviteAction)都在 profile scope ✅;待 IDE 编译截图 + live(预取 invite_code / bind-email 发邮件闭环经 web verify)",
-          "todo_c6_c7": [
-            "C.6 new-chat:我的好友段(fetchFriends)+ 可能认识的同学段(fetchSuggest 按 reason i18n same_programme/hkmu_peer)→ 点选 openUser → chat",
-            "C.7 home:onShow 消费 pendingInvite(已登录)→ consumeInvite → toast + 可选跳 chat;清暂存 + i18n social scope"
+          "todo_c6_c7": "done — C.6/C.7 已实现,闭环与验证详见各自对象 c6/c7"
+        },
+        "c6": {
+          "status": "done — 代码层验证全绿;待 IDE 编译 + live 两账号闭环",
+          "what": "new-chat 加发现区两段(我的好友 fetchFriends→FriendshipOut.friend 卡片 / 可能认识的同学 fetchSuggest→扁平 SuggestOut + reason i18n 标签),点选 openUser→chat。抽 WXML <template name=ncUserCard>(results/friends/suggest 三处共用,suggest 带 reason 胶囊)。onShow 登录态加载 friends(每次刷,反映新好友)+ suggest(首次);_applySocial 用当前语言重映射(load 成功+语言切换都调);失败 best-effort 当空不阻塞搜索。i18n newChat scope +7 key 三语(friendsTitle/friendsEmpty/suggestTitle/suggestEmpty/loadingHint/suggestReasonSameProgramme/suggestReasonHkmuPeer)",
+          "decisions": [
+            "抽 <template> 而非内联三份卡片 — results/friends/suggest 共用,reason 用 wx:if 区分(friends/results 无 reason 不显胶囊)",
+            "reason 在 JS 预译成本地化文案(social.js 信号 same_programme/hkmu_peer→文案),模板不引用 text.* 避作用域问题;_applySocial 语言切换重译",
+            "onShow 驱动(非 onLoad):首进 onLoad→onShow 不双载;friends 每次刷(便宜+反映 C.7 新加好友),suggest 仅首次(suggestLoaded 守卫)",
+            "登录态判断复刻 messages.js:auth.getStoredUser() && token;未登录只显搜索,发现区隐藏",
+            "失败 best-effort 当空(friendsLoaded/suggestLoaded=true+空),不阻塞搜索主路径"
+          ],
+          "verification": "node --check new-chat.js/social.js/i18n.js ✅ + i18n 7 key × 3 parity 全 3 ✅ + runtime getTexts('newChat') 全非空 ✅ + WXML view 24/24 block 1/1 text 2/2 平衡 + template 1 定义+3 自闭合调用 ✅ + require 无环(social→request 单向)✅ + 端点对齐后端 C.3(GET /me/friends + /suggest)✅;待 IDE 编译截图 + live 两账号闭环",
+          "todo_live": [
+            "微信开发者工具编译/截图:两段渲染、reason 胶囊(同专业/HKMU 同学)位置、空态文案、搜索时发现区隐藏、切语言 reason 重译",
+            "live:GET /users/me/friends + /users/suggest 闭环;tap 卡片→chat;边界(无好友/无推荐 empty)"
+          ]
+        },
+        "c7": {
+          "status": "done — 代码层验证全绿;待 IDE 编译 + live 两账号闭环",
+          "what": "home onShow bootstrapSession().then 里调 _consumePendingInvite(user):读 app.globalData.pendingInvite(C.4 暂存)→未登录留待→立即清暂存防重复→social.consumeInvite(POST /me/friends)→ created=true 走 wx.showModal(已添加好友/你和 {name} 已成为好友 [去聊天][稍后])确认跳 chat,created=false(自邀/已好友)toast,catch toast 失败。i18n 新建 social scope × 3 语言(7 key,继承 COMMON.defaultAuthor)",
+          "decisions": [
+            "消费点放 bootstrapSession().then 内 — user 已解析登录态确定;未登录 user=null 跳过,pendingInvite 留待登录后 home onShow 再消费",
+            "立即清暂存(同步)防 onShow 多次触发重复 POST;失败不回填(坏码不自动重试,已 toast)",
+            "created 分流:真新好友→modal 引导去 chat;created=false(自邀/已好友)→轻 toast;catch→邀请码无效 toast",
+            "跳 chat 参数对齐 new-chat openUser:user_id/name/avatar(decodeURIComponent),chat onLoad 已支持",
+            "C.6+C.7 串成完整 P1 邀请闭环:分享→app.js 捕获 inv→home 消费→双向好友→modal→DM→new-chat 好友段互见。测试无需造数据,2 账号走产品自身流程即可"
+          ],
+          "verification": "node --check home.js/i18n.js/social.js ✅ + social scope 7 key × 3 parity ✅ + runtime getTexts('social') 全非空(含继承 defaultAuthor)+ {name} 占位三语保留 ✅ + 接线确认(home:55 调用 / 257 方法 / 268 consumeInvite)+ app.js pendingInvite/_captureInvite 链路 ✅ + consumeInvite↔后端 POST /me/friends 契约 {friend,created} ✅;待 IDE 编译 + live 两账号走闭环",
+          "todo_live": [
+            "两账号端到端:A profile 邀请分享→B 打开(开发者工具编译模式自定义启动参数 inv=CODE 或真机扫码)→B home 弹已添加好友→去聊天→发消息→B/A new-chat 好友段互见",
+            "边界:未登录打开邀请码(留待登录后消费)、自邀(created=false toast)、无效码(catch toast)、重复消费(清暂存防重)"
           ]
         },
         "steps": [
@@ -638,8 +667,8 @@
           "C.3 invite-code/suggest/friendships 端点(自邀拦截+幂等双向) ✅ done",
           "C.4 app.js 读 query.inv + utils/social.js ✅ done",
           "C.5 profile 验证入口+邀请分享 ✅ done",
-          "C.6 new-chat 好友+推荐两段",
-          "C.7 home 消费邀请 + i18n",
+          "C.6 new-chat 好友+推荐两段 ✅ done",
+          "C.7 home 消费邀请 + i18n ✅ done",
           "C.8 静态+live 验证"
         ]
       },
