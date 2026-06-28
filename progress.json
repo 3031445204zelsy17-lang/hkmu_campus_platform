@@ -544,7 +544,7 @@
         "verification": "终态:news 8(保留) / lostfound 1(黑色钱包,seed 已撤回) / posts 2 / comments 2 / post_likes 1 / 垃圾帖候选 0;news 5 分类全覆盖;每日 db-backup.yml pg_dump 兜底"
       },
       "phase5_social_coldstart": {
-        "status": "C.1+C.2+C.3 done (2026-06-28, branch feature/miniprogram-phase5-social);后端 P0+P1 齐活,C.4 起转前端",
+        "status": "C.1+C.2+C.3+C.4 done (2026-06-28, branch feature/miniprogram-phase5-social);前端传输层就绪,C.5 profile",
         "doc": "docs/ops/小程序社交冷启动-C方案.md",
         "what": "P0 HKMU 邮箱验证层 + 同学推荐;P1 邀请码分享 → 自动双向好友 → DM。微信好友关系链不可用(memory wechat-friend-graph-unavailable),走自有关系图",
         "c1": {
@@ -598,11 +598,28 @@
             "前端路径对齐:GET /users/me/invite-code + /users/suggest + /users/me/friends(GET/POST);friendships 用 /me/friends 非方案 /friendships"
           ]
         },
+        "c4": {
+          "status": "done — 代码层验证全绿;待 IDE 编译 + C.5-C.7 联调",
+          "what": "app.js 加 pendingInvite globalData + _captureInvite helper + onLaunch(options)/onShow(options) 读 query.inv(暂存不消费,C.7 home 消费)。新建 utils/social.js(传输层):getInviteCode/buildSharePath/consumeInvite/fetchFriends/fetchSuggest,仿 messages.js 风格(只依赖 request 不依赖 auth 避环)",
+          "decisions": [
+            "social.js 纯 REST 不带事件总线(无 WS,与 messages.js 不同)",
+            "social 刻意不 require auth(避环),登录态由 request auth:true + Bearer 自动处理(同 messages.js 模式)",
+            "app.js onLaunch+onShow 双捕获 query.inv(冷启动走 onLaunch,热启动/后台切回走 onShow)",
+            "C.4 只暂存 pendingInvite 不消费(消费在 C.7 home onShow,因需登录态)"
+          ],
+          "verification": "node --check social.js + app.js ✅ + 路径对齐后端 C.3(/users/me/invite-code /users/me/friends GET+POST /users/suggest)✅ + require 无环(social 只依赖 request)✅ + app.js 改动确认(pendingInvite/_captureInvite/onShow)✅;待 IDE 编译 + live",
+          "todo_c5_c7": [
+            "C.5 profile:未验证 → bind-email 入口(输 HKMU 邮箱)+ 邀请分享(<button open-type=share> + onShareAppMessage path=buildSharePath(code))",
+            "C.6 new-chat:我的好友段(fetchFriends)+ 可能认识的同学段(fetchSuggest 按 reason i18n same_programme/hkmu_peer)→ 点选 openUser → chat",
+            "C.7 home:onShow 消费 pendingInvite(已登录才消费)→ consumeInvite → toast + 可选跳 chat;清暂存 + i18n social scope",
+            "app.js 共享文件改动需群通知(改动小:onShow+pendingInvite+_captureInvite)"
+          ]
+        },
         "steps": [
           "C.1 后端 schema(hkmu_verified/invite_code/friendships 表)+ models ✅ done",
           "C.2 HKMU 域判定 + verify 置 hkmu_verified + 学生邮箱推 student_id + bind-email ✅ done",
           "C.3 invite-code/suggest/friendships 端点(自邀拦截+幂等双向) ✅ done",
-          "C.4 app.js 读 query.inv + utils/social.js",
+          "C.4 app.js 读 query.inv + utils/social.js ✅ done",
           "C.5 profile 验证入口+邀请分享",
           "C.6 new-chat 好友+推荐两段",
           "C.7 home 消费邀请 + i18n",
