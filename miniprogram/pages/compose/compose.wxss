@@ -1,0 +1,53 @@
+.compose-image-row {
+  margin-top: 20rpx;
+}
+
+.compose-image-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  height: 200rpx;
+  background: var(--surface);
+  border: 2rpx dashed var(--border-soft);
+  border-radius: var(--radius-entry);
+  color: var(--text-secondary);
+}
+
+.compose-image-add-glyph {
+  font-size: 48rpx;
+  color: var(--accent-blue);
+}
+
+.compose-image-add-label {
+  font-size: var(--fs-link);
+}
+
+.compose-image-preview {
+  position: relative;
+  width: 100%;
+  height: 200rpx;
+  border-radius: var(--radius-entry);
+  overflow: hidden;
+}
+
+.compose-image-thumb {
+  width: 100%;
+  height: 100%;
+}
+
+.compose-image-remove {
+  position: absolute;
+  top: 12rpx;
+  right: 12rpx;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: var(--radius-pill);
+  background: rgba(20, 32, 51, 0.6);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-link);
+}

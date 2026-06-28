@@ -1,15 +1,15 @@
-<app-header bind:languagechange="handleLanguageChange" />
+<app-header show-back="{{true}}" bind:languagechange="handleLanguageChange" />
 
 <view class="page-shell">
   <view class="top-bar tight">
     <view class="brand-lockup">
       <view class="eyebrow">{{text.eyebrow}}</view>
-      <view class="app-title">{{text.title}}</view>
+      <view class="app-title">{{isRegister ? text.registerTitle : text.title}}</view>
       <view class="subtitle">{{text.subtitle}}</view>
     </view>
   </view>
 
-  <view class="form-sheet">
+  <view wx:if="{{!isRegister}}" class="form-sheet">
     <view class="section-title">{{text.wechatTitle}}</view>
     <view class="helper-text">{{text.wechatCopy}}</view>
     <button class="wechat-action" loading="{{loading}}" bindtap="submitWechatLogin">
@@ -18,16 +18,25 @@
   </view>
 
   <view class="form-sheet">
-    <view class="section-title">{{text.accountTitle}}</view>
-    <view class="segmented flat">
-      <view class="{{usernameModeClass}}" data-mode="username" bindtap="switchMode">{{text.usernameMode}}</view>
-      <view class="{{emailModeClass}}" data-mode="email" bindtap="switchMode">{{text.emailMode}}</view>
-    </view>
+    <view class="section-title">{{isRegister ? text.registerTitle : text.accountTitle}}</view>
 
-    <view class="field-label">{{modeLabel}}</view>
+    <!-- 登录模式：用户名/邮箱切换 -->
+    <block wx:if="{{!isRegister}}">
+      <view class="segmented flat">
+        <view class="{{usernameModeClass}}" data-mode="username" bindtap="switchMode">{{text.usernameMode}}</view>
+        <view class="{{emailModeClass}}" data-mode="email" bindtap="switchMode">{{text.emailMode}}</view>
+      </view>
+      <view class="field-label">{{modeLabel}}</view>
+    </block>
+
+    <!-- 注册模式：邮箱固定 -->
+    <block wx:else>
+      <view class="field-label">{{text.emailLabel}}</view>
+    </block>
+
     <input
       class="text-input"
-      placeholder="{{accountPlaceholder}}"
+      placeholder="{{isRegister ? text.emailPlaceholder : accountPlaceholder}}"
       value="{{account}}"
       data-field="account"
       bindinput="updateField"
@@ -42,11 +51,41 @@
       data-field="password"
       bindinput="updateField"
     />
+    <view wx:if="{{isRegister}}" class="helper-text">{{text.passwordRule}}</view>
+
+    <!-- 注册额外字段 -->
+    <block wx:if="{{isRegister}}">
+      <view class="field-label">{{text.nicknameLabel}}</view>
+      <input
+        class="text-input"
+        maxlength="30"
+        placeholder="{{text.nicknamePlaceholder}}"
+        value="{{nickname}}"
+        data-field="nickname"
+        bindinput="updateField"
+      />
+
+      <view class="field-label">{{text.studentIdLabel}}</view>
+      <input
+        class="text-input"
+        placeholder="{{text.studentIdPlaceholder}}"
+        value="{{studentId}}"
+        data-field="studentId"
+        bindinput="updateField"
+      />
+    </block>
 
     <view class="action-row">
-      <button class="primary-action" loading="{{loading}}" bindtap="submitAccountLogin">
+      <button wx:if="{{!isRegister}}" class="primary-action" loading="{{loading}}" bindtap="submitAccountLogin">
         {{text.loginButton}}
       </button>
+      <button wx:else class="primary-action" loading="{{loading}}" bindtap="submitRegister">
+        {{text.registerButton}}
+      </button>
+    </view>
+
+    <view class="form-toggle" bindtap="toggleRegister">
+      <view class="text-link">{{isRegister ? text.goLogin : text.goRegister}}</view>
     </view>
   </view>
 </view>

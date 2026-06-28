@@ -444,5 +444,143 @@
       "db_backup": "done via PR#6 (64c666d) — .github/workflows/db-backup.yml 每天 pg_dump（postgres:17 docker + pooler IPv4，secret 名 MUCP），artifact 14天"
     },
     "next_step": "微信公众平台注册小程序拿 AppID → 配 Azure 环境变量 → 开 Docker Desktop 部署（让微信登录 + health 探活在生产生效）"
+  },
+  "miniprogram_parity": {
+    "_doc": "小程序↔网页版功能对齐（2026-06-25 起；目标彻底对齐；约束=少动小程序前端，新增样式只用 styles/tokens.wxss 的 var）",
+    "strategy_doc": "docs/ops/小程序对齐-优化策略.md",
+    "decisions": {
+      "c3": "方案 B — 后端新增聚合端点（SYF 是 owner，无协调成本）",
+      "post_image": "定 a — 单图 image_url TEXT（与 lostfound 一致，2026-06-26 定；多图 JSONB 延后）",
+      "data_ops": "已授权连生产 Supabase（补 seed + 清垃圾帖）",
+      "app_wxss": "轻量隔离（建 tokens.wxss + 死层注释，不删死层）"
+    },
+    "phases": {
+      "phase0_foundation": {
+        "status": "done",
+        "commit": "61b6498 (branch feature/miniprogram-phase0-foundation, pending push/PR)",
+        "what": "styles/tokens.wxss 设计 token + app.wxss @import/死层注释；i18n 补 typeFound 招領 + statusCopy 三语改实时；compose 发帖回 community + postsNeedRefresh 刷新；community 标题 bug 排除(视觉误判)",
+        "verified": "automator 编译通过 + home/community/lostfound 截图 + 0 console error",
+        "deferred": "home/community 公共代码抽取 → 延到 Phase 1 改 normalizePost 时局部抽"
+      },
+      "phase1_connect_apis": {
+        "status": "done (①-⑦, 2026-06-27)",
+        "what": "帖子配图 → 评论 → 资料编辑 → 注册入口（详细步骤见 done/pending）",
+        "done": [
+          "① 抽公共代码：home/community 的 normalizePost/compactNumber/avatarUrl → utils/post.js（含 imageUrl）；avatarUrl 改名 resolveUrl 复用给图片。commit 2b55dfd",
+          "② 帖子配图（单图 image_url TEXT）：后端 posts 加字段(models PostCreate/Out + posts.py _POST_COLS/INSERT/_post_row_to_out + database.py DO$$幂等迁移) commit 7eb2391；小程序 compose wx.chooseMedia + 新建 utils/upload.js(wx.uploadFile,Bearer,JSON.parse res.data) + home/community 帖子卡 feed-image commit 2b55dfd；web _showPostEditor 新建模式挂 createImageUploader({module:posts}) + PostBody 渲染 post-card-img commit ad23503。上传基建沿用 POST /api/v1/upload?module=posts（已就绪，无需新建端点）",
+          "③ 评论（community 接 /posts/{id}/comments）：community.js 加 normalizeComment + commentState map（独立于 posts 防 rebuild 冲掉）+ toggleComments/loadComments/updateCommentDraft/submitComment/_bumpCommentsCount（乐观更新 comments_count 复刻 toggleLike）；wxml 评论按钮 openComments→toggleComments+data-id、post-actions 后加 comment-section（列表 wx:for-item=comment + 登录才显输入 composer 回车即发）；wxss 评论样式全用 tokens var、页面级不动 app.wxss；i18n 三语加 commentLoading/Empty/Placeholder/Send/Sent（失败复用 actionFail/loadFail；commentsSoon 保留 home.js:217 仍用）。GET /posts/3/comments 已 live 验证；POST 已 curl 闭环验证（syf_review_test 号：create_comment+count+1+字段契约全通，测试评论已清；开发者工具手动 UI 验证仍待用户）。评论为 inline 展开（feed-card 内，占视野不符社交媒体习惯），⑦ 帖子详情页会将其迁到详情页。commit 06a27cc",
+          "④ 资料编辑：profile.js 重写编辑态（enterEdit/cancelEdit/updateDraft/chooseAvatar/saveProfile）；chooseAvatar 复用 utils/upload.js(module:avatars) 预览，saveProfile diff 变更字段→PUT /users/me→refreshProfile 回刷存储+全局用户；profile.wxml 视图/编辑双态（头像可点+昵称+简介+保存/取消；视图态「刷新」按钮换「编辑资料」，刷新保留下拉）；新建 profile.wxss（头像编辑块+＋徽章，全 tokens var，不动 app.wxss）；i18n 三语 +12 key；昵称空值前端拦截。commit fd81d79。⚠️ 实装后发现 profile 是孤立页（全项目 0 跳转引用、不在 tabbar）→ ④ 不可达，已补「我的」第 5 tab 入口（app.json tabBar.list + i18n TABBAR_ROUTES/三语 + custom-tab-bar icon-profile + profile.js syncTabBar(4)，commit 805cf15）。开发者工具编译/截图 + live PUT/上传 + 5-tab 胶囊布局仍待用户",
+          "⑤ 注册入口：login.js 加 isRegister 模式 + toggleRegister/submitRegister（前端校验镜像后端：email 正则 + 密码≥8 含大小写数字 + 昵称非空）；POST /auth/email/register 成功 → 回邮箱登录态保留 email，不自动登录（后端 /auth/email/login 拦截未验证邮箱，需用户邮箱点验证链接 web URL 后再登录）。login.wxml 注册/登录双态 + 底部 text-link 切换；新建 login.wxss(.form-toggle)；i18n 三语 +15 key。commit 70d1e28。开发者工具编译/截图 + live 注册闭环（含邮箱验证链路）仍待用户",
+          "⑥ carryover（2026-06-26 done，commit e7757e2+702f16f）：⑥a page_size 常量化（utils/config.js PAGE_SIZE={feed:2,list:12,comments:50}，5 处替换值不动；用户开发者工具已确认行为一致）；⑥c logout 调后端 revoke（后端 revoke_refresh_token: sha256→DELETE...RETURNING 幂等 + POST /auth/logout RFC7009 不强制 auth 始终200；前端 logout() 同步清本地 + 后台 best-effort POST /auth/logout，catch 兜底不阻塞）。✅⑥c 已上线生产 cc19d3a8（2026-06-27：本地 buildx amd64 push ACR + az webapp config container set；/auth/logout+微信登录后端+/api/health 真实探活 curl 验证通过，部署方法 memory azure-deploy-method）+ 小程序已上传 + uploadFile 域名已补。⑥b 跳过：lostfound 非 tab 页，syncTabBar 为 no-op（getTabBar 返 null）；onShow 数据刷新留作观察项",
+          "⑦ 帖子详情页（pages/post-detail，2026-06-27 done）：新建 post-detail 页（js/wxml/wxss/json）+ app.json 注册路由；GET /posts/{id} 单帖端点已存在（posts.py:184，返全文 PostOut）→ 无需加端点。③ 的 inline 评论逻辑从 community 迁到 post-detail：normalizeComment 复刻 + loadComments(GET /posts/{id}/comments,page_size=PAGE_SIZE.comments) + submitComment(POST,乐观追加+comments_count+1) + toggleLike(单帖版)；composer 用 textarea(auto-height)+发送按钮（登录态显，未登录显 loginPrompt→跳 login）。community 改造：feed-main 加 catchtap openDetail、评论按钮 toggleComments→openDetail，移除 inline comment-section/commentState/normalizeComment/5 评论方法 + community.wxss 死 comment 样式。i18n 新增 postDetail scope 三语 11 key（headerTitle/loading/notFound*/commentCountLabel/comment*×5/loginPrompt）+ COMMON 继承 11 key 共 22。发评论后 getApp().globalData.postsNeedRefresh=true 让 community 回返刷新计数。全静态验证通过（node --check ×3 + JSON 有效 + tag 平衡 33/33 + orphan 0 + 三语 postDetail 各 22 key 解析）；开发者工具编译/截图 + live GET 单帖/评论闭环仍待用户",
+          "失物招领完整功能（页内发表 + 作者管理，commit 87f9dc6，2026-06-27，补记此前未回填）：lostfound 加页内发表表单(openForm/submitItem + chooseImage→utils/upload.js module=lostfound) + 作者管理(openEditForm/markResolved/deleteItem，isMine 才显按钮，后端再校验归属)；i18n+wxss 配套"
+        ],
+        "pending": [
+          "（Phase 1 ①-⑦ 全部完成；下一步转 Phase 2 C3 选课规划）"
+        ],
+        "deferred": [
+          "PostUpdate.image_url（编辑帖子改图）—— web 编辑模式暂不挂 uploader",
+          "多图 JSONB —— 本轮定为单图，将来升级再 ALTER"
+        ],
+        "verification_gap": "③ 已 live 验证：GET /posts/3/comments + POST 评论 curl 闭环（syf_review_test 号，create_comment+count+1+字段契约全通，测试评论已清；开发者工具手动 UI 验证仍待用户）。①② 仍欠 live。Azure/Supabase HTTPS 受 VPN 节点影响见 memory vpn-azure-https-block。④ 已静态验证（node --check + 三语 12 key 各 3 处 + wxml handler 全接线 + CSS 徽章定位修正），开发者工具编译/截图 + live PUT /users/me + 头像上传闭环 + 5-tab 入口/胶囊布局仍待用户。共享基础改动（app.json + custom-tab-bar）按协作规范需群里通知。⑤ 已静态验证（node --check + 三语 15 key 各 3 处 + handler 接线），live 注册闭环（+邮箱验证链路）仍待用户"
+
+      },
+      "phase2_c3": {
+        "status": "done (2026-06-27 代码 cbf0aad + 部署 cec1cf7 + perf aaa55f4/3905818；用户实测 OK)",
+        "what": "方案B 聚合端点：后端新增 GET /courses/programmes + /courses/graduation-status；miniprogram planner 全重写接端点。仅 DSAI 有数据，CS/网安 comingSoon 占位",
+        "done": [
+          "后端 data/programmes.py（web programmes.js 的 Python 镜像，后端单一事实来源；DSAI 完整 + CS/Cyber comingSoon）+ data/__init__.py",
+          "GET /courses/programmes（公开）：专业目录 code/name三语/school/totalCredits/comingSoon/categories{minCredits,color,pickN,courses[]}",
+          "GET /courses/graduation-status（auth）：query programme_code > user.programme_code > default；逐行复刻 web 毕业 math（每分类 earned=已完成学分和、totalEarned 求和、pct=min(100,...)、推荐=未满足分类里未开始且先修满足的前3）",
+          "两单段静态路由插在 /{course_id} 之前，避免被 path-param 吞",
+          "miniprogram planner.js 全重写：原 100% mock（3 假课 + 硬编码 68%）→ 接 /programmes + /graduation-status；picker 专业选择器 + 毕业仪表盘(分类进度条) + 智能推荐 + 登录闸门；切专业 PUT /users/me programme_code 持久化 + best-effort 重算",
+          "planner.wxml 单滚动 4 态（loading / comingSoon / 未登录静态学分要求 / 仪表盘）；planner.wxss 纯 token var + 6 分类色作页面局部 var（不动共享 tokens.wxss）",
+          "i18n planner scope 三语全重写（18 key + 6 分类标签），删 mock reminderCopy/statuses/termPreview（页面已真实 → 满足 carryover）",
+          "✅ 部署生产 SEA cec1cf7：/courses/programmes 200（catalogue 正确）+ /graduation-status 401（auth gate）+ /api/health ok；prod DB 43 门 DSAI 课 id 与 programmes.py 全匹配",
+          "perf aaa55f4：planner setData 收敛到 _emit() 单出口（切 tab ~9 次→1 次），修真机切到 planner 的 jank",
+          "perf 3905818：planner 暖路径跳 bootstrapSession（切回省 /users/me 一跳，缓存 _status 经 _emit 瞬间出仪表盘）"
+        ],
+        "pending": [],
+        "deferred": [
+          "web programmes.js → 改接 /courses/programmes 端点去重（当前 web 仍客户端 programmes.js，后端 Python 镜像独立）",
+          "CS/网安 comingSoon 占位 → 接 docs/ops/选课选课 4768 行官方课程补全（扩 scope 独立任务）"
+        ],
+        "verification_gap": "后端 py_compile + 路由顺序 + 毕业数学单测（mock earned33 / core30-84 / 3 推荐 / 27.5%）；miniprogram node --check×2 + i18n 三语 18key parity + WXML 平衡 + text.* key 全存在。✅ 生产 SEA cec1cf7 已 live：/courses/programmes 200 + /graduation-status 401(auth gate) + /api/health ok；prod DB 43 门 DSAI 课 id 全匹配（早先 search=COMP1080 返 0 是 search 只查 code/name 不查 id 的误报，非缺数据）。✅ 用户 2026-06-27 真机/模拟器实测：planner 切 tab 无 jank、暖路径秒出。本地无 PG 无法 boot 全量"
+      },
+      "phase3_messages": {
+        "status": "code done (3.1-3.8, 2026-06-27);静态全绿;待 IDE/automator/live",
+        "what": "IG/X 式私信:新闻降级为子页腾 tab → 私信 tab + 收件箱 + 聊天 + new-chat 搜索 + 头像点按 DM + 全局未读红点。后端零改动(WS ?token= + REST + /users/search 现成)",
+        "done": [
+          "3.1 tab 重构:tabBar home/community/messages/planner/profile(去 news);news 留 pages 作 navigateTo 子页;community campusNews + home goNews switchTab→navigateTo;planner syncTabBar 2→3;custom-tab-bar icon-messages + 红点 wxml/wxss/data 管线。共享文件 app.json/i18n.js/custom-tab-bar(home.js 跨司徒模块)",
+          "3.2 utils/messages.js:WS 单例(connect/ensureConnected/disconnect + 状态机)+ 心跳 30s/pong 超时重连/指数退避 5→30s/轮询降级/id 去重 + 事件总线(chat/unread/open/close)+ REST 封装(conversations/history/postMessage/markRead/unread-count);WS 鉴权 ?token= 派生自 API_ORIGIN;auth.js 登录回调 ensureConnected + logout disconnect(无环);onAppShow 重连",
+          "3.3 收件箱 pages/messages:登录闸 + fetchConversations + normalize(头像/昵称/预览/相对时间/未读);列表未读加粗+红点+数字(>99 显 99+);搜索框 + 「+」new-chat 入口;空态 CTA + 下拉刷新;WS chat 节流 800ms 合并刷新。format.js +formatChatTime;i18n messages scope 三语",
+          "3.4 聊天 pages/chat:onLoad 收 user_id(GET /users/{pid} 拉资料)+ GET history(自动 mark read);气泡收左灰/发右绿+小头像+日期分隔;toView 滚底;查看更早分页;乐观发送 pending→WS 回显按 content 匹配确认/WS 不通或 6s 超时 REST 兜底/失败重试/id 去重;已读态;self/未登录/notFound/429 守卫;page 级 flex。i18n chat scope 三语(16 key)",
+          "3.5 new-chat pages/new-chat:搜索框→GET /users/search?q=→列表→点选 navigateTo chat(首条 POST 即建会话);300ms 防抖;三态。i18n newChat scope 三语",
+          "3.6 红点全局:custom-tab-bar refreshBadge 读 messages.getUnread + 订阅 unread(attached/detached/show)",
+          "3.7 头像→DM(全加):utils/dm.js openDMWith(self/未登录/无 uid 守卫);post.js normalizePost +authorId(覆盖 home/community/post-detail feed);post-detail normalizeComment + lostfound normalize + authorId;5 处头像(home/community feed、post-detail 作者+评论者、lostfound)catchtap openDM + data-author-id",
+          "3.8 i18n 三语 parity 审计(8/12/5 key 全 OK)+ token var 合法性 + WXML 平衡 全过"
+        ],
+        "pending": [
+          "✅ 用户已测:WeChat 开发者工具编译/截图 + 5 tab + 收件箱/聊天/new-chat + 新闻 navigateTo(2026-06-27,无反馈问题)",
+          "用户:automator switchTab 到 messages 无 jank + page.data 验证",
+          "用户:真实两账号 A 发→B 收(B 红点亮)→B 进会话已读红点灭→A 静态已读 闭环(用户说稍后测)",
+          "共享文件改动(app.json/i18n.js/custom-tab-bar)群通知 + home.js(goNews/openDM)合并前司徒 review"
+        ],
+        "deferred": [
+          "WS-first 发送优化(当前 REST 兜底为主,WS 回显确认已实现)",
+          "parity 增强:正在输入/实时已读/在线绿点/反应/图片 DM/消息请求/编辑撤回/群聊(均需后端扩展)"
+        ],
+        "verification_gap": "静态全绿(node --check ×16 + app.json 12 pages/5 tab + i18n 三语×3 scope parity + token var 全合法 + WXML 平衡 + require 无环 auth→messages 单向)。生产端点 curl 探活受本地 VPN 挡(TLS handshake 卡 198.18.0.137,memory vpn-azure-https-block,非代码问题;端点 prior 已 live 验证)。IDE/automator/真实两账号收发仍待用户"
+      },
+      "phase4_data": {
+        "status": "done (2026-06-27 seed; 2026-06-28 应反馈撤回 lostfound seed)",
+        "what": "补 news seed + 清测试垃圾帖;lostfound seed 后应用户反馈撤回(失物招领是真实交互功能,假数据会误导认领)",
+        "done": [
+          "news 0→8 条(覆盖 academic×2/event×2/announcement×2/career×1/other×1;内容取 HKMU 真实新闻线索[发展蓝图/DSAI报名/中乐团粤剧/AI低空经济峰会/医学实验室/选课/招聘会/粤语酒后语音检测];source_url 指向真实栏目 https://www.hkmu.edu.hk/latest-news-and-events/;author_id=1(admin);published_at 分散过去 40 天) — 保留(单向资讯,有真实出处,不涉及认领)",
+          "lostfound seed 已撤回:原 1→8 后,用户反馈「失物招领是真实交互功能,AI 编的假失物(U盘/学生证/雨伞/水杯/耳机/课本/钥匙串,作者挂 testuser1/评审测试/Zelsy)会误导真实用户认领不存在的东西,不符合实际」→ 清回 1 条(保留真实用户 Zelsy id=10 发的「黑色钱包」);news seed 保留",
+          "清垃圾帖:posts 4→2(删 id=2 E2E Bot 测试帖 + id=3 asd/qwe 帖);按外键 NO ACTION 顺序级联清 comments 3→2 + post_likes 3→1 再删 posts;只删帖不删号(删号超范围)",
+          "脚本:scripts/phase4_inspect.py(只读探查,零写入)+ scripts/phase4_seed.py(默认 dry-run/--apply 写,单事务失败回滚,垃圾帖 SQL 动态识别不硬编码 id)+ scripts/phase4_cleanup_lostfound.py(按 7 条 title 精确删,保留真实条目);连生产 Supabase pooler aws-1:6543(asyncpg 0.31 + SSL check_hostname=False/CERT_NONE + statement_cache_size=0 兼容 pgbouncer transaction mode)"
+        ],
+        "verification": "终态:news 8(保留) / lostfound 1(黑色钱包,seed 已撤回) / posts 2 / comments 2 / post_likes 1 / 垃圾帖候选 0;news 5 分类全覆盖;每日 db-backup.yml pg_dump 兜底"
+      },
+      "phase5_social_coldstart": {
+        "status": "plan approved (2026-06-27);待 Phase 3 live 验证后启动",
+        "doc": "docs/ops/小程序社交冷启动-C方案.md",
+        "what": "P0 HKMU 邮箱验证层 + 同学推荐;P1 邀请码分享 → 自动双向好友 → DM。微信好友关系链不可用(memory wechat-friend-graph-unavailable),走自有关系图",
+        "steps": [
+          "C.1 后端 schema(hkmu_verified/invite_code/friendships 表)+ models",
+          "C.2 HKMU 域判定 + verify 置 hkmu_verified + 学生邮箱推 student_id + bind-email",
+          "C.3 invite-code/suggest/friendships 端点(自邀拦截+幂等双向)",
+          "C.4 app.js 读 query.inv + utils/social.js",
+          "C.5 profile 验证入口+邀请分享",
+          "C.6 new-chat 好友+推荐两段",
+          "C.7 home 消费邀请 + i18n",
+          "C.8 静态+live 验证"
+        ]
+      },
+      "phase6a_news_sync": {
+        "status": "done (2026-06-28; 代码+本地 dry-run 验证过,首次回填待 Task 15)",
+        "what": "news 真实化:GitHub Actions 定时从 HKMU 官网 WordPress RSS 抓真实新闻入库(替代 Phase 4 手工 seed)。方案 C 精修版 — 后端 lang 基建一次到位,Phase 6a 只抓繁体(zh-hant)",
+        "done": [
+          "后端 lang 基建一次到位:news 表加 lang 列(NOT NULL DEFAULT 'zh-hant',database.py DO$$ 幂等块)+ GET /news 加 ?lang 参数(不传默认 zh-hant,三语钩子)+ NewsOut/NewsCreate 加 lang + requirements 加 feedparser",
+          "scripts/sync_news.py:httpx 抓 RSS→feedparser 解析→clean_text(剥 HTML+unescape+截断 200 字)→map_category(WP 中英 category→前端 5 类,优先级 announcement>event>academic>career>other)→upsert ON CONFLICT(lang,source_url) RETURNING (xmax=0);复用 phase4_seed 连接模式(SSL+statement_cache_size=0),端口 5432→6543 归一;模式 --dry-run/--pages N/--purge",
+          "UNIQUE(lang,source_url) 索引由脚本 purge 后建(不放 DDL — 防 Phase 4 假 seed 共享 source_url 致生产重启 init_db 崩溃)",
+          ".github/workflows/news-sync.yml:cron '7 6 * * *'(每天 UTC 06:07,错开 db-backup 18:17)+ workflow_dispatch(purge/pages inputs);复用 SUPABASE_DB_URL_BACKUP secret;cron 触发 inputs 空兜底 pages=1",
+          "本地 dry-run 验证(繁体 3 页 30 条):解析+去重 OK;category 分布 academic 8(学者撰文+UAS)/other 15(媒体报道 QS 排名)/event 1(活動日誌)/announcement 1(新聞稿)/career 0(真实);source_url 全为 hkmu.edu.hk/news/tc/ 精确链接"
+        ],
+        "data_source": "HKMU News WordPress RSS(tc/feed 繁体 + feed 英文 + sc/feed 简体,WPML 三语同批新闻翻译版);robots.txt 全允许;只存摘要+精确原文链接不存全文;UA 标识;每日 1 次低频",
+        "verification_gap": "本地 dry-run 过(解析/映射/去重全 OK);待跑:首次回填(gh workflow run purge+pages=3)+ 生产 SELECT 核对(lang 全 zh-hant / source_url 精确)+ 端到端(news 页显示真实新闻)+ 次日 cron 自动触发"
+      },
+      "phase6b_news_trilingual": {
+        "status": "deferred — 防过渡期烂尾(硬约束:以后绝对支持三语)",
+        "trigger": "news 爬虫稳定运行 ≥2 周 / 下次优化 news 页时",
+        "foundation_done_in_phase6a": "news 表 lang 列 + GET /news ?lang 参数(后端 6a 一次到位,6b 无需改表/API)",
+        "todo": [
+          "脚本:scripts/sync_news.py 的 FEEDS 字典解开 en + zh-hans 两行(目前注释),即抓三语 — 表/API 已就绪",
+          "前端:小程序 news.js + web news.js 请求带 ?lang= 按 locale,切语言重拉(唯一需动前端处)"
+        ]
+      }
+    },
+    "next_step": "✅ Phase 4 数据运维 done(news 0→8 保留/lostfound seed 应反馈清回 1/清 2 垃圾帖,见 phase4_data)。Phase 3 私信代码完成(3.1-3.8,commit 67f84b0→82b9314,branch feature/miniprogram-phase3-messages;静态全绿)。✅ 用户已测开发者工具冒烟(2026-06-27);待用户:automator + 真实两账号收发(用户说稍后)+ 共享文件群通知 + home.js 合并前司徒 review。Phase 5 社交冷启动(P0 同校+P1 邀请)方案已批准,见 docs/ops/小程序社交冷启动-C方案.md,8 步(C.1-C.8),待 Phase 3 live 验证后启动(说「开始 C.1」即动)。⑦ 仍待用户开发者工具验证。✅⑥c 已上线 cc19d3a8"
   }
 }

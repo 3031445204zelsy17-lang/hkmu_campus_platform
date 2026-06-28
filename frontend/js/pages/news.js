@@ -174,6 +174,15 @@ function _NewsCard(item) {
   commentBtn.addEventListener("click", () => _toggleNewsComments(item.id));
   actions.appendChild(commentBtn);
 
+  // Read original — opens the HKMU canonical article in a new tab
+  const readBtn = document.createElement("a");
+  readBtn.className = "action-btn read-original-btn";
+  readBtn.href = item.source_url;
+  readBtn.target = "_blank";
+  readBtn.rel = "noopener noreferrer";
+  readBtn.textContent = t("news.readOriginal");
+  actions.appendChild(readBtn);
+
   card.appendChild(actions);
 
   // Delete button — only for author

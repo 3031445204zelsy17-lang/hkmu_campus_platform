@@ -1,0 +1,86 @@
+/**
+ * HKMU Campus 小程序设计 token
+ * 来源：app.wxss L6 "Premium campus refresh" (行 1899-2389，当前生效层)
+ *
+ * 使用规则：
+ *  - 新增页/组件样式请用 var(--xxx) 引用本文件 token，保证风格一致
+ *  - 禁止从 app.wxss 死代码层（行 723-1898）抄值，那些是已被覆盖的废弃层
+ *
+ * ⚠️ 死层清理注意：app.wxss 行 723-1898 不可直接删除。以下 23 个 class
+ *    wxml 仍在使用，但其最终样式定义只存在于死层（L0/L2/L5），L6 未重定义：
+ *    feed-main, section-header, spotlight-title, spotlight-summary,
+ *    article-meta, utility-meta, profile-stats, action-row, field-label,
+ *    category-strip, composer-head, composer-scope, profile-stat-value,
+ *    profile-card, profile-row-value, empty-icon, planner-shell,
+ *    planner-score, course-row, post-comment-icon, planner-kicker,
+ *    spotlight-kicker, spotlight-footer
+ *    清理死层前必须先把这些 class 的生效规则迁到本文件或保留原位。
+ */
+
+page {
+  /* === Color === */
+  --page-bg: #F7FAF6;
+  --text-primary: #142033;
+  --text-secondary: #6B7280;
+  --eyebrow: rgba(61, 122, 46, 0.72);
+  --accent-blue: #0F8FBE;          /* 主按钮/链接/互动 */
+  --accent-green: #7FBF4D;         /* 头像/图标/hero 起点 */
+  --green-deep: #3D7A2E;           /* 次按钮/绿系文字 */
+  --green-mid: #6DB344;            /* hero 终点 */
+  --pill-green-bg: #F0F7ED;
+  --segmented-bg: #EEF5EC;
+  --surface: #FFFFFF;
+  --border-soft: rgba(90, 130, 90, 0.12);
+  --border-hair: #E5EFE3;
+  --divider: #E5EFE3;
+  --danger-text: #B42318;
+  --danger-bg: #FFF7F7;
+  --danger-border: rgba(180, 60, 60, 0.12);
+  --danger-pill-bg: #FFF4F2;
+
+  /* === Hero gradient === */
+  --hero-gradient: linear-gradient(135deg, #7FBF4D 0%, #6DB344 100%);
+
+  /* === Shadows === */
+  --shadow-card: 0 16rpx 48rpx rgba(30, 70, 40, 0.06);
+  --shadow-btn-primary: 0 10rpx 24rpx rgba(15, 143, 190, 0.16);
+  --shadow-btn-secondary: 0 8rpx 22rpx rgba(30, 70, 40, 0.04);
+  --shadow-segment-active: 0 8rpx 22rpx rgba(30, 70, 40, 0.08);
+  --shadow-avatar: 0 10rpx 24rpx rgba(127, 191, 77, 0.18);
+  --shadow-hero: 0 18rpx 44rpx rgba(61, 122, 46, 0.12);
+  --focus-ring: 0 0 0 6rpx rgba(127, 191, 77, 0.10);
+
+  /* === Radius === */
+  --radius-pill: 999rpx;
+  --radius-card-lg: 44rpx;
+  --radius-card-md: 40rpx;
+  --radius-entry: 28rpx;
+
+  /* === Type === */
+  --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  --fs-app-title: 60rpx;
+  --fs-app-title-compact: 44rpx;
+  --fs-feed-title: 36rpx;
+  --fs-section: 34rpx;
+  --fs-feed-author: 32rpx;
+  --fs-feed-body: 30rpx;
+  --fs-subtitle: 27rpx;
+  --fs-body: 28rpx;
+  --fs-search: 28rpx;
+  --fs-feed-meta: 26rpx;
+  --fs-segment: 26rpx;
+  --fs-btn: 25rpx;
+  --fs-chip: 25rpx;
+  --fs-pill: 24rpx;
+  --fs-link: 24rpx;
+  --fs-eyebrow: 21rpx;
+
+  /* === Spacing === */
+  --pad-shell: 44rpx;
+  --shell-bottom: 208rpx;
+  --shell-bottom-feed: 224rpx;
+
+  /* === Motion === */
+  --press-opacity: 0.86;
+  --press-scale: 0.985;
+}

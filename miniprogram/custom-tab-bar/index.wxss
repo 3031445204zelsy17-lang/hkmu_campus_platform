@@ -312,3 +312,78 @@
   border-radius: 999rpx;
   background: currentColor;
 }
+
+.icon-profile .piece-a {
+  display: block;
+  left: 11rpx;
+  top: 4rpx;
+  width: 14rpx;
+  height: 14rpx;
+  border: 4rpx solid currentColor;
+  border-radius: 999rpx;
+}
+
+.icon-profile .piece-b {
+  display: block;
+  left: 5rpx;
+  top: 21rpx;
+  width: 26rpx;
+  height: 15rpx;
+  border: 4rpx solid currentColor;
+  border-top: 0;
+  border-radius: 0 0 999rpx 999rpx;
+}
+
+.icon-messages .piece-a {
+  display: block;
+  left: 6rpx;
+  top: 9rpx;
+  width: 24rpx;
+  height: 19rpx;
+  border: 4rpx solid currentColor;
+  border-radius: 5rpx;
+  box-sizing: border-box;
+}
+
+.icon-messages .piece-b {
+  display: block;
+  left: 8rpx;
+  top: 11rpx;
+  width: 14rpx;
+  height: 4rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+  transform: rotate(34deg);
+  transform-origin: left center;
+}
+
+.icon-messages .piece-c {
+  display: block;
+  right: 8rpx;
+  top: 11rpx;
+  width: 14rpx;
+  height: 4rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+  transform: rotate(-34deg);
+  transform-origin: right center;
+}
+
+.tabbar-badge {
+  position: absolute;
+  top: 4rpx;
+  right: 14rpx;
+  min-width: 28rpx;
+  height: 28rpx;
+  padding: 0 6rpx;
+  border-radius: 999rpx;
+  background: #E5484D;
+  color: #FFFFFF;
+  font-size: 18rpx;
+  font-weight: 700;
+  line-height: 28rpx;
+  text-align: center;
+  box-shadow: 0 2rpx 6rpx rgba(229, 72, 77, 0.32);
+  z-index: 3;
+  pointer-events: none;
+}

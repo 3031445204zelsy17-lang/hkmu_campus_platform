@@ -7,6 +7,7 @@ from ..models import (
     CourseOut, UserCourseUpdate, UserCourseOut,
     CourseReviewCreate, CourseReviewOut, PaginatedResponse,
 )
+from ..data.programmes import PROGRAMMES, DEFAULT_PROGRAMME_CODE, get_programme
 from pydantic import BaseModel
 
 
@@ -16,6 +17,60 @@ from ..services.auth_service import get_current_user
 from ..services.sanitizer import sanitize
 
 router = APIRouter(prefix="/courses", tags=["courses"])
+
+
+# ── Programme catalogue & graduation response models ─────────────────────────
+# Inline (like BatchProgressUpdate) to keep the change inside the courses module.
+
+class ProgrammeCategoryOut(BaseModel):
+    key: str
+    min_credits: int
+    color: str
+    pick_n: int | None = None
+    courses: list[str]
+
+
+class ProgrammeOut(BaseModel):
+    code: str
+    name: dict[str, str]
+    school: str
+    total_credits: int
+    coming_soon: bool = False
+    categories: list[ProgrammeCategoryOut]
+
+
+class ProgrammeCatalogueOut(BaseModel):
+    default_code: str
+    programmes: list[ProgrammeOut]
+
+
+class CategoryProgressOut(BaseModel):
+    key: str
+    min_credits: int
+    earned_credits: int
+    color: str
+    pick_n: int | None = None
+    completed_count: int
+    total_courses: int
+
+
+class RecommendedCourseOut(BaseModel):
+    course_id: str
+    code: str
+    name: str
+    credits: int
+    category_key: str
+    needed_credits: int
+
+
+class GraduationStatusOut(BaseModel):
+    programme_code: str
+    coming_soon: bool
+    total_credits: int
+    earned_credits: int
+    percent: float
+    categories: list[CategoryProgressOut]
+    recommendations: list[RecommendedCourseOut]
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -107,6 +162,183 @@ async def list_courses(
     return PaginatedResponse(
         items=items, total=total, page=page,
         page_size=page_size, has_next=(offset + page_size) < total,
+    )
+
+
+# ── Programme catalogue & graduation status ──────────────────────────────────
+# NOTE: these single-segment routes MUST be declared before ``GET /{course_id}``,
+# otherwise ``programmes`` / ``graduation-status`` would be captured as a course_id.
+
+def _programme_to_out(code: str, prog: dict) -> ProgrammeOut:
+    cats = [
+        ProgrammeCategoryOut(
+            key=key,
+            min_credits=cat.get("min_credits", 0),
+            color=cat.get("color", "blue"),
+            pick_n=cat.get("pick_n"),
+            courses=list(cat.get("courses", [])),
+        )
+        for key, cat in prog.get("categories", {}).items()
+    ]
+    return ProgrammeOut(
+        code=code,
+        name=dict(prog.get("name", {})),
+        school=prog.get("school", ""),
+        total_credits=prog.get("total_credits", 0),
+        coming_soon=prog.get("coming_soon", False),
+        categories=cats,
+    )
+
+
+def _parse_prereqs(raw) -> list[str]:
+    """prerequisites is a JSON text column, e.g. '["COMP1080SEF"]'."""
+    try:
+        parsed = json.loads(raw or "[]")
+        if isinstance(parsed, list):
+            return [str(x) for x in parsed]
+    except (ValueError, TypeError):
+        pass
+    return []
+
+
+def _compute_graduation(
+    prog: dict, course_rows: dict, progress: dict
+) -> tuple[list[CategoryProgressOut], int, list[RecommendedCourseOut]]:
+    """Mirror of the web client's graduation math.
+
+    course_rows: {course_id: {"id","code","name","credits","prerequisites"}}
+    progress:    {course_id: status}
+    Returns (categories, total_earned, recommendations).
+    """
+    categories: list[CategoryProgressOut] = []
+    recs: list[RecommendedCourseOut] = []
+    total_earned = 0
+
+    for key, cat in prog.get("categories", {}).items():
+        required = cat.get("min_credits", 0)
+        earned = 0
+        completed_count = 0
+        for cid in cat.get("courses", []):
+            course = course_rows.get(cid)
+            if not course:
+                continue
+            if progress.get(cid) == "completed":
+                earned += course["credits"]
+                completed_count += 1
+
+        categories.append(CategoryProgressOut(
+            key=key,
+            min_credits=required,
+            earned_credits=earned,
+            color=cat.get("color", "blue"),
+            pick_n=cat.get("pick_n"),
+            completed_count=completed_count,
+            total_courses=len(cat.get("courses", [])),
+        ))
+        total_earned += earned
+
+        # Recommend not-started courses whose prereqs are met, while unsatisfied.
+        if earned < required:
+            for cid in cat.get("courses", []):
+                if len(recs) >= 3:
+                    break
+                course = course_rows.get(cid)
+                if not course:
+                    continue
+                if progress.get(cid) in ("completed", "in_progress"):
+                    continue
+                prereqs = _parse_prereqs(course.get("prerequisites"))
+                if prereqs and not all(progress.get(p) == "completed" for p in prereqs):
+                    continue
+                recs.append(RecommendedCourseOut(
+                    course_id=course["id"],
+                    code=course["code"],
+                    name=course["name"],
+                    credits=course["credits"],
+                    category_key=key,
+                    needed_credits=required - earned,
+                ))
+
+    return categories, total_earned, recs
+
+
+@router.get("/programmes", response_model=ProgrammeCatalogueOut)
+async def list_programmes():
+    """Programme catalogue — static reference data (public, no auth).
+
+    Lets clients render the selector and per-programme requirements without a
+    second call; graduation numbers come from /graduation-status.
+    """
+    programmes = [_programme_to_out(code, prog) for code, prog in PROGRAMMES.items()]
+    return ProgrammeCatalogueOut(
+        default_code=DEFAULT_PROGRAMME_CODE, programmes=programmes,
+    )
+
+
+@router.get("/graduation-status", response_model=GraduationStatusOut)
+async def get_graduation_status(
+    programme_code: str | None = None,
+    user: dict = Depends(get_current_user),
+):
+    """Graduation progress + recommendations for the current user.
+
+    Programme is resolved as: query param > user's saved programme_code > default.
+    """
+    async with get_db() as db:
+        code = programme_code
+        if not code:
+            row = await db.fetchrow(
+                "SELECT programme_code FROM users WHERE id = $1", user["id"],
+            )
+            code = row["programme_code"] if row else None
+        prog = get_programme(code)
+        resolved_code = prog["code"]
+        coming_soon = prog.get("coming_soon", False)
+
+        course_rows: dict = {}
+        progress: dict = {}
+        if not coming_soon:
+            all_ids = [
+                cid for cat in prog.get("categories", {}).values()
+                for cid in cat.get("courses", [])
+            ]
+            if all_ids:
+                rows = await db.fetch(
+                    "SELECT id, code, name, credits, prerequisites "
+                    "FROM courses WHERE id = ANY($1::text[])",
+                    all_ids,
+                )
+                course_rows = {r["id"]: dict(r) for r in rows}
+
+                prows = await db.fetch(
+                    "SELECT course_id, status FROM user_courses WHERE user_id = $1",
+                    user["id"],
+                )
+                progress = {r["course_id"]: r["status"] for r in prows}
+
+    if coming_soon:
+        return GraduationStatusOut(
+            programme_code=resolved_code,
+            coming_soon=True,
+            total_credits=prog.get("total_credits", 0),
+            earned_credits=0,
+            percent=0.0,
+            categories=[],
+            recommendations=[],
+        )
+
+    categories, total_earned, recs = _compute_graduation(prog, course_rows, progress)
+    total_required = prog.get("total_credits", 0)
+    pct = min(100.0, total_earned / total_required * 100) if total_required > 0 else 0.0
+
+    return GraduationStatusOut(
+        programme_code=resolved_code,
+        coming_soon=False,
+        total_credits=total_required,
+        earned_credits=total_earned,
+        percent=round(pct, 1),
+        categories=categories,
+        recommendations=recs,
     )
 
 

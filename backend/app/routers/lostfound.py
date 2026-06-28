@@ -143,6 +143,14 @@ async def update_item(
             updates["description"] = sanitize(body.description)
         if body.status is not None:
             updates["status"] = body.status
+        if body.item_type is not None:
+            updates["item_type"] = body.item_type
+        if body.category is not None:
+            updates["category"] = sanitize(body.category)
+        if body.location is not None:
+            updates["location"] = sanitize(body.location)
+        if body.image_url is not None:
+            updates["image_url"] = body.image_url
 
         if not updates:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "No fields to update")

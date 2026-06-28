@@ -1,27 +1,12 @@
 const auth = require("../../utils/auth");
 const { request } = require("../../utils/request");
-const { API_ORIGIN } = require("../../utils/config");
-const { formatDate, getInitial } = require("../../utils/format");
 const { syncTabBar } = require("../../utils/tabbar");
 const { getLocale, getTexts } = require("../../utils/i18n");
+const { normalizePost } = require("../../utils/post");
+const { PAGE_SIZE } = require("../../utils/config");
+const { openDMWith } = require("../../utils/dm");
 
 const FEED_TAB_KEYS = ["newest", "hot"];
-
-function avatarUrl(value) {
-  if (!value) {
-    return "";
-  }
-
-  return value.startsWith("/") ? `${API_ORIGIN}${value}` : value;
-}
-
-function compactNumber(value) {
-  const number = Number(value || 0);
-  if (number >= 1000) {
-    return `${(number / 1000).toFixed(1)}k`;
-  }
-  return String(number);
-}
 
 function buildTabs(activeKey, text = getTexts("home")) {
   return FEED_TAB_KEYS.map((key) => ({
@@ -29,30 +14,6 @@ function buildTabs(activeKey, text = getTexts("home")) {
     key,
     label: text.feedTabs[key],
   }));
-}
-
-function normalizePost(item, text = getTexts("home")) {
-  const authorName = item.author_nickname || text.defaultAuthor;
-  const content = String(item.content || "").trim();
-
-  return {
-    authorAvatar: avatarUrl(item.author_avatar),
-    authorInitial: getInitial(authorName),
-    authorName,
-    category: item.category || text.defaultCategory,
-    commentsLabel: compactNumber(item.comments_count),
-    content,
-    createdAtLabel: formatDate(item.created_at) || text.justNow,
-    handle: `@campus${item.author_id || item.id}`,
-    id: item.id,
-    isLiked: !!item.is_liked,
-    likeClass: item.is_liked ? "post-action like-action is-liked" : "post-action like-action",
-    likeIcon: item.is_liked ? "♥" : "♡",
-    likeIconClass: item.is_liked ? "social-glyph like-glyph filled" : "social-glyph like-glyph",
-    likeLabel: compactNumber(item.likes_count),
-    title: item.title,
-    topicClass: item.likes_count > 0 ? "topic-pill hot" : "topic-pill",
-  };
 }
 
 Page({
@@ -74,6 +35,12 @@ Page({
   onShow() {
     this.applyLocale(getLocale());
     syncTabBar(this, 0);
+
+    const app = getApp();
+    if (app.globalData && app.globalData.postsNeedRefresh) {
+      app.globalData.postsNeedRefresh = false;
+      this._hasLoadedPosts = false;
+    }
 
     auth.bootstrapSession().then((user) => {
       this.setData({
@@ -151,7 +118,7 @@ Page({
     }
 
     const nextPage = reset ? 1 : this.data.page;
-    const query = [`page=${nextPage}`, "page_size=2", `sort=${this.data.sort}`];
+    const query = [`page=${nextPage}`, `page_size=${PAGE_SIZE.feed}`, `sort=${this.data.sort}`];
     const keyword = this.data.keyword.trim();
 
     if (keyword) {
@@ -272,10 +239,14 @@ Page({
   },
 
   goNews() {
-    wx.switchTab({ url: "/pages/news/news" });
+    wx.navigateTo({ url: "/pages/news/news" });
   },
 
   goPlanner() {
     wx.switchTab({ url: "/pages/planner/planner" });
+  },
+
+  openDM(event) {
+    openDMWith(event.currentTarget.dataset.authorId);
   },
 });

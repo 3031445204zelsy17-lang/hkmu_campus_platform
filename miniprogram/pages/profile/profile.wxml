@@ -3,48 +3,90 @@
 <view class="page-shell">
   <view class="profile-cover"></view>
 
-  <view wx:if="{{user}}" class="profile-card">
-    <view class="avatar large">
-      <image wx:if="{{user.avatar_url}}" src="{{user.avatar_url}}" mode="aspectFill" />
-      <view wx:else>{{user.initial}}</view>
-    </view>
-    <view class="profile-name">{{user.displayName}}</view>
-    <view class="profile-handle">@{{user.username}} {{text.separator}} {{identityLabel}}</view>
-    <view class="profile-bio">{{user.bioLabel}}</view>
+  <view wx:if="{{user}}">
+    <!-- 视图模式 -->
+    <view wx:if="{{!editing}}" class="profile-card">
+      <view class="avatar large">
+        <image wx:if="{{user.avatar_url}}" src="{{user.avatar_url}}" mode="aspectFill" />
+        <view wx:else>{{user.initial}}</view>
+      </view>
+      <view class="profile-name">{{user.displayName}}</view>
+      <view class="profile-handle">@{{user.username}} {{text.separator}} {{identityLabel}}</view>
+      <view class="profile-bio">{{user.bioLabel}}</view>
 
-    <view class="profile-stats">
-      <view class="profile-stat">
-        <view class="profile-stat-value">{{joinedAtDisplay}}</view>
-        <view class="profile-stat-label">{{text.joinedLabel}}</view>
+      <view class="profile-stats">
+        <view class="profile-stat">
+          <view class="profile-stat-value">{{joinedAtDisplay}}</view>
+          <view class="profile-stat-label">{{text.joinedLabel}}</view>
+        </view>
+        <view class="profile-stat">
+          <view class="profile-stat-value">{{user.providerLabel}}</view>
+          <view class="profile-stat-label">{{text.providerLabel}}</view>
+        </view>
       </view>
-      <view class="profile-stat">
-        <view class="profile-stat-value">{{user.providerLabel}}</view>
-        <view class="profile-stat-label">{{text.providerLabel}}</view>
+
+      <view class="action-row">
+        <button class="primary-action" bindtap="goCompose">{{text.composeAction}}</button>
+        <button class="secondary-action" bindtap="enterEdit">{{text.editAction}}</button>
+      </view>
+
+      <view class="profile-list">
+        <view class="profile-row">
+          <view class="profile-row-label">{{text.emailLabel}}</view>
+          <view class="profile-row-value">{{user.emailLabel}}</view>
+        </view>
+        <view class="profile-row">
+          <view class="profile-row-label">{{text.studentIdLabel}}</view>
+          <view class="profile-row-value">{{user.studentIdLabel}}</view>
+        </view>
+        <view class="profile-row">
+          <view class="profile-row-label">{{text.bioLabel}}</view>
+          <view class="profile-row-value">{{user.bioLabel}}</view>
+        </view>
+      </view>
+
+      <view class="action-row">
+        <button class="danger-action" bindtap="logout">{{text.logoutAction}}</button>
       </view>
     </view>
 
-    <view class="action-row">
-      <button class="primary-action" bindtap="goCompose">{{text.composeAction}}</button>
-      <button class="secondary-action" bindtap="refreshProfile">{{text.refreshAction}}</button>
-    </view>
+    <!-- 编辑模式 -->
+    <view wx:else class="profile-card">
+      <view class="avatar-edit-block">
+        <view class="avatar-edit-wrap" bindtap="chooseAvatar">
+          <view class="avatar large">
+            <image wx:if="{{draftAvatarUrl}}" src="{{draftAvatarUrl}}" mode="aspectFill" />
+            <view wx:else>{{user.initial}}</view>
+          </view>
+          <view class="avatar-edit-badge">+</view>
+        </view>
+        <view class="avatar-hint">{{text.avatarChangeHint}}</view>
+      </view>
 
-    <view class="profile-list">
-      <view class="profile-row">
-        <view class="profile-row-label">{{text.emailLabel}}</view>
-        <view class="profile-row-value">{{user.emailLabel}}</view>
-      </view>
-      <view class="profile-row">
-        <view class="profile-row-label">{{text.studentIdLabel}}</view>
-        <view class="profile-row-value">{{user.studentIdLabel}}</view>
-      </view>
-      <view class="profile-row">
-        <view class="profile-row-label">{{text.bioLabel}}</view>
-        <view class="profile-row-value">{{user.bioLabel}}</view>
-      </view>
-    </view>
+      <view class="field-label">{{text.nicknameLabel}}</view>
+      <input
+        class="text-input"
+        maxlength="40"
+        placeholder="{{text.nicknamePlaceholder}}"
+        value="{{draftNickname}}"
+        data-field="draftNickname"
+        bindinput="updateDraft"
+      />
 
-    <view class="action-row">
-      <button class="danger-action" bindtap="logout">{{text.logoutAction}}</button>
+      <view class="field-label">{{text.bioLabel}}</view>
+      <textarea
+        class="text-area"
+        maxlength="200"
+        placeholder="{{text.bioPlaceholder}}"
+        value="{{draftBio}}"
+        data-field="draftBio"
+        bindinput="updateDraft"
+      />
+
+      <view class="action-row">
+        <button class="primary-action" loading="{{saving}}" bindtap="saveProfile">{{text.saveAction}}</button>
+        <button class="secondary-action" bindtap="cancelEdit">{{text.cancelAction}}</button>
+      </view>
     </view>
   </view>
 

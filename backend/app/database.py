@@ -223,6 +223,14 @@ DO $$ BEGIN
     ALTER TABLE posts ADD COLUMN image_url TEXT;
 EXCEPTION WHEN duplicate_column THEN NULL;
 END $$;
+
+-- Add lang column for news. UNIQUE(lang, source_url) index is created by
+-- sync_news.py (not here) to avoid failing on legacy seed rows that share
+-- a source_url value
+DO $$ BEGIN
+    ALTER TABLE news ADD COLUMN lang TEXT NOT NULL DEFAULT 'zh-hant';
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
 """
 
 

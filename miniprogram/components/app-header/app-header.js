@@ -11,6 +11,12 @@ Component({
       type: String,
       value: "HKMU Campus",
     },
+    // Show a back button on the left. Off by default so the five tab pages
+    // are unaffected; sub-pages (lostfound/compose/login) opt in via show-back.
+    showBack: {
+      type: Boolean,
+      value: false,
+    },
   },
 
   data: {
@@ -54,6 +60,18 @@ Component({
   },
 
   methods: {
+    onBack() {
+      // Sub-pages are reached via navigateTo, so a page stack usually exists.
+      // Fall back to the home tab when there's nothing to pop (e.g. deep link
+      // or simulator reLaunch), otherwise navigateBack would silently no-op.
+      const pages = getCurrentPages();
+      if (pages.length > 1) {
+        wx.navigateBack({ delta: 1 });
+      } else {
+        wx.switchTab({ url: "/pages/home/home" });
+      }
+    },
+
     selectLanguage(event) {
       const requestedLocale = event.currentTarget.dataset.locale;
       if (!isSupportedLocale(requestedLocale) || requestedLocale === this.data.locale) {

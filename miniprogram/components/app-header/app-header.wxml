@@ -1,5 +1,8 @@
 <view class="app-header" style="padding-top: {{statusBarHeight}}px;">
-  <view class="app-header-row" style="height: {{navBarHeight}}px; padding-right: {{rightReserve}}px;">
+  <view class="app-header-row {{showBack ? 'has-back' : ''}}" style="height: {{navBarHeight}}px; padding-right: {{rightReserve}}px;">
+    <view wx:if="{{showBack}}" class="app-back" bindtap="onBack" hover-class="app-back-press">
+      <view class="app-back-arrow"></view>
+    </view>
     <view class="header-title" style="right: {{titleRight}}px;">{{title}}</view>
     <view class="language-switch" style="right: {{languageRight}}px;">
       <view

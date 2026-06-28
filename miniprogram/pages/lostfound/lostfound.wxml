@@ -1,4 +1,4 @@
-<app-header bind:languagechange="handleLanguageChange" />
+<app-header show-back="{{true}}" bind:languagechange="handleLanguageChange" />
 
 <view class="page-shell">
   <view class="top-bar tight">
@@ -7,6 +7,7 @@
       <view class="app-title">{{text.title}}</view>
       <view class="subtitle">{{text.subtitle}}</view>
     </view>
+    <button class="top-action" bindtap="openForm">{{text.publishAction}}</button>
   </view>
 
   <view class="search-dock flat">
@@ -39,7 +40,7 @@
 
   <view wx:for="{{filteredItems}}" wx:key="id" class="utility-card">
     <view class="feed-head">
-      <view class="avatar small">{{item.authorInitial}}</view>
+      <view class="avatar small" data-author-id="{{item.authorId}}" catchtap="openDM">{{item.authorInitial}}</view>
       <view class="feed-main">
         <view class="utility-meta">
           <view class="{{item.typeClass}}">{{item.typeLabel}}</view>
@@ -49,9 +50,62 @@
         <view class="utility-title">{{item.title}}</view>
         <view class="utility-summary">{{item.description}}</view>
         <view class="card-footer">{{item.category}} {{text.separator}} {{item.location}} {{text.separator}} {{item.author}}</view>
+        <view wx:if="{{item.isMine}}" class="item-actions">
+          <view wx:if="{{item.statusLabel !== text.statusResolved}}" class="item-action" data-id="{{item.id}}" bindtap="markResolved">{{text.markResolvedAction}}</view>
+          <view class="item-action" data-id="{{item.id}}" bindtap="openEditForm">{{text.editAction}}</view>
+          <view class="item-action danger" data-id="{{item.id}}" bindtap="deleteItem">{{text.deleteAction}}</view>
+        </view>
       </view>
     </view>
   </view>
 
   <view wx:if="{{loading}}" class="loading-line">{{text.loading}}</view>
+</view>
+
+<view wx:if="{{formOpen}}" class="form-overlay" catchtap="closeForm">
+  <view class="lost-form-sheet" catchtap="noop">
+    <view class="lost-form-head">
+      <view class="lost-form-title">{{editingId !== null ? text.formEditTitle : text.formTitle}}</view>
+      <view class="lost-form-close" catchtap="closeForm">✕</view>
+    </view>
+
+    <scroll-view scroll-y class="lost-form-body">
+      <view class="field-label">{{text.formTypeLabel}}</view>
+      <view class="segmented">
+        <view class="{{draftItemType === 'lost' ? 'segment-item active' : 'segment-item'}}" data-type="lost" bindtap="selectDraftType">{{text.filters.lost}}</view>
+        <view class="{{draftItemType === 'found' ? 'segment-item active' : 'segment-item'}}" data-type="found" bindtap="selectDraftType">{{text.filters.found}}</view>
+      </view>
+
+      <view class="field-label">{{text.formTitleLabel}}</view>
+      <input class="text-input" maxlength="200" placeholder="{{text.formTitlePlaceholder}}" value="{{draftTitle}}" data-field="draftTitle" bindinput="updateDraft" />
+
+      <view class="field-label">{{text.formDescLabel}}</view>
+      <textarea class="text-area" maxlength="2000" placeholder="{{text.formDescPlaceholder}}" value="{{draftDescription}}" data-field="draftDescription" bindinput="updateDraft" />
+
+      <view class="field-label">{{text.formLocationLabel}}</view>
+      <input class="text-input" maxlength="200" placeholder="{{text.formLocationPlaceholder}}" value="{{draftLocation}}" data-field="draftLocation" bindinput="updateDraft" />
+
+      <view class="field-label">{{text.formCategoryLabel}}</view>
+      <input class="text-input" maxlength="200" placeholder="{{text.formCategoryPlaceholder}}" value="{{draftCategory}}" data-field="draftCategory" bindinput="updateDraft" />
+
+      <view class="compose-image-row">
+        <view wx:if="{{draftImageTempPath}}" class="compose-image-preview">
+          <image class="compose-image-thumb" src="{{draftImageTempPath}}" mode="aspectFill" />
+          <view class="compose-image-remove" catchtap="removeDraftImage">✕</view>
+        </view>
+        <view wx:elif="{{draftImageUrl}}" class="compose-image-preview" bindtap="chooseImage" hover-class="compose-image-preview-tap">
+          <image class="compose-image-thumb" src="{{draftImageUrl}}" mode="aspectFill" />
+        </view>
+        <view wx:else class="compose-image-add" bindtap="chooseImage">
+          <text class="compose-image-add-glyph">+</text>
+          <text class="compose-image-add-label">{{text.addImage}}</text>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view class="lost-form-foot">
+      <button class="secondary-action" bindtap="closeForm">{{text.formCancel}}</button>
+      <button class="primary-action" loading="{{submitting}}" bindtap="submitItem">{{text.formSubmit}}</button>
+    </view>
+  </view>
 </view>

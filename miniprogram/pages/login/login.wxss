@@ -1,0 +1,7 @@
+/* Login page — register/login toggle. Link styling comes from the global
+   .text-link class; this just centers it and enlarges the tap target. */
+.form-toggle {
+  margin-top: 16rpx;
+  padding: 12rpx 0;
+  text-align: center;
+}

@@ -1,6 +1,7 @@
 const { API_ORIGIN } = require("./config");
 const requestStore = require("./request");
 const { getInitial } = require("./format");
+const messages = require("./messages");
 
 function setGlobalUser(user) {
   const app = getApp();
@@ -57,12 +58,17 @@ function bootstrapSession() {
     setGlobalUser(session.user);
   }
 
-  return syncCurrentUser().catch(() => {
-    const nextSession = requestStore.getSession();
-    const fallbackUser = nextSession.accessToken ? session.user || nextSession.user || null : null;
-    setGlobalUser(fallbackUser);
-    return fallbackUser;
-  });
+  return syncCurrentUser()
+    .then((user) => {
+      if (user) messages.ensureConnected();
+      return user;
+    })
+    .catch(() => {
+      const nextSession = requestStore.getSession();
+      const fallbackUser = nextSession.accessToken ? session.user || nextSession.user || null : null;
+      setGlobalUser(fallbackUser);
+      return fallbackUser;
+    });
 }
 
 function loginWithWechat() {
@@ -88,7 +94,10 @@ function loginWithWechat() {
             });
             return syncCurrentUser();
           })
-          .then(resolve)
+          .then((user) => {
+            messages.ensureConnected();
+            resolve(user);
+          })
           .catch(reject);
       },
       fail(error) {
@@ -115,12 +124,33 @@ function loginWithAccount({ mode, account, password }) {
         refreshToken: tokens.refresh_token || "",
       });
       return syncCurrentUser();
+    })
+    .then((user) => {
+      messages.ensureConnected();
+      return user;
     });
 }
 
 function logout() {
+  messages.disconnect();
+  const { refreshToken } = requestStore.getSession();
+
+  // Clear local state synchronously (preserves prior behavior), then revoke
+  // the refresh token server-side as best-effort — never block logout on the
+  // network; a failed revoke just leaves a stale row that expires on its own.
   requestStore.clearSession();
   setGlobalUser(null);
+
+  if (refreshToken) {
+    requestStore
+      .request({
+        method: "POST",
+        path: "/auth/logout",
+        data: { refresh_token: refreshToken },
+        auth: false,
+      })
+      .catch(() => {});
+  }
 }
 
 function getStoredUser() {

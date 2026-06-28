@@ -2,12 +2,16 @@
   "pages": [
     "pages/home/home",
     "pages/community/community",
+    "pages/post-detail/post-detail",
     "pages/planner/planner",
     "pages/compose/compose",
     "pages/news/news",
     "pages/lostfound/lostfound",
     "pages/profile/profile",
-    "pages/login/login"
+    "pages/login/login",
+    "pages/messages/messages",
+    "pages/chat/chat",
+    "pages/new-chat/new-chat"
   ],
   "window": {
     "navigationBarTitleText": "HKMU Campus",
@@ -33,12 +37,16 @@
         "text": "\u793e\u533a"
       },
       {
+        "pagePath": "pages/messages/messages",
+        "text": "\u79c1\u4fe1"
+      },
+      {
         "pagePath": "pages/planner/planner",
         "text": "\u9009\u8bfe\u89c4\u5212"
       },
       {
-        "pagePath": "pages/news/news",
-        "text": "\u65b0\u95fb"
+        "pagePath": "pages/profile/profile",
+        "text": "\u6211\u7684"
       }
     ]
   },

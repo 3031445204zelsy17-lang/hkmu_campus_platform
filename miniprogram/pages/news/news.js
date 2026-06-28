@@ -2,6 +2,7 @@ const { request } = require("../../utils/request");
 const { formatDate } = require("../../utils/format");
 const { syncTabBar } = require("../../utils/tabbar");
 const { getLocale, getTexts } = require("../../utils/i18n");
+const { PAGE_SIZE } = require("../../utils/config");
 
 function normalizeNews(items, text = getTexts("news")) {
   return items.map((item) => ({
@@ -118,7 +119,7 @@ Page({
     this.setData({ loading: true });
 
     return request({
-      path: `/news?page=${nextPage}&page_size=12`,
+      path: `/news?page=${nextPage}&page_size=${PAGE_SIZE.list}`,
     })
       .then((data) => {
         const nextRawItems = data.items || [];

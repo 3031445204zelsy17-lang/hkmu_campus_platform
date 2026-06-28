@@ -1,0 +1,40 @@
+<app-header show-back="{{true}}" title="{{text.headerTitle}}" bind:languagechange="handleLanguageChange" />
+
+<view class="nc">
+  <view class="nc-searchbar">
+    <input
+      class="nc-search"
+      value="{{kw}}"
+      placeholder="{{text.searchPlaceholder}}"
+      placeholder-class="nc-ph"
+      confirm-type="search"
+      focus
+      bindinput="onInput"
+    />
+  </view>
+
+  <view wx:if="{{loading}}" class="nc-hint">{{text.loading}}</view>
+  <view wx:elif="{{!searched}}" class="nc-hint">{{text.hint}}</view>
+  <view wx:elif="{{results.length === 0}}" class="nc-hint">{{text.noResults}}</view>
+
+  <view wx:else class="nc-list">
+    <view
+      wx:for="{{results}}"
+      wx:key="id"
+      class="nc-user"
+      data-id="{{item.id}}"
+      data-name="{{item.name}}"
+      data-avatar="{{item.avatar}}"
+      bindtap="openUser"
+    >
+      <view class="nc-avatar">
+        <image wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" class="nc-avatar-img" />
+        <view wx:else class="nc-avatar-fallback">{{item.initial}}</view>
+      </view>
+      <view class="nc-info">
+        <text class="nc-name">{{item.name}}</text>
+        <text wx:if="{{item.handle}}" class="nc-handle">{{item.handle}}</text>
+      </view>
+    </view>
+  </view>
+</view>
