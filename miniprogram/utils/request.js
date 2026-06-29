@@ -1,5 +1,6 @@
 const { API_BASE, CLIENT_PLATFORM, PREVIEW_MODE, REQUEST_TIMEOUT } = require("./config");
 const { mockRawRequest } = require("./mock-api");
+const log = require("./log");
 
 const STORAGE_KEYS = {
   accessToken: "hkmu_access_token",
@@ -123,11 +124,12 @@ function request({ method = "GET", path, data = null, auth = false, retry = true
         clearSession();
       }
 
-      throw new Error(
-        response.data && (response.data.detail || response.data.message)
-          ? response.data.detail || response.data.message
-          : `Request failed (${response.statusCode})`,
-      );
+      const errMsg = response.data && (response.data.detail || response.data.message)
+        ? response.data.detail || response.data.message
+        : `Request failed (${response.statusCode})`;
+      // 内测监控 B3:失败请求上报后台实时日志(带 path/method/status,便于定位)
+      log.error("api", errMsg, { path, method, status: response.statusCode });
+      throw new Error(errMsg);
     }
 
     return response.data;
