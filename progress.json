@@ -696,5 +696,69 @@
       }
     },
     "next_step": "✅ Phase 4 数据运维 done(news 0→8 保留/lostfound seed 应反馈清回 1/清 2 垃圾帖,见 phase4_data)。Phase 3 私信代码完成(3.1-3.8,commit 67f84b0→82b9314,branch feature/miniprogram-phase3-messages;静态全绿)。✅ 用户已测开发者工具冒烟(2026-06-27);待用户:automator + 真实两账号收发(用户说稍后)+ 共享文件群通知 + home.js 合并前司徒 review。Phase 5 社交冷启动(P0 同校+P1 邀请)方案已批准,见 docs/ops/小程序社交冷启动-C方案.md,8 步(C.1-C.8),待 Phase 3 live 验证后启动(说「开始 C.1」即动)。⑦ 仍待用户开发者工具验证。✅⑥c 已上线 cc19d3a8"
+  },
+  "internal_beta_readiness": {
+    "_doc": "内测就绪 checklist (2026-06-29 评估)。功能已够内测;非功能几点待补/确认。内测=体验版(不需备案审核);正式上线(全校公开)才需小程序备案+微信审核+严格质量门槛。",
+    "verdict": "功能✅够内测。非功能🔶补 B3 错误监控 + 确认 B4 health 探活后即可开始内测;B1/B2/B5/B6 逐步完善。",
+    "tasks": [
+      {
+        "id": "B1",
+        "title": "实时私信:socket 合法域名 + Azure websockets",
+        "type": "config(用户操作)",
+        "owner": "SYF 操作",
+        "status": "pending",
+        "detail": "① 微信公众平台→开发管理→开发设置→socket 合法域名 加 wss://hkmu-campus-sea.azurewebsites.net;② Azure webapp→配置→Web sockets=开。代码已 OK(前端 WS_PATH=/api/v1/messages/ws ↔ 后端 @router.websocket('/ws') 于 /api/v1 前缀,路径对齐)。配完私信从轮询升级为实时。"
+      },
+      {
+        "id": "B2",
+        "title": "司徒 live 验证闭环",
+        "type": "verify(双人)",
+        "owner": "SYF+司徒",
+        "status": "pending",
+        "detail": "桌面 社交验证清单-Phase5-C6C7.md:邀请闭环(C.5→C.4→C.7→C.6)+ Phase3 两账号 DM 真实收发 + Phase1 配图/资料编辑/注册+邮箱验证。验完报结果(过/bug),即 C.8 收尾。"
+      },
+      {
+        "id": "B3",
+        "title": "错误监控(微信原生运维中心 + Azure App Insights + realtime log 封装)",
+        "type": "code+config",
+        "owner": "SYF",
+        "status": "code done;待用户 2 项(看后台运维中心 + Azure 启用 App Insights)",
+        "priority": "high",
+        "detail": "不用第三方。① 小程序端:微信后台运维中心自动收 JS/网络/API 错误(体验版用户即收,零代码);② 代码:utils/log.js 封装 wx.getRealtimeLogManager + app.js onError/onUnhandledRejection 全局兜底 + request.js 非 2xx 失败上报(带 path/method/status)→ 后台实时日志带上下文;③ 后端:Azure webapp 门户启用 Application Insights。Sentry 留作将来原生不够细时的升级项。"
+      },
+      {
+        "id": "B4",
+        "title": "确认 /api/health 真探活已部署",
+        "type": "verify",
+        "owner": "SYF",
+        "status": "pending",
+        "detail": "代码已是真实 SELECT 1(DB 挂返 503,不再恒 200 掩盖 Supabase pause)。post_db13_ops 6-25 记 pending deploy;c5906ee(6-28)大概率含。确认 UptimeRobot 打 /api/health 返真探活(非恒 200)。"
+      },
+      {
+        "id": "B5",
+        "title": "隐私声明",
+        "type": "content",
+        "owner": "SYF",
+        "status": "pending",
+        "detail": "收集邮箱(HKMU 验证)+ GA4/Mixpanel 行为分析。内测前放简单隐私说明(收集什么/为什么/存哪),尤其涉及 HKMU 邮箱。"
+      },
+      {
+        "id": "B6",
+        "title": "确认 admin 能删任意帖/评论(UGC 应急下架)",
+        "type": "verify",
+        "owner": "SYF",
+        "status": "pending",
+        "detail": "现状:有 _is_admin(identity=='admin') + 匿名帖作者对 admin 可见(show_author=is_admin)。确认 admin 删任意帖/评论的端点存在 + 能用。内测期靠人盯内容够用。"
+      }
+    ],
+    "watch_items": [
+      "Supabase 免费层 auto-pause(keepalive 每 10min ping 缓解;一旦 pause 服务 503,memory supabase-pause-recovery 有恢复 runbook)",
+      "Azure 冷启动(免费/基础层,首次进入可能卡几秒)"
+    ],
+    "nice_to_have_deferred": [
+      "新闻三语(Phase 6b,等爬虫稳 ≥2 周)",
+      "选课 CS/网安 数据补全(docs/ops/选课选课)",
+      "DM 高级:正在输入/实时已读/在线绿点/图片 DM/撤回/群聊(需后端扩展)"
+    ]
   }
 }
