@@ -189,6 +189,8 @@ const DICTIONARY = {
     }),
     compose: {
       eyebrow: "NEW POST",
+      postAnonymously: "匿名发布",
+      anonHint: "勾选后,他人看不到你的昵称和头像",
       addImage: "\u6dfb\u52a0\u56fe\u7247",
       title: "\u53d1\u5e03\u6821\u56ed\u52a8\u6001",
       publish: "\u53d1\u5e03",
@@ -548,6 +550,8 @@ DICTIONARY["zh-Hant"] = {
   compose: {
     eyebrow: "NEW POST",
     addImage: "\u6dfb\u52a0\u5716\u7247",
+    postAnonymously: "\u533f\u540d\u767c\u5e03",
+    anonHint: "\u52fe\u9078\u5f8c,\u4ed6\u4eba\u770b\u4e0d\u5230\u4f60\u7684\u66b1\u7a31\u548c\u982d\u50cf",
     title: "\u767c\u5e03\u6821\u5712\u52d5\u614b",
     publish: "\u767c\u5e03",
     scope: "\u767c\u5e03\u5230\u6821\u5712\u516c\u5171\u52d5\u614b\u6d41",
@@ -895,6 +899,8 @@ DICTIONARY.en = {
     eyebrow: "NEW POST",
     addImage: "Add image",
     title: "Post Campus Update",
+    postAnonymously: "Post anonymously",
+    anonHint: "Others won't see your nickname or avatar",
     publish: "Post",
     scope: "Post to the public campus feed",
     titleLabel: "Title",

@@ -65,5 +65,13 @@
         <view class="compose-image-remove" catchtap="removeImage">✕</view>
       </view>
     </view>
+
+    <view class="compose-anon-row">
+      <view class="compose-anon-label">
+        <view class="compose-anon-title">{{text.postAnonymously}}</view>
+        <view class="compose-anon-hint">{{text.anonHint}}</view>
+      </view>
+      <switch checked="{{isAnonymous}}" bindchange="toggleAnonymous" color="#3D7A2E" />
+    </view>
   </view>
 </view>
