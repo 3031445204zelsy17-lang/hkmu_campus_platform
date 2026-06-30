@@ -89,7 +89,7 @@ async def get_history(
                 FROM messages
                 WHERE (sender_id = $1 AND receiver_id = $2)
                    OR (sender_id = $3 AND receiver_id = $4)
-                ORDER BY created_at DESC
+                ORDER BY created_at DESC, id DESC
                 LIMIT $5 OFFSET $6
                 """,
                 user["id"], partner_id, partner_id, user["id"],
