@@ -5,3 +5,12 @@
   padding: 12rpx 0;
   text-align: center;
 }
+
+/* B5 隐私声明入口 — 弱于 text-link,不抢注册切换视觉 */
+.privacy-entry {
+  margin-top: 8rpx;
+  padding: 8rpx 0 32rpx;
+  text-align: center;
+  font-size: var(--fs-link);
+  color: var(--text-secondary);
+}
