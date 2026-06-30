@@ -34,6 +34,7 @@ Page({
     joinedAtLabel: "",
     loading: false,
     locale: getLocale(),
+    privacyAction: getTexts("privacy").openAction,
     text: getTexts("profile"),
     user: null,
     sharePath: "", // Phase 5: 预取的邀请分享路径(onShareAppMessage 用)
@@ -60,6 +61,7 @@ Page({
       identityLabel: identityLabel(this.data.user && this.data.user.identity, text),
       joinedAtDisplay,
       locale,
+      privacyAction: getTexts("privacy", locale).openAction,
       text,
     });
   },
@@ -220,6 +222,12 @@ Page({
   goCompose() {
     wx.navigateTo({
       url: "/pages/compose/compose",
+    });
+  },
+
+  openPrivacy() {
+    wx.navigateTo({
+      url: "/pages/privacy/privacy",
     });
   },
 

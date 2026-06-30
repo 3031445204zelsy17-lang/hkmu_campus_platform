@@ -46,6 +46,7 @@ Page({
     modeLabel: getTexts("login").usernameMode,
     nickname: "",
     password: "",
+    privacyAction: getTexts("privacy").openAction,
     studentId: "",
     text: getTexts("login"),
     usernameModeClass: "segment-item active",
@@ -67,6 +68,7 @@ Page({
     const text = getTexts("login", locale);
     this.setData(Object.assign({
       locale,
+      privacyAction: getTexts("privacy", locale).openAction,
       text,
     }, getModeMeta(this.data.mode, text)));
   },
@@ -103,6 +105,10 @@ Page({
     this.setData({
       [field]: event.detail.value,
     });
+  },
+
+  openPrivacy() {
+    wx.navigateTo({ url: "/pages/privacy/privacy" });
   },
 
   finishLogin() {
