@@ -79,3 +79,13 @@
   margin-top: 4rpx;
   line-height: 1.5;
 }
+
+/* 选中分类:实色绿底白字,与未选(白底绿字)强对比。
+   覆盖 app.wxss 全局 .category-chip.active —— 那里选中态也是白底绿字,
+   仅多 8% 透明阴影,几乎看不出选了哪个。*/
+.category-strip .category-chip.active {
+  background: var(--green-deep);
+  color: #FFFFFF;
+  border-color: var(--green-deep);
+  box-shadow: 0 8rpx 22rpx rgba(61, 122, 46, 0.18);
+}
