@@ -739,8 +739,8 @@
         "title": "隐私声明",
         "type": "content",
         "owner": "SYF",
-        "status": "pending",
-        "detail": "收集邮箱(HKMU 验证)+ GA4/Mixpanel 行为分析。内测前放简单隐私说明(收集什么/为什么/存哪),尤其涉及 HKMU 邮箱。"
+        "status": "code done;待用户换官方邮箱 + IDE 编译/截图",
+        "detail": "收集邮箱(HKMU 验证)+ GA4/Mixpanel 行为分析。内测前放简单隐私说明(收集什么/为什么/存哪),尤其涉及 HKMU 邮箱。✅ 2026-06-30 done:新建 pages/privacy(三语 privacy scope 20 key,6 段 收集/为什么/存储/分享/权利/联系)+ privacy.openAction 复用入口文案 + login 注册区底部入口 + profile profile-row 入口;privacy.wxss 纯 token var。静态全绿(node --check×4 + JSON 有效 + wxml view 平衡 23/23·24/24·53/53 + 三语 parity 20/20)。⚠️ 联系邮箱 support@hkmu-campus.example 为占位,正式上线前换官方邮箱;微信开发者工具编译/截图仍待用户。"
       },
       {
         "id": "B6",
