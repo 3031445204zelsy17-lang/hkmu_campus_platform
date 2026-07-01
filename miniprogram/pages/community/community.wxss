@@ -65,3 +65,11 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* feedTabs(最新/热门)选中态:绿底白字,覆盖全局弱 segment-item.active
+   (白底绿字+8% 淡阴影,选中几乎看不出)。board-item.active 已有浅绿底可辨,不动。*/
+.segmented .segment-item.active {
+  background: var(--green-deep);
+  color: #FFFFFF;
+  box-shadow: 0 8rpx 22rpx rgba(61, 122, 46, 0.18);
+}
