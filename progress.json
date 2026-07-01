@@ -435,7 +435,7 @@
     "wechat_login_port": {
       "status": "merged via PR#5 (commit 410de4e)",
       "what": "从司徒 [手机端] 分支只 cherry-pick 微信登录：wechat_service.py 原样 + auth.py /wechat/miniprogram 端点（SQLite ? → asyncpg $N 改写）",
-      "pending": "生产 Azure 部署 + 配 WECHAT AppID/Secret"
+      "pending": "✅ done(2026-07-01 核实):wechat_service.py 在生产镜像 3bb1846 + Azure 已配 WECHAT_MINIPROGRAM_APPID/SECRET。仅剩用户用真微信 code 登录实测确认 Secret 值无误"
     },
     "stability_hardening": {
       "keepalive": "done — .github/workflows/keepalive.yml，每10分钟 ping 防 Supabase pause",
