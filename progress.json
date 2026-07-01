@@ -673,7 +673,7 @@
         ]
       },
       "phase6a_news_sync": {
-        "status": "done (2026-06-28; 代码+本地 dry-run 验证过,首次回填待 Task 15)",
+        "status": "done + 生产已自动回填 ✅ (2026-07-01 核实:cron 6-28/29/30 schedule success,生产 news 8 条全真实 RSS 繁体,source_url 精确文章,pub 6-24~6-29;无需手动触发)",
         "what": "news 真实化:GitHub Actions 定时从 HKMU 官网 WordPress RSS 抓真实新闻入库(替代 Phase 4 手工 seed)。方案 C 精修版 — 后端 lang 基建一次到位,Phase 6a 只抓繁体(zh-hant)",
         "done": [
           "后端 lang 基建一次到位:news 表加 lang 列(NOT NULL DEFAULT 'zh-hant',database.py DO$$ 幂等块)+ GET /news 加 ?lang 参数(不传默认 zh-hant,三语钩子)+ NewsOut/NewsCreate 加 lang + requirements 加 feedparser",
@@ -683,7 +683,7 @@
           "本地 dry-run 验证(繁体 3 页 30 条):解析+去重 OK;category 分布 academic 8(学者撰文+UAS)/other 15(媒体报道 QS 排名)/event 1(活動日誌)/announcement 1(新聞稿)/career 0(真实);source_url 全为 hkmu.edu.hk/news/tc/ 精确链接"
         ],
         "data_source": "HKMU News WordPress RSS(tc/feed 繁体 + feed 英文 + sc/feed 简体,WPML 三语同批新闻翻译版);robots.txt 全允许;只存摘要+精确原文链接不存全文;UA 标识;每日 1 次低频",
-        "verification_gap": "本地 dry-run 过(解析/映射/去重全 OK);待跑:首次回填(gh workflow run purge+pages=3)+ 生产 SELECT 核对(lang 全 zh-hant / source_url 精确)+ 端到端(news 页显示真实新闻)+ 次日 cron 自动触发"
+        "verification_gap": "✅ 已 live(2026-07-01 核实):cron 6-28 起每天 schedule success,生产 GET /news?lang=zh-hant 返 8 条真实 RSS 繁体新闻(source_url 全 hkmu.edu.hk/news/tc/精确文章,pub 6-24~6-29)。首次回填(6-28 workflow_dispatch)+ 后续增量 cron 均已自动跑通。小观察:8 条含同事件多篇报道(學與教博覽2026 ×3)+ 媒体专栏转载(家國天下/講樓),是 RSS 真实条目非 bug"
       },
       "phase6b_news_trilingual": {
         "status": "deferred — 防过渡期烂尾(硬约束:以后绝对支持三语)",
