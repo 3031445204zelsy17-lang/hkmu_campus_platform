@@ -14,3 +14,10 @@
   font-size: var(--fs-link);
   color: var(--text-secondary);
 }
+
+/* 用户名/邮箱切换选中态:绿底白字,覆盖全局弱 active(白底绿字+8% 淡阴影)*/
+.segmented .segment-item.active {
+  background: var(--green-deep);
+  color: #FFFFFF;
+  box-shadow: 0 8rpx 22rpx rgba(61, 122, 46, 0.18);
+}
