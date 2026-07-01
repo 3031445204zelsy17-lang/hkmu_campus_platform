@@ -37,6 +37,7 @@ class ProgrammeOut(BaseModel):
     total_credits: int
     coming_soon: bool = False
     categories: list[ProgrammeCategoryOut]
+    template: dict = {}
 
 
 class ProgrammeCatalogueOut(BaseModel):
@@ -187,6 +188,7 @@ def _programme_to_out(code: str, prog: dict) -> ProgrammeOut:
         total_credits=prog.get("total_credits", 0),
         coming_soon=prog.get("coming_soon", False),
         categories=cats,
+        template=prog.get("template", {}),
     )
 
 
