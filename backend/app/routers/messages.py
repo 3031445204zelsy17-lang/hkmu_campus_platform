@@ -49,7 +49,7 @@ async def list_conversations(user: dict = Depends(get_current_user)):
             JOIN users u ON u.id = l.partner_id
             JOIN messages m ON m.id = l.max_id
             LEFT JOIN unread ud ON ud.partner_id = l.partner_id
-            ORDER BY m.created_at DESC
+            ORDER BY m.created_at DESC, m.id DESC
             """,
             uid, uid, uid, uid,
         )
