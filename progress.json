@@ -833,13 +833,13 @@
     "observability": {
       "_doc": "可观测性 checklist:访问量/流量/超载/安全 从哪看。独立文档 docs/ops/正式上线可观测性-checklist.md",
       "scope": "最初 ≤1000 用户量级起步;免费层基本扛得住峰值并发(几十~一两百),重心先观测再扩容;唯一确定性崩点=Supabase auto-pause",
-      "status": "checklist 已整理(2026-07-02);待执行 3 件优先事",
+      "status": "checklist 已整理(2026-07-02);3 件优先事:✅ App Insights 已开(2026-07-03 workspace-based+SDK,AppTraces 实测落 sec_audit;commit 07b76df 部署),剩 配告警 + 每周 Supabase 巡检",
       "priority_3": [
-        "开 Application Insights(Azure 门户,几分钟)——后端性能/超载/错误主力观测面,当前未开(=内测就绪 B3 待办的 Azure 部分)",
+        "✅ 开 Application Insights——done(2026-07-03:workspace-based hkmu-campus-sea-ai + azure-monitor-opentelemetry SDK 接入[自定义容器只能 SDK 非 codeless],AppTraces 实测捕获 sec_audit status=401 真实流量;commit 07b76df 部署)",
         "配 2-3 告警:App Insights 失败率/响应时间 + UptimeRobot 关键端点(/api/health、/api/v1/courses、/api/v1/news)",
         "每周看 Supabase Dashboard 连接数/存储(auto-pause 是唯一确定性崩点)"
       ],
-      "main_gap": "Application Insights 未启用;开了基础指标够,深度 trace(DB 调用耗时)待量大时加 OpenTelemetry",
+      "main_gap": "✅ Application Insights 已启用(2026-07-03,SDK 接入;自定义容器无法 codeless 故用 azure-monitor-opentelemetry);深度 trace(DB 调用耗时)待量大时再加 OpenTelemetry 细化 instrumentation",
       "scale_triggers": "见 docs/ops/正式上线可观测性-checklist.md 第 5 节(观测→扩容决策对照)",
       "not_needed_now": "Grafana/Prometheus/k8s 监控/付费 APM(Datadog)——1000 人量级过度"
     },
