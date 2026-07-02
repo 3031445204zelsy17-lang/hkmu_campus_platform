@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
+import logging
 import secrets
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -9,8 +10,31 @@ from starlette.responses import Response
 import os
 
 from .database import init_db, close_db
-from .config import API_PREFIX, SECRET_KEY
+from .config import API_PREFIX, SECRET_KEY, RATE_LIMIT_PER_MIN
 from .routers import auth, posts, courses, users, news, lostfound, messages, push, upload
+from .services.rate_limiter import check_rate_limit
+
+# Security/observability logger. Propagates to uvicorn root → stdout → Azure Log
+# Stream + Application Insights. WARNING+ surfaces in App Insights failure views.
+logger = logging.getLogger("hkmu.security")
+
+
+def _init_app_insights() -> None:
+    """Wire Azure Monitor OpenTelemetry (Application Insights) when a connection
+    string is present. Dormant by default — no env, no telemetry, no behavior
+    change. Once APPLICATIONINSIGHTS_CONNECTION_STRING is set, auto-instruments
+    requests / exceptions / logging / httpx so the App Insights blade fills with
+    real data (custom-container webapps can't use codeless injection)."""
+    conn = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING", "").strip()
+    if not conn:
+        return
+    try:
+        from azure.monitor.opentelemetry import configure_azure_monitor
+        configure_azure_monitor()  # reads APPLICATIONINSIGHTS_CONNECTION_STRING from env
+        logger.info("app_insights enabled")
+    except Exception as e:
+        # Never let monitoring break the app.
+        logger.warning("app_insights init failed: %s", e)
 
 
 @asynccontextmanager
@@ -19,6 +43,7 @@ async def lifespan(app: FastAPI):
         import warnings
         warnings.warn("WARNING: Using default SECRET_KEY. Set SECRET_KEY in .env for production!")
     await init_db()
+    _init_app_insights()
     yield
     await close_db()
 
@@ -97,6 +122,68 @@ async def csrf_protect(request: Request, call_next):
     return await call_next(request)
 
 
+def _client_ip(request: Request) -> str:
+    """Best-effort client IP. Prefers first X-Forwarded-For hop (Azure front-end
+    sets this), falls back to the direct peer."""
+    xff = request.headers.get("x-forwarded-for", "")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+# Optional global per-IP rate limit (defense-in-depth vs scraping / blunt abuse).
+# DISABLED by default (RATE_LIMIT_PER_MIN=0) so it cannot throttle real users on
+# deploy; enable via Azure app settings once tuned. In-memory → per-instance; needs
+# Redis once we go multi-instance.
+@app.middleware("http")
+async def global_ip_rate_limit(request: Request, call_next):
+    if RATE_LIMIT_PER_MIN > 0:
+        path = request.url.path
+        if path.startswith(API_PREFIX) and not path.endswith("/health"):
+            ip = _client_ip(request)
+            try:
+                check_rate_limit(f"ip:{ip}", max_requests=RATE_LIMIT_PER_MIN, window_seconds=60)
+            except HTTPException:
+                # security_audit (outer) logs this 429 with ip/path.
+                return JSONResponse(
+                    {"detail": "Too many requests. Try again later."},
+                    status_code=429,
+                )
+    return await call_next(request)
+
+
+# Security audit (outermost middleware): single chokepoint that logs auth/abuse-
+# relevant responses so App Insights + Azure Log Stream surface attack patterns
+# (brute-force login, scraping, CSRF attempts, server errors).
+_AUDITED_STATUS = {401, 403, 429}
+
+
+@app.middleware("http")
+async def security_audit(request: Request, call_next):
+    response: Response = await call_next(request)
+    path = request.url.path
+    if (
+        path.startswith(API_PREFIX)
+        and request.method != "OPTIONS"
+        and not path.endswith("/health")
+        and (response.status_code in _AUDITED_STATUS or response.status_code >= 500)
+    ):
+        logger.warning(
+            "sec_audit status=%s method=%s path=%s ip=%s",
+            response.status_code, request.method, path, _client_ip(request),
+        )
+    return response
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Last-resort for unhandled errors: log full traceback server-side, return a
+    generic 500 so DB host / SQL / stack internals never reach the client. Note:
+    HTTPException / RequestValidationError keep their dedicated FastAPI handlers."""
+    logger.exception("Unhandled error %s %s", request.method, request.url.path)
+    return JSONResponse({"detail": "Internal server error"}, status_code=500)
+
+
 app.include_router(auth.router, prefix=API_PREFIX)
 app.include_router(posts.router, prefix=API_PREFIX)
 app.include_router(courses.router, prefix=API_PREFIX)
@@ -119,8 +206,11 @@ async def health():
             await db.fetchval("SELECT 1")
         return {"status": "ok", "database": "up"}
     except Exception as e:
+        # Log the real error server-side only; asyncpg exceptions can embed the DB
+        # host / DSN, which must not leak to clients or scrapers in the response body.
+        logger.warning("health probe failed: %s", e)
         return JSONResponse(
-            {"status": "degraded", "database": "down", "detail": str(e)},
+            {"status": "degraded", "database": "down"},
             status_code=503,
         )
 
