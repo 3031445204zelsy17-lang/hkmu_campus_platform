@@ -544,7 +544,7 @@
         "verification": "终态:news 8(保留) / lostfound 1(黑色钱包,seed 已撤回) / posts 2 / comments 2 / post_likes 1 / 垃圾帖候选 0;news 5 分类全覆盖;每日 db-backup.yml pg_dump 兜底"
       },
       "phase5_social_coldstart": {
-        "status": "C.1-C.7 done (2026-06-28, branch feature/miniprogram-phase5-social;代码 c68a85d);后端 C.1-C.3 已部署生产镜像 c5906ee(init_db 建表 OK + automator 端到端验证 user.hkmu_verified/invite_code/sharePath 全通);C.6 new-chat 好友+推荐段 + C.7 home 消费邀请闭环 done(静态全绿);剩 C.8 live 两账号端到端验证",
+        "status": "C.1-C.7 done + C.8 静态复核全绿 done(2026-07-02,坐实 6 维度:node --check 29/29 + pages 4件套 + require 无环 + WXML 13/13 平衡 + i18n 三语 parity home27/profile39/newChat23/social18 + 前后端路径契约对齐);后端 C.1-C.3 已部署生产镜像 c5906ee;剩 C.8 live 两账号端到端验证(checklist 见 c8.live_checklist)",
         "doc": "docs/ops/小程序社交冷启动-C方案.md",
         "what": "P0 HKMU 邮箱验证层 + 同学推荐;P1 邀请码分享 → 自动双向好友 → DM。微信好友关系链不可用(memory wechat-friend-graph-unavailable),走自有关系图",
         "c1": {
@@ -661,6 +661,24 @@
             "边界:未登录打开邀请码(留待登录后消费)、自邀(created=false toast)、无效码(catch toast)、重复消费(清暂存防重)"
           ]
         },
+        "c8": {
+          "status": "静态复核全绿 done(2026-07-02);剩 live 两账号端到端验证(待用户,见 live_checklist)",
+          "what": "C.8 静态 6 维度坐实:① node --check 全量 29/29 ② pages 4件套全齐(home/news 无页面 wxss=历史既定靠 app.wxss,非缺陷)③ require 无环(social→request 单向,auth→messages 单向)④ WXML 13/13 平衡(home/profile/new-chat ✓)⑤ i18n 三语 parity 运行时全等(home 27/profile 39/newChat 23/social 18)⑥ 前后端路径契约对齐(social.js 5端点↔users.py 5路由;/me/* 与 /suggest 均在 /{user_id} 之前声明 + user_id:int 约束兜底,无路由冲突)。后端 C.1-C.3 已部署 c5906ee;生产 curl 受本地 VPN 挡(memory vpn-azure-https-block),非代码问题",
+          "verification": "2026-07-02 复核脚本(/tmp/i18n_parity.js 运行时 getTexts 比对 + /tmp/wxml_balance.py 标签计数 + node --check 全量 + grep require 图 + pages 4件套 ls)。全绿零问题。附带核实 users.py:328 get_user(user_id:int) 类型约束保护 admin 路由顺序,非 bug",
+          "live_checklist": [
+            "[P0 邮箱验证] A 登录→profile→hkmu_verified 徽章未亮→点验证 HKMU 邮箱→输 s1234567@live.hkmu.edu.hk→收信点链接→徽章亮+student_id 自动回填;B 同样验证",
+            "[P1 邀请闭环] A profile 邀请好友→拿 sharePath(/pages/home/home?inv=CODE)→B 用该路径冷启动→home onShow 消费 pendingInvite→弹'你和 A 已成为好友'→去聊天→进 chat",
+            "[好友互见] A/B new-chat 好友段都出现对方",
+            "[P0 同学推荐] A/B 同 programme→new-chat 可能认识的同学出现对方 标签 same_programme;不同 programme HKMU 已验证→标签 hkmu_peer",
+            "[边界] 自邀(created=false toast 不加好友)/已好友再邀请(created=false)/坏码 inv=xxx(邀请码无效 toast)/未登录打开邀请(留待登录后消费)",
+            "[DM 衔接] 推荐或好友卡片点对方→直跳 chat→发消息→对方收(复用 Phase 3 DM live 验证)"
+          ],
+          "todo_live_user": [
+            "微信开发者工具编译模式自定义编译设置启动参数 inv=CODE 模拟分享落地,或真机两账号扫码",
+            "automator switchTab/读 page.data 辅助(见 memory miniprogram-automator-drive:别连跑两遍)",
+            "全过后回来把 c8.status 标全 done + phase5.status 收口"
+          ]
+        },
         "steps": [
           "C.1 后端 schema(hkmu_verified/invite_code/friendships 表)+ models ✅ done",
           "C.2 HKMU 域判定 + verify 置 hkmu_verified + 学生邮箱推 student_id + bind-email ✅ done",
@@ -669,7 +687,7 @@
           "C.5 profile 验证入口+邀请分享 ✅ done",
           "C.6 new-chat 好友+推荐两段 ✅ done",
           "C.7 home 消费邀请 + i18n ✅ done",
-          "C.8 静态+live 验证"
+          "C.8 静态 ✅ done(2026-07-02) / live 两账号验证 待用户"
         ]
       },
       "phase6a_news_sync": {
@@ -693,6 +711,41 @@
           "脚本:scripts/sync_news.py 的 FEEDS 字典解开 en + zh-hans 两行(目前注释),即抓三语 — 表/API 已就绪",
           "前端:小程序 news.js + web news.js 请求带 ?lang= 按 locale,切语言重拉(唯一需动前端处)"
         ]
+      },
+      "phase7_planner_expand": {
+        "status": "路线图(2026-07-02 记)。阶段一(planner 标记闭环)刚实现待复测;A 课程详情+课评 下一步(后端零改);B 排课表 阶段二(动后端);C 专业绑定深化 依附 A/B",
+        "vision": "把 planner 从「标记进度」升级为「选课规划 + 课评社区」:系统与专业绑定 → 总览要修课程 → 打开课看介绍/先修/课评 → 规划表排课 → 结合已修标记",
+        "inventory_2026_07_02": "DSAI 44 门(core29/elective6/project1/english2/通识2/大核4,120学分);CS+网安 comingSoon 0 门待补(docs/ops/选课选课/School_of_Science_and_Technology.docx 原料就位)",
+        "backend_ready": [
+          "GET /courses/{course_id} → CourseOut(含 description/prerequisites/credits/year/semester)",
+          "GET/POST/DELETE /courses/{course_id}/reviews → 课评全 CRUD",
+          "CourseReviewOut 字段:id/course_id/author_id/rating(1-5星)/content/helpful_count(点赞)/created_at/author_nickname — RateMyProfessor 式课评非普通评论",
+          "programme_code 绑定 + graduation-status 按专业算(已就绪)"
+        ],
+        "modules": {
+          "A_course_detail_review": {
+            "priority": "高(先做)",
+            "what": "新建小程序 pages/course-detail/(网页可后补);从「我的课程」点课卡 navigateTo 进详情;页内 = description/先修/学分学期 + 内联标记(复用 PUT /courses/progress) + 课评列表(rating 星+helpful) + 发评论框",
+            "backend_change": "零改(4 端点全就绪)",
+            "frontend_need": "新页 course-detail(js/wxml/wxss/json) + planner 课程卡加 bindtap navigateTo + i18n 新 scope",
+            "value": "社区感 + 选课决策辅助;和刚做的标记天然衔接(点课卡进详情)"
+          },
+          "B_plan_table": {
+            "priority": "中(阶段二)",
+            "what": "排课规划表:把课分配到未来学期做「计划修」vs「已修」;参考网页 plan 视图(学期 tab + status select)",
+            "backend_change": "需扩展:status 加 planned 语义 或 新建 plan 表(planned_semester 字段)— 要 plan",
+            "frontend_need": "小程序规划表 UI(按学期分组 + 分配交互)",
+            "value": "真正的「规划」而不只是「记录」"
+          },
+          "C_programme_binding": {
+            "priority": "低(依附 A/B)",
+            "what": "专业绑定深化:首页「我的专业」卡片 / 切换专业提示重置进度视角 等 UX",
+            "backend_change": "零改(programme_code 已存)",
+            "frontend_need": "UX 点缀"
+          }
+        },
+        "precedence": "先复测 planner 标记闭环(9步,2026-07-02 实现,见 phase2_c3) + 提交固化阶段一对齐 → 开 A(后端零改价值最高) → B(动后端)",
+        "data_gap_note": "CS/网安 课程数据缺(nice_to_have_deferred 已记);补数据独立,不阻塞 A(DSAI 44 门即可用),但 B/C 全专业铺开前需补"
       }
     },
     "next_step": "✅ Phase 4 数据运维 done(news 0→8 保留/lostfound seed 应反馈清回 1/清 2 垃圾帖,见 phase4_data)。Phase 3 私信代码完成(3.1-3.8,commit 67f84b0→82b9314,branch feature/miniprogram-phase3-messages;静态全绿)。✅ 用户已测开发者工具冒烟(2026-06-27);待用户:automator + 真实两账号收发(用户说稍后)+ 共享文件群通知 + home.js 合并前司徒 review。Phase 5 社交冷启动(P0 同校+P1 邀请)方案已批准,见 docs/ops/小程序社交冷启动-C方案.md,8 步(C.1-C.8),待 Phase 3 live 验证后启动(说「开始 C.1」即动)。⑦ 仍待用户开发者工具验证。✅⑥c 已上线 cc19d3a8"
