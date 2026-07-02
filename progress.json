@@ -713,7 +713,7 @@
         ]
       },
       "phase7_planner_expand": {
-        "status": "路线图(2026-07-02 记)。阶段一(planner 标记闭环)刚实现待复测;A 课程详情+课评 下一步(后端零改);B 排课表 阶段二(动后端);C 专业绑定深化 依附 A/B",
+        "status": "Module A 课程详情+课评 代码完成 + 静态全绿(2026-07-02);live 待用户(IDE 编译/截图 + 两账号课评闭环)。阶段一 planner 标记闭环已迁入详情页内联标记(action-sheet 退役)。下一步 B 排课表(动后端);C 专业绑定深化 依附 A/B",
         "vision": "把 planner 从「标记进度」升级为「选课规划 + 课评社区」:系统与专业绑定 → 总览要修课程 → 打开课看介绍/先修/课评 → 规划表排课 → 结合已修标记",
         "inventory_2026_07_02": "DSAI 44 门(core29/elective6/project1/english2/通识2/大核4,120学分);CS+网安 comingSoon 0 门待补(docs/ops/选课选课/School_of_Science_and_Technology.docx 原料就位)",
         "backend_ready": [
@@ -724,11 +724,32 @@
         ],
         "modules": {
           "A_course_detail_review": {
-            "priority": "高(先做)",
-            "what": "新建小程序 pages/course-detail/(网页可后补);从「我的课程」点课卡 navigateTo 进详情;页内 = description/先修/学分学期 + 内联标记(复用 PUT /courses/progress) + 课评列表(rating 星+helpful) + 发评论框",
-            "backend_change": "零改(4 端点全就绪)",
-            "frontend_need": "新页 course-detail(js/wxml/wxss/json) + planner 课程卡加 bindtap navigateTo + i18n 新 scope",
-            "value": "社区感 + 选课决策辅助;和刚做的标记天然衔接(点课卡进详情)"
+            "status": "代码完成 + 静态全绿(2026-07-02);live 待用户(IDE 编译/截图 + 两账号课评闭环)",
+            "priority": "高(已先做)",
+            "what": "新建小程序 pages/course-detail/(网页可后补);从 planner「我的课程」点课卡 navigateTo 进详情;页内 = code/name/credits·year·semester + category pill + description + 先修 + 内联标记 segmented(未修/进行中/已完成,复用 PUT /courses/progress) + 课评分(avg+stars) + 课评列表(rating 星+helpful 只读+作者+日期) + 发课评 composer(星选器+正文) + 删自己的课评",
+            "backend_change": "零改(GET /courses/{id} + GET/POST /courses/{id}/reviews + DELETE /courses/reviews/{id} + PUT /courses/progress 全就绪;helpful_count 只读无点赞端点;课评一人一课一条 409)",
+            "frontend_need": "✅ done:新页 course-detail(js/wxml/wxss/json) + planner 课程卡 bindtap→navigateTo + onShow 作废 _progress 缓存回拉 + i18n courseDetail scope 三语 27 key 含 officialNote 免责声明(+COMMON 继承共 38)",
+            "decisions": [
+              "课程 category(core/elective/...) 恰好=planner.categories key → 复用 planner scope 标签(categories/semAutumn/yearLabel),不重复造 i18n key",
+              "helpful_count 后端只读(无点赞端点)→ 前端仅展示(>0 才显 'N 人觉得有用'),不加点赞按钮",
+              "课评一人一课一条(后端 409)→ loadReviews 检测 myReviewId:已评则隐 composer + 列表里自己那条显删除按钮;POST 遇 409 toast+重拉同步",
+              "内联标记三态走 PUT not_started/in_progress/completed(与 planner 原 action-sheet 同语义,非 DELETE);标记后 set globalData.coursesNeedRefresh → planner onShow 作废 _progress 重拉",
+              "planner 原 onCourseTap action-sheet 退役(标记迁详情页内联);i18n markInProgress/markCompleted/markRemove 保留(三语 parity 仍成立,无悬空引用)",
+              "officialNote 免责声明(courseDetail scope + 课程 hero 卡底部小字,三语):seed description 非官方原文,无论最终留空/保留/用户手抄都标注'以 MyHKMU 官方大纲为准';description 公开来源无 description 的查证见 description_source_note"
+            ],
+            "verification": "node --check×3(course-detail/planner/i18n)✅ + JSON 有效(app.json 14 pages 含路由/course-detail.json)✅ + WXML 平衡(course-detail view39/text7/block2;planner 回归 view61/text6)✅ + i18n 运行时 parity(courseDetail 38 key×3 含 officialNote 全非空+COMMON 继承+planner 复用键)✅ + 接线确认(openCourseDetail js+wxml/onCourseTap 无残留/navigateTo 入口/planner request+getTexts 仍活)✅;待 IDE 编译/截图 + live",
+            "live_checklist": [
+              "IDE 编译/截图:课程 hero 卡(category pill/credits·year·semester/description/先修) + 标记 segmented 三态 + 课评分 avg+stars + 课评列表星 + composer 星选器",
+              "live:planner 点课卡→进详情;标记三态→回 planner 仪表盘/卡片刷新(coursesNeedRefresh);课评:发(星+正文)→列表+avg 更新+自己那条显删除;再发→409 toast;删→composer 复现",
+              "边界:未登录进详情(未来 deep-link;hero+课评只读+login-prompt 标记);课程 404→notFound 态;无课评→空态;helpful_count=0 不显"
+            ],
+            "deferred": [
+              "网页版 course-detail(当前仅小程序;web planner 课程卡可后补接同名端点)",
+              "课评点赞(helpful_count 写入端点,当前只读)",
+              "课评分页(当前 page_size=50 一次性,超 50 条不翻页)"
+            ],
+            "description_source_note": "⚠️ seed_courses.py 的 description(如 'Fundamental programming concepts using Python.')非 HKMU 官方原文,是早期一句话概括。本地 docs/ops/选课选课/*.docx(6 学院 + HKMU_public_programme_courses_no_status.docx)= HKMU 公开 Programme Requirements PDF 的结构化版,列仅 code/name/credits/group/term,无 description;文档自述 course details 在 MyHKMU 内部门户,公开层(含 WebSearch)拿不到 COMP1080SEF 等单课详情。故「去官网拿 description」公开层到 code/name/credits 为止。待用户定方案:(a)留空+免责声明(course-detail 已留 wx:if 空描述隐藏) (b)保留概括+免责声明 (c)用户从 MyHKMU 手抄官方描述逐条替换 seed+生产DB。门槛:用户认可「按修读状态而非按专业」,待定软(前端徽章,评论级徽章需后端 join author 修读态)/硬(后端 create_review 加 completed/in_progress 校验,Module A 从零改变小改)",
+            "value": "社区感 + 选课决策辅助;和标记天然衔接(点课卡进详情)"
           },
           "B_plan_table": {
             "priority": "中(阶段二)",
@@ -744,7 +765,7 @@
             "frontend_need": "UX 点缀"
           }
         },
-        "precedence": "先复测 planner 标记闭环(9步,2026-07-02 实现,见 phase2_c3) + 提交固化阶段一对齐 → 开 A(后端零改价值最高) → B(动后端)",
+        "precedence": "A 课程详情+课评 ✅ 代码 done(2026-07-02,静态全绿) → live 验证 → B 排课表(动后端,status planned 语义 或 新 plan 表) → C(依附 A/B)。阶段一 planner 标记闭环已并入详情页内联标记",
         "data_gap_note": "CS/网安 课程数据缺(nice_to_have_deferred 已记);补数据独立,不阻塞 A(DSAI 44 门即可用),但 B/C 全专业铺开前需补"
       }
     },
