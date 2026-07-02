@@ -134,7 +134,7 @@
       <view wx:for="{{sem.courses}}" wx:for-item="c" wx:key="courseId"
             class="course-row course-tap"
             data-course-id="{{c.courseId}}" data-code="{{c.code}}"
-            bindtap="onCourseTap">
+            bindtap="openCourseDetail">
         <view class="course-main">
           <view class="course-code">{{c.code}}</view>
           <view class="course-name">{{c.name}} · {{c.credits}}cr</view>

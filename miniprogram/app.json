@@ -4,6 +4,7 @@
     "pages/community/community",
     "pages/post-detail/post-detail",
     "pages/planner/planner",
+    "pages/course-detail/course-detail",
     "pages/compose/compose",
     "pages/news/news",
     "pages/lostfound/lostfound",

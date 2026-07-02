@@ -136,6 +136,12 @@ Page({
   onShow() {
     syncTabBar(this, 3);
     this._locale = getLocale();
+    // course-detail 页标记课程后回返:作废会话级进度缓存,强制重拉(仪表盘/卡片状态)
+    const app = getApp();
+    if (app && app.globalData && app.globalData.coursesNeedRefresh) {
+      app.globalData.coursesNeedRefresh = false;
+      this._progress = null;
+    }
     // 只有首次（无 catalogue）才显示 loading 占位；之后切回都用缓存瞬间渲染
     this._loading = !this._catalogue;
     this._emit();
@@ -282,39 +288,14 @@ Page({
     }, 300);
   },
 
-  onCourseTap(e) {
-    if (!this._user) {
-      this.goLogin();
+  openCourseDetail(e) {
+    // 课程卡只在登录态渲染(showTabs = _user && status),点按即进详情页(页内内联标记)
+    const courseId = e.currentTarget.dataset.courseId;
+    if (!courseId) {
       return;
     }
-    const courseId = e.currentTarget.dataset.courseId;
-    if (!courseId) return;
-    const text = getTexts("planner", this._locale);
-    wx.showActionSheet({
-      itemList: [text.markInProgress, text.markCompleted, text.markRemove],
-      success: (res) => {
-        const nextStatus =
-          res.tapIndex === 0 ? "in_progress" :
-          res.tapIndex === 1 ? "completed" : "not_started";
-        const prev = this._progress[courseId];
-        // 乐观更新卡片(即时 pill 变化)
-        this._progress[courseId] = nextStatus;
-        this._emit();
-        request({
-          method: "PUT", path: "/courses/progress",
-          data: { course_id: courseId, status: nextStatus }, auth: true,
-        })
-          .then(() => {
-            wx.showToast({ title: text.markSuccess, icon: "success" });
-            this._loadStatus(); // 重拉校准顶部仪表盘 + 推荐
-          })
-          .catch((error) => {
-            if (prev === undefined) delete this._progress[courseId];
-            else this._progress[courseId] = prev;
-            this._emit();
-            wx.showToast({ title: (error && error.message) || text.loadFail, icon: "none" });
-          });
-      },
+    wx.navigateTo({
+      url: `/pages/course-detail/course-detail?id=${encodeURIComponent(courseId)}`,
     });
   },
 
