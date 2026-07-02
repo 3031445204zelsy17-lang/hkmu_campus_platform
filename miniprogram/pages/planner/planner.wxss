@@ -119,3 +119,76 @@
   display: flex;
   flex-direction: column;
 }
+
+/* segmented 总览/我的课程 */
+.seg-bar {
+  display: flex;
+  gap: 8rpx;
+  margin: 16rpx 0 24rpx;
+  background: var(--segmented-bg);
+  border-radius: var(--radius-pill);
+  padding: 6rpx;
+}
+.seg-item {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  border-radius: var(--radius-pill);
+  color: var(--text-secondary);
+  font-size: var(--fs-link);
+  font-weight: 600;
+}
+.seg-on {
+  background: var(--surface, #ffffff);
+  color: var(--text-primary);
+  box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.06);
+}
+
+/* 搜索框 */
+.planner-search {
+  padding: 8rpx 0;
+}
+.search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20rpx 24rpx;
+  background: var(--segmented-bg);
+  border-radius: var(--radius-entry);
+  font-size: var(--fs-body);
+  color: var(--text-primary);
+}
+
+/* 学期分组头 */
+.sem-header {
+  margin: 24rpx 4rpx 12rpx;
+  color: var(--text-secondary);
+  font-size: var(--fs-link);
+  font-weight: 600;
+  letter-spacing: 1rpx;
+}
+
+/* 课程卡点击反馈 */
+.course-tap {
+  transition: background 0.15s;
+}
+.course-tap:active {
+  background: var(--segmented-bg);
+}
+
+/* 先修提示 */
+.prereq-row {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+}
+.prereq-row.met {
+  color: var(--cat-emerald);
+}
+.prereq-row.unmet {
+  color: var(--text-secondary);
+}
+
+/* 状态 pill:进行中 amber(已完成 green 已在 app.wxss) */
+.mini-pill.amber {
+  background: var(--cat-amber);
+  color: #ffffff;
+}

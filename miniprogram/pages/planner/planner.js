@@ -32,6 +32,87 @@ function fillTemplate(tpl, vars) {
   return tpl.replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null ? vars[k] : ""));
 }
 
+// prerequisites 是 JSON 文本列(如 '["COMP1080SEF"]'),复刻网页 planner.js:1451
+function parsePrereqs(raw) {
+  try {
+    const parsed = JSON.parse(raw || "[]");
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function prereqsMet(prereqIds, progress) {
+  if (!prereqIds || !prereqIds.length) return true;
+  return prereqIds.every((id) => progress[id] === "completed");
+}
+
+const SEMESTER_ORDER = { autumn: 0, spring: 1, summer: 2 };
+
+function semesterRank(name) {
+  const key = String(name || "").toLowerCase();
+  return SEMESTER_ORDER[key] != null ? SEMESTER_ORDER[key] : 99;
+}
+
+// 当前专业的课程按学年学期分组,每张卡带 status + 先修提示(仅提示,不阻塞标记)
+function buildCoursesView(prog, idToCourse, progress, keyword, text) {
+  if (!prog || !idToCourse) return { semesters: [], empty: true };
+  const cats = prog.categories || {};
+  const all = [];
+  Object.keys(cats).forEach((key) => {
+    (cats[key].courses || []).forEach((cid) => {
+      const c = idToCourse[cid];
+      if (c) all.push(c);
+    });
+  });
+  const kw = keyword ? keyword.toLowerCase() : "";
+  const filtered = kw
+    ? all.filter((c) =>
+        (c.code && String(c.code).toLowerCase().includes(kw)) ||
+        (c.name && String(c.name).toLowerCase().includes(kw)))
+    : all;
+  const groups = {};
+  filtered.forEach((c) => {
+    const yr = c.year != null ? c.year : 0;
+    const sem = c.semester || "other";
+    const gk = yr + "::" + sem;
+    if (!groups[gk]) groups[gk] = { year: yr, semester: sem, courses: [] };
+    groups[gk].courses.push(c);
+  });
+  const semLabelMap = {
+    autumn: text.semAutumn, spring: text.semSpring, summer: text.semSummer,
+  };
+  const semesters = Object.keys(groups).map((k) => groups[k]).sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year;
+    return semesterRank(a.semester) - semesterRank(b.semester);
+  });
+  semesters.forEach((g) => {
+    g.label = fillTemplate(text.yearLabel, { n: g.year }) + " · " +
+      (semLabelMap[String(g.semester).toLowerCase()] || g.semester);
+    g.courses = g.courses.map((c) => {
+      const status = progress[c.id] || "not_started";
+      const prereqIds = parsePrereqs(c.prerequisites);
+      const met = prereqsMet(prereqIds, progress);
+      let prereqLabel = "";
+      if (prereqIds.length) {
+        prereqLabel = met ? text.prereqMet : (text.prereqPrefix + prereqIds.join(", "));
+      }
+      return {
+        courseId: c.id,
+        code: c.code,
+        name: c.name,
+        credits: c.credits,
+        statusKey: status,
+        statusLabel: status === "completed" ? text.statusCompleted :
+          status === "in_progress" ? text.statusInProgress : "",
+        prereqsMet: met,
+        prereqLabel,
+      };
+    });
+  });
+  return { semesters, empty: !filtered.length };
+}
+
 Page({
   // ── 非响应式缓存：所有渲染都从缓存算，_emit() 是唯一的 setData 出口 ──
   // 这样每次切 tab / 换语言只触发一次 setData，避免密集 setData 跨原生桥卡顿。
@@ -43,6 +124,12 @@ Page({
   _selectedCode: null,     // 用户手动选的专业（优先于 saved）
   _loading: true,
   _loadError: null,
+  _courses: null,           // /courses?page_size=50 → items
+  _idToCourse: null,        // {course_id: course 对象}
+  _progress: null,          // /courses/progress/me → {course_id: status}
+  _activeTab: "overview",   // "overview" | "courses"
+  _searchKeyword: "",
+  _searchTimer: null,
 
   // ── 生命周期 ──────────────────────────────────────────────────────────
 
@@ -117,7 +204,9 @@ Page({
       return Promise.resolve();
     }
     const path = `/courses/graduation-status?programme_code=${encodeURIComponent(code)}`;
-    return request({ path, auth: true })
+    // 并行预拉课程全量 + 用户进度(会话级缓存),再拉仪表盘
+    return Promise.all([this._loadCourses(), this._loadProgress()])
+      .then(() => request({ path, auth: true }))
       .then((status) => {
         this._status = status;
         this._emit();
@@ -125,6 +214,34 @@ Page({
       .catch((error) => {
         wx.showToast({ title: error.message || getTexts("planner", this._locale).loadFail, icon: "none" });
         // 保留上次 status，不 blank 仪表盘
+      });
+  },
+
+  _loadCourses() {
+    if (this._courses) return Promise.resolve();
+    return request({ path: "/courses?page_size=50", auth: false })
+      .then((data) => {
+        this._courses = (data && data.items) || [];
+        const map = {};
+        this._courses.forEach((c) => { if (c && c.id) map[c.id] = c; });
+        this._idToCourse = map;
+      })
+      .catch(() => {
+        this._courses = [];
+        this._idToCourse = {};
+      });
+  },
+
+  _loadProgress() {
+    if (this._progress) return Promise.resolve();
+    return request({ path: "/courses/progress/me", auth: true })
+      .then((data) => {
+        const map = {};
+        (data || []).forEach((r) => { if (r && r.course_id) map[r.course_id] = r.status; });
+        this._progress = map;
+      })
+      .catch(() => {
+        this._progress = {};
       });
   },
 
@@ -146,6 +263,59 @@ Page({
 
   goLogin() {
     wx.navigateTo({ url: "/pages/login/login" });
+  },
+
+  onTabChange(e) {
+    const tab = e.currentTarget.dataset.tab;
+    if (tab && tab !== this._activeTab) {
+      this._activeTab = tab;
+      this._emit();
+    }
+  },
+
+  onSearchInput(e) {
+    const kw = (e.detail.value || "").trim().toLowerCase();
+    if (this._searchTimer) clearTimeout(this._searchTimer);
+    this._searchTimer = setTimeout(() => {
+      this._searchKeyword = kw;
+      this._emit();
+    }, 300);
+  },
+
+  onCourseTap(e) {
+    if (!this._user) {
+      this.goLogin();
+      return;
+    }
+    const courseId = e.currentTarget.dataset.courseId;
+    if (!courseId) return;
+    const text = getTexts("planner", this._locale);
+    wx.showActionSheet({
+      itemList: [text.markInProgress, text.markCompleted, text.markRemove],
+      success: (res) => {
+        const nextStatus =
+          res.tapIndex === 0 ? "in_progress" :
+          res.tapIndex === 1 ? "completed" : "not_started";
+        const prev = this._progress[courseId];
+        // 乐观更新卡片(即时 pill 变化)
+        this._progress[courseId] = nextStatus;
+        this._emit();
+        request({
+          method: "PUT", path: "/courses/progress",
+          data: { course_id: courseId, status: nextStatus }, auth: true,
+        })
+          .then(() => {
+            wx.showToast({ title: text.markSuccess, icon: "success" });
+            this._loadStatus(); // 重拉校准顶部仪表盘 + 推荐
+          })
+          .catch((error) => {
+            if (prev === undefined) delete this._progress[courseId];
+            else this._progress[courseId] = prev;
+            this._emit();
+            wx.showToast({ title: (error && error.message) || text.loadFail, icon: "none" });
+          });
+      },
+    });
   },
 
   // ── 唯一渲染出口：从缓存算出完整 view model，一次 setData ─────────────
@@ -185,6 +355,10 @@ Page({
       categoriesView: [],
       recommendations: [],
       heroCopy: "",
+      activeTab: this._activeTab,
+      showTabs: false,
+      searchKeyword: this._searchKeyword,
+      coursesView: { semesters: [], empty: true },
     };
 
     if (!prog || this._loading) {
@@ -221,8 +395,13 @@ Page({
         credits: r.credits,
         categoryLabel: text.categories[r.category_key] || r.category_key,
       }));
+      view.showTabs = true;
+      if (this._idToCourse && this._progress) {
+        view.coursesView = buildCoursesView(prog, this._idToCourse, this._progress, this._searchKeyword, text);
+      }
     } else if (prog.coming_soon) {
       view.heroCopy = text.comingSoonCopy;
+      view.activeTab = "overview";
     } else {
       // 未登录 / status 未到：用目录静态学分要求
       view.categoriesView = (prog.categories || []).map((c) => ({

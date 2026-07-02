@@ -40,6 +40,12 @@
     <view wx:if="{{loggedIn && !comingSoon}}" class="planner-score">{{percent}}%</view>
   </view>
 
+  <!-- 总览/我的课程 切换 -->
+  <view wx:if="{{showTabs}}" class="seg-bar">
+    <view class="seg-item {{activeTab==='overview'?'seg-on':''}}" data-tab="overview" bindtap="onTabChange">{{text.tabOverview}}</view>
+    <view class="seg-item {{activeTab==='courses'?'seg-on':''}}" data-tab="courses" bindtap="onTabChange">{{text.tabCourses}}</view>
+  </view>
+
   <!-- 加载中 -->
   <view wx:if="{{loading}}" class="web-panel">
     <view class="panel-copy">{{text.loading}}</view>
@@ -74,7 +80,7 @@
   </view>
 
   <!-- 已登录：毕业仪表盘 -->
-  <block wx:else>
+  <block wx:elif="{{activeTab==='overview'}}">
     <view class="web-panel">
       <view class="section-title">{{text.progressTitle}}</view>
       <view class="credits-summary">{{creditsSummary}}</view>
@@ -113,6 +119,34 @@
         </view>
         <view class="mini-pill green">{{item.categoryLabel}}</view>
       </view>
+    </view>
+  </block>
+
+  <!-- 我的课程:按学年学期分组 + 搜索 + 标记 -->
+  <block wx:elif="{{activeTab==='courses'}}">
+    <view class="web-panel planner-search">
+      <input class="search-input" value="{{searchKeyword}}"
+             placeholder="{{text.searchPlaceholder}}" bindinput="onSearchInput" />
+    </view>
+
+    <block wx:for="{{coursesView.semesters}}" wx:for-item="sem" wx:key="label">
+      <view class="sem-header">{{sem.label}}</view>
+      <view wx:for="{{sem.courses}}" wx:for-item="c" wx:key="courseId"
+            class="course-row course-tap"
+            data-course-id="{{c.courseId}}" data-code="{{c.code}}"
+            bindtap="onCourseTap">
+        <view class="course-main">
+          <view class="course-code">{{c.code}}</view>
+          <view class="course-name">{{c.name}} · {{c.credits}}cr</view>
+          <view wx:if="{{c.prereqLabel}}" class="prereq-row {{c.prereqsMet?'met':'unmet'}}">{{c.prereqLabel}}</view>
+        </view>
+        <view wx:if="{{c.statusKey==='completed'}}" class="mini-pill green">{{c.statusLabel}}</view>
+        <view wx:elif="{{c.statusKey==='in_progress'}}" class="mini-pill amber">{{c.statusLabel}}</view>
+      </view>
+    </block>
+
+    <view wx:if="{{coursesView.empty}}" class="web-panel">
+      <view class="panel-copy">{{text.coursesEmpty}}</view>
     </view>
   </block>
 </view>
