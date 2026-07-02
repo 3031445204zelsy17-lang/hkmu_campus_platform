@@ -830,6 +830,19 @@
       "Supabase 免费层 auto-pause(keepalive 每 10min ping 缓解;一旦 pause 服务 503,memory supabase-pause-recovery 有恢复 runbook)",
       "Azure 冷启动(免费/基础层,首次进入可能卡几秒)"
     ],
+    "observability": {
+      "_doc": "可观测性 checklist:访问量/流量/超载/安全 从哪看。独立文档 docs/ops/正式上线可观测性-checklist.md",
+      "scope": "最初 ≤1000 用户量级起步;免费层基本扛得住峰值并发(几十~一两百),重心先观测再扩容;唯一确定性崩点=Supabase auto-pause",
+      "status": "checklist 已整理(2026-07-02);待执行 3 件优先事",
+      "priority_3": [
+        "开 Application Insights(Azure 门户,几分钟)——后端性能/超载/错误主力观测面,当前未开(=内测就绪 B3 待办的 Azure 部分)",
+        "配 2-3 告警:App Insights 失败率/响应时间 + UptimeRobot 关键端点(/api/health、/api/v1/courses、/api/v1/news)",
+        "每周看 Supabase Dashboard 连接数/存储(auto-pause 是唯一确定性崩点)"
+      ],
+      "main_gap": "Application Insights 未启用;开了基础指标够,深度 trace(DB 调用耗时)待量大时加 OpenTelemetry",
+      "scale_triggers": "见 docs/ops/正式上线可观测性-checklist.md 第 5 节(观测→扩容决策对照)",
+      "not_needed_now": "Grafana/Prometheus/k8s 监控/付费 APM(Datadog)——1000 人量级过度"
+    },
     "nice_to_have_deferred": [
       "新闻三语(Phase 6b,等爬虫稳 ≥2 周)",
       "选课 CS/网安 数据补全(docs/ops/选课选课)",
