@@ -276,9 +276,26 @@ function _scheduleReconnect() {
 function startPolling() {
   _pollRefCount += 1;
   if (_pollTimer) return;
+  // Don't poll when logged out — otherwise a dead session (request.js clears the
+  // token on 401) makes this fire /messages/unread-count every 5s → endless 401s.
+  if (!wx.getStorageSync(TOKEN_KEY)) return;
   _pollTimer = setInterval(() => {
     if (_state === "open") return;
-    fetchUnread().catch(() => {});
+    if (!wx.getStorageSync(TOKEN_KEY)) {
+      // session died → stop polling entirely (no page should poll while logged out)
+      clearInterval(_pollTimer);
+      _pollTimer = null;
+      _pollRefCount = 0;
+      return;
+    }
+    fetchUnread().catch(() => {
+      // 401 → request.js cleared the token; if now logged out, stop hammering.
+      if (!wx.getStorageSync(TOKEN_KEY)) {
+        clearInterval(_pollTimer);
+        _pollTimer = null;
+        _pollRefCount = 0;
+      }
+    });
   }, POLL_INTERVAL_MS);
 }
 
