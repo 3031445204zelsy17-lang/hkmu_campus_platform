@@ -1,7 +1,38 @@
 # 正式上线 — 可观测性 Checklist
 
 > 适用阶段:最初 ≤1000 注册用户、慢增长。本文回答:**访问量/流量/性能超载/安全 从哪里看、怎么看、看完怎么办。**
-> 最后更新:2026-07-02
+> 最后更新:2026-07-03
+
+## 现状总览（2026-07-03 — 内测期实际落地）
+
+**结论：内测阶段监测充分，致命路径全覆盖。剩 2 个非阻塞缺口，列为正式上线前补。**
+
+### 5 层流程
+| 层 | 机制 | 触发 |
+|--|--|--|
+| 1. 主动告警 | UptimeRobot（down）+ Supabase 邮件（pause） | 24/7，你不在也工作 |
+| 2. 持续采集 | App Insights（sec_audit+异常）/ GA4（web 访问）/ 微信运维中心（小程序错误） | 常驻被动 |
+| 3. 按需巡检 | `scripts/health-check.sh`（端点/错误/安全/指标/CI 一张图） | 用户说"查一遍"→ Claude 跑 + 解读 |
+| 4. 人工深看 | GA4 留存漏斗 / Supabase 连接数 / Azure Portal / 微信数据助手 | 偶尔 |
+| 5. 预防（CI） | keepalive（防 pause）/ db-backup（日备）/ news-sync（日更）/ dependabot（周扫） | 自动 |
+
+### 覆盖矩阵
+| 监测任务 | 状态 |
+|--|--|
+| 站点/端点可用性、DB 活/pause、后端 5xx、后端未捕获异常、安全（撞库/爬虫）、性能（延迟/请求/资源）、web 访问/行为、CI/定时任务、小程序错误、down/pause 主动告警 | ✅ |
+| per-route 性能剖析（AppRequests） | 🟡 init 顺序没接上，平台 AverageResponseTime 已兜底整体延迟 |
+| 小程序访问自动化 | 🟡 微信数据助手人工（微信无 API，可接受） |
+| web 前端 JS 错误 | ❌ 正式上线前补 |
+| 主动性能/错误阈值告警 | 🔶 deferred，UptimeRobot 管"挂"够内测 |
+
+### 已知缺口（非阻塞内测，正式上线前评估）
+- **web 前端 JS 错误捕获** — 现 web 用户撞 JS 报错不可见（GA4 不收错误）。web 推广/正式上线前补：`window.onerror`/`unhandledrejection` → GA4 `js_error` 或上 Sentry。⚠️ `window.onerror` 噪音大（浏览器插件/跨域 "Script error."），需过滤/采样再上。
+- **App Insights AppRequests**（per-route 性能）— `configure_azure_monitor()` 在 lifespan 晚于 FastAPI app 创建，ASGI 请求 instrumentation 没挂上。补法：挪到 app 创建之前 + 重部署。平台指标 AverageResponseTime/Http5xx 已覆盖整体延迟/错误。
+- **App Insights 主动告警** — deferred（见 §4/§8）；UptimeRobot 已覆盖 down。
+- 小程序访问：微信数据助手人工看，可接受。
+
+### 按需巡检工具
+`scripts/health-check.sh`（commit bf9567d 同批）—— 用户说"查一遍情况"时 Claude 执行，输出 端点探活 / 后端错误+安全(sec_audit) / App Service 平台指标 / CI 四段，Claude 解读。**实战已用它抓到 unread-count 轮询 401 bug 并修复**。
 
 ## 0. 量级判断(先定调)
 
