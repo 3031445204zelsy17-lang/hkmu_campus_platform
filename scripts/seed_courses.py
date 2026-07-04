@@ -6,6 +6,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
+from app.database import init_db  # noqa: E402 — sys.path set above
 from passlib.context import CryptContext
 from dotenv import load_dotenv
 
@@ -106,4 +107,9 @@ async def seed():
 
 
 if __name__ == "__main__":
+    # Ensure schema exists before seeding. Idempotent (CREATE TABLE IF NOT
+    # EXISTS) so it's safe on both a fresh CI/dev DB and an existing prod DB.
+    # Without this, running on an empty DB fails with "relation courses does
+    # not exist" — which is what broke the deploy.yml CI gate.
+    asyncio.run(init_db())
     asyncio.run(seed())
