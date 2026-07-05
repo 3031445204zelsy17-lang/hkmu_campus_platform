@@ -263,6 +263,18 @@ CREATE INDEX IF NOT EXISTS idx_friendships_user_status ON friendships(user_id, s
 
 -- friend_id index defensive for CASCADE row lookup redundant under bidirectional storage
 CREATE INDEX IF NOT EXISTS idx_friendships_friend ON friendships(friend_id);
+
+-- feedback submitted via the in-app feedback page
+CREATE TABLE IF NOT EXISTS feedback (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    content TEXT NOT NULL,
+    contact TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_feedback_created ON feedback(created_at DESC);
 """
 
 

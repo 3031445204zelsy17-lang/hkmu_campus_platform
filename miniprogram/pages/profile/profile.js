@@ -35,6 +35,7 @@ Page({
     loading: false,
     locale: getLocale(),
     privacyAction: getTexts("privacy").openAction,
+    feedbackAction: getTexts("feedback").title,
     text: getTexts("profile"),
     user: null,
     sharePath: "", // Phase 5: 预取的邀请分享路径(onShareAppMessage 用)
@@ -62,6 +63,7 @@ Page({
       joinedAtDisplay,
       locale,
       privacyAction: getTexts("privacy", locale).openAction,
+      feedbackAction: getTexts("feedback", locale).title,
       text,
     });
   },
@@ -228,6 +230,12 @@ Page({
   openPrivacy() {
     wx.navigateTo({
       url: "/pages/privacy/privacy",
+    });
+  },
+
+  openFeedback() {
+    wx.navigateTo({
+      url: "/pages/feedback/feedback",
     });
   },
 

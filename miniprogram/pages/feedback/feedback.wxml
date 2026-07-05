@@ -1,0 +1,41 @@
+<app-header bind:languagechange="handleLanguageChange" />
+
+<view class="feedback-page">
+  <view class="feedback-card">
+    <view class="feedback-title">{{text.title}}</view>
+    <view class="feedback-hint">{{text.hint}}</view>
+
+    <view class="field-label">{{text.ratingLabel}}</view>
+    <view class="rating-row">
+      <view
+        wx:for="{{stars}}"
+        wx:key="*this"
+        class="rating-star {{rating >= item ? 'active' : ''}}"
+        data-value="{{item}}"
+        bindtap="onRatingTap"
+      >★</view>
+    </view>
+
+    <view class="field-label">{{text.contentLabel}}</view>
+    <textarea
+      class="feedback-textarea"
+      maxlength="2000"
+      placeholder="{{text.contentPlaceholder}}"
+      value="{{content}}"
+      bindinput="onContentInput"
+    />
+
+    <view class="field-label">{{text.contactLabel}}</view>
+    <input
+      class="feedback-input"
+      maxlength="200"
+      placeholder="{{text.contactHint}}"
+      value="{{contact}}"
+      bindinput="onContactInput"
+    />
+
+    <button class="feedback-submit" loading="{{submitting}}" disabled="{{submitting}}" bindtap="onSubmit">
+      {{submitting ? text.submitting : text.submit}}
+    </button>
+  </view>
+</view>
