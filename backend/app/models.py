@@ -350,3 +350,19 @@ class SuggestOut(UserOut):
 
 class InviteAccept(BaseModel):
     invite_code: str = Field(min_length=1, max_length=64)
+
+
+# --- Feedback ---
+
+class FeedbackCreate(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    content: str = Field(min_length=1, max_length=2000)
+    contact: str | None = Field(default=None, max_length=200)
+
+
+class FeedbackOut(BaseModel):
+    id: int
+    rating: int
+    content: str
+    contact: Optional[str] = None
+    created_at: Optional[str] = None

@@ -56,6 +56,10 @@
           <view class="profile-row-label">{{privacyAction}}</view>
           <view class="profile-row-value">›</view>
         </view>
+        <view class="profile-row" bindtap="openFeedback">
+          <view class="profile-row-label">{{feedbackAction}}</view>
+          <view class="profile-row-value">›</view>
+        </view>
       </view>
 
       <view class="action-row">

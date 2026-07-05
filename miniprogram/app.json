@@ -13,7 +13,8 @@
     "pages/messages/messages",
     "pages/chat/chat",
     "pages/new-chat/new-chat",
-    "pages/privacy/privacy"
+    "pages/privacy/privacy",
+    "pages/feedback/feedback"
   ],
   "window": {
     "navigationBarTitleText": "HKMU Campus",
