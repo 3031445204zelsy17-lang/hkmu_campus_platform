@@ -100,6 +100,8 @@ class UserOut(BaseModel):
     email: Optional[str] = None
     oauth_provider: Optional[str] = None
     programme_code: Optional[str] = None
+    hkmu_verified: bool = False
+    invite_code: Optional[str] = None
 
 
 class UserUpdate(BaseModel):
@@ -322,3 +324,29 @@ class PaginatedResponse(BaseModel):
 
 class PushSubscriptionIn(BaseModel):
     subscription: dict
+
+
+# --- Social ---
+
+class BindEmail(BaseModel):
+    email: str = Field(pattern=r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
+
+class InviteCodeOut(BaseModel):
+    invite_code: str
+    share_path: str
+
+
+class FriendshipOut(BaseModel):
+    id: int
+    friend: UserOut
+    source: str
+    created_at: Optional[str] = None
+
+
+class SuggestOut(UserOut):
+    reason: Optional[str] = None
+
+
+class InviteAccept(BaseModel):
+    invite_code: str = Field(min_length=1, max_length=64)

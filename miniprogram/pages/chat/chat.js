@@ -17,9 +17,10 @@ function dayLabel(iso, now, text) {
   return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-// 后端历史 newest-first;翻成 chronological(旧→新)
+// 后端 get_history 已 ASC(旧→新) 返回(DB DESC 查最近 N 条 + return list(reversed(...)));
+// 前端勿再反转,否则双重 reverse 变新→旧,历史最早消息会跑到列表底部(退出再打开复现)
 function normalizeMessages(rawList, myId) {
-  const chrono = (rawList || []).slice().reverse();
+  const chrono = (rawList || []).slice();
   return chrono.map((m) => ({
     id: "m" + m.id,
     realId: m.id,

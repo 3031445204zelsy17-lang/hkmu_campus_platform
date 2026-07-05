@@ -4,6 +4,7 @@
     "pages/community/community",
     "pages/post-detail/post-detail",
     "pages/planner/planner",
+    "pages/course-detail/course-detail",
     "pages/compose/compose",
     "pages/news/news",
     "pages/lostfound/lostfound",
@@ -11,7 +12,8 @@
     "pages/login/login",
     "pages/messages/messages",
     "pages/chat/chat",
-    "pages/new-chat/new-chat"
+    "pages/new-chat/new-chat",
+    "pages/privacy/privacy"
   ],
   "window": {
     "navigationBarTitleText": "HKMU Campus",

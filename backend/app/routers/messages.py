@@ -49,7 +49,7 @@ async def list_conversations(user: dict = Depends(get_current_user)):
             JOIN users u ON u.id = l.partner_id
             JOIN messages m ON m.id = l.max_id
             LEFT JOIN unread ud ON ud.partner_id = l.partner_id
-            ORDER BY m.created_at DESC
+            ORDER BY m.created_at DESC, m.id DESC
             """,
             uid, uid, uid, uid,
         )
@@ -89,7 +89,7 @@ async def get_history(
                 FROM messages
                 WHERE (sender_id = $1 AND receiver_id = $2)
                    OR (sender_id = $3 AND receiver_id = $4)
-                ORDER BY created_at DESC
+                ORDER BY created_at DESC, id DESC
                 LIMIT $5 OFFSET $6
                 """,
                 user["id"], partner_id, partner_id, user["id"],

@@ -1,0 +1,38 @@
+/* B5 隐私声明 — 页面级样式,全用 tokens.wxss var,不动共享 app.wxss。
+   头部 page-shell/top-bar/brand-lockup/eyebrow/app-title/subtitle 复用全局类(与 login 一致)。 */
+
+.privacy-sheet {
+  background: var(--surface);
+  border-radius: var(--radius-card-md);
+  box-shadow: var(--shadow-card);
+  padding: 36rpx 32rpx 44rpx;
+  margin-bottom: 48rpx;
+}
+
+.privacy-intro {
+  font-size: var(--fs-body);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  padding-bottom: 24rpx;
+  margin-bottom: 8rpx;
+  border-bottom: 1rpx solid var(--divider);
+}
+
+.privacy-section-title {
+  font-size: var(--fs-section);
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-top: 32rpx;
+  margin-bottom: 12rpx;
+}
+
+.privacy-section-title:first-of-type {
+  margin-top: 24rpx;
+}
+
+.privacy-body {
+  font-size: var(--fs-body);
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin-bottom: 14rpx;
+}

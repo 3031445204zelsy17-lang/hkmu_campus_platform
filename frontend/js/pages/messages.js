@@ -87,13 +87,21 @@ let _lastPollTs = null;
 
 function startPolling() {
   stopPolling();
+  // Never poll when logged out — otherwise a dead/expired session makes this fire
+  // /messages/unread-count every 5s with no token → endless 401s (observed in prod).
+  if (!isLoggedIn()) return;
   _pollTimer = setInterval(async () => {
+    if (!isLoggedIn()) { stopPolling(); return; } // session died mid-poll
     try {
       if (_onUnreadCount) {
         const { count } = await api.get("/messages/unread-count");
         _onUnreadCount(count);
       }
-    } catch {}
+    } catch {
+      // 401 → api.js already cleared token + dispatched "auth:logout"; if that left
+      // us logged out, stop polling so we don't keep hammering the endpoint.
+      if (!isLoggedIn()) stopPolling();
+    }
   }, 5000);
 }
 
@@ -103,6 +111,22 @@ function stopPolling() {
     _pollTimer = null;
   }
 }
+
+// Halt all messaging background activity the moment auth dies (token expired /
+// revoked → api.js clears it on 401 + dispatches "auth:logout"), so the REST poll
+// fallback can't keep firing /messages/unread-count every 5s after session death.
+window.addEventListener("auth:logout", () => {
+  stopPolling();
+  stopHeartbeat();
+  if (_wsReconnectTimer) {
+    clearTimeout(_wsReconnectTimer);
+    _wsReconnectTimer = null;
+  }
+  if (_ws) {
+    try { _ws.close(); } catch {}
+    _ws = null;
+  }
+});
 
 // --- Disconnect banner ---
 

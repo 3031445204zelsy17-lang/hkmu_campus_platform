@@ -3,7 +3,6 @@ import { showToast } from "../components/toast.js";
 import { t } from "../utils/i18n.js";
 import { skeletonCard, errorState } from "../components/skeleton.js";
 import { track } from "../utils/analytics.js";
-import { PROGRAMMES, programmeName } from "../data/programmes.js";
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -11,8 +10,52 @@ let _courses = [];
 let _progress = [];
 let _view = "overview";
 let _programmeCode = localStorage.getItem("hkmu_programme") || "BSCHDSAIJ";
-let _programme = PROGRAMMES[_programmeCode] || PROGRAMMES.BSCHDSAIJ;
+let _programme = null; // populated after _loadProgrammes()
+let _PROGRAMMES = {}; // from /courses/programmes (backend programmes.py = single source of truth)
+let _defaultProgrammeCode = "BSCHDSAIJ";
+let _programmesLoaded = false;
 let _authHandler = null; // auth:changed listener, cleaned up on re-render
+
+// ── Programmes (fetched from /courses/programmes; backend programmes.py is the single source of truth) ─
+function _adaptProgramme(p) {
+  const categories = {};
+  for (const c of p.categories || []) {
+    categories[c.key] = {
+      minCredits: c.min_credits,
+      color: c.color,
+      pickN: c.pick_n,
+      courses: c.courses || [],
+    };
+  }
+  return {
+    code: p.code,
+    name: p.name,
+    school: p.school,
+    totalCredits: p.total_credits,
+    comingSoon: p.coming_soon,
+    template: p.template || {},
+    categories,
+  };
+}
+
+function programmeName(prog, lang) {
+  return prog?.name?.[lang] || prog?.name?.en || prog?.code || "";
+}
+
+async function _loadProgrammes() {
+  if (_programmesLoaded) return;
+  try {
+    const data = await api.get("/courses/programmes");
+    _PROGRAMMES = {};
+    for (const p of data.programmes || []) {
+      _PROGRAMMES[p.code] = _adaptProgramme(p);
+    }
+    if (data.default_code) _defaultProgrammeCode = data.default_code;
+  } catch (err) {
+    // keep _PROGRAMMES empty; _loadData surfaces a load error downstream
+  }
+  _programmesLoaded = true;
+}
 
 const STATUS_LABELS = {
   not_started: () => t("planner.status_not_started"),
@@ -164,9 +207,9 @@ function _getRecommendations(maxResults = 3) {
 
 /** Change the active programme */
 function _setProgramme(code) {
-  if (!PROGRAMMES[code]) return;
+  if (!_PROGRAMMES[code]) return;
   _programmeCode = code;
-  _programme = PROGRAMMES[code];
+  _programme = _PROGRAMMES[code];
   localStorage.setItem("hkmu_programme", code);
   if (isLoggedIn()) {
     api.put("/users/me", { programme_code: code }).catch(() => {});
@@ -421,7 +464,7 @@ function _renderProgrammeSelector() {
   const select = document.createElement("select");
   select.className = "programme-selector bg-white/20 text-white border border-white/30 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/50";
 
-  for (const [code, prog] of Object.entries(PROGRAMMES)) {
+  for (const [code, prog] of Object.entries(_PROGRAMMES)) {
     const opt = document.createElement("option");
     opt.value = code;
     // Use English name for the dropdown (option elements don't support rich content)
@@ -1269,6 +1312,7 @@ export async function renderPlanner() {
 }
 
 function _render() {
+  if (!_programme) return; // programmes not loaded yet (or fetch failed); skeleton/errorState shown by _loadData
   const content = document.getElementById("planner-content");
   if (!content) return;
   content.innerHTML = "";
@@ -1294,6 +1338,10 @@ function _render() {
 // ── Data ──────────────────────────────────────────────────────────────────────
 
 async function _loadData() {
+  await _loadProgrammes();
+  if (!_programme) {
+    _programme = _PROGRAMMES[_programmeCode] || _PROGRAMMES[_defaultProgrammeCode] || null;
+  }
   try {
     const data = await api.get("/courses?page_size=50");
     _courses = data.items;
@@ -1307,9 +1355,9 @@ async function _loadData() {
       // Load user's programme preference from backend
       try {
         const user = await api.get("/users/me");
-        if (user.programme_code && PROGRAMMES[user.programme_code]) {
+        if (user.programme_code && _PROGRAMMES[user.programme_code]) {
           _programmeCode = user.programme_code;
-          _programme = PROGRAMMES[_programmeCode];
+          _programme = _PROGRAMMES[_programmeCode];
           localStorage.setItem("hkmu_programme", _programmeCode);
         }
       } catch {

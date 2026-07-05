@@ -1,0 +1,104 @@
+<app-header show-back="{{true}}" title="{{text.headerTitle}}" bind:languagechange="handleLanguageChange" />
+
+<view class="page-shell detail-shell">
+  <view wx:if="{{loading}}" class="loading-line">{{text.loading}}</view>
+
+  <view wx:elif="{{notFound}}" class="empty-state">
+    <view class="empty-title">{{text.notFoundTitle}}</view>
+    <view class="empty-copy">{{text.notFoundCopy}}</view>
+  </view>
+
+  <block wx:elif="{{course}}">
+    <!-- 课程 hero 卡 -->
+    <view class="web-panel course-hero">
+      <view class="course-hero-top">
+        <view class="course-code">{{course.code}}</view>
+        <view wx:if="{{course.categoryLabel}}" class="mini-pill green">{{course.categoryLabel}}</view>
+      </view>
+      <view class="course-hero-name">{{course.name}}</view>
+      <view class="course-hero-meta">{{course.creditsLabel}} · {{course.yearLabel}} · {{course.semesterLabel}}</view>
+      <view wx:if="{{course.description}}" class="course-desc">{{course.description}}</view>
+      <view wx:if="{{course.hasPrereqs}}" class="course-prereqs">
+        <text class="course-prereq-label">{{text.prereqLabel}}</text>
+        <text class="course-prereq-text">{{course.prereqText}}</text>
+      </view>
+      <view class="course-official-note">{{text.officialNote}}</view>
+    </view>
+
+    <!-- 内联标记(登录态) -->
+    <view wx:if="{{loggedIn}}" class="web-panel">
+      <view class="section-title">{{text.markTitle}}</view>
+      <view class="status-seg">
+        <view
+          wx:for="{{statusSegments}}"
+          wx:key="key"
+          class="status-seg-item {{item.active ? 'status-seg-on' : ''}}"
+          data-status="{{item.key}}"
+          bindtap="onMark"
+        >{{item.label}}</view>
+      </view>
+    </view>
+    <view wx:else class="login-prompt" catchtap="goLogin">{{text.loginPromptMark}}</view>
+
+    <!-- 课评分 + 列表 -->
+    <view class="web-panel reviews-section">
+      <view class="reviews-header">
+        <text class="section-title">{{text.reviewsTitle}}</text>
+        <text class="reviews-count">· {{reviewsTotal}}</text>
+      </view>
+
+      <view wx:if="{{reviewsTotal > 0}}" class="rating-summary">
+        <text class="rating-avg">{{avgRatingLabel}}</text>
+        <text class="rating-stars">{{avgStarsText}}</text>
+        <text class="rating-count">{{reviewsTotal}} {{text.reviewsSuffix}}</text>
+      </view>
+
+      <view wx:if="{{reviewsLoading}}" class="review-status">{{text.reviewsLoading}}</view>
+      <block wx:else>
+        <view wx:if="{{reviews.length === 0}}" class="review-status">{{text.reviewsEmpty}}</view>
+        <view wx:for="{{reviews}}" wx:key="id" class="review-item">
+          <view class="review-head">
+            <view class="comment-avatar">{{item.authorInitial}}</view>
+            <view class="review-head-main">
+              <view class="comment-author">{{item.authorName}}</view>
+              <view class="review-stars">{{item.starsText}}</view>
+            </view>
+            <view
+              wx:if="{{item.isMine}}"
+              class="review-delete"
+              data-id="{{item.id}}"
+              catchtap="onDeleteReview"
+            >{{text.deleteAction}}</view>
+          </view>
+          <view class="review-content">{{item.content}}</view>
+          <view class="comment-meta">{{item.dateLabel}}{{item.helpfulLabel}}</view>
+        </view>
+      </block>
+    </view>
+
+    <!-- 发课评(登录 + 未评过) -->
+    <view wx:if="{{loggedIn && !myReviewId}}" class="web-panel review-composer">
+      <view wx:if="{{draftRating === 0}}" class="star-hint">{{text.reviewRatingHint}}</view>
+      <view class="star-picker">
+        <view
+          wx:for="{{composerStars}}"
+          wx:key="value"
+          class="star {{item.filled ? 'star-on' : ''}}"
+          data-value="{{item.value}}"
+          bindtap="onPickStar"
+        >★</view>
+      </view>
+      <textarea
+        class="review-textarea"
+        placeholder="{{text.reviewPlaceholder}}"
+        value="{{draftContent}}"
+        maxlength="2000"
+        auto-height
+        show-confirm-bar="{{false}}"
+        bindinput="onDraftInput"
+      />
+      <view class="comment-send {{submitting ? 'is-busy' : ''}}" catchtap="submitReview">{{text.reviewSend}}</view>
+    </view>
+    <view wx:elif="{{loggedIn && myReviewId}}" class="review-done-hint">{{text.alreadyReviewed}}</view>
+  </block>
+</view>

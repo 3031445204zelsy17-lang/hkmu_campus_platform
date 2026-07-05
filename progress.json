@@ -435,7 +435,7 @@
     "wechat_login_port": {
       "status": "merged via PR#5 (commit 410de4e)",
       "what": "从司徒 [手机端] 分支只 cherry-pick 微信登录：wechat_service.py 原样 + auth.py /wechat/miniprogram 端点（SQLite ? → asyncpg $N 改写）",
-      "pending": "生产 Azure 部署 + 配 WECHAT AppID/Secret"
+      "pending": "✅ done(2026-07-01 核实):wechat_service.py 在生产镜像 3bb1846 + Azure 已配 WECHAT_MINIPROGRAM_APPID/SECRET。仅剩用户用真微信 code 登录实测确认 Secret 值无误"
     },
     "stability_hardening": {
       "keepalive": "done — .github/workflows/keepalive.yml，每10分钟 ping 防 Supabase pause",
@@ -502,7 +502,7 @@
         ],
         "pending": [],
         "deferred": [
-          "web programmes.js → 改接 /courses/programmes 端点去重（当前 web 仍客户端 programmes.js，后端 Python 镜像独立）",
+          "✅ done(2026-07-01):web planner 接 /courses/programmes + programmes.js 退役(programmes.py 单一事实来源);后端 ProgrammeOut 补 template。剩 CS/网安 补全。",
           "CS/网安 comingSoon 占位 → 接 docs/ops/选课选课 4768 行官方课程补全（扩 scope 独立任务）"
         ],
         "verification_gap": "后端 py_compile + 路由顺序 + 毕业数学单测（mock earned33 / core30-84 / 3 推荐 / 27.5%）；miniprogram node --check×2 + i18n 三语 18key parity + WXML 平衡 + text.* key 全存在。✅ 生产 SEA cec1cf7 已 live：/courses/programmes 200 + /graduation-status 401(auth gate) + /api/health ok；prod DB 43 门 DSAI 课 id 全匹配（早先 search=COMP1080 返 0 是 search 只查 code/name 不查 id 的误报，非缺数据）。✅ 用户 2026-06-27 真机/模拟器实测：planner 切 tab 无 jank、暖路径秒出。本地无 PG 无法 boot 全量"
@@ -544,22 +544,155 @@
         "verification": "终态:news 8(保留) / lostfound 1(黑色钱包,seed 已撤回) / posts 2 / comments 2 / post_likes 1 / 垃圾帖候选 0;news 5 分类全覆盖;每日 db-backup.yml pg_dump 兜底"
       },
       "phase5_social_coldstart": {
-        "status": "plan approved (2026-06-27);待 Phase 3 live 验证后启动",
+        "status": "C.1-C.7 done + C.8 静态复核全绿 done(2026-07-02,坐实 6 维度:node --check 29/29 + pages 4件套 + require 无环 + WXML 13/13 平衡 + i18n 三语 parity home27/profile39/newChat23/social18 + 前后端路径契约对齐);后端 C.1-C.3 已部署生产镜像 c5906ee;剩 C.8 live 两账号端到端验证(checklist 见 c8.live_checklist)。✅ live(2026-07-02 用户实测):P1 邀请闭环+好友互见+DM 衔接全通(私信 Phase3 亦通,Phase7 课评亦通);⏸ P0 邮箱验证 deferred——SMTP 本地+生产均未配(SMTP_HOST/USER/PASS 空),发信静默跳过,根因=配置缺失非 bug,延后正式上线前补 SMTP 中转",
         "doc": "docs/ops/小程序社交冷启动-C方案.md",
         "what": "P0 HKMU 邮箱验证层 + 同学推荐;P1 邀请码分享 → 自动双向好友 → DM。微信好友关系链不可用(memory wechat-friend-graph-unavailable),走自有关系图",
+        "c1": {
+          "status": "done — 代码层验证全绿;init_db live 建表待部署/SELECT 核对",
+          "what": "database.py:users 加 hkmu_verified BOOLEAN DEFAULT FALSE + invite_code TEXT 两列(均 DO$$ 幂等块);partial unique index idx_users_invite_code(WHERE invite_code IS NOT NULL,照抄 idx_users_email 模式,多 NULL 安全);friendships 表(id SERIAL PK + user_id/friend_id 双 FK ON DELETE CASCADE + status DEFAULT accepted + source DEFAULT invite + UNIQUE(user_id,friend_id))+ idx_friendships_user_status + idx_friendships_friend。models.py:UserOut 加 hkmu_verified/invite_code + 4 新 model(BindEmail/InviteCodeOut/FriendshipOut/SuggestOut)",
+          "decisions": [
+            "invite_code 用 partial unique index(WHERE IS NOT NULL)非普通 UNIQUE — 多 NULL 安全 + 照抄 idx_users_email",
+            "SuggestOut(UserOut) 继承非组合 — 扁平 JSON 复用 new-chat nc-user 渲染(已运行时验证 model_dump 扁平)",
+            "status DEFAULT accepted(P1 自动好友);枚举留口子备将来 friend-request",
+            "friendships 双向存储两行(WHERE user_id=me 单向查询)"
+          ],
+          "verification": "py_compile ✅ + init_db splitter 程序化复刻(42=36+6 语句 bad=0 红线过关)✅ + Pydantic 继承/嵌套 import+实例化+SuggestOut.model_dump 扁平+BindEmail pattern 拦截 运行时 ✅;待 init_db live 建表(Azure 重启自动跑 或 Supabase SQL editor SELECT information_schema.columns/pg_indexes 核对)",
+          "todo_c3": [
+            "_USER_COLS + _user_out(routers/users.py:25/29)接 hkmu_verified/invite_code — C.1 后字段是默认值 False/None,C.3 才 SELECT 填充",
+            "invite_code 懒生成需 ON CONFLICT 重试防并发竞争(partial unique index 已就位)",
+            "POST /friendships/invite 用 ON CONFLICT (user_id,friend_id) DO NOTHING 幂等(依赖 UNIQUE 约束)"
+          ]
+        },
+        "c2": {
+          "status": "代码层验证全绿;⏸ P0 live deferred(2026-07-02):SMTP 本地+生产均未配(SMTP_HOST/USER/PASS 空 → email_service._smtp_configured 返 False 静默跳过发信),且 bind-email(users.py:110)+注册(auth.py:343)不查 send_verification_email 返回值 → 假装成功(已知体验 bug,归正式上线前清理)。根因=SMTP 配置缺失,非代码 bug。延后正式上线前补:SMTP 中转(SendGrid/Brevo 等)+真实发信域名(现 SMTP_FROM=noreply@hkmu-campus.example.com 是保留域会被拒)+FRONTEND_URL 生产。代码(is_hkmu_email/verify 扩展/bind-email)就绪,SMTP 配通即生效",
+          "what": "auth_service.py 加 is_hkmu_email(@hkmu.edu.hk 教职员 / @live.hkmu.edu.hk 学生)+ derive_student_id(学生邮箱前缀去 s 回填学号 s1234567→1234567)。auth.py verify-email 扩展:消费 token 后查 user.email,若 HKMU 域 → 置 hkmu_verified=TRUE + COALESCE(student_id, derived) 回填(register 和 bind 共用统一逻辑)。users.py 新增 POST /me/bind-email(已登录用户补绑 HKMU 邮箱,方案 C 复用 register 先写 email 后验证模式)",
+          "decisions": [
+            "bind-email 方案 C(沿用 register 先写 users.email 后验证)非方案 A(email_tokens 加 email 列)— 不动 C.1 刚建的 schema,改动最小;v1 仅允许 email 未验证/为空的用户 bind(防覆盖已验证 email)",
+            "bind-email 挂 users.router(/me/bind-email 路径自然)非 auth.py — 方案文档写 auth.py 但路径 /users/me/* 挂 users 更顺;复用 auth._create_email_token + email_service.send_verification_email(跨 router import 私有 helper,无循环)",
+            "verify-email 统一判 HKMU 域(register + bind 共用,不区分 token 来源)",
+            "student_id 回填用 COALESCE(student_id, derived)— 不覆盖用户已填值;derive 仅学生邮箱(@live.hkmu.edu.hk 前缀 s+数字)生效"
+          ],
+          "verification": "py_compile ✅ + is_hkmu_email/derive_student_id 6 case 全过(学生/教职员/非HKMU/大小写/前缀异常/空)✅ + 无循环 import(auth.py 不 import users grep 确认)✅ + 端点/helper 接线 grep 确认(bind-email users.py:67 / verify-email 扩展 auth.py:525 / _create_email_token 复用 users.py:13,99)✅;待 live import+路由注册+curl 请求(本地缺 aiosmtplib==3.0.2,生产 requirements 已含,部署 Azure 自动装)",
+          "todo_v2": [
+            "换绑(已有验证 email 换 HKMU)→ 升级方案 A:email_tokens 加 email 列,_create/_consume_email_token 加 email 参数,verify 按 token.email 落库(users.email verify 前不变)",
+            "前端 C.5:profile 未验证 → bind-email 入口(输 HKMU 邮箱 → 后端发验证 → toast)"
+          ]
+        },
+        "c3": {
+          "status": "done — 代码层验证全绿;live curl 待部署",
+          "what": "users.py 加 4 端点 + 兑现 C.1 todo_c3。GET /me/invite-code(懒生成 base62 8 位 invite_code + share_path /pages/home/home?inv=);GET /suggest(HKMU 已验证 + 排除好友 + 排除 DM partner + 同 programme 优先,reason 是 i18n 信号 same_programme/hkmu_peer);GET /me/friends(accepted 好友 FriendshipOut[],两步查避 JOIN id 歧义);POST /me/friends(InviteAccept body,自邀 no-op + 双向 INSERT ON CONFLICT DO NOTHING 幂等)。_USER_COLS+_user_out 接 hkmu_verified/invite_code(6 端点受益);models 补 InviteAccept",
+          "decisions": [
+            "路径 /friendships → /me/friends(GET 列表 + POST 加好友)— RESTful 且挂 users.router 自然(方案 /friendships 独立路径挂载复杂);social.js(C.4)对齐",
+            "reason 是 i18n 信号(same_programme/hkmu_peer)非文案 — 前端 C.6 三语翻译",
+            "invite_code 懒生成:base62 8 位 + UPDATE...WHERE IS NULL + UniqueViolationError 重试(并发安全,partial unique index C.1 就位)",
+            "friends 两步查(先 friend_id 列表再 ANY(int[]) 批量 SELECT)— 避免 JOIN 时 f.id 与 u.id 列名歧义",
+            "自邀拦截 inviter==me → {created: False} no-op(前后端双拦)",
+            "双向 INSERT VALUES (...,...),(...,...) ON CONFLICT (user_id,friend_id) DO NOTHING — 幂等,created = not result.endswith(0)"
+          ],
+          "verification": "py_compile ✅ + invite_code 生成(8 位 base62 alphabet 62)+ SuggestOut/InviteCodeOut/FriendshipOut/InviteAccept 构造与校验 ✅ + 4 端点定义确认(/me/invite-code:144 /suggest:152 /me/friends:189 GET /220 POST)+ 路由顺序 /suggest(152) < /{user_id}(328)✅ + _USER_COLS 含新字段 ✅;待 live curl(本地缺 aiosmtplib,部署 Azure 验证 + Supabase SELECT friendships 表)",
+          "todo_frontend": [
+            "C.4 utils/social.js:getInviteCode/buildSharePath/consumeInvite/fetchFriends/fetchSuggest + app.js 读 query.inv",
+            "C.5 profile:未验证 → bind-email 入口 + 邀请分享(<button open-type=share> + onShareAppMessage path=buildSharePath)",
+            "C.6 new-chat:我的好友段(fetchFriends)+ 可能认识的同学段(fetchSuggest 按 reason i18n)→ 点选 openUser → chat",
+            "C.7 home:onShow 消费 pendingInvite → consumeInvite → toast/跳 chat + i18n social scope",
+            "前端路径对齐:GET /users/me/invite-code + /users/suggest + /users/me/friends(GET/POST);friendships 用 /me/friends 非方案 /friendships"
+          ]
+        },
+        "c4": {
+          "status": "done — 代码层验证全绿;待 IDE 编译 + C.5-C.7 联调",
+          "what": "app.js 加 pendingInvite globalData + _captureInvite helper + onLaunch(options)/onShow(options) 读 query.inv(暂存不消费,C.7 home 消费)。新建 utils/social.js(传输层):getInviteCode/buildSharePath/consumeInvite/fetchFriends/fetchSuggest,仿 messages.js 风格(只依赖 request 不依赖 auth 避环)",
+          "decisions": [
+            "social.js 纯 REST 不带事件总线(无 WS,与 messages.js 不同)",
+            "social 刻意不 require auth(避环),登录态由 request auth:true + Bearer 自动处理(同 messages.js 模式)",
+            "app.js onLaunch+onShow 双捕获 query.inv(冷启动走 onLaunch,热启动/后台切回走 onShow)",
+            "C.4 只暂存 pendingInvite 不消费(消费在 C.7 home onShow,因需登录态)"
+          ],
+          "verification": "node --check social.js + app.js ✅ + 路径对齐后端 C.3(/users/me/invite-code /users/me/friends GET+POST /users/suggest)✅ + require 无环(social 只依赖 request)✅ + app.js 改动确认(pendingInvite/_captureInvite/onShow)✅;待 IDE 编译 + live",
+          "todo_c5_c7": [
+            "C.5 profile:未验证 → bind-email 入口(输 HKMU 邮箱)+ 邀请分享(<button open-type=share> + onShareAppMessage path=buildSharePath(code))",
+            "C.6 new-chat:我的好友段(fetchFriends)+ 可能认识的同学段(fetchSuggest 按 reason i18n same_programme/hkmu_peer)→ 点选 openUser → chat",
+            "C.7 home:onShow 消费 pendingInvite(已登录才消费)→ consumeInvite → toast + 可选跳 chat;清暂存 + i18n social scope",
+            "app.js 共享文件改动需群通知(改动小:onShow+pendingInvite+_captureInvite)"
+          ]
+        },
+        "c5": {
+          "status": "done — 代码层验证全绿;待 IDE 编译 + live",
+          "what": "profile 视图模式加 hkmu_verified 徽章(name 旁)+ 未验证→bind-email 入口(wx.showModal editable 输 HKMU 邮箱 → social.bindEmail)+ 邀请好友分享按钮(<button open-type=share> + onShareAppMessage 返回 sharePath)。social.js 补 bindEmail(C.4 漏)。refreshProfile 后预取 invite_code → sharePath(onShareAppMessage 同步返回,分享时 path 须提前就绪;失败 fallback 默认 path)。i18n profile scope +9 key 三语",
+          "decisions": [
+            "bind-email UX 用 wx.showModal editable(轻量,不改编辑态表单)— 输邮箱 → social.bindEmail → 后端发验证 → toast",
+            "分享异步:onShareAppMessage 同步返回,故 refreshProfile 后预取 invite_code 懒生成 sharePath;预取失败 fallback /pages/home/home",
+            "hkmu_verified 透传确认:decorateUser 用 Object.assign({}, user, {...}) spread 原始 UserOut,bootstrapSession 返回的 user 含 hkmu_verified",
+            "徽章样式加 profile.wxss(页面级,不动共享 app.wxss)用 token var",
+            "social.js 补 bindEmail(C.4 方案列表漏)— 传输层完整覆盖 Phase 5 全部端点",
+            "bind-email 验证邮件链路经 web /#/verify-email(微信内置浏览器可打开,非小程序阻塞)"
+          ],
+          "verification": "node --check social.js/profile.js/i18n.js ✅ + i18n 9 key × 3 语言 parity 全 3 ✅ + WXML <view> 50/50 平衡 ✅ + 新 text.* key(hkmuVerifiedBadge/bindEmailAction/inviteAction)都在 profile scope ✅;待 IDE 编译截图 + live(预取 invite_code / bind-email 发邮件闭环经 web verify)",
+          "todo_c6_c7": "done — C.6/C.7 已实现,闭环与验证详见各自对象 c6/c7"
+        },
+        "c6": {
+          "status": "done — 代码层验证全绿;待 IDE 编译 + live 两账号闭环",
+          "what": "new-chat 加发现区两段(我的好友 fetchFriends→FriendshipOut.friend 卡片 / 可能认识的同学 fetchSuggest→扁平 SuggestOut + reason i18n 标签),点选 openUser→chat。抽 WXML <template name=ncUserCard>(results/friends/suggest 三处共用,suggest 带 reason 胶囊)。onShow 登录态加载 friends(每次刷,反映新好友)+ suggest(首次);_applySocial 用当前语言重映射(load 成功+语言切换都调);失败 best-effort 当空不阻塞搜索。i18n newChat scope +7 key 三语(friendsTitle/friendsEmpty/suggestTitle/suggestEmpty/loadingHint/suggestReasonSameProgramme/suggestReasonHkmuPeer)",
+          "decisions": [
+            "抽 <template> 而非内联三份卡片 — results/friends/suggest 共用,reason 用 wx:if 区分(friends/results 无 reason 不显胶囊)",
+            "reason 在 JS 预译成本地化文案(social.js 信号 same_programme/hkmu_peer→文案),模板不引用 text.* 避作用域问题;_applySocial 语言切换重译",
+            "onShow 驱动(非 onLoad):首进 onLoad→onShow 不双载;friends 每次刷(便宜+反映 C.7 新加好友),suggest 仅首次(suggestLoaded 守卫)",
+            "登录态判断复刻 messages.js:auth.getStoredUser() && token;未登录只显搜索,发现区隐藏",
+            "失败 best-effort 当空(friendsLoaded/suggestLoaded=true+空),不阻塞搜索主路径"
+          ],
+          "verification": "node --check new-chat.js/social.js/i18n.js ✅ + i18n 7 key × 3 parity 全 3 ✅ + runtime getTexts('newChat') 全非空 ✅ + WXML view 24/24 block 1/1 text 2/2 平衡 + template 1 定义+3 自闭合调用 ✅ + require 无环(social→request 单向)✅ + 端点对齐后端 C.3(GET /me/friends + /suggest)✅;待 IDE 编译截图 + live 两账号闭环",
+          "todo_live": [
+            "微信开发者工具编译/截图:两段渲染、reason 胶囊(同专业/HKMU 同学)位置、空态文案、搜索时发现区隐藏、切语言 reason 重译",
+            "live:GET /users/me/friends + /users/suggest 闭环;tap 卡片→chat;边界(无好友/无推荐 empty)"
+          ]
+        },
+        "c7": {
+          "status": "done — 代码层验证全绿;待 IDE 编译 + live 两账号闭环",
+          "what": "home onShow bootstrapSession().then 里调 _consumePendingInvite(user):读 app.globalData.pendingInvite(C.4 暂存)→未登录留待→立即清暂存防重复→social.consumeInvite(POST /me/friends)→ created=true 走 wx.showModal(已添加好友/你和 {name} 已成为好友 [去聊天][稍后])确认跳 chat,created=false(自邀/已好友)toast,catch toast 失败。i18n 新建 social scope × 3 语言(7 key,继承 COMMON.defaultAuthor)",
+          "decisions": [
+            "消费点放 bootstrapSession().then 内 — user 已解析登录态确定;未登录 user=null 跳过,pendingInvite 留待登录后 home onShow 再消费",
+            "立即清暂存(同步)防 onShow 多次触发重复 POST;失败不回填(坏码不自动重试,已 toast)",
+            "created 分流:真新好友→modal 引导去 chat;created=false(自邀/已好友)→轻 toast;catch→邀请码无效 toast",
+            "跳 chat 参数对齐 new-chat openUser:user_id/name/avatar(decodeURIComponent),chat onLoad 已支持",
+            "C.6+C.7 串成完整 P1 邀请闭环:分享→app.js 捕获 inv→home 消费→双向好友→modal→DM→new-chat 好友段互见。测试无需造数据,2 账号走产品自身流程即可"
+          ],
+          "verification": "node --check home.js/i18n.js/social.js ✅ + social scope 7 key × 3 parity ✅ + runtime getTexts('social') 全非空(含继承 defaultAuthor)+ {name} 占位三语保留 ✅ + 接线确认(home:55 调用 / 257 方法 / 268 consumeInvite)+ app.js pendingInvite/_captureInvite 链路 ✅ + consumeInvite↔后端 POST /me/friends 契约 {friend,created} ✅;待 IDE 编译 + live 两账号走闭环",
+          "todo_live": [
+            "两账号端到端:A profile 邀请分享→B 打开(开发者工具编译模式自定义启动参数 inv=CODE 或真机扫码)→B home 弹已添加好友→去聊天→发消息→B/A new-chat 好友段互见",
+            "边界:未登录打开邀请码(留待登录后消费)、自邀(created=false toast)、无效码(catch toast)、重复消费(清暂存防重)"
+          ]
+        },
+        "c8": {
+          "status": "静态全绿 done(2026-07-02);live(2026-07-02 用户实测):P1 邀请闭环+好友互见+DM 衔接 ✅,私信 Phase3 ✅,Phase7 课评 ✅;⏸ P0 邮箱验证 deferred(SMTP 未配,见 c2)。主社交路径(P1)已 live 就绪,P0 同校增强延后",
+          "what": "C.8 静态 6 维度坐实:① node --check 全量 29/29 ② pages 4件套全齐(home/news 无页面 wxss=历史既定靠 app.wxss,非缺陷)③ require 无环(social→request 单向,auth→messages 单向)④ WXML 13/13 平衡(home/profile/new-chat ✓)⑤ i18n 三语 parity 运行时全等(home 27/profile 39/newChat 23/social 18)⑥ 前后端路径契约对齐(social.js 5端点↔users.py 5路由;/me/* 与 /suggest 均在 /{user_id} 之前声明 + user_id:int 约束兜底,无路由冲突)。后端 C.1-C.3 已部署 c5906ee;生产 curl 受本地 VPN 挡(memory vpn-azure-https-block),非代码问题",
+          "verification": "2026-07-02 复核脚本(/tmp/i18n_parity.js 运行时 getTexts 比对 + /tmp/wxml_balance.py 标签计数 + node --check 全量 + grep require 图 + pages 4件套 ls)。全绿零问题。附带核实 users.py:328 get_user(user_id:int) 类型约束保护 admin 路由顺序,非 bug",
+          "live_checklist": [
+            "[P0 邮箱验证] A 登录→profile→hkmu_verified 徽章未亮→点验证 HKMU 邮箱→输 s1234567@live.hkmu.edu.hk→收信点链接→徽章亮+student_id 自动回填;B 同样验证",
+            "[P1 邀请闭环] A profile 邀请好友→拿 sharePath(/pages/home/home?inv=CODE)→B 用该路径冷启动→home onShow 消费 pendingInvite→弹'你和 A 已成为好友'→去聊天→进 chat",
+            "[好友互见] A/B new-chat 好友段都出现对方",
+            "[P0 同学推荐] A/B 同 programme→new-chat 可能认识的同学出现对方 标签 same_programme;不同 programme HKMU 已验证→标签 hkmu_peer",
+            "[边界] 自邀(created=false toast 不加好友)/已好友再邀请(created=false)/坏码 inv=xxx(邀请码无效 toast)/未登录打开邀请(留待登录后消费)",
+            "[DM 衔接] 推荐或好友卡片点对方→直跳 chat→发消息→对方收(复用 Phase 3 DM live 验证)"
+          ],
+          "todo_live_user": [
+            "微信开发者工具编译模式自定义编译设置启动参数 inv=CODE 模拟分享落地,或真机两账号扫码",
+            "automator switchTab/读 page.data 辅助(见 memory miniprogram-automator-drive:别连跑两遍)",
+            "P1 邀请闭环+好友+DM 已 live ✅(2026-07-02);P0 邮箱验证 deferred(SMTP 未配),不阻塞内测,正式上线前补"
+          ],
+          "live_result": "2026-07-02 用户实测:P1 邀请闭环✅ / 好友互见✅ / DM 衔接✅(私信 Phase3✅) / Phase7 课评✅ / 边界(自邀/已好友/坏码)随邀请通✅;⏸ P0 邮箱验证 deferred(SMTP 未配,见 c2);P0 同学推荐 same_programme 部分(hkmu_peer 标签依赖延后的 hkmu_verified)"
+        },
         "steps": [
-          "C.1 后端 schema(hkmu_verified/invite_code/friendships 表)+ models",
-          "C.2 HKMU 域判定 + verify 置 hkmu_verified + 学生邮箱推 student_id + bind-email",
-          "C.3 invite-code/suggest/friendships 端点(自邀拦截+幂等双向)",
-          "C.4 app.js 读 query.inv + utils/social.js",
-          "C.5 profile 验证入口+邀请分享",
-          "C.6 new-chat 好友+推荐两段",
-          "C.7 home 消费邀请 + i18n",
-          "C.8 静态+live 验证"
+          "C.1 后端 schema(hkmu_verified/invite_code/friendships 表)+ models ✅ done",
+          "C.2 HKMU 域判定 + verify 置 hkmu_verified + 学生邮箱推 student_id + bind-email ✅ done",
+          "C.3 invite-code/suggest/friendships 端点(自邀拦截+幂等双向) ✅ done",
+          "C.4 app.js 读 query.inv + utils/social.js ✅ done",
+          "C.5 profile 验证入口+邀请分享 ✅ done",
+          "C.6 new-chat 好友+推荐两段 ✅ done",
+          "C.7 home 消费邀请 + i18n ✅ done",
+          "C.8 静态 ✅ done(2026-07-02) / live 两账号验证 待用户"
         ]
       },
       "phase6a_news_sync": {
-        "status": "done (2026-06-28; 代码+本地 dry-run 验证过,首次回填待 Task 15)",
+        "status": "done + 生产已自动回填 ✅ (2026-07-01 核实:cron 6-28/29/30 schedule success,生产 news 8 条全真实 RSS 繁体,source_url 精确文章,pub 6-24~6-29;无需手动触发)",
         "what": "news 真实化:GitHub Actions 定时从 HKMU 官网 WordPress RSS 抓真实新闻入库(替代 Phase 4 手工 seed)。方案 C 精修版 — 后端 lang 基建一次到位,Phase 6a 只抓繁体(zh-hant)",
         "done": [
           "后端 lang 基建一次到位:news 表加 lang 列(NOT NULL DEFAULT 'zh-hant',database.py DO$$ 幂等块)+ GET /news 加 ?lang 参数(不传默认 zh-hant,三语钩子)+ NewsOut/NewsCreate 加 lang + requirements 加 feedparser",
@@ -569,7 +702,7 @@
           "本地 dry-run 验证(繁体 3 页 30 条):解析+去重 OK;category 分布 academic 8(学者撰文+UAS)/other 15(媒体报道 QS 排名)/event 1(活動日誌)/announcement 1(新聞稿)/career 0(真实);source_url 全为 hkmu.edu.hk/news/tc/ 精确链接"
         ],
         "data_source": "HKMU News WordPress RSS(tc/feed 繁体 + feed 英文 + sc/feed 简体,WPML 三语同批新闻翻译版);robots.txt 全允许;只存摘要+精确原文链接不存全文;UA 标识;每日 1 次低频",
-        "verification_gap": "本地 dry-run 过(解析/映射/去重全 OK);待跑:首次回填(gh workflow run purge+pages=3)+ 生产 SELECT 核对(lang 全 zh-hant / source_url 精确)+ 端到端(news 页显示真实新闻)+ 次日 cron 自动触发"
+        "verification_gap": "✅ 已 live(2026-07-01 核实):cron 6-28 起每天 schedule success,生产 GET /news?lang=zh-hant 返 8 条真实 RSS 繁体新闻(source_url 全 hkmu.edu.hk/news/tc/精确文章,pub 6-24~6-29)。首次回填(6-28 workflow_dispatch)+ 后续增量 cron 均已自动跑通。小观察:8 条含同事件多篇报道(學與教博覽2026 ×3)+ 媒体专栏转载(家國天下/講樓),是 RSS 真实条目非 bug"
       },
       "phase6b_news_trilingual": {
         "status": "deferred — 防过渡期烂尾(硬约束:以后绝对支持三语)",
@@ -579,8 +712,141 @@
           "脚本:scripts/sync_news.py 的 FEEDS 字典解开 en + zh-hans 两行(目前注释),即抓三语 — 表/API 已就绪",
           "前端:小程序 news.js + web news.js 请求带 ?lang= 按 locale,切语言重拉(唯一需动前端处)"
         ]
+      },
+      "phase7_planner_expand": {
+        "status": "Module A 课程详情+课评 代码完成 + 静态全绿(2026-07-02);live 待用户(IDE 编译/截图 + 两账号课评闭环)。阶段一 planner 标记闭环已迁入详情页内联标记(action-sheet 退役)。下一步 B 排课表(动后端);C 专业绑定深化 依附 A/B",
+        "vision": "把 planner 从「标记进度」升级为「选课规划 + 课评社区」:系统与专业绑定 → 总览要修课程 → 打开课看介绍/先修/课评 → 规划表排课 → 结合已修标记",
+        "inventory_2026_07_02": "DSAI 44 门(core29/elective6/project1/english2/通识2/大核4,120学分);CS+网安 comingSoon 0 门待补(docs/ops/选课选课/School_of_Science_and_Technology.docx 原料就位)",
+        "backend_ready": [
+          "GET /courses/{course_id} → CourseOut(含 description/prerequisites/credits/year/semester)",
+          "GET/POST/DELETE /courses/{course_id}/reviews → 课评全 CRUD",
+          "CourseReviewOut 字段:id/course_id/author_id/rating(1-5星)/content/helpful_count(点赞)/created_at/author_nickname — RateMyProfessor 式课评非普通评论",
+          "programme_code 绑定 + graduation-status 按专业算(已就绪)"
+        ],
+        "modules": {
+          "A_course_detail_review": {
+            "status": "代码完成 + 静态全绿(2026-07-02);live 待用户(IDE 编译/截图 + 两账号课评闭环)",
+            "priority": "高(已先做)",
+            "what": "新建小程序 pages/course-detail/(网页可后补);从 planner「我的课程」点课卡 navigateTo 进详情;页内 = code/name/credits·year·semester + category pill + description + 先修 + 内联标记 segmented(未修/进行中/已完成,复用 PUT /courses/progress) + 课评分(avg+stars) + 课评列表(rating 星+helpful 只读+作者+日期) + 发课评 composer(星选器+正文) + 删自己的课评",
+            "backend_change": "零改(GET /courses/{id} + GET/POST /courses/{id}/reviews + DELETE /courses/reviews/{id} + PUT /courses/progress 全就绪;helpful_count 只读无点赞端点;课评一人一课一条 409)",
+            "frontend_need": "✅ done:新页 course-detail(js/wxml/wxss/json) + planner 课程卡 bindtap→navigateTo + onShow 作废 _progress 缓存回拉 + i18n courseDetail scope 三语 27 key 含 officialNote 免责声明(+COMMON 继承共 38)",
+            "decisions": [
+              "课程 category(core/elective/...) 恰好=planner.categories key → 复用 planner scope 标签(categories/semAutumn/yearLabel),不重复造 i18n key",
+              "helpful_count 后端只读(无点赞端点)→ 前端仅展示(>0 才显 'N 人觉得有用'),不加点赞按钮",
+              "课评一人一课一条(后端 409)→ loadReviews 检测 myReviewId:已评则隐 composer + 列表里自己那条显删除按钮;POST 遇 409 toast+重拉同步",
+              "内联标记三态走 PUT not_started/in_progress/completed(与 planner 原 action-sheet 同语义,非 DELETE);标记后 set globalData.coursesNeedRefresh → planner onShow 作废 _progress 重拉",
+              "planner 原 onCourseTap action-sheet 退役(标记迁详情页内联);i18n markInProgress/markCompleted/markRemove 保留(三语 parity 仍成立,无悬空引用)",
+              "officialNote 免责声明(courseDetail scope + 课程 hero 卡底部小字,三语):seed description 非官方原文,无论最终留空/保留/用户手抄都标注'以 MyHKMU 官方大纲为准';description 公开来源无 description 的查证见 description_source_note"
+            ],
+            "verification": "node --check×3(course-detail/planner/i18n)✅ + JSON 有效(app.json 14 pages 含路由/course-detail.json)✅ + WXML 平衡(course-detail view39/text7/block2;planner 回归 view61/text6)✅ + i18n 运行时 parity(courseDetail 38 key×3 含 officialNote 全非空+COMMON 继承+planner 复用键)✅ + 接线确认(openCourseDetail js+wxml/onCourseTap 无残留/navigateTo 入口/planner request+getTexts 仍活)✅;待 IDE 编译/截图 + live",
+            "live_checklist": [
+              "IDE 编译/截图:课程 hero 卡(category pill/credits·year·semester/description/先修) + 标记 segmented 三态 + 课评分 avg+stars + 课评列表星 + composer 星选器",
+              "live:planner 点课卡→进详情;标记三态→回 planner 仪表盘/卡片刷新(coursesNeedRefresh);课评:发(星+正文)→列表+avg 更新+自己那条显删除;再发→409 toast;删→composer 复现",
+              "边界:未登录进详情(未来 deep-link;hero+课评只读+login-prompt 标记);课程 404→notFound 态;无课评→空态;helpful_count=0 不显"
+            ],
+            "deferred": [
+              "网页版 course-detail(当前仅小程序;web planner 课程卡可后补接同名端点)",
+              "课评点赞(helpful_count 写入端点,当前只读)",
+              "课评分页(当前 page_size=50 一次性,超 50 条不翻页)"
+            ],
+            "description_source_note": "⚠️ seed_courses.py 的 description(如 'Fundamental programming concepts using Python.')非 HKMU 官方原文,是早期一句话概括。本地 docs/ops/选课选课/*.docx(6 学院 + HKMU_public_programme_courses_no_status.docx)= HKMU 公开 Programme Requirements PDF 的结构化版,列仅 code/name/credits/group/term,无 description;文档自述 course details 在 MyHKMU 内部门户,公开层(含 WebSearch)拿不到 COMP1080SEF 等单课详情。故「去官网拿 description」公开层到 code/name/credits 为止。待用户定方案:(a)留空+免责声明(course-detail 已留 wx:if 空描述隐藏) (b)保留概括+免责声明 (c)用户从 MyHKMU 手抄官方描述逐条替换 seed+生产DB。门槛:用户认可「按修读状态而非按专业」,待定软(前端徽章,评论级徽章需后端 join author 修读态)/硬(后端 create_review 加 completed/in_progress 校验,Module A 从零改变小改)",
+            "value": "社区感 + 选课决策辅助;和标记天然衔接(点课卡进详情)"
+          },
+          "B_plan_table": {
+            "priority": "中(阶段二)",
+            "what": "排课规划表:把课分配到未来学期做「计划修」vs「已修」;参考网页 plan 视图(学期 tab + status select)",
+            "backend_change": "需扩展:status 加 planned 语义 或 新建 plan 表(planned_semester 字段)— 要 plan",
+            "frontend_need": "小程序规划表 UI(按学期分组 + 分配交互)",
+            "value": "真正的「规划」而不只是「记录」"
+          },
+          "C_programme_binding": {
+            "priority": "低(依附 A/B)",
+            "what": "专业绑定深化:首页「我的专业」卡片 / 切换专业提示重置进度视角 等 UX",
+            "backend_change": "零改(programme_code 已存)",
+            "frontend_need": "UX 点缀"
+          }
+        },
+        "precedence": "A 课程详情+课评 ✅ 代码 done(2026-07-02,静态全绿) → live 验证 → B 排课表(动后端,status planned 语义 或 新 plan 表) → C(依附 A/B)。阶段一 planner 标记闭环已并入详情页内联标记",
+        "data_gap_note": "CS/网安 课程数据缺(nice_to_have_deferred 已记);补数据独立,不阻塞 A(DSAI 44 门即可用),但 B/C 全专业铺开前需补"
       }
     },
     "next_step": "✅ Phase 4 数据运维 done(news 0→8 保留/lostfound seed 应反馈清回 1/清 2 垃圾帖,见 phase4_data)。Phase 3 私信代码完成(3.1-3.8,commit 67f84b0→82b9314,branch feature/miniprogram-phase3-messages;静态全绿)。✅ 用户已测开发者工具冒烟(2026-06-27);待用户:automator + 真实两账号收发(用户说稍后)+ 共享文件群通知 + home.js 合并前司徒 review。Phase 5 社交冷启动(P0 同校+P1 邀请)方案已批准,见 docs/ops/小程序社交冷启动-C方案.md,8 步(C.1-C.8),待 Phase 3 live 验证后启动(说「开始 C.1」即动)。⑦ 仍待用户开发者工具验证。✅⑥c 已上线 cc19d3a8"
+  },
+  "internal_beta_readiness": {
+    "_doc": "内测就绪 checklist (2026-06-29 评估)。功能已够内测;非功能几点待补/确认。内测=体验版(不需备案审核);正式上线(全校公开)才需小程序备案+微信审核+严格质量门槛。",
+    "verdict": "功能✅够内测。非功能🔶补 B3 错误监控 + 确认 B4 health 探活后即可开始内测;B1/B2/B5/B6 逐步完善。",
+    "tasks": [
+      {
+        "id": "B1",
+        "title": "实时私信:socket 合法域名 + Azure websockets",
+        "type": "config(用户操作)",
+        "owner": "SYF 操作",
+        "status": "pending",
+        "detail": "① 微信公众平台→开发管理→开发设置→socket 合法域名 加 wss://hkmu-campus-sea.azurewebsites.net;② Azure webapp→配置→Web sockets=开。代码已 OK(前端 WS_PATH=/api/v1/messages/ws ↔ 后端 @router.websocket('/ws') 于 /api/v1 前缀,路径对齐)。配完私信从轮询升级为实时。"
+      },
+      {
+        "id": "B2",
+        "title": "司徒 live 验证闭环",
+        "type": "verify(双人)",
+        "owner": "SYF+司徒",
+        "status": "pending",
+        "detail": "桌面 社交验证清单-Phase5-C6C7.md:邀请闭环(C.5→C.4→C.7→C.6)+ Phase3 两账号 DM 真实收发 + Phase1 配图/资料编辑/注册+邮箱验证。验完报结果(过/bug),即 C.8 收尾。"
+      },
+      {
+        "id": "B3",
+        "title": "错误监控(微信原生运维中心 + Azure App Insights + realtime log 封装)",
+        "type": "code+config",
+        "owner": "SYF",
+        "status": "code done;待用户 2 项(看后台运维中心 + Azure 启用 App Insights)",
+        "priority": "high",
+        "detail": "不用第三方。① 小程序端:微信后台运维中心自动收 JS/网络/API 错误(体验版用户即收,零代码);② 代码:utils/log.js 封装 wx.getRealtimeLogManager + app.js onError/onUnhandledRejection 全局兜底 + request.js 非 2xx 失败上报(带 path/method/status)→ 后台实时日志带上下文;③ 后端:Azure webapp 门户启用 Application Insights。Sentry 留作将来原生不够细时的升级项。"
+      },
+      {
+        "id": "B4",
+        "title": "确认 /api/health 真探活已部署",
+        "type": "verify",
+        "owner": "SYF",
+        "status": "pending",
+        "detail": "代码已是真实 SELECT 1(DB 挂返 503,不再恒 200 掩盖 Supabase pause)。post_db13_ops 6-25 记 pending deploy;c5906ee(6-28)大概率含。确认 UptimeRobot 打 /api/health 返真探活(非恒 200)。"
+      },
+      {
+        "id": "B5",
+        "title": "隐私声明",
+        "type": "content",
+        "owner": "SYF",
+        "status": "code done;待用户换官方邮箱 + IDE 编译/截图",
+        "detail": "收集邮箱(HKMU 验证)+ GA4/Mixpanel 行为分析。内测前放简单隐私说明(收集什么/为什么/存哪),尤其涉及 HKMU 邮箱。✅ 2026-06-30 done:新建 pages/privacy(三语 privacy scope 20 key,6 段 收集/为什么/存储/分享/权利/联系)+ privacy.openAction 复用入口文案 + login 注册区底部入口 + profile profile-row 入口;privacy.wxss 纯 token var。静态全绿(node --check×4 + JSON 有效 + wxml view 平衡 23/23·24/24·53/53 + 三语 parity 20/20)。⚠️ 联系邮箱 support@hkmu-campus.example 为占位,正式上线前换官方邮箱;微信开发者工具编译/截图仍待用户。"
+      },
+      {
+        "id": "B6",
+        "title": "确认 admin 能删任意帖/评论(UGC 应急下架)",
+        "type": "verify",
+        "owner": "SYF",
+        "status": "pending",
+        "detail": "现状:有 _is_admin(identity=='admin') + 匿名帖作者对 admin 可见(show_author=is_admin)。确认 admin 删任意帖/评论的端点存在 + 能用。内测期靠人盯内容够用。"
+      }
+    ],
+    "watch_items": [
+      "Supabase 免费层 auto-pause(keepalive 每 10min ping 缓解;一旦 pause 服务 503,memory supabase-pause-recovery 有恢复 runbook)",
+      "Azure 冷启动(免费/基础层,首次进入可能卡几秒)"
+    ],
+    "observability": {
+      "_doc": "可观测性 checklist:访问量/流量/超载/安全 从哪看。独立文档 docs/ops/正式上线可观测性-checklist.md",
+      "scope": "最初 ≤1000 用户量级起步;免费层基本扛得住峰值并发(几十~一两百),重心先观测再扩容;唯一确定性崩点=Supabase auto-pause",
+      "status": "2026-07-03 覆盖评估 done(详见 checklist §现状总览):内测致命路径全覆盖。已 live:App Insights(workspace-based hkmu-campus-sea-ai+SDK,AppTraces 收 sec_audit/异常)+ GA4(G-2TT86K3S1F)+ UptimeRobot(down)+ scripts/health-check.sh(按需,Claude 跑+解读,实战抓到 unread-count 轮询 401 bug)。缺口(非阻塞内测):🟡 AppRequests(per-route)+小程序访问人工;❌ web JS 错误捕获(正式上线前补);🔶 性能告警 deferred",
+      "priority_3": [
+        "✅ 开 Application Insights——done(2026-07-03:workspace-based hkmu-campus-sea-ai + azure-monitor-opentelemetry SDK 接入[自定义容器只能 SDK 非 codeless],AppTraces 实测捕获 sec_audit status=401 真实流量;commit 07b76df 部署)",
+        "🔶 配告警 deferred(2026-07-03 定,内测非必须):App Insights 失败率/P95 告警不配——UptimeRobot(已盯 /api/v1/courses,down 即报警)+Supabase 邮件(pause)已覆盖最致命场景;App Insights 数据可被动看。量大/正式上线再配。可选小升级:UptimeRobot 加 /api/health(真 DB 探活)",
+        "每周看 Supabase Dashboard 连接数/存储(auto-pause 是唯一确定性崩点)"
+      ],
+      "main_gap": "✅ Application Insights 已启用(2026-07-03,SDK 接入;自定义容器无法 codeless 故用 azure-monitor-opentelemetry);深度 trace(DB 调用耗时)待量大时再加 OpenTelemetry 细化 instrumentation",
+      "scale_triggers": "见 docs/ops/正式上线可观测性-checklist.md 第 5 节(观测→扩容决策对照)",
+      "not_needed_now": "Grafana/Prometheus/k8s 监控/付费 APM(Datadog)——1000 人量级过度"
+    },
+    "nice_to_have_deferred": [
+      "新闻三语(Phase 6b,等爬虫稳 ≥2 周)",
+      "选课 CS/网安 数据补全(docs/ops/选课选课)",
+      "DM 高级:正在输入/实时已读/在线绿点/图片 DM/撤回/群聊(需后端扩展)"
+    ]
   }
 }

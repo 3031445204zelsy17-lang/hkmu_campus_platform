@@ -1,0 +1,36 @@
+<app-header show-back="{{true}}" bind:languagechange="handleLanguageChange" />
+
+<view class="page-shell">
+  <view class="top-bar tight">
+    <view class="brand-lockup">
+      <view class="eyebrow">{{text.eyebrow}}</view>
+      <view class="app-title">{{text.title}}</view>
+      <view class="subtitle">{{text.updatedLabel}}</view>
+    </view>
+  </view>
+
+  <view class="privacy-sheet">
+    <view class="privacy-intro">{{text.intro}}</view>
+
+    <view class="privacy-section-title">{{text.sectionCollect}}</view>
+    <view class="privacy-body">{{text.itemAccount}}</view>
+    <view class="privacy-body">{{text.itemVerify}}</view>
+    <view class="privacy-body">{{text.itemUsage}}</view>
+    <view class="privacy-body">{{text.itemContent}}</view>
+
+    <view class="privacy-section-title">{{text.sectionWhy}}</view>
+    <view class="privacy-body">{{text.copyWhy}}</view>
+
+    <view class="privacy-section-title">{{text.sectionStore}}</view>
+    <view class="privacy-body">{{text.copyStore}}</view>
+
+    <view class="privacy-section-title">{{text.sectionShare}}</view>
+    <view class="privacy-body">{{text.copyShare}}</view>
+
+    <view class="privacy-section-title">{{text.sectionRights}}</view>
+    <view class="privacy-body">{{text.copyRights}}</view>
+
+    <view class="privacy-section-title">{{text.sectionContact}}</view>
+    <view class="privacy-body">{{text.copyContact}}</view>
+  </view>
+</view>

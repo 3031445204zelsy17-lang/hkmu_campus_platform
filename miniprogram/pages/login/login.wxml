@@ -88,4 +88,6 @@
       <view class="text-link">{{isRegister ? text.goLogin : text.goRegister}}</view>
     </view>
   </view>
+
+  <view class="privacy-entry" bindtap="openPrivacy">{{privacyAction}}</view>
 </view>

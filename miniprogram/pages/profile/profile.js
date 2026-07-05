@@ -5,6 +5,7 @@ const { uploadImage } = require("../../utils/upload");
 const { formatDate } = require("../../utils/format");
 const { getLocale, getTexts } = require("../../utils/i18n");
 const { syncTabBar } = require("../../utils/tabbar");
+const social = require("../../utils/social");
 
 function identityLabel(identity, text = getTexts("profile")) {
   if (!identity || identity === "student") {
@@ -33,8 +34,10 @@ Page({
     joinedAtLabel: "",
     loading: false,
     locale: getLocale(),
+    privacyAction: getTexts("privacy").openAction,
     text: getTexts("profile"),
     user: null,
+    sharePath: "", // Phase 5: 预取的邀请分享路径(onShareAppMessage 用)
   },
 
   onShow() {
@@ -58,6 +61,7 @@ Page({
       identityLabel: identityLabel(this.data.user && this.data.user.identity, text),
       joinedAtDisplay,
       locale,
+      privacyAction: getTexts("privacy", locale).openAction,
       text,
     });
   },
@@ -80,6 +84,7 @@ Page({
           joinedAtLabel: user && user.created_at ? formatDate(user.created_at) : "",
           user: user || null,
         });
+        if (user) this._prefetchSharePath();
       })
       .catch((error) => {
         wx.showToast({
@@ -220,6 +225,12 @@ Page({
     });
   },
 
+  openPrivacy() {
+    wx.navigateTo({
+      url: "/pages/privacy/privacy",
+    });
+  },
+
   logout() {
     auth.logout();
     this.setData({
@@ -233,5 +244,49 @@ Page({
       title: this.data.text.loggedOut,
       icon: "success",
     });
+  },
+
+  // Phase 5: 预取邀请码 → 分享路径(onShareAppMessage 同步返回,须提前就绪)
+  _prefetchSharePath() {
+    social
+      .getInviteCode()
+      .then((res) => {
+        this.setData({ sharePath: social.buildSharePath(res.invite_code) });
+      })
+      .catch(() => {
+        // 静默失败:未验证/网络异常时分享按钮走默认 path(不带 inv)
+      });
+  },
+
+  // Phase 5 P0: 补绑 HKMU 邮箱,解锁同校验证层
+  startBindEmail() {
+    const text = this.data.text;
+    wx.showModal({
+      title: text.bindEmailTitle,
+      editable: true,
+      placeholderText: text.bindEmailPlaceholder,
+      confirmText: text.bindEmailSend,
+      success: (res) => {
+        if (!res.confirm) return;
+        const email = (res.content || "").trim();
+        if (!email) return;
+        social
+          .bindEmail(email)
+          .then(() => {
+            wx.showToast({ title: text.bindEmailSent, icon: "success" });
+          })
+          .catch((err) => {
+            wx.showToast({ title: (err && err.message) || text.bindEmailFail, icon: "none" });
+          });
+      },
+    });
+  },
+
+  // Phase 5 P1: 邀请好友分享(带 inv 落地自动双向好友)
+  onShareAppMessage() {
+    return {
+      title: this.data.text.inviteShareTitle,
+      path: this.data.sharePath || "/pages/home/home",
+    };
   },
 });

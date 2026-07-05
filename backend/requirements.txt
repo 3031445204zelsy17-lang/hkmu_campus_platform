@@ -13,3 +13,4 @@ httpx==0.28.1
 feedparser>=6.0.8
 aiosmtplib==3.0.2
 pywebpush>=2.0.0
+azure-monitor-opentelemetry>=1.0.0

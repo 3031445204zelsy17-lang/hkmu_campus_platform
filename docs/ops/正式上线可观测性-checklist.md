@@ -1,0 +1,132 @@
+# 正式上线 — 可观测性 Checklist
+
+> 适用阶段:最初 ≤1000 注册用户、慢增长。本文回答:**访问量/流量/性能超载/安全 从哪里看、怎么看、看完怎么办。**
+> 最后更新:2026-07-03
+
+## 现状总览（2026-07-03 — 内测期实际落地）
+
+**结论：内测阶段监测充分，致命路径全覆盖。剩 2 个非阻塞缺口，列为正式上线前补。**
+
+### 5 层流程
+| 层 | 机制 | 触发 |
+|--|--|--|
+| 1. 主动告警 | UptimeRobot（down）+ Supabase 邮件（pause） | 24/7，你不在也工作 |
+| 2. 持续采集 | App Insights（sec_audit+异常）/ GA4（web 访问）/ 微信运维中心（小程序错误） | 常驻被动 |
+| 3. 按需巡检 | `scripts/health-check.sh`（端点/错误/安全/指标/CI 一张图） | 用户说"查一遍"→ Claude 跑 + 解读 |
+| 4. 人工深看 | GA4 留存漏斗 / Supabase 连接数 / Azure Portal / 微信数据助手 | 偶尔 |
+| 5. 预防（CI） | keepalive（防 pause）/ db-backup（日备）/ news-sync（日更）/ dependabot（周扫） | 自动 |
+
+### 覆盖矩阵
+| 监测任务 | 状态 |
+|--|--|
+| 站点/端点可用性、DB 活/pause、后端 5xx、后端未捕获异常、安全（撞库/爬虫）、性能（延迟/请求/资源）、web 访问/行为、CI/定时任务、小程序错误、down/pause 主动告警 | ✅ |
+| per-route 性能剖析（AppRequests） | 🟡 init 顺序没接上，平台 AverageResponseTime 已兜底整体延迟 |
+| 小程序访问自动化 | 🟡 微信数据助手人工（微信无 API，可接受） |
+| web 前端 JS 错误 | ❌ 正式上线前补 |
+| 主动性能/错误阈值告警 | 🔶 deferred，UptimeRobot 管"挂"够内测 |
+
+### 已知缺口（非阻塞内测，正式上线前评估）
+- **web 前端 JS 错误捕获** — 现 web 用户撞 JS 报错不可见（GA4 不收错误）。web 推广/正式上线前补：`window.onerror`/`unhandledrejection` → GA4 `js_error` 或上 Sentry。⚠️ `window.onerror` 噪音大（浏览器插件/跨域 "Script error."），需过滤/采样再上。
+- **App Insights AppRequests**（per-route 性能）— `configure_azure_monitor()` 在 lifespan 晚于 FastAPI app 创建，ASGI 请求 instrumentation 没挂上。补法：挪到 app 创建之前 + 重部署。平台指标 AverageResponseTime/Http5xx 已覆盖整体延迟/错误。
+- **App Insights 主动告警** — deferred（见 §4/§8）；UptimeRobot 已覆盖 down。
+- 小程序访问：微信数据助手人工看，可接受。
+
+### 按需巡检工具
+`scripts/health-check.sh`（commit bf9567d 同批）—— 用户说"查一遍情况"时 Claude 执行，输出 端点探活 / 后端错误+安全(sec_audit) / App Service 平台指标 / CI 四段，Claude 解读。**实战已用它抓到 unread-count 轮询 401 bug 并修复**。
+
+## 0. 量级判断(先定调)
+
+- 1000 注册 ≠ 1000 并发。校园产品典型同时在线远低于注册数,**峰值并发大概率几十~一两百**。
+- 这个量级**当前免费层架构基本扛得住**,重心是「**先观测,再扩容**」——用数据告诉你什么时候该升,而不是现在就盲目升付费层。
+- **唯一确定性崩点**:Supabase 免费层 auto-pause(已有 keepalive 每 10min ping 缓解,但属缓解非根治;pause 了服务 503,memory supabase-pause-recovery 有恢复 runbook)。
+- 次要隐患:Azure 免费/基础层冷启动(首次请求卡几秒)+ 单实例(无自动扩缩)。
+
+## 1. 4 类数据 → 平台对照
+
+| 类别 | 看什么 | 平台 | 现状 | 路径 |
+|------|--------|------|------|------|
+| **可用性** | uptime、响应时间、宕机 | UptimeRobot(外部探活) | ✅ 已配 | app.uptimerobot.com |
+| | 健康探活 | Azure App Service 健康检查 | ✅ /api/health 真探活 | Portal → Web App → 监视 → 运行状态 |
+| **访问量/流量** | DAU、PV/UV、留存(业务) | GA4 + Mixpanel | ✅ 已埋点(I3) | GA4/Mixpanel 后台 |
+| | 请求数、QPS、带宽(技术) | Azure Monitor / App Insights | ✅ App Insights 已开(workspace-based) | Portal → Web App → Application Insights |
+| | 小程序访问 | 微信数据助手 + 运维中心 | ✅ 部分已用 | 微信公众平台 → 数据/运维中心 |
+| **性能/超载** | 响应延迟、错误率、CPU/内存 | Application Insights | ✅ 已开(SDK 接入,AppTraces 实测落库) | 同上 |
+| | DB 连接数、慢查询、存储 | Supabase Dashboard | ✅ 现成,要常看 | supabase.com → Project → Reports/Logs |
+| **安全** | 异常请求、认证失败、可疑 payload | App Insights(4xx/5xx 模式) + 后端日志 | ✅ 已部署+接入(sec_audit 落 AppTraces 实测) | App Insights 失败+日志 ; Azure Log Stream |
+
+## 2. ~~主力缺口~~ Application Insights(✅ 已开,2026-07-03)
+
+> **2026-07-03 已落地**:workspace-based `hkmu-campus-sea-ai`(southeastasia)+ `azure-monitor-opentelemetry` SDK(env-gated,自定义容器无法 codeless)。webapp 已配 `APPLICATIONINSIGHTS_CONNECTION_STRING`。实测:`sec_audit status=401 ...` 真实流量落 `AppTraces` 表(查 LA workspace `hkmu-sea-logs`)。下面"开了能看"现在都能看了。
+
+progress `internal_beta_readiness.B3` 把它列为「待用户在 Azure 门户启用」。它是后端**性能/超载/错误**的主力观测面。
+
+- **怎么开**:Azure Portal → 你的 Web App → Monitoring → Application Insights → 启用。
+- **开了能看**:每分钟请求数、响应时间分布(P50/P95/P99)、失败率(5xx)、最慢的接口 Top N、未处理异常堆栈、按接口聚合。
+- **深度 trace**(每个 DB 调用耗时、跨服务链路)需在 FastAPI 集成 OpenTelemetry → **1000 人量级先不做**,基础指标够用;量大或定位疑难时再加。
+- 小程序端错误监控已用微信后台运维中心(memory `miniprogram-operations.B3`:getRealtimeLogManager + app.js onError 兜底)。
+
+## 3. 怎么判断「超载了」——具体信号
+
+出现一两个就该考虑扩容(见第 5 节):
+
+- 响应时间 **P95 持续 > 1–2 秒**
+- **5xx 错误率 > 1%**
+- App Service **CPU 或内存持续 > 70–80%**
+- **频繁冷启动**(免费/基础层内存紧张反复重启,表现为间歇性卡几秒)
+- Supabase **active connections 接近上限**(免费层很低,Dashboard 直接看)或报 `too many connections`
+- Supabase **存储接近 500MB / 带宽接近限额**(免费层)
+- UptimeRobot 响应时间**趋势性退化**(不是单点抖动)
+- App Service **重启次数**异常升高
+
+## 4. 告警:从「被动看」到「主动通知」
+
+| 对象 | 阈值 | 通道 | 状态 |
+|------|------|------|------|
+| UptimeRobot 探活 | 端点不可达 | 邮件/微信 | ✅ 已配 |
+| App Insights | 失败率 > 阈值 / 响应 P95 > 阈值 | 邮件 | 🔶 deferred(内测非必须):UptimeRobot 已覆盖「挂了」+ Supabase 邮件覆盖 pause;App Insights 数据可被动看;量大再配 |
+| Supabase | 项目接近限额 / 自动 pause | 邮件(Supabase 自动) | ✅ 默认;留意收件箱 |
+| App Service | CPU/内存/重启 | 邮件 | ⚠️ Portal 配告警规则 |
+
+## 5. 观测 → 扩容:数据达到什么阈值,升什么
+
+这是「看完数据怎么办」的决策对照(别提前升,按信号升):
+
+| 信号 | 扩什么 |
+|------|--------|
+| Supabase 连接数常逼近上限 / 频繁 pause | **升 Supabase Pro**(付费层连接数/pause 规则放宽) |
+| App Service CPU/内存持续高 / 冷启动频繁 | **升 App Service 标准层 + 多实例 + 自动扩缩** |
+| 一旦上多实例 | **必须加 Redis**:① WebSocket 私信跨实例广播(否则跨实例消息丢) ② 顺手做缓存 |
+| 请求数大 / DB 压力高 | **加热点读缓存**(课程目录/新闻/feed)+ **全局限流**(公开读端点) |
+| 安全:异常请求/注入尝试多 | 收紧 CORS、加全局限流、补日志脱敏 |
+
+> 1000 人量级大概率只会先碰到 Supabase pause 这一项;其余是「量再涨一档」才需要。
+
+## 6. 安全观测(上线前补)
+
+**已有**:HTTPS、参数化 SQL(asyncpg `$N` 防注入)、后端 sanitize + 前端 textContent(XSS)、JWT+refresh、部分速率限制、密钥在 Azure app settings / GitHub secrets。
+
+**上线前补**(✅=代码 done 待部署 / ⬜=待办/配置):
+- ✅ 依赖漏洞扫描 — Dependabot 已配(`.github/dependabot.yml`,pip + github-actions 周扫);`pip-audit` 可选加 CI
+- ⬜ CORS 收紧到实际域名 — 代码已是 env 白名单(非 `*`),仅需 Azure app settings 把 `CORS_ORIGINS` 配成生产域名
+- ✅ 全局限流(公开读端点)— `RATE_LIMIT_PER_MIN` 中间件就绪,**默认关**;Azure 调好阈值后开(见下)
+- ✅ 日志脱敏 + 异常兜底 — 全局 `exception_handler` 返回通用 500、`/api/health` 不再把 asyncpg 异常(含 DB host)回传客户端;现有日志本就无 token/密码明文
+- ✅ 安全事件结构化日志 — `security_audit` 中间件记录所有 401/403/429/5xx(`method/path/ip`)→ 开 App Insights 后可直接聚合攻击模式
+- ⬜ 密钥轮换流程
+- ⬜ UGC 内容审核机制(社区/课评/失物/私信——人盯 + 关键词 + 举报)
+
+> 代码侧安全加固(审计日志 / 异常兜底 / health 脱敏 / IP 限流 / Dependabot)已落 main.py + config.py + .github/dependabot.yml,静态全绿;**需重新部署 Azure 才生效**。
+
+## 7. 1000 人量级**不需要**的东西
+
+- **Grafana / Prometheus** —— 给多服务集群用的,单实例 + 几百并发纯属增运维负担。各平台原生面板够。
+- **K8s / 服务网格监控** —— 同上,用不上。
+- **付费 APM(Datadog/New Relic)** —— Azure App Insights 免费层够用。
+- **统一聚合面板** —— 等量大、多实例时再考虑 Grafana 聚合 Azure+Supabase+自定义指标。
+
+## 8. 下一步:收敛成 3 件事
+
+1. ~~开 Application Insights~~ ✅ **已开**(2026-07-03,workspace-based + SDK 接入,AppTraces 实测落库)。剩:配 App Insights 告警(失败率/响应 P95,见第 4 节)。
+2. ~~配 2-3 个告警~~ 🔶 **App Insights 告警 deferred**（2026-07-03 定）：内测非必须——UptimeRobot（已盯 `/api/v1/courses`）覆盖「站点/DB 挂了」、Supabase 邮件覆盖 pause，这俩是最致命的且已就位；App Insights **数据**已在流（被动看够），主动告警等量大再配。可选小升级：UptimeRobot 多加 `/api/health`（今天起是真 DB 探活，DB 挂返 503）。
+3. **定期(每周)看 Supabase Dashboard** 的连接数和存储——auto-pause 是你唯一的确定性崩点。
+
+做完这 3 件,「访问量 / 流量 / 超载 / 安全」就都有地方看了。量级往上一档(数千 DAU / 多实例)时,再回到第 5 节按信号扩容。

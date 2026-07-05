@@ -21,6 +21,7 @@ Page({
     content: "",
     displayName: getTexts("compose").defaultDisplayName,
     imageTempPath: "",
+    isAnonymous: false,
     loading: false,
     locale: getLocale(),
     text: getTexts("compose"),
@@ -98,6 +99,10 @@ Page({
     this.setData({ imageTempPath: "" });
   },
 
+  toggleAnonymous(event) {
+    this.setData({ isAnonymous: event.detail.value });
+  },
+
   submitPost() {
     if (this.data.loading) {
       return;
@@ -123,6 +128,7 @@ Page({
         data: {
           category: this.data.category,
           content,
+          is_anonymous: this.data.isAnonymous,
           title,
           image_url: imageUrl,
         },

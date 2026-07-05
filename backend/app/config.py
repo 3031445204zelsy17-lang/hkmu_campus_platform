@@ -12,6 +12,10 @@ DATABASE_URL = os.getenv("DATABASE_URL", "")
 DB_POOL_MIN = int(os.getenv("DB_POOL_MIN", "2"))
 DB_POOL_MAX = int(os.getenv("DB_POOL_MAX", "10"))
 
+# Global per-IP API rate limit (requests/min). 0 = disabled (default) — enable in
+# production as defense-in-depth against scraping / blunt abuse once tuned.
+RATE_LIMIT_PER_MIN = int(os.getenv("RATE_LIMIT_PER_MIN", "0"))
+
 API_PREFIX = "/api/v1"
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 
