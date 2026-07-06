@@ -131,7 +131,8 @@ Page({
   _searchKeyword: "",
   _searchTimer: null,
   _courseCatalogue: null,        // /courses/catalogue/programmes (全校 ~107 专业 browse 目录)
-  _catalogueCoursesCache: {},    // programme_code -> /courses/catalogue 课程分组
+  _catalogueCoursesCache: {},    // programme_code -> /courses/catalogue 课程分组（失败也写入 _failed:true 负缓存，防 _emit 死循环）
+  _catalogueInflight: {},        // programme_code -> 进行中的 promise（去重并发请求）
   _catalogueCollapsed: {},       // bucket key -> false(已展开) 巨型专业折叠态
   _pickerList: [],               // _emit 算出的扁平 picker 项（onProgrammeChange 按 idx 取）
 
@@ -285,16 +286,37 @@ Page({
     }
   },
 
-  // 拉某专业的官方课程目录（带会话级缓存）
+  // 拉某专业的官方课程目录（会话级缓存 + in-flight 去重 + 失败负缓存，
+  // 防 _emit 缓存未命中→重拉→失败→re-emit 的死循环）
   _loadCatalogueCourses(code) {
     if (!code) return Promise.resolve(null);
-    if (this._catalogueCoursesCache[code]) {
+    if (Object.prototype.hasOwnProperty.call(this._catalogueCoursesCache, code)) {
       return Promise.resolve(this._catalogueCoursesCache[code]);
     }
+    if (this._catalogueInflight[code]) {
+      return this._catalogueInflight[code];
+    }
     const path = `/courses/catalogue?programme_code=${encodeURIComponent(code)}`;
-    return request({ path, auth: false })
-      .then((data) => { this._catalogueCoursesCache[code] = data; return data; })
-      .catch(() => null);
+    const p = request({ path, auth: false })
+      .then((data) => {
+        this._catalogueCoursesCache[code] = data;
+        return data;
+      })
+      .catch((err) => {
+        // 负缓存：失败也写入（_failed 标记），UI 显加载失败、不再重拉
+        this._catalogueCoursesCache[code] = {
+          buckets: [],
+          _failed: true,
+          _error: err && err.message,
+        };
+        return this._catalogueCoursesCache[code];
+      })
+      .then((res) => {
+        this._catalogueInflight[code] = null;
+        return res;
+      });
+    this._catalogueInflight[code] = p;
+    return p;
   },
 
   // 目录课程 → 桶视图（巨型桶默认折叠显前 10）
@@ -424,6 +446,7 @@ Page({
       catalogueTotal: 0,
       catalogueBuckets: [],
       catalogueLoading: false,
+      catalogueLoadError: "",
       percent: 0,
       creditsSummary: "",
       categoriesView: [],
@@ -446,7 +469,12 @@ Page({
       view.viewMode = "catalogue";
       view.catalogueDisclaimer = text.catalogueDisclaimer;
       const cached = this._catalogueCoursesCache[entry.code];
-      if (cached) {
+      if (cached && cached._failed) {
+        // 负缓存命中：显加载失败，不再重拉（避免死循环）
+        view.catalogueProgrammeName = view.programmeName;
+        view.catalogueSchool = view.programmeSchool;
+        view.catalogueLoadError = text.catalogueLoadFail;
+      } else if (cached) {
         view.catalogueProgrammeName = cached.programme_name || view.programmeName;
         view.catalogueSchool = cached.school || view.programmeSchool;
         view.catalogueBuckets = this._buildCatalogueBuckets(cached, text);

@@ -60,6 +60,10 @@
       <view class="panel-copy">{{text.loading}}</view>
     </view>
 
+    <view wx:elif="{{catalogueLoadError}}" class="web-panel">
+      <view class="panel-copy">{{catalogueLoadError}}</view>
+    </view>
+
     <block wx:else>
       <view class="web-panel catalogue-stats">
         <view class="cat-stat">
