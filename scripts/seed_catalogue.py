@@ -68,6 +68,8 @@ _BUCKET_RULES = [
     ("core", "core", 50),
     ("concentration", "concentration", 60),
     ("major", "concentration", 60),
+    ("specialisation", "concentration", 60),
+    ("specialization", "concentration", 60),
     ("option", "elective", 70),
     ("outside discipline", "elective", 70),
     ("elective", "elective", 70),
@@ -97,11 +99,13 @@ def clean_name(raw_name: str, code_token: str) -> str:
     """Strip leaked PDF artifacts; fall back to the code when unrecoverable."""
     name = raw_name
     name = re.sub(r"^\d{1,2}\s+", "", name)  # stray leading digit ('3 ')
+    name = re.sub(r"\s*\d+\s+.+?\s+\d+\s+out of.*$", "", name)  # '3 Technology 1 out of …' (PDF pagination leak; .+? tolerates mid-word splits like 'Techno logy')
     name = re.sub(r"\s*\d*\s*\d-credit-unit system.*$", "", name)
     name = re.sub(r"\s*\d*CRU_[A-Z_]+_V\d+ Page \d+ of.*$", "", name)
     name = re.sub(r"\s*\d{4}\s+(Autumn|Spring|Summer)\s+\d+\..*$", "", name)
     name = re.sub(r"\s+", " ", name).strip()
-    if not name or len(name) > 200 or re.match(r"^[A-Z]{2,4}\s+[A-Z]\d", name):
+    # Unrecoverable / code-shaped name → show the authoritative course code.
+    if not name or len(name) > 200 or re.match(r"^[A-Z]{2,4}\s+[A-Z0-9]{3,}", name):
         return code_token
     return name
 
