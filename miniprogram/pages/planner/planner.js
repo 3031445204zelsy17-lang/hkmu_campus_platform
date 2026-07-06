@@ -130,6 +130,10 @@ Page({
   _activeTab: "overview",   // "overview" | "courses"
   _searchKeyword: "",
   _searchTimer: null,
+  _courseCatalogue: null,        // /courses/catalogue/programmes (全校 ~107 专业 browse 目录)
+  _catalogueCoursesCache: {},    // programme_code -> /courses/catalogue 课程分组
+  _catalogueCollapsed: {},       // bucket key -> false(已展开) 巨型专业折叠态
+  _pickerList: [],               // _emit 算出的扁平 picker 项（onProgrammeChange 按 idx 取）
 
   // ── 生命周期 ──────────────────────────────────────────────────────────
 
@@ -161,7 +165,7 @@ Page({
   // ── 异步数据：只更新缓存，再 _emit ────────────────────────────────────
 
   _refresh() {
-    const catDone = this._catalogue
+    const planningP = this._catalogue
       ? Promise.resolve()
       : request({ path: "/courses/programmes", auth: false })
           .then((data) => {
@@ -174,7 +178,14 @@ Page({
             this._loadError = error.message;
           });
 
-    return catDone.then(() => {
+    // browse 目录（全校专业）非关键：失败时 picker 回退到 planning 3 专业
+    const browseP = this._courseCatalogue
+      ? Promise.resolve()
+      : request({ path: "/courses/catalogue/programmes", auth: false })
+          .then((data) => { this._courseCatalogue = data; })
+          .catch(() => {});
+
+    return Promise.all([planningP, browseP]).then(() => {
       this._emit();
       // 暖路径：本会话已解析过 user → 跳过 bootstrapSession（省 /users/me 一跳），
       // 直接刷 status。request 层遇 401 会自动刷新 access token；若最终失败则
@@ -255,16 +266,67 @@ Page({
 
   onProgrammeChange(event) {
     const idx = Number(event.detail.value);
-    const prog = this._catalogue && this._catalogue.programmes[idx];
-    this._selectedCode = prog ? prog.code : "";
-    this._emit(); // 立刻切到新专业（_emit 会因 _status.programme_code 不匹配而落到静态视图）
+    const entry = (this._pickerList || [])[idx];
+    const code = entry ? entry.code : "";
+    this._selectedCode = code;
+    this._emit(); // 立刻切到新专业
     if (!this._user) {
       return;
     }
-    // 持久化（best-effort）后按新专业重算进度
-    request({ method: "PUT", path: "/users/me", data: { programme_code: this._selectedCode }, auth: true })
-      .catch(() => {})
-      .then(() => this._loadStatus());
+    if (entry && entry.has_full_planning) {
+      // 完整规划专业：持久化（best-effort）后按新专业重算进度
+      request({ method: "PUT", path: "/users/me", data: { programme_code: code }, auth: true })
+        .catch(() => {})
+        .then(() => this._loadStatus());
+    } else {
+      // 目录专业：无 graduation-status，清旧 status（_emit 内部缓存未命中会自动拉目录并 re-emit）
+      this._status = null;
+      this._emit();
+    }
+  },
+
+  // 拉某专业的官方课程目录（带会话级缓存）
+  _loadCatalogueCourses(code) {
+    if (!code) return Promise.resolve(null);
+    if (this._catalogueCoursesCache[code]) {
+      return Promise.resolve(this._catalogueCoursesCache[code]);
+    }
+    const path = `/courses/catalogue?programme_code=${encodeURIComponent(code)}`;
+    return request({ path, auth: false })
+      .then((data) => { this._catalogueCoursesCache[code] = data; return data; })
+      .catch(() => null);
+  },
+
+  // 目录课程 → 桶视图（巨型桶默认折叠显前 10）
+  _buildCatalogueBuckets(data, text) {
+    const collapsed = this._catalogueCollapsed || {};
+    return (data.buckets || []).map((b) => {
+      const labelKey = `bucket_${b.key}`;
+      const label = text[labelKey] || b.key.replace(/-/g, " ");
+      const all = (b.courses || []).map((c) => ({
+        code: c.course_code,
+        name: c.display_name,
+        credits: c.credits,
+        system: c.code_system,
+      }));
+      const isMega = all.length > 30;
+      const isCollapsed = isMega && collapsed[b.key] !== false;
+      return {
+        key: b.key,
+        label,
+        total: all.length,
+        courses: isCollapsed ? all.slice(0, 10) : all,
+        collapsed: isCollapsed,
+        showAllLabel: fillTemplate(text.catalogueShowAll, { n: all.length }),
+      };
+    });
+  },
+
+  onToggleBucket(e) {
+    const key = e.currentTarget.dataset.bucket;
+    this._catalogueCollapsed = this._catalogueCollapsed || {};
+    this._catalogueCollapsed[key] = false; // 展开
+    this._emit();
   },
 
   goLogin() {
@@ -304,33 +366,64 @@ Page({
   _emit() {
     const locale = this._locale;
     const text = getTexts("planner", locale);
-    const catalogue = this._catalogue;
-    const programmes = catalogue ? catalogue.programmes : [];
+    const planning = this._catalogue;
+    const browse = this._courseCatalogue;
 
-    // 选中优先级：手动选 > 用户已保存 > 后端默认
-    const wanted = this._selectedCode || this._userProgrammeCode || (catalogue && catalogue.default_code) || "";
-    let idx = programmes.findIndex((p) => p.code === wanted);
-    if (idx < 0) {
-      idx = 0;
+    // 扁平 picker 列表：优先 browse 目录（全校 ~107），否则回退 planning 3 专业
+    let pickerList = [];
+    if (browse && browse.schools) {
+      for (const sch of browse.schools) {
+        for (const p of sch.programmes) {
+          const known = planning && planning.programmes.find((x) => x.code === p.programme_code);
+          const name = known ? localizeName(known.name, locale) : p.programme_name;
+          pickerList.push({
+            code: p.programme_code,
+            has_full_planning: !!p.has_full_planning,
+            school: p.school || (known && known.school) || "",
+            label: name + (p.has_full_planning ? ` (${text.catalogueTagFull})` : ` (${text.catalogueTagCatalogue})`),
+          });
+        }
+      }
+    } else if (planning) {
+      pickerList = planning.programmes.map((p) => ({
+        code: p.code,
+        has_full_planning: !p.coming_soon,
+        school: p.school || "",
+        label: localizeName(p.name, locale) + (p.coming_soon ? ` (${text.catalogueTagCatalogue})` : ` (${text.catalogueTagFull})`),
+      }));
     }
-    const prog = programmes[idx];
+    this._pickerList = pickerList;
 
-    const programmeOptions = programmes.map((p) => ({
-      code: p.code,
-      label: localizeName(p.name, locale) + (p.coming_soon ? ` (${text.comingSoonTag})` : ""),
-    }));
+    // 选中优先级：手动选 > 已保存(须完整规划专业) > 默认
+    const saved = this._userProgrammeCode;
+    const savedValid = saved && pickerList.some((p) => p.code === saved && p.has_full_planning);
+    const wanted = this._selectedCode
+      || (savedValid ? saved : "")
+      || (planning && planning.default_code)
+      || (browse && browse.default_programme_code)
+      || "";
+    let idx = pickerList.findIndex((p) => p.code === wanted);
+    if (idx < 0) idx = 0;
+    const entry = pickerList[idx];
 
     const view = {
       locale,
       text,
       loading: this._loading,
       loggedIn: !!this._user,
-      programmeOptions,
+      programmeOptions: pickerList,
       programmeIndex: idx,
-      programmeCode: prog ? prog.code : "",
-      programmeName: prog ? localizeName(prog.name, locale) : "",
-      programmeSchool: prog ? prog.school || "" : "",
-      comingSoon: prog ? !!prog.coming_soon : false,
+      programmeCode: entry ? entry.code : "",
+      programmeName: entry ? entry.label.replace(/\s*\([^)]*\)\s*$/, "") : "",
+      programmeSchool: entry ? entry.school || "" : "",
+      comingSoon: false,
+      viewMode: "planning",
+      catalogueDisclaimer: "",
+      catalogueProgrammeName: "",
+      catalogueSchool: "",
+      catalogueTotal: 0,
+      catalogueBuckets: [],
+      catalogueLoading: false,
       percent: 0,
       creditsSummary: "",
       categoriesView: [],
@@ -342,11 +435,40 @@ Page({
       coursesView: { semesters: [], empty: true },
     };
 
-    if (!prog || this._loading) {
+    if (!entry || this._loading) {
       // 首次加载 / 无目录：留给 WXML 的 loading 或空态
       this.setData(view);
       return;
     }
+
+    // ── 目录专业（非完整规划）→ 只读课程目录视图 ──
+    if (!entry.has_full_planning) {
+      view.viewMode = "catalogue";
+      view.catalogueDisclaimer = text.catalogueDisclaimer;
+      const cached = this._catalogueCoursesCache[entry.code];
+      if (cached) {
+        view.catalogueProgrammeName = cached.programme_name || view.programmeName;
+        view.catalogueSchool = cached.school || view.programmeSchool;
+        view.catalogueBuckets = this._buildCatalogueBuckets(cached, text);
+        view.catalogueTotal = (cached.buckets || []).reduce(
+          (n, b) => n + (b.courses ? b.courses.length : 0), 0,
+        );
+      } else {
+        view.catalogueProgrammeName = view.programmeName;
+        view.catalogueSchool = view.programmeSchool;
+        view.catalogueLoading = true;
+        this._loadCatalogueCourses(entry.code).then(() => this._emit());
+      }
+      this.setData(view);
+      return;
+    }
+
+    // ── 完整规划专业（DSAI）→ 既有仪表盘/课程流 ──
+    const programmes = planning ? planning.programmes : [];
+    const prog = programmes.find((p) => p.code === entry.code) || programmes[0];
+    view.programmeName = prog ? localizeName(prog.name, locale) : view.programmeName;
+    view.programmeSchool = prog ? prog.school || "" : view.programmeSchool;
+    view.comingSoon = prog ? !!prog.coming_soon : false;
 
     // 仅当 status 属于当前选中专业时才用它（切专业后旧 status 自动失效）
     const status =

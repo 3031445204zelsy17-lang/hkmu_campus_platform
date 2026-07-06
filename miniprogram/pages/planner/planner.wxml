@@ -32,12 +32,13 @@
       <view class="planner-kicker">{{programmeSchool}}</view>
       <view class="planner-title">{{programmeName}}</view>
       <view class="planner-copy">
-        <block wx:if="{{loggedIn && !comingSoon}}">{{creditsSummary}}</block>
+        <block wx:if="{{viewMode==='catalogue'}}">{{text.catalogueHeroCopy}}</block>
+        <block wx:elif="{{loggedIn && !comingSoon}}">{{creditsSummary}}</block>
         <block wx:elif="{{comingSoon}}">{{text.comingSoonCopy}}</block>
         <block wx:else>{{text.heroCopy}}</block>
       </view>
     </view>
-    <view wx:if="{{loggedIn && !comingSoon}}" class="planner-score">{{percent}}%</view>
+    <view wx:if="{{loggedIn && !comingSoon && viewMode==='planning'}}" class="planner-score">{{percent}}%</view>
   </view>
 
   <!-- 总览/我的课程 切换 -->
@@ -49,6 +50,40 @@
   <!-- 加载中 -->
   <view wx:if="{{loading}}" class="web-panel">
     <view class="panel-copy">{{text.loading}}</view>
+  </view>
+
+  <!-- 课程目录（非完整规划专业：全校 ~106 专业官方课程列表） -->
+  <view wx:elif="{{viewMode==='catalogue'}}" class="planner-catalogue">
+    <view class="catalogue-disclaimer">{{catalogueDisclaimer}}</view>
+
+    <view wx:if="{{catalogueLoading}}" class="web-panel">
+      <view class="panel-copy">{{text.loading}}</view>
+    </view>
+
+    <block wx:else>
+      <view class="web-panel catalogue-stats">
+        <view class="cat-stat">
+          <text class="cat-stat-num">{{catalogueTotal}}</text>
+          <text class="cat-stat-label">{{text.totalCourses}}</text>
+        </view>
+        <view class="cat-stat">
+          <text class="cat-stat-num">{{catalogueBuckets.length}}</text>
+          <text class="cat-stat-label">{{text.catalogueGroupCount}}</text>
+        </view>
+      </view>
+
+      <view wx:for="{{catalogueBuckets}}" wx:for-item="b" wx:key="key" class="web-panel">
+        <view class="section-title">{{b.label}} ({{b.total}})</view>
+        <view wx:for="{{b.courses}}" wx:for-item="c" wx:key="code" class="course-row catalogue-row">
+          <view class="course-main">
+            <view class="course-code">{{c.code}}</view>
+            <view class="course-name">{{c.name}} · {{c.credits}}cr</view>
+          </view>
+          <view class="mini-pill gray">{{c.system}}</view>
+        </view>
+        <view wx:if="{{b.collapsed}}" class="catalogue-showall" data-bucket="{{b.key}}" bindtap="onToggleBucket">{{b.showAllLabel}}</view>
+      </view>
+    </block>
   </view>
 
   <!-- 敬请期待（占位专业） -->

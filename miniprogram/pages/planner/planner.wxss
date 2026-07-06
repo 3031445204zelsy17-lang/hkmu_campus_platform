@@ -192,3 +192,47 @@
   background: var(--cat-amber);
   color: #ffffff;
 }
+
+/* 课程目录（非完整规划专业） */
+.catalogue-disclaimer {
+  margin: 0 0 24rpx;
+  padding: 20rpx 24rpx;
+  background: var(--segmented-bg);
+  border-left: 6rpx solid var(--cat-amber);
+  border-radius: var(--radius-entry);
+  font-size: var(--fs-link);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+.catalogue-stats {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+}
+.cat-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.cat-stat-num {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.cat-stat-label {
+  margin-top: 4rpx;
+  font-size: var(--fs-link);
+  color: var(--text-secondary);
+}
+.mini-pill.gray {
+  background: var(--segmented-bg);
+  color: var(--text-secondary);
+}
+.catalogue-showall {
+  margin-top: 16rpx;
+  padding: 12rpx 0;
+  font-size: var(--fs-link);
+  color: var(--accent-blue);
+  text-align: left;
+}
