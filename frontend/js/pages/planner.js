@@ -22,6 +22,7 @@ let _CATALOGUE = { schools: [] }; // /courses/catalogue/programmes payload
 let _CATALOGUE_COURSES = {}; // cache: programme_code -> CatalogueCoursesResponse
 let _catalogueOnly = false; // true when the selected programme has no planning data
 let _programmeQuery = ""; // programme picker search query (web)
+let _programmeSearchOpen = false; // programme picker dropdown open (web)
 
 // ── Programmes (fetched from /courses/programmes; backend programmes.py is the single source of truth) ─
 function _adaptProgramme(p) {
@@ -505,31 +506,80 @@ function _filteredProgrammeGroups(query) {
   return groups;
 }
 
-/** Programme picker — search box + live-filtered list grouped by school. */
+/** Display name of the currently selected programme (planning or catalogue). */
+function _currentProgrammeName(lang) {
+  if (_programme) return programmeName(_programme, lang);
+  if (_CATALOGUE.schools) {
+    for (const s of _CATALOGUE.schools) {
+      for (const p of s.programmes) {
+        if (p.programme_code === _programmeCode) return p.programme_name;
+      }
+    }
+  }
+  return _programmeCode || "";
+}
+
+/** Programme picker — compact pill (collapsed) → search dropdown (on click).
+ *  Collapsed by default so the hero stays clean; the list only appears on demand. */
 function _renderProgrammeSelector() {
   const lang = localStorage.getItem("hkmu_lang") || "en";
   const tagFull = ` (${t("planner.catalogue.tag_full")})`;
   const tagCat = ` (${t("planner.catalogue.tag_catalogue")})`;
 
   const wrap = document.createElement("div");
-  wrap.className = "flex flex-col items-center w-full";
+  wrap.className = "relative w-full max-w-md mx-auto";
 
+  // ── Trigger pill (always visible, compact) ──
+  const trigger = document.createElement("button");
+  trigger.type = "button";
+  trigger.className = "group w-full flex items-center justify-between gap-2 bg-white/15 hover:bg-white/25 text-white border border-white/25 rounded-full pl-5 pr-4 py-2 text-sm transition-colors backdrop-blur-sm";
+  const tLabel = document.createElement("span");
+  tLabel.className = "truncate text-left font-medium";
+  tLabel.textContent = _currentProgrammeName(lang);
+  trigger.appendChild(tLabel);
+  trigger.appendChild(LucideIcon("chevron-down",
+    `w-4 h-4 shrink-0 transition-transform ${_programmeSearchOpen ? "rotate-180" : ""}`));
+  trigger.addEventListener("click", () => {
+    _programmeSearchOpen = !_programmeSearchOpen;
+    if (_programmeSearchOpen) _programmeQuery = "";
+    _render();
+  });
+  wrap.appendChild(trigger);
+
+  if (!_programmeSearchOpen) return wrap;
+
+  // ── Open: click-capture overlay (outside click closes) ──
+  const overlay = document.createElement("div");
+  overlay.className = "fixed inset-0 z-40";
+  overlay.addEventListener("click", () => {
+    _programmeSearchOpen = false;
+    _render();
+  });
+  wrap.appendChild(overlay);
+
+  // ── Dropdown panel (absolute, doesn't push hero layout) ──
+  const panel = document.createElement("div");
+  panel.className = "absolute z-50 left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 overflow-hidden";
+
+  const inputWrap = document.createElement("div");
+  inputWrap.className = "sticky top-0 bg-white border-b border-gray-100";
   const input = document.createElement("input");
   input.type = "text";
   input.value = _programmeQuery;
   input.placeholder = t("planner.catalogue.search_placeholder");
-  input.className = "w-full max-w-md px-4 py-2 rounded-lg bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white/60";
+  input.className = "w-full px-4 py-3 text-sm text-gray-800 focus:outline-none";
   input.setAttribute("autocomplete", "off");
+  inputWrap.appendChild(input);
+  panel.appendChild(inputWrap);
 
   const results = document.createElement("div");
-  results.className = "mt-2 w-full max-w-md bg-white rounded-lg shadow-lg max-h-80 overflow-y-auto text-left";
-
+  results.className = "max-h-72 overflow-y-auto text-left";
   const renderResults = () => {
     results.innerHTML = "";
     const groups = _filteredProgrammeGroups(_programmeQuery);
     if (!groups.length) {
       const empty = document.createElement("div");
-      empty.className = "px-3 py-4 text-sm text-gray-400 text-center";
+      empty.className = "px-4 py-6 text-sm text-gray-400 text-center";
       empty.textContent = t("planner.catalogue.search_empty");
       results.appendChild(empty);
       return;
@@ -537,7 +587,7 @@ function _renderProgrammeSelector() {
     for (const g of groups) {
       if (g.school) {
         const lbl = document.createElement("div");
-        lbl.className = "px-3 py-1.5 text-xs font-semibold text-gray-500 bg-gray-50 sticky top-0";
+        lbl.className = "px-4 py-1.5 text-xs font-semibold text-gray-500 bg-gray-50";
         lbl.textContent = `${g.school} (${g.programmes.length})`;
         results.appendChild(lbl);
       }
@@ -545,7 +595,7 @@ function _renderProgrammeSelector() {
         const known = _PROGRAMMES[p.programme_code];
         const name = known ? programmeName(known, lang) : p.programme_name;
         const row = document.createElement("div");
-        row.className = "flex items-center justify-between gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 cursor-pointer border-b border-gray-50";
+        row.className = "flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 cursor-pointer";
         if (p.programme_code === _programmeCode) {
           row.classList.add("bg-blue-50", "text-blue-700", "font-semibold");
         }
@@ -558,6 +608,7 @@ function _renderProgrammeSelector() {
         codeSpan.textContent = p.programme_code;
         row.appendChild(codeSpan);
         row.addEventListener("click", () => {
+          _programmeSearchOpen = false;
           _programmeQuery = "";
           _setProgramme(p.programme_code);
         });
@@ -565,15 +616,15 @@ function _renderProgrammeSelector() {
       }
     }
   };
-
   input.addEventListener("input", () => {
     _programmeQuery = input.value;
     renderResults(); // rebuild results only — input keeps focus
   });
-
-  wrap.appendChild(input);
   renderResults();
-  wrap.appendChild(results);
+  panel.appendChild(results);
+  wrap.appendChild(panel);
+
+  setTimeout(() => input.focus(), 0); // autofocus after DOM insert
   return wrap;
 }
 
