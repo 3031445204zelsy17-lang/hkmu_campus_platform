@@ -236,3 +236,58 @@
   color: var(--accent-blue);
   text-align: left;
 }
+
+/* 专业搜索选择器（替代滚轮 picker） */
+.programme-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16rpx 24rpx;
+  background: var(--surface);
+  border: 1rpx solid var(--divider);
+  border-radius: var(--radius-entry);
+  font-size: var(--fs-body);
+  color: var(--text-primary);
+}
+.programme-search-results {
+  height: 520rpx;
+  margin-top: 16rpx;
+  border: 1rpx solid var(--divider);
+  border-radius: var(--radius-entry);
+  background: var(--surface);
+}
+.programme-search-group {
+  position: sticky;
+  top: 0;
+  padding: 12rpx 24rpx;
+  background: var(--segmented-bg);
+  color: var(--text-secondary);
+  font-size: var(--fs-link);
+  font-weight: 600;
+}
+.programme-search-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 18rpx 24rpx;
+  border-top: 1rpx solid var(--divider);
+}
+.programme-search-row.ps-selected {
+  background: var(--segmented-bg);
+}
+.ps-name {
+  flex: 1;
+  color: var(--text-primary);
+  font-size: var(--fs-feed-body);
+}
+.ps-code {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: var(--fs-link);
+}
+.programme-search-empty {
+  padding: 36rpx;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: var(--fs-link);
+}

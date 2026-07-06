@@ -9,21 +9,23 @@
     </view>
   </view>
 
-  <!-- 专业选择 -->
+  <!-- 专业选择（实时搜索） -->
   <view class="web-panel planner-selector">
-    <view class="field-label">{{text.selectProgramme}}</view>
-    <picker
-      mode="selector"
-      range="{{programmeOptions}}"
-      range-key="label"
-      value="{{programmeIndex}}"
-      bindchange="onProgrammeChange"
-    >
-      <view class="selector-display">
-        <text class="selector-text">{{programmeOptions[programmeIndex].label}}</text>
-        <text class="selector-caret">▾</text>
-      </view>
-    </picker>
+    <input class="programme-search-input" value="{{programmeQuery}}"
+           placeholder="{{text.programmeSearchPlaceholder}}"
+           bindinput="onProgrammeSearchInput" confirm-type="search" />
+    <scroll-view scroll-y class="programme-search-results">
+      <view wx:if="{{programmeSearchEmpty}}" class="programme-search-empty">{{text.programmeSearchEmpty}}</view>
+      <block wx:for="{{programmeSearchResults}}" wx:for-item="grp" wx:key="school">
+        <view wx:if="{{grp.school}}" class="programme-search-group">{{grp.school}} ({{grp.programmes.length}})</view>
+        <view wx:for="{{grp.programmes}}" wx:for-item="p" wx:key="code"
+              class="programme-search-row {{p.selected?'ps-selected':''}}"
+              data-code="{{p.code}}" bindtap="onSelectProgramme">
+          <text class="ps-name">{{p.label}}</text>
+          <text class="ps-code">{{p.code}}</text>
+        </view>
+      </block>
+    </scroll-view>
   </view>
 
   <!-- Hero：专业名 + 总进度 -->

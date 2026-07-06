@@ -134,7 +134,9 @@ Page({
   _catalogueCoursesCache: {},    // programme_code -> /courses/catalogue 课程分组（失败也写入 _failed:true 负缓存，防 _emit 死循环）
   _catalogueInflight: {},        // programme_code -> 进行中的 promise（去重并发请求）
   _catalogueCollapsed: {},       // bucket key -> false(已展开) 巨型专业折叠态
-  _pickerList: [],               // _emit 算出的扁平 picker 项（onProgrammeChange 按 idx 取）
+  _pickerList: [],               // _emit 算出的扁平 picker 项（onSelectProgramme 按 code 取）
+  _programmeQuery: "",           // 专业搜索词（实时过滤）
+  _programmeSearchTimer: null,   // 搜索防抖 timer
 
   // ── 生命周期 ──────────────────────────────────────────────────────────
 
@@ -265,25 +267,33 @@ Page({
 
   // ── 交互 ──────────────────────────────────────────────────────────────
 
-  onProgrammeChange(event) {
-    const idx = Number(event.detail.value);
-    const entry = (this._pickerList || [])[idx];
-    const code = entry ? entry.code : "";
-    this._selectedCode = code;
-    this._emit(); // 立刻切到新专业
-    if (!this._user) {
-      return;
-    }
-    if (entry && entry.has_full_planning) {
-      // 完整规划专业：持久化（best-effort）后按新专业重算进度
-      request({ method: "PUT", path: "/users/me", data: { programme_code: code }, auth: true })
-        .catch(() => {})
-        .then(() => this._loadStatus());
-    } else {
-      // 目录专业：无 graduation-status，清旧 status（_emit 内部缓存未命中会自动拉目录并 re-emit）
-      this._status = null;
+  onProgrammeSearchInput(e) {
+    const v = e.detail.value || "";
+    if (this._programmeSearchTimer) clearTimeout(this._programmeSearchTimer);
+    this._programmeSearchTimer = setTimeout(() => {
+      this._programmeQuery = v;
       this._emit();
+    }, 200);
+  },
+
+  onSelectProgramme(e) {
+    const code = e.currentTarget.dataset.code;
+    if (!code) return;
+    const entry = (this._pickerList || []).find((p) => p.code === code);
+    this._selectedCode = code;
+    this._programmeQuery = "";
+    if (this._user) {
+      if (entry && entry.has_full_planning) {
+        // 完整规划专业：持久化（best-effort）后按新专业重算进度
+        request({ method: "PUT", path: "/users/me", data: { programme_code: code }, auth: true })
+          .catch(() => {})
+          .then(() => this._loadStatus());
+      } else {
+        // 目录专业：清旧 status（_emit 缓存未命中会自动拉目录并 re-emit）
+        this._status = null;
+      }
     }
+    this._emit();
   },
 
   // 拉某专业的官方课程目录（会话级缓存 + in-flight 去重 + 失败负缓存，
@@ -428,6 +438,29 @@ Page({
     if (idx < 0) idx = 0;
     const entry = pickerList[idx];
 
+    // 专业搜索过滤 + 按学院分组（picker 已改为搜索列表）
+    const pq = (this._programmeQuery || "").trim().toLowerCase();
+    const searchGroups = [];
+    let programmeSearchEmpty = false;
+    if (pickerList.length) {
+      const gmap = new Map();
+      for (const p of pickerList) {
+        if (pq) {
+          const hay = `${p.label} ${p.code} ${p.school || ""}`.toLowerCase();
+          if (!hay.includes(pq)) continue;
+        }
+        if (!gmap.has(p.school)) gmap.set(p.school, []);
+        gmap.get(p.school).push({
+          code: p.code,
+          label: p.label,
+          has_full_planning: p.has_full_planning,
+          selected: !!entry && p.code === entry.code,
+        });
+      }
+      for (const [school, progs] of gmap) searchGroups.push({ school, programmes: progs });
+      programmeSearchEmpty = !!pq && searchGroups.length === 0;
+    }
+
     const view = {
       locale,
       text,
@@ -435,6 +468,9 @@ Page({
       loggedIn: !!this._user,
       programmeOptions: pickerList,
       programmeIndex: idx,
+      programmeQuery: this._programmeQuery,
+      programmeSearchResults: searchGroups,
+      programmeSearchEmpty,
       programmeCode: entry ? entry.code : "",
       programmeName: entry ? entry.label.replace(/\s*\([^)]*\)\s*$/, "") : "",
       programmeSchool: entry ? entry.school || "" : "",
