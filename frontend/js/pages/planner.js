@@ -21,6 +21,7 @@ let _authHandler = null; // auth:changed listener, cleaned up on re-render
 let _CATALOGUE = { schools: [] }; // /courses/catalogue/programmes payload
 let _CATALOGUE_COURSES = {}; // cache: programme_code -> CatalogueCoursesResponse
 let _catalogueOnly = false; // true when the selected programme has no planning data
+let _programmeQuery = ""; // programme picker search query (web)
 
 // ── Programmes (fetched from /courses/programmes; backend programmes.py is the single source of truth) ─
 function _adaptProgramme(p) {
@@ -473,60 +474,106 @@ function _renderLoginPrompt(container) {
   container.appendChild(msg);
 }
 
-/** Programme selector dropdown — returns a DOM element */
+/** Programmes matching the search query, grouped by school (empty query → all). */
+function _filteredProgrammeGroups(query) {
+  const q = (query || "").trim().toLowerCase();
+  const lang = localStorage.getItem("hkmu_lang") || "en";
+  const source = (_CATALOGUE.schools && _CATALOGUE.schools.length)
+    ? _CATALOGUE.schools.map((s) => ({ school: s.school, programmes: s.programmes }))
+    : [{
+        school: "",
+        programmes: Object.values(_PROGRAMMES).map((p) => ({
+          programme_code: p.code,
+          programme_name: programmeName(p, lang),
+          has_full_planning: !p.comingSoon,
+        })),
+      }];
+  const groups = [];
+  for (const g of source) {
+    const matches = g.programmes.filter((p) => {
+      if (!q) return true;
+      const known = _PROGRAMMES[p.programme_code];
+      const name = known ? programmeName(known, lang) : p.programme_name;
+      return (
+        name.toLowerCase().includes(q) ||
+        (p.programme_code || "").toLowerCase().includes(q) ||
+        (g.school || "").toLowerCase().includes(q)
+      );
+    });
+    if (matches.length) groups.push({ school: g.school, programmes: matches });
+  }
+  return groups;
+}
+
+/** Programme picker — search box + live-filtered list grouped by school. */
 function _renderProgrammeSelector() {
-  const wrap = document.createElement("div");
-  wrap.className = "inline-flex items-center gap-2";
-
-  const label = document.createElement("span");
-  label.className = "text-sm text-white/80";
-  label.textContent = t("planner.select_programme");
-  wrap.appendChild(label);
-
-  const select = document.createElement("select");
-  select.className = "programme-selector bg-white/20 text-white border border-white/30 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/50";
-
   const lang = localStorage.getItem("hkmu_lang") || "en";
   const tagFull = ` (${t("planner.catalogue.tag_full")})`;
   const tagCat = ` (${t("planner.catalogue.tag_catalogue")})`;
 
-  if (_CATALOGUE.schools && _CATALOGUE.schools.length) {
-    // All ~107 programmes grouped by school; tag full-planning vs catalogue-only.
-    for (const school of _CATALOGUE.schools) {
-      const group = document.createElement("optgroup");
-      group.label = school.school;
-      for (const p of school.programmes) {
-        const opt = document.createElement("option");
-        opt.value = p.programme_code;
+  const wrap = document.createElement("div");
+  wrap.className = "flex flex-col items-center w-full";
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = _programmeQuery;
+  input.placeholder = t("planner.catalogue.search_placeholder");
+  input.className = "w-full max-w-md px-4 py-2 rounded-lg bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white/60";
+  input.setAttribute("autocomplete", "off");
+
+  const results = document.createElement("div");
+  results.className = "mt-2 w-full max-w-md bg-white rounded-lg shadow-lg max-h-80 overflow-y-auto text-left";
+
+  const renderResults = () => {
+    results.innerHTML = "";
+    const groups = _filteredProgrammeGroups(_programmeQuery);
+    if (!groups.length) {
+      const empty = document.createElement("div");
+      empty.className = "px-3 py-4 text-sm text-gray-400 text-center";
+      empty.textContent = t("planner.catalogue.search_empty");
+      results.appendChild(empty);
+      return;
+    }
+    for (const g of groups) {
+      if (g.school) {
+        const lbl = document.createElement("div");
+        lbl.className = "px-3 py-1.5 text-xs font-semibold text-gray-500 bg-gray-50 sticky top-0";
+        lbl.textContent = `${g.school} (${g.programmes.length})`;
+        results.appendChild(lbl);
+      }
+      for (const p of g.programmes) {
         const known = _PROGRAMMES[p.programme_code];
         const name = known ? programmeName(known, lang) : p.programme_name;
-        opt.textContent = name + (p.has_full_planning ? tagFull : tagCat);
-        opt.selected = p.programme_code === _programmeCode;
-        group.appendChild(opt);
+        const row = document.createElement("div");
+        row.className = "flex items-center justify-between gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 cursor-pointer border-b border-gray-50";
+        if (p.programme_code === _programmeCode) {
+          row.classList.add("bg-blue-50", "text-blue-700", "font-semibold");
+        }
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "truncate";
+        nameSpan.textContent = name + (p.has_full_planning ? tagFull : tagCat);
+        row.appendChild(nameSpan);
+        const codeSpan = document.createElement("span");
+        codeSpan.className = "text-xs text-gray-400 shrink-0";
+        codeSpan.textContent = p.programme_code;
+        row.appendChild(codeSpan);
+        row.addEventListener("click", () => {
+          _programmeQuery = "";
+          _setProgramme(p.programme_code);
+        });
+        results.appendChild(row);
       }
-      select.appendChild(group);
     }
-  } else {
-    // Fallback: catalogue endpoint failed — show only the planning programmes.
-    for (const [code, prog] of Object.entries(_PROGRAMMES)) {
-      const opt = document.createElement("option");
-      opt.value = code;
-      opt.textContent = prog.name.en + (prog.comingSoon ? tagCat : tagFull);
-      opt.selected = code === _programmeCode;
-      select.appendChild(opt);
-    }
-  }
+  };
 
-  select.addEventListener("change", () => {
-    _setProgramme(select.value);
+  input.addEventListener("input", () => {
+    _programmeQuery = input.value;
+    renderResults(); // rebuild results only — input keeps focus
   });
 
-  // Style selected option text color for dark background
-  select.style.color = "#fff";
-  select.addEventListener("focus", () => { select.style.color = "#333"; });
-  select.addEventListener("blur", () => { select.style.color = "#fff"; });
-
-  wrap.appendChild(select);
+  wrap.appendChild(input);
+  renderResults();
+  wrap.appendChild(results);
   return wrap;
 }
 
