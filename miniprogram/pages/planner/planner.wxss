@@ -300,7 +300,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28rpx 32rpx 20rpx;
+  /* 留出状态栏/刘海（浮层盖住了 app-header，需自带顶部安全区） */
+  padding: calc(env(safe-area-inset-top) + 24rpx) 32rpx 20rpx;
   border-bottom: 1rpx solid var(--divider);
 }
 .ps-overlay-title {
