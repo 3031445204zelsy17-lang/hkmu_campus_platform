@@ -137,6 +137,7 @@ Page({
   _pickerList: [],               // _emit 算出的扁平 picker 项（onSelectProgramme 按 code 取）
   _programmeQuery: "",           // 专业搜索词（实时过滤）
   _programmeSearchTimer: null,   // 搜索防抖 timer
+  _programmeSearchOpen: false,   // 全屏专业搜索浮层开关（点 hero 触发，默认收起）
 
   // ── 生命周期 ──────────────────────────────────────────────────────────
 
@@ -276,12 +277,25 @@ Page({
     }, 200);
   },
 
+  onOpenProgrammeSearch() {
+    // 点 hero → 打开全屏专业搜索浮层，清空上次搜索词
+    this._programmeSearchOpen = true;
+    this._programmeQuery = "";
+    this._emit();
+  },
+
+  onCloseProgrammeSearch() {
+    this._programmeSearchOpen = false;
+    this._emit();
+  },
+
   onSelectProgramme(e) {
     const code = e.currentTarget.dataset.code;
     if (!code) return;
     const entry = (this._pickerList || []).find((p) => p.code === code);
     this._selectedCode = code;
     this._programmeQuery = "";
+    this._programmeSearchOpen = false; // 选完关浮层
     if (this._user) {
       if (entry && entry.has_full_planning) {
         // 完整规划专业：持久化（best-effort）后按新专业重算进度
@@ -412,7 +426,9 @@ Page({
             code: p.programme_code,
             has_full_planning: !!p.has_full_planning,
             school: p.school || (known && known.school) || "",
-            label: name + (p.has_full_planning ? ` (${text.catalogueTagFull})` : ` (${text.catalogueTagCatalogue})`),
+            name,
+            // 仅完整规划专业挂徽章；其余 106 个目录专业不再每行重复"课程目录"标签
+            badge: p.has_full_planning ? text.catalogueTagFull : "",
           });
         }
       }
@@ -421,7 +437,8 @@ Page({
         code: p.code,
         has_full_planning: !p.coming_soon,
         school: p.school || "",
-        label: localizeName(p.name, locale) + (p.coming_soon ? ` (${text.catalogueTagCatalogue})` : ` (${text.catalogueTagFull})`),
+        name: localizeName(p.name, locale),
+        badge: p.coming_soon ? "" : text.catalogueTagFull,
       }));
     }
     this._pickerList = pickerList;
@@ -446,14 +463,14 @@ Page({
       const gmap = new Map();
       for (const p of pickerList) {
         if (pq) {
-          const hay = `${p.label} ${p.code} ${p.school || ""}`.toLowerCase();
+          const hay = `${p.name} ${p.code} ${p.school || ""}`.toLowerCase();
           if (!hay.includes(pq)) continue;
         }
         if (!gmap.has(p.school)) gmap.set(p.school, []);
         gmap.get(p.school).push({
           code: p.code,
-          label: p.label,
-          has_full_planning: p.has_full_planning,
+          name: p.name,
+          badge: p.badge,
           selected: !!entry && p.code === entry.code,
         });
       }
@@ -471,8 +488,9 @@ Page({
       programmeQuery: this._programmeQuery,
       programmeSearchResults: searchGroups,
       programmeSearchEmpty,
+      programmeSearchOpen: this._programmeSearchOpen,
       programmeCode: entry ? entry.code : "",
-      programmeName: entry ? entry.label.replace(/\s*\([^)]*\)\s*$/, "") : "",
+      programmeName: entry ? entry.name : "",
       programmeSchool: entry ? entry.school || "" : "",
       comingSoon: false,
       viewMode: "planning",
