@@ -389,7 +389,17 @@ async def get_catalogue_courses(
             programme_code,
         )
     buckets: dict[str, CatalogueBucketOut] = {}
+    # A course can appear under several official_groups in the source PDF (e.g.
+    # "Core (Middle Level)" and "Core (Higher Level)") that collapse into the
+    # same bucket — de-dup by course_code programme-wide so each course shows
+    # once (first occurrence in bucket/group order wins). Avoids repeated cards
+    # and WeChat wx:key="code" collisions.
+    seen_codes: set[str] = set()
     for r in rows:
+        code = r["course_code"]
+        if code in seen_codes:
+            continue
+        seen_codes.add(code)
         key = r["canonical_bucket"]
         b = buckets.get(key)
         if b is None:
