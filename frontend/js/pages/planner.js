@@ -15,6 +15,12 @@ let _PROGRAMMES = {}; // from /courses/programmes (backend programmes.py = singl
 let _defaultProgrammeCode = "BSCHDSAIJ";
 let _programmesLoaded = false;
 let _authHandler = null; // auth:changed listener, cleaned up on re-render
+// Course catalogue layer (read-only official course lists for the ~106 non-DSAI
+// programmes). _CATALOGUE drives the picker; selecting a non-full-planning
+// programme sets _catalogueOnly=true and routes to the catalogue view.
+let _CATALOGUE = { schools: [] }; // /courses/catalogue/programmes payload
+let _CATALOGUE_COURSES = {}; // cache: programme_code -> CatalogueCoursesResponse
+let _catalogueOnly = false; // true when the selected programme has no planning data
 
 // ── Programmes (fetched from /courses/programmes; backend programmes.py is the single source of truth) ─
 function _adaptProgramme(p) {
@@ -45,12 +51,16 @@ function programmeName(prog, lang) {
 async function _loadProgrammes() {
   if (_programmesLoaded) return;
   try {
-    const data = await api.get("/courses/programmes");
+    const [data, cat] = await Promise.all([
+      api.get("/courses/programmes"),
+      api.get("/courses/catalogue/programmes").catch(() => null),
+    ]);
     _PROGRAMMES = {};
     for (const p of data.programmes || []) {
       _PROGRAMMES[p.code] = _adaptProgramme(p);
     }
     if (data.default_code) _defaultProgrammeCode = data.default_code;
+    if (cat && Array.isArray(cat.schools)) _CATALOGUE = { schools: cat.schools };
   } catch (err) {
     // keep _PROGRAMMES empty; _loadData surfaces a load error downstream
   }
@@ -205,14 +215,26 @@ function _getRecommendations(maxResults = 3) {
   return recs;
 }
 
-/** Change the active programme */
+/** Change the active programme (full-planning or catalogue-only). */
 function _setProgramme(code) {
-  if (!_PROGRAMMES[code]) return;
+  const knownFull = !!_PROGRAMMES[code];
+  const knownCat = _CATALOGUE.schools.some((s) =>
+    s.programmes.some((p) => p.programme_code === code));
+  if (!knownFull && !knownCat) return;
   _programmeCode = code;
-  _programme = _PROGRAMMES[code];
   localStorage.setItem("hkmu_programme", code);
-  if (isLoggedIn()) {
-    api.put("/users/me", { programme_code: code }).catch(() => {});
+  if (knownFull) {
+    _programme = _PROGRAMMES[code];
+    _catalogueOnly = false;
+    _view = "overview";
+    // Persist only full-planning preferences to the backend profile.
+    if (isLoggedIn()) {
+      api.put("/users/me", { programme_code: code }).catch(() => {});
+    }
+  } else {
+    _programme = null;
+    _catalogueOnly = true;
+    _view = "catalogue";
   }
   _render();
 }
@@ -464,14 +486,35 @@ function _renderProgrammeSelector() {
   const select = document.createElement("select");
   select.className = "programme-selector bg-white/20 text-white border border-white/30 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/50";
 
-  for (const [code, prog] of Object.entries(_PROGRAMMES)) {
-    const opt = document.createElement("option");
-    opt.value = code;
-    // Use English name for the dropdown (option elements don't support rich content)
-    opt.textContent = prog.name.en;
-    opt.selected = code === _programmeCode;
-    if (prog.comingSoon) opt.textContent += " (Coming Soon)";
-    select.appendChild(opt);
+  const lang = localStorage.getItem("hkmu_lang") || "en";
+  const tagFull = ` (${t("planner.catalogue.tag_full")})`;
+  const tagCat = ` (${t("planner.catalogue.tag_catalogue")})`;
+
+  if (_CATALOGUE.schools && _CATALOGUE.schools.length) {
+    // All ~107 programmes grouped by school; tag full-planning vs catalogue-only.
+    for (const school of _CATALOGUE.schools) {
+      const group = document.createElement("optgroup");
+      group.label = school.school;
+      for (const p of school.programmes) {
+        const opt = document.createElement("option");
+        opt.value = p.programme_code;
+        const known = _PROGRAMMES[p.programme_code];
+        const name = known ? programmeName(known, lang) : p.programme_name;
+        opt.textContent = name + (p.has_full_planning ? tagFull : tagCat);
+        opt.selected = p.programme_code === _programmeCode;
+        group.appendChild(opt);
+      }
+      select.appendChild(group);
+    }
+  } else {
+    // Fallback: catalogue endpoint failed — show only the planning programmes.
+    for (const [code, prog] of Object.entries(_PROGRAMMES)) {
+      const opt = document.createElement("option");
+      opt.value = code;
+      opt.textContent = prog.name.en + (prog.comingSoon ? tagCat : tagFull);
+      opt.selected = code === _programmeCode;
+      select.appendChild(opt);
+    }
   }
 
   select.addEventListener("change", () => {
@@ -1312,12 +1355,20 @@ export async function renderPlanner() {
 }
 
 function _render() {
-  if (!_programme) return; // programmes not loaded yet (or fetch failed); skeleton/errorState shown by _loadData
+  if (!_programme && !_catalogueOnly) return; // not loaded yet; skeleton/errorState shown by _loadData
   const content = document.getElementById("planner-content");
   if (!content) return;
   content.innerHTML = "";
 
+  // Catalogue-only programmes have no progress/browse/plan tabs.
+  const tabBar = document.querySelector(".planner-tabs-wrap");
+  if (tabBar) tabBar.style.display = _catalogueOnly ? "none" : "";
+  if (_catalogueOnly) _view = "catalogue";
+
   switch (_view) {
+    case "catalogue":
+      _renderCatalogue(content);
+      break;
     case "overview":
       _renderOverview(content);
       break;
@@ -1335,12 +1386,155 @@ function _render() {
   _refreshIcons();
 }
 
+// ── Catalogue view (read-only official course list for non-DSAI programmes) ──
+
+/** Read-only card for a catalogue course. Self-contained — does NOT reuse
+ *  CourseCard, which depends on _programme.categories and wires a click
+ *  handler that would try to update progress on a planning-table id. */
+function _catalogueCourseCard(c) {
+  const card = document.createElement("div");
+  card.className = "course-card";
+  const header = document.createElement("div");
+  header.className = "flex justify-between items-start mb-3";
+  const code = document.createElement("span");
+  code.className = "text-sm font-bold";
+  code.style.color = "#0066CC";
+  code.textContent = c.course_code;
+  header.appendChild(code);
+  const sys = document.createElement("span");
+  sys.className = "text-xs text-gray-400";
+  sys.textContent = c.code_system;
+  header.appendChild(sys);
+  card.appendChild(header);
+  const name = document.createElement("h3");
+  name.className = "font-semibold mb-2";
+  name.textContent = c.display_name;
+  card.appendChild(name);
+  const credits = document.createElement("span");
+  credits.className = "text-xs text-gray-500";
+  credits.textContent = `${c.credits} cr`;
+  card.appendChild(credits);
+  return card;
+}
+
+function _catalogueBucketLabel(key) {
+  const fullKey = `planner.catalogue.bucket_${key}`;
+  const lbl = t(fullKey);
+  return lbl === fullKey ? key.replace(/-/g, " ") : lbl;
+}
+
+async function _renderCatalogue(container) {
+  // Skeleton while fetching (first visit only; cached afterwards).
+  const sk = document.createElement("div");
+  sk.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4";
+  sk.innerHTML = skeletonCard(6);
+  container.appendChild(sk);
+
+  let data = _CATALOGUE_COURSES[_programmeCode];
+  if (!data) {
+    try {
+      data = await api.get(`/courses/catalogue?programme_code=${encodeURIComponent(_programmeCode)}`);
+      _CATALOGUE_COURSES[_programmeCode] = data;
+    } catch (err) {
+      container.innerHTML = "";
+      container.appendChild(errorState(t("planner.catalogue.load_failed"), err?.message || ""));
+      return;
+    }
+  }
+  container.innerHTML = "";
+  track("catalogue_viewed", { programme: _programmeCode });
+
+  // Hero
+  const hero = document.createElement("section");
+  hero.className = "animated-gradient relative overflow-hidden rounded-2xl mb-8";
+  const inner = document.createElement("div");
+  inner.className = "max-w-3xl mx-auto text-center py-14 px-4 relative z-10";
+  const selectorWrap = document.createElement("div");
+  selectorWrap.className = "flex justify-center mb-6";
+  selectorWrap.appendChild(_renderProgrammeSelector());
+  inner.appendChild(selectorWrap);
+  const h1 = document.createElement("h1");
+  h1.className = "text-3xl sm:text-4xl font-bold text-white mb-2";
+  h1.textContent = data.programme_name || _programmeCode;
+  inner.appendChild(h1);
+  const schoolLine = document.createElement("p");
+  schoolLine.className = "text-white/85 mb-6";
+  schoolLine.textContent = data.school;
+  inner.appendChild(schoolLine);
+  const back = document.createElement("button");
+  back.className = "bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-opacity";
+  back.textContent = t("planner.catalogue.back_to_planning");
+  back.addEventListener("click", () => _setProgramme(_defaultProgrammeCode));
+  inner.appendChild(back);
+  hero.appendChild(inner);
+  container.appendChild(hero);
+
+  // Disclaimer
+  const disc = document.createElement("div");
+  disc.className = "bg-amber-50 border-l-4 border-amber-400 text-amber-800 p-4 rounded-xl mb-6 text-sm";
+  disc.textContent = t("planner.catalogue.disclaimer");
+  container.appendChild(disc);
+
+  // Stats
+  const total = data.buckets.reduce((n, b) => n + b.courses.length, 0);
+  const stats = document.createElement("div");
+  stats.className = "grid grid-cols-2 gap-6 mb-8";
+  stats.appendChild(StatCard(t("planner.total_courses"), total, "text-blue-600", "book-open"));
+  stats.appendChild(StatCard(t("planner.catalogue.group_count"), data.buckets.length, "text-purple-600", "layers"));
+  container.appendChild(stats);
+
+  // Buckets (mega-programmes collapse: first 10 + "show all")
+  for (const b of data.buckets) {
+    const section = document.createElement("div");
+    section.className = "mb-8";
+    const title = document.createElement("h3");
+    title.className = "text-xl font-bold mb-3 flex items-center gap-2";
+    title.appendChild(LucideIcon("folder", "w-5 h-5 text-gray-400"));
+    const titleText = document.createElement("span");
+    titleText.textContent = `${_catalogueBucketLabel(b.key)} (${b.courses.length})`;
+    title.appendChild(titleText);
+    section.appendChild(title);
+
+    const grid = document.createElement("div");
+    grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4";
+    const renderAll = () => {
+      grid.innerHTML = "";
+      for (const c of b.courses) grid.appendChild(_catalogueCourseCard(c));
+      _refreshIcons();
+    };
+    if (b.courses.length > 30) {
+      for (const c of b.courses.slice(0, 10)) grid.appendChild(_catalogueCourseCard(c));
+      const moreBtn = document.createElement("button");
+      moreBtn.className = "md:col-span-2 lg:col-span-3 text-left text-blue-600 font-medium py-2 hover:underline";
+      moreBtn.textContent = t("planner.catalogue.show_all", { n: b.courses.length });
+      moreBtn.addEventListener("click", renderAll);
+      grid.appendChild(moreBtn);
+    } else {
+      for (const c of b.courses) grid.appendChild(_catalogueCourseCard(c));
+    }
+    section.appendChild(grid);
+    container.appendChild(section);
+  }
+  _refreshIcons();
+}
+
 // ── Data ──────────────────────────────────────────────────────────────────────
 
 async function _loadData() {
   await _loadProgrammes();
   if (!_programme) {
-    _programme = _PROGRAMMES[_programmeCode] || _PROGRAMMES[_defaultProgrammeCode] || null;
+    const inCat = _CATALOGUE.schools.some((s) =>
+      s.programmes.some((p) => p.programme_code === _programmeCode));
+    if (_PROGRAMMES[_programmeCode]) {
+      _programme = _PROGRAMMES[_programmeCode];
+      _catalogueOnly = false;
+    } else if (inCat) {
+      _programme = null;
+      _catalogueOnly = true;
+    } else {
+      _programme = _PROGRAMMES[_defaultProgrammeCode] || null;
+      _catalogueOnly = false;
+    }
   }
   try {
     const data = await api.get("/courses?page_size=50");
@@ -1358,6 +1552,7 @@ async function _loadData() {
         if (user.programme_code && _PROGRAMMES[user.programme_code]) {
           _programmeCode = user.programme_code;
           _programme = _PROGRAMMES[_programmeCode];
+          _catalogueOnly = false;
           localStorage.setItem("hkmu_programme", _programmeCode);
         }
       } catch {
