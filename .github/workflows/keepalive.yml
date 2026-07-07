@@ -1,8 +1,22 @@
 name: Keepalive
 
-# Keeps the Supabase database warm so the free-tier project is not auto-paused
-# after ~7 days of inactivity. Pings a DB-backed endpoint every 10 minutes.
-# The offset (3,13,...) avoids the :00/:30 fleet pile-up.
+# 每 10 分钟从 GitHub Actions（Azure 外部）ping 生产 DB-backed 端点。双职责：
+#   1. 保活 Supabase（防免费层 ~7 天无活动 auto-pause）
+#   2. 生产可用性哨兵 —— 失败时用飞书【自建应用 Zelsy's key】主动推告警到群。
+# 走自建应用路线：app_id/secret 换 tenant_access_token → 调 im/v1/messages。
+#   原因：HKMU 飞书禁了群"自定义机器人 webhook"；自建应用机器人不受影响、更强。
+#   实测教训 2026-07-07：订阅 disabled 后 keepalive 连续失败 3 次、检测正确，
+#   但 GitHub 默认邮件未送达 → 无人知晓 3+ 小时。故必须主动推 IM。
+#
+# 需 3 个 repo secret（Settings → Secrets → Actions）：
+#   FEISHU_APP_ID         Zelsy's key 的 App ID（开发者后台 → 凭证与基础信息）
+#   FEISHU_APP_SECRET     Zelsy's key 的 App Secret（同页，勿外泄）
+#   FEISHU_ALERT_CHAT_ID  告警群 chat_id（oc_xxx；应用机器人须已加入该群）
+# 应用前置：开权限 im:message:send_as_bot + 发布版本 + 应用机器人加入告警群。
+#
+# 域名：国内飞书 open.feishu.cn；国际 Lark 改 open.larksuite.com（见 FEISHU_HOST）。
+# 不配 secret → 回退 GitHub Actions 失败邮件（须 repo Watch → Custom → Failures）。
+# cron offset (3,13,...) 避开 :00/:30 全网 cron 堆叠。
 
 on:
   schedule:
@@ -12,15 +26,86 @@ on:
 jobs:
   ping:
     runs-on: ubuntu-latest
+    env:
+      URL: https://hkmu-campus-sea.azurewebsites.net/api/v1/courses
+      FEISHU_HOST: open.feishu.cn   # 国际版 Lark 改 open.larksuite.com
+      FEISHU_APP_ID: ${{ secrets.FEISHU_APP_ID }}
+      FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+      FEISHU_ALERT_CHAT_ID: ${{ secrets.FEISHU_ALERT_CHAT_ID }}
     steps:
       - name: Ping production DB-backed endpoint
+        id: probe
         run: |
           set -u
-          URL="https://hkmu-campus-sea.azurewebsites.net/api/v1/courses"
           code=$(curl -s -o /dev/null -w "%{http_code}" -m 30 "$URL")
           echo "GET $URL -> HTTP $code"
-          if [ "$code" != "200" ]; then
-            echo "::warning::Endpoint returned $code — Supabase project may be paused (check dashboard and restore)."
-            exit 1
+          if [ "$code" = "200" ]; then
+            echo "OK — endpoint healthy."
+            exit 0
           fi
-          echo "OK — database is warm."
+          # 非 200：给原因线索，不臆断单一根因（订阅 disabled / App 挂 / Supabase pause 都可能）
+          echo "::error::生产端点不可达 HTTP=$code（疑：Azure App 挂/重启、订阅 disabled、或 Supabase paused）。$URL"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          exit 1
+
+      - name: Alert via Feishu app bot（Zelsy's key 换 token 发消息）
+        if: failure() && env.FEISHU_APP_ID != '' && env.FEISHU_APP_SECRET != '' && env.FEISHU_ALERT_CHAT_ID != ''
+        env:
+          CODE: ${{ steps.probe.outputs.code }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 <<'PY'
+          import os, json, time, urllib.request
+          host     = os.environ["FEISHU_HOST"]
+          app_id   = os.environ["FEISHU_APP_ID"]
+          app_sec  = os.environ["FEISHU_APP_SECRET"]
+          chat_id  = os.environ["FEISHU_ALERT_CHAT_ID"]
+          url      = os.environ["URL"]
+          code     = os.environ.get("CODE", "?")
+          run_url  = os.environ["RUN_URL"]
+          ts_human = time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime())
+
+          def post(u, payload, token=None):
+              h = {"Content-Type": "application/json; charset=utf-8"}
+              if token:
+                  h["Authorization"] = f"Bearer {token}"
+              req = urllib.request.Request(u, data=json.dumps(payload).encode(), headers=h)
+              try:
+                  with urllib.request.urlopen(req, timeout=15) as r:
+                      return r.getcode(), r.read().decode()
+              except Exception as e:
+                  return -1, str(e)
+
+          # 1) 换 tenant_access_token
+          rc, body = post(f"https://{host}/open-apis/auth/v3/tenant_access_token/internal",
+                          {"app_id": app_id, "app_secret": app_sec})
+          token = None
+          if rc == 200:
+              try:
+                  token = json.loads(body).get("tenant_access_token")
+              except Exception:
+                  pass
+          if not token:
+              # 告警失败不叠加 job 红色（ping step 已红）；只记 warning
+              print(f"::warning::换 token 失败 rc={rc} body={body[:200]}（检查 App ID/Secret 是否对、是否发布版本）")
+              raise SystemExit(0)
+
+          # 2) 发消息到告警群
+          text = (f"🔴 HKMU 生产告警\n"
+                  f"端点 {url} 返回 HTTP {code}（非 200，生产不可达）\n"
+                  f"时间 {ts_human}\n"
+                  f"排查 {run_url}")
+          rc, body = post(
+              f"https://{host}/open-apis/im/v1/messages?receive_id_type=chat_id",
+              {"receive_id": chat_id, "msg_type": "text",
+               "content": json.dumps({"text": text})},
+              token=token)
+          ok = False
+          if rc == 200:
+              try:
+                  ok = json.loads(body).get("code") == 0
+              except Exception:
+                  pass
+          print("Feishu alert sent OK" if ok
+                else f"::warning::发消息失败 rc={rc} body={body[:200]}（检查应用是否在群里 / chat_id 是否对）")
+          PY
