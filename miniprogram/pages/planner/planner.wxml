@@ -175,30 +175,47 @@
     </view>
   </block>
 
-  <!-- 全屏专业搜索浮层：点 hero 触发。搜索 + 按学院分组列表，选完或 ✕ 返回 -->
+  <!-- 全屏专业搜索浮层：点 hero 触发。搜索引导 + 按学院分组卡片，选完或 ✕ 返回 -->
   <view wx:if="{{programmeSearchOpen}}" class="ps-overlay">
     <view class="ps-overlay-bar">
+      <view class="ps-back" bindtap="onCloseProgrammeSearch" hover-class="ps-back-hover">‹</view>
       <text class="ps-overlay-title">{{text.selectProgramme}}</text>
       <view class="ps-overlay-close" bindtap="onCloseProgrammeSearch">✕</view>
     </view>
     <view class="ps-overlay-search">
-      <input class="programme-search-input" value="{{programmeQuery}}"
-             placeholder="{{text.programmeSearchPlaceholder}}"
-             focus="{{programmeSearchOpen}}"
-             bindinput="onProgrammeSearchInput" confirm-type="search" />
+      <view class="ps-search-wrap">
+        <view class="ps-search-icon">🔍</view>
+        <input class="ps-search-input" value="{{programmeQuery}}"
+               placeholder="{{text.programmeSearchPlaceholder}}"
+               placeholder-class="ps-search-ph"
+               focus="{{programmeSearchOpen}}"
+               bindinput="onProgrammeSearchInput" confirm-type="search" />
+      </view>
+      <view class="ps-search-hint">{{text.programmeSearchHintPre}}{{programmeTotal}}{{text.programmeSearchHintPost}}</view>
     </view>
     <scroll-view scroll-y class="ps-overlay-list">
-      <view wx:if="{{programmeSearchEmpty}}" class="programme-search-empty">{{text.programmeSearchEmpty}}</view>
+      <view wx:if="{{programmeSearchEmpty}}" class="ps-empty">
+        <view class="ps-empty-icon">🔍</view>
+        <view class="ps-empty-text">{{text.programmeSearchEmpty}}</view>
+      </view>
       <block wx:for="{{programmeSearchResults}}" wx:for-item="grp" wx:key="school">
-        <view wx:if="{{grp.school}}" class="programme-search-group">{{grp.school}} ({{grp.programmes.length}})</view>
-        <view wx:for="{{grp.programmes}}" wx:for-item="p" wx:key="code"
-              class="ps-row {{p.selected?'ps-row-selected':''}}"
-              data-code="{{p.code}}" bindtap="onSelectProgramme">
-          <view class="ps-row-main">
-            <text class="ps-row-name">{{p.name}}</text>
-            <text wx:if="{{p.badge}}" class="ps-row-badge">{{p.badge}}</text>
+        <view class="ps-group-card">
+          <view wx:if="{{grp.school}}" class="ps-group-head">
+            <text class="ps-group-name">{{grp.school}}</text>
+            <text class="ps-group-count">{{grp.programmes.length}}</text>
           </view>
-          <text class="ps-row-code">{{p.code}}</text>
+          <view wx:for="{{grp.programmes}}" wx:for-item="p" wx:key="code"
+                class="ps-row {{p.selected?'ps-row-selected':''}}"
+                data-code="{{p.code}}" bindtap="onSelectProgramme">
+            <view class="ps-row-main">
+              <text class="ps-row-name">{{p.name}}</text>
+              <text wx:if="{{p.badge}}" class="ps-row-badge">{{p.badge}}</text>
+            </view>
+            <view class="ps-row-tail">
+              <text class="ps-row-code">{{p.code}}</text>
+              <text wx:if="{{p.selected}}" class="ps-row-check">✓</text>
+            </view>
+          </view>
         </view>
       </block>
     </scroll-view>

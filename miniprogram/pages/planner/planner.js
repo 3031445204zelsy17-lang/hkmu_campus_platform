@@ -138,6 +138,7 @@ Page({
   _programmeQuery: "",           // 专业搜索词（实时过滤）
   _programmeSearchTimer: null,   // 搜索防抖 timer
   _programmeSearchOpen: false,   // 全屏专业搜索浮层开关（点 hero 触发，默认收起）
+  _programmePrompted: false,     // 首屏引导：本会话是否已判过自动弹浮层（防反复弹）
 
   // ── 生命周期 ──────────────────────────────────────────────────────────
 
@@ -208,6 +209,7 @@ Page({
         this._user = user;
         this._userProgrammeCode = (user && user.programme_code) || null;
         this._emit();
+        this._maybePromptProgramme();
         if (user) {
           return this._loadStatus();
         }
@@ -216,7 +218,21 @@ Page({
       .catch(() => {
         this._user = null;
         this._emit();
+        this._maybePromptProgramme();
       });
+  },
+
+  // 首屏引导：用户态确定后，若本会话未引导过且没选过任何专业（未登录 / 账户无 programme）
+  // → 自动弹专业搜索浮层，把"选专业"主动推到用户面前，而非默认 DSAI 让人找入口。
+  // _programmePrompted 保证本会话只判一次：用户手动关掉浮层后，切 tab 回来不会重弹。
+  _maybePromptProgramme() {
+    if (this._programmePrompted) return;
+    this._programmePrompted = true;
+    const pickerList = this._pickerList || [];
+    if (pickerList.length && !this._selectedCode && !this._userProgrammeCode) {
+      this._programmeSearchOpen = true;
+      this._emit();
+    }
   },
 
   _loadStatus() {
@@ -445,7 +461,9 @@ Page({
 
     // 选中优先级：手动选 > 已保存(须完整规划专业) > 默认
     const saved = this._userProgrammeCode;
-    const savedValid = saved && pickerList.some((p) => p.code === saved && p.has_full_planning);
+    // 账户存的专业即采用（含 catalogue，会进目录视图）；不再只认完整规划专业，
+    // 否则选了 catalogue 专业下次会被静默回退到 DSAI（"选了没记住"的根因）
+    const savedValid = saved && pickerList.some((p) => p.code === saved);
     const wanted = this._selectedCode
       || (savedValid ? saved : "")
       || (planning && planning.default_code)
@@ -486,6 +504,7 @@ Page({
       programmeOptions: pickerList,
       programmeIndex: idx,
       programmeQuery: this._programmeQuery,
+      programmeTotal: pickerList.length,
       programmeSearchResults: searchGroups,
       programmeSearchEmpty,
       programmeSearchOpen: this._programmeSearchOpen,

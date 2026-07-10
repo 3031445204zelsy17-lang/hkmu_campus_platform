@@ -238,30 +238,53 @@
 }
 
 /* 专业搜索：hero 触发 → 全屏浮层（默认收起，不再常驻霸屏） */
-.programme-search-input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 18rpx 24rpx;
-  background: var(--surface);
-  border: 1rpx solid var(--divider);
+/* 搜索框：品牌绿浅底 + 左侧图标，浮层打开后最醒目的锚点 */
+.ps-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 16rpx 24rpx;
+  background: var(--segmented-bg);
   border-radius: var(--radius-entry);
+}
+.ps-search-icon {
+  flex-shrink: 0;
+  font-size: 30rpx;
+  line-height: 1;
+  opacity: 0.7;
+}
+.ps-search-input {
+  flex: 1;
+  min-width: 0;
   font-size: var(--fs-body);
   color: var(--text-primary);
+  background: transparent;
 }
-.programme-search-group {
-  position: sticky;
-  top: 0;
-  padding: 14rpx 28rpx;
-  background: var(--segmented-bg);
+.ps-search-ph {
   color: var(--text-secondary);
-  font-size: var(--fs-link);
-  font-weight: 600;
 }
-.programme-search-empty {
-  padding: 60rpx 36rpx;
+.ps-search-hint {
+  margin-top: 14rpx;
+  padding: 0 8rpx;
+  font-size: var(--fs-link);
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+/* 空状态 */
+.ps-empty {
+  padding: 80rpx 36rpx;
   text-align: center;
   color: var(--text-secondary);
+}
+.ps-empty-icon {
+  font-size: 56rpx;
+  opacity: 0.4;
+}
+.ps-empty-text {
+  margin-top: 16rpx;
   font-size: var(--fs-link);
+  line-height: 1.5;
 }
 
 /* hero 信息区：点击切换专业 */
@@ -304,7 +327,21 @@
   padding: calc(env(safe-area-inset-top) + 24rpx) 32rpx 20rpx;
   border-bottom: 1rpx solid var(--divider);
 }
+.ps-back {
+  flex-shrink: 0;
+  margin-left: -8rpx;
+  padding: 8rpx 24rpx 8rpx 16rpx;
+  color: var(--text-primary);
+  font-size: 46rpx;
+  line-height: 1;
+  font-weight: 300;
+}
+.ps-back-hover {
+  opacity: var(--press-opacity);
+}
 .ps-overlay-title {
+  flex: 1;
+  text-align: center;
   color: var(--text-primary);
   font-size: 34rpx;
   font-weight: 800;
@@ -321,17 +358,47 @@
 .ps-overlay-list {
   flex: 1;
   width: 100%;
+  box-sizing: border-box;
+  padding: 0 24rpx 40rpx;
+}
+/* 学院分组卡片：圆角 + 阴影，替代逐行 border-top 平铺 */
+.ps-group-card {
+  margin-top: 20rpx;
+  background: var(--surface);
+  border-radius: var(--radius-entry);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.ps-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 18rpx 28rpx 6rpx;
+}
+.ps-group-name {
+  color: var(--text-secondary);
+  font-size: var(--fs-link);
+  font-weight: 700;
+  letter-spacing: 0.5rpx;
+}
+.ps-group-count {
+  color: var(--text-secondary);
+  font-size: 22rpx;
+  opacity: 0.7;
 }
 .ps-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20rpx;
-  padding: 26rpx 28rpx;
-  border-top: 1rpx solid var(--divider);
+  padding: 22rpx 28rpx;
+}
+.ps-row + .ps-row {
+  border-top: 1rpx solid var(--border-hair);
 }
 .ps-row-selected {
-  background: var(--segmented-bg);
+  background: var(--pill-green-bg);
+  box-shadow: inset 5rpx 0 0 var(--accent-green);
 }
 .ps-row-main {
   flex: 1;
@@ -358,8 +425,18 @@
   font-size: 20rpx;
   font-weight: 700;
 }
-.ps-row-code {
+.ps-row-tail {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+.ps-row-code {
   color: var(--text-secondary);
   font-size: var(--fs-link);
+}
+.ps-row-check {
+  color: var(--accent-green);
+  font-size: 30rpx;
+  font-weight: 700;
 }
