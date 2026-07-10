@@ -483,7 +483,6 @@
           "多图 JSONB —— 本轮定为单图，将来升级再 ALTER"
         ],
         "verification_gap": "③ 已 live 验证：GET /posts/3/comments + POST 评论 curl 闭环（syf_review_test 号，create_comment+count+1+字段契约全通，测试评论已清；开发者工具手动 UI 验证仍待用户）。①② 仍欠 live。Azure/Supabase HTTPS 受 VPN 节点影响见 memory vpn-azure-https-block。④ 已静态验证（node --check + 三语 12 key 各 3 处 + wxml handler 全接线 + CSS 徽章定位修正），开发者工具编译/截图 + live PUT /users/me + 头像上传闭环 + 5-tab 入口/胶囊布局仍待用户。共享基础改动（app.json + custom-tab-bar）按协作规范需群里通知。⑤ 已静态验证（node --check + 三语 15 key 各 3 处 + handler 接线），live 注册闭环（+邮箱验证链路）仍待用户"
-
       },
       "phase2_c3": {
         "status": "done (2026-06-27 代码 cbf0aad + 部署 cec1cf7 + perf aaa55f4/3905818；用户实测 OK)",
@@ -774,14 +773,14 @@
   },
   "internal_beta_readiness": {
     "_doc": "内测就绪 checklist (2026-06-29 评估)。功能已够内测;非功能几点待补/确认。内测=体验版(不需备案审核);正式上线(全校公开)才需小程序备案+微信审核+严格质量门槛。",
-    "verdict": "功能✅够内测。非功能🔶补 B3 错误监控 + 确认 B4 health 探活后即可开始内测;B1/B2/B5/B6 逐步完善。",
+    "verdict": "✅ 内测就绪：B1/B2/B4/B5/B6 done，仅剩 B3（错误监控：App Insights Claude 查证有数据 + 微信运维中心待用户确认）。可发体验版。",
     "tasks": [
       {
         "id": "B1",
         "title": "实时私信:socket 合法域名 + Azure websockets",
         "type": "config(用户操作)",
         "owner": "SYF 操作",
-        "status": "pending",
+        "status": "done（用户配 socket 合法域名 + Azure websockets）",
         "detail": "① 微信公众平台→开发管理→开发设置→socket 合法域名 加 wss://hkmu-campus-sea.azurewebsites.net;② Azure webapp→配置→Web sockets=开。代码已 OK(前端 WS_PATH=/api/v1/messages/ws ↔ 后端 @router.websocket('/ws') 于 /api/v1 前缀,路径对齐)。配完私信从轮询升级为实时。"
       },
       {
@@ -789,7 +788,7 @@
         "title": "司徒 live 验证闭环",
         "type": "verify(双人)",
         "owner": "SYF+司徒",
-        "status": "pending",
+        "status": "done（司徒双人 live 验证社交/私信闭环）",
         "detail": "桌面 社交验证清单-Phase5-C6C7.md:邀请闭环(C.5→C.4→C.7→C.6)+ Phase3 两账号 DM 真实收发 + Phase1 配图/资料编辑/注册+邮箱验证。验完报结果(过/bug),即 C.8 收尾。"
       },
       {
@@ -806,7 +805,7 @@
         "title": "确认 /api/health 真探活已部署",
         "type": "verify",
         "owner": "SYF",
-        "status": "pending",
+        "status": "done（2026-07-10 Claude 验证：/api/health 返 200 {\"status\":\"ok\",\"database\":\"up\"}，真 SELECT 1 探活，订阅 PAYG 恢复后）",
         "detail": "代码已是真实 SELECT 1(DB 挂返 503,不再恒 200 掩盖 Supabase pause)。post_db13_ops 6-25 记 pending deploy;c5906ee(6-28)大概率含。确认 UptimeRobot 打 /api/health 返真探活(非恒 200)。"
       },
       {
@@ -814,7 +813,7 @@
         "title": "隐私声明",
         "type": "content",
         "owner": "SYF",
-        "status": "code done;待用户换官方邮箱 + IDE 编译/截图",
+        "status": "done（用户换官方邮箱 + 编译隐私声明）",
         "detail": "收集邮箱(HKMU 验证)+ GA4/Mixpanel 行为分析。内测前放简单隐私说明(收集什么/为什么/存哪),尤其涉及 HKMU 邮箱。✅ 2026-06-30 done:新建 pages/privacy(三语 privacy scope 20 key,6 段 收集/为什么/存储/分享/权利/联系)+ privacy.openAction 复用入口文案 + login 注册区底部入口 + profile profile-row 入口;privacy.wxss 纯 token var。静态全绿(node --check×4 + JSON 有效 + wxml view 平衡 23/23·24/24·53/53 + 三语 parity 20/20)。⚠️ 联系邮箱 support@hkmu-campus.example 为占位,正式上线前换官方邮箱;微信开发者工具编译/截图仍待用户。"
       },
       {
@@ -822,7 +821,7 @@
         "title": "确认 admin 能删任意帖/评论(UGC 应急下架)",
         "type": "verify",
         "owner": "SYF",
-        "status": "pending",
+        "status": "done（2026-07-10 Claude 端到端：admin testuser1 DELETE azuretest 的帖→204，GET→404，_is_admin 放行确认）",
         "detail": "现状:有 _is_admin(identity=='admin') + 匿名帖作者对 admin 可见(show_author=is_admin)。确认 admin 删任意帖/评论的端点存在 + 能用。内测期靠人盯内容够用。"
       }
     ],
