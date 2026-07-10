@@ -773,7 +773,7 @@
   },
   "internal_beta_readiness": {
     "_doc": "内测就绪 checklist (2026-06-29 评估)。功能已够内测;非功能几点待补/确认。内测=体验版(不需备案审核);正式上线(全校公开)才需小程序备案+微信审核+严格质量门槛。",
-    "verdict": "✅ 内测就绪：B1/B2/B4/B5/B6 done，仅剩 B3（错误监控：App Insights Claude 查证有数据 + 微信运维中心待用户确认）。可发体验版。",
+    "verdict": "✅ 内测就绪：B1-B6 全 done（2026-07-10）。可发体验版（体验成员制，不需备案审核）。正式上线（全校公开）才需小程序备案+微信审核+严格质量门槛。",
     "tasks": [
       {
         "id": "B1",
@@ -796,7 +796,7 @@
         "title": "错误监控(微信原生运维中心 + Azure App Insights + realtime log 封装)",
         "type": "code+config",
         "owner": "SYF",
-        "status": "code done;待用户 2 项(看后台运维中心 + Azure 启用 App Insights)",
+        "status": "done（Azure App Insights Claude 查证 live：近3天有 sec_audit status=401 trace，最近 2026-07-09 08:24；微信原生运维中心用户确认）",
         "priority": "high",
         "detail": "不用第三方。① 小程序端:微信后台运维中心自动收 JS/网络/API 错误(体验版用户即收,零代码);② 代码:utils/log.js 封装 wx.getRealtimeLogManager + app.js onError/onUnhandledRejection 全局兜底 + request.js 非 2xx 失败上报(带 path/method/status)→ 后台实时日志带上下文;③ 后端:Azure webapp 门户启用 Application Insights。Sentry 留作将来原生不够细时的升级项。"
       },
