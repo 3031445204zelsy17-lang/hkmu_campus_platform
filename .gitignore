@@ -220,6 +220,8 @@ __marimo__/
 # SQLite database
 *.db
 *.db-journal
+*.db-wal
+*.db-shm
 
 # Node
 node_modules/
