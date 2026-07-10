@@ -5,6 +5,10 @@ const { getInitial, formatChatTime } = require("../../utils/format");
 const messages = require("../../utils/messages");
 const auth = require("../../utils/auth");
 
+// WS 连不上服务端时(wx.connectSocket 握手不兼容,见 utils/messages.js connect),
+// 聊天页降级轮询拉新消息的间隔。WS 通时跳过,只用推送。
+const CHAT_POLL_MS = 3000;
+
 function dayLabel(iso, now, text) {
   if (!iso) return "";
   const d = new Date(iso);
@@ -86,6 +90,7 @@ Page({
     this.loadHistory(true);
     messages.ensureConnected();
     messages.startPolling();
+    this._startChatPoll();
     this._wireEvents();
     messages
       .markRead(partnerId)
@@ -99,6 +104,7 @@ Page({
     if (!this.data.loggedIn || this.data.isSelf) return;
     messages.ensureConnected();
     messages.startPolling();
+    this._startChatPoll();
     this._wireEvents();
     if (this.data.partnerId && !this.data.loading) {
       // 回到本页:重拉兜底漏收 + 重新标已读
@@ -110,11 +116,13 @@ Page({
   onHide() {
     this._unwireEvents();
     messages.stopPolling();
+    this._stopChatPoll();
   },
 
   onUnload() {
     this._unwireEvents();
     messages.stopPolling();
+    this._stopChatPoll();
     if (this._pending) {
       this._pending.forEach((p) => p.timer && clearTimeout(p.timer));
       this._pending.clear();
@@ -228,6 +236,68 @@ Page({
       messages.off("chat", this._chatHandler);
       this._chatHandler = null;
     }
+  },
+
+  // ── 降级轮询:WS 断时定时拉当前会话新消息 ──────────────────────────
+  // 根因 wx.connectSocket 连不上服务端 WS(python 标准客户端可连,微信 WS 握手不兼容),
+  // 详见 utils/messages.js connect 注释。WS 通时 getState()==="open" 跳过只用推送;断时每
+  // CHAT_POLL_MS 拉 page1 历史,增量 append 对方新消息(后端 history 端点会顺带把当前
+  // 会话未读标已读,故只补 fetchUnread 校正全局角标)。自己发的 WS 断时已由 REST 走
+  // _confirmSent 确认进 _seenIds,轮询不重复处理。
+  _startChatPoll() {
+    if (this._chatPollTimer) return;
+    this._chatPollTimer = setInterval(() => this._pollNewMessages(), CHAT_POLL_MS);
+  },
+
+  _stopChatPoll() {
+    if (this._chatPollTimer) {
+      clearInterval(this._chatPollTimer);
+      this._chatPollTimer = null;
+    }
+  },
+
+  _pollNewMessages() {
+    if (messages.getState() === "open") return; // WS 通 → 用推送,不轮询
+    if (!wx.getStorageSync("hkmu_access_token")) {
+      this._stopChatPoll(); // session 已失效(request.js 401 清了 token)→ 停轮询
+      return;
+    }
+    if (!this.data.partnerId || this.data.isSelf || !this.data.loggedIn) return;
+    messages
+      .fetchHistory(this.data.partnerId, 1)
+      .then((list) => {
+        const myId = this.data.myId;
+        const partnerId = this.data.partnerId;
+        const text = this.data.text;
+        const fresh = [];
+        for (const m of (list || [])) {
+          if (m.id == null) continue;
+          if (this._seenIds.has(m.id)) continue; // 去重:历史/推送已见过
+          // 只补对方发来的新消息;自己发的 WS 断时已由 REST 走 _confirmSent 确认进 _seenIds
+          if (m.sender_id !== partnerId || m.receiver_id !== myId) continue;
+          this._seenIds.add(m.id);
+          fresh.push(m);
+        }
+        if (!fresh.length) return;
+        const msgs = this.data.messages.slice();
+        for (const m of fresh) {
+          msgs.push({
+            id: "m" + m.id,
+            realId: m.id,
+            mine: false,
+            content: String(m.content || ""),
+            createdAt: m.created_at,
+            timeLabel: formatChatTime(m.created_at, text),
+            dateLabel: "",
+            status: "sent",
+            isRead: true,
+          });
+        }
+        this._applyDayLabels(msgs);
+        this.setData({ messages: msgs, toView: "m" + fresh[fresh.length - 1].id });
+        messages.fetchUnread().catch(() => {}); // history 已标已读,校正全局角标
+      })
+      .catch(() => {});
   },
 
   _handleIncoming(payload) {
