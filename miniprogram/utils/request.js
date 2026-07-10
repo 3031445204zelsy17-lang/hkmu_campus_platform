@@ -76,7 +76,22 @@ function rawRequest({ method = "GET", path, data = null, header = {} }) {
   });
 }
 
+let _refreshPromise = null;
+
+// 并发 401 复用同一个 refresh 请求(后端 refresh token 是 rotation 模式 —— 刷新即删旧
+// token)。若多个请求各自 POST /auth/refresh(带同一 refresh_token),第二个会因旧 token
+// 已被第一个 rotate 删除而失败 → clearSession 把全局 session 搞坏。典型触发:小程序启动
+// 时 app.onLaunch + home.onShow 并发 bootstrapSession → 两个 /users/me 同时 401。这里用
+// 单例 promise 保证同一时刻只真正刷新一次,其他并发 401 等同一个结果。
 function refreshSession() {
+  if (_refreshPromise) return _refreshPromise;
+  _refreshPromise = _doRefresh().finally(() => {
+    _refreshPromise = null;
+  });
+  return _refreshPromise;
+}
+
+function _doRefresh() {
   const session = getSession();
 
   if (!session.refreshToken) {
