@@ -6,6 +6,7 @@ from ..models import NewsCreate, NewsOut, NewsCommentCreate, NewsCommentOut, Pag
 from ..services.auth_service import get_current_user
 from ..services.rate_limiter import check_rate_limit
 from ..services.sanitizer import sanitize
+from ..services.content_security import audit_user_text, SCENE_COMMENT
 
 router = APIRouter(prefix="/news", tags=["news"])
 
@@ -198,6 +199,7 @@ async def create_news_comment(
     check_rate_limit(f"news_comment:{user['id']}", max_requests=15, window_seconds=60)
 
     safe_content = sanitize(body.content)
+    await audit_user_text(user, body.content, SCENE_COMMENT)
     now = datetime.now(timezone.utc)
 
     async with get_db() as db:
