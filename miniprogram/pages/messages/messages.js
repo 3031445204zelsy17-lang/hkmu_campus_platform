@@ -124,6 +124,9 @@ Page({
       })
       .catch(() => {
         this.setData({ loading: false });
+        if (!silent) {
+          wx.showToast({ title: getTexts("messages").loadFail, icon: "none" });
+        }
       });
   },
 

@@ -55,7 +55,7 @@
     <view wx:for="{{posts}}" wx:key="id" class="feed-card">
       <view class="feed-head">
         <view class="avatar" data-author-id="{{item.authorId}}" catchtap="openDM">
-          <image wx:if="{{item.authorAvatar}}" src="{{item.authorAvatar}}" mode="aspectFill" />
+          <image wx:if="{{item.authorAvatar}}" src="{{item.authorAvatar}}" mode="aspectFill" binderror="onAvatarError" data-idx="{{index}}" />
           <view wx:else>{{item.authorInitial}}</view>
         </view>
         <view class="feed-main">
@@ -67,7 +67,7 @@
             <view class="{{item.topicClass}}">{{item.category}}</view>
           </view>
           <view class="feed-title">{{item.title}}</view>
-          <image wx:if="{{item.imageUrl}}" class="feed-image" src="{{item.imageUrl}}" mode="widthFix" />
+          <image wx:if="{{item.imageUrl}}" class="feed-image" src="{{item.imageUrl}}" mode="widthFix" binderror="onImageError" data-idx="{{index}}" />
           <view class="feed-body">{{item.content}}</view>
           <view class="post-actions">
             <view class="{{item.likeClass}}" data-index="{{index}}" catchtap="toggleLike" hover-class="post-action-press">

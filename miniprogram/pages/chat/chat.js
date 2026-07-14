@@ -204,6 +204,9 @@ Page({
       })
       .catch(() => {
         this.setData({ loading: false });
+        if (reset) {
+          wx.showToast({ title: getTexts("chat").loadFail, icon: "none" });
+        }
       });
   },
 

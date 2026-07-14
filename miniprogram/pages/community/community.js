@@ -231,6 +231,14 @@ Page({
       });
   },
 
+  onAvatarError(e) {
+    // 头像加载失败 → 置空，触发 wxml wx:else 走 authorInitial 字母兜底
+    this.setData({ [`posts[${e.currentTarget.dataset.idx}].authorAvatar`]: "" });
+  },
+  onImageError(e) {
+    // 配图加载失败 → 置空，wxml wx:if 隐藏（避免破损图标）
+    this.setData({ [`posts[${e.currentTarget.dataset.idx}].imageUrl`]: "" });
+  },
   toggleLike(event) {
     if (!this.data.user) {
       wx.navigateTo({ url: "/pages/login/login" });

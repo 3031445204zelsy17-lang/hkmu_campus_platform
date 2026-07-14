@@ -156,6 +156,12 @@ Page({
       });
   },
 
+  onAvatarError(e) {
+    this.setData({ [`posts[${e.currentTarget.dataset.idx}].authorAvatar`]: "" });
+  },
+  onImageError(e) {
+    this.setData({ [`posts[${e.currentTarget.dataset.idx}].imageUrl`]: "" });
+  },
   toggleLike(event) {
     if (!this.data.user) {
       wx.navigateTo({ url: "/pages/login/login" });
