@@ -101,13 +101,21 @@ Page({
       this._hasLoadedPosts = false;
     }
 
-    auth.bootstrapSession().then((user) => {
-      this.setData({ user: user || null });
-      if (!this._hasLoadedPosts) {
-        this._hasLoadedPosts = true;
-        this.loadPosts(true);
-      }
-    });
+    // PERF-2: 首屏 /users/me 与 /posts 并行(原串行,首屏耗时=sum 现在=max)
+    if (!this._hasLoadedPosts) {
+      this._hasLoadedPosts = true;
+      this.loadPosts(true);
+    }
+
+    // PERF-3: 暖路径——storage 有 user 直接用,跳过 bootstrapSession 的 /users/me
+    const cachedUser = auth.getStoredUser();
+    if (cachedUser) {
+      this.setData({ user: cachedUser });
+    } else {
+      auth.bootstrapSession().then((user) => {
+        this.setData({ user: user || null });
+      });
+    }
   },
 
   handleLanguageChange(event) {
@@ -206,7 +214,9 @@ Page({
 
     return request({
       path: `/posts?${query.join("&")}`,
-      auth: !!this.data.user,
+      // PERF-2: 读 storage 登录态(非 this.data.user)——首屏并行时 user 尚未 setData,
+      // 仍能正确带 Bearer,登录用户首屏保留 is_liked 私有态。
+      auth: !!auth.getStoredUser(),
     })
       .then((data) => {
         const nextRawPosts = data.items || [];
@@ -231,6 +241,14 @@ Page({
       });
   },
 
+  onAvatarError(e) {
+    // 头像加载失败 → 置空，触发 wxml wx:else 走 authorInitial 字母兜底
+    this.setData({ [`posts[${e.currentTarget.dataset.idx}].authorAvatar`]: "" });
+  },
+  onImageError(e) {
+    // 配图加载失败 → 置空，wxml wx:if 隐藏（避免破损图标）
+    this.setData({ [`posts[${e.currentTarget.dataset.idx}].imageUrl`]: "" });
+  },
   toggleLike(event) {
     if (!this.data.user) {
       wx.navigateTo({ url: "/pages/login/login" });
@@ -242,17 +260,36 @@ Page({
     if (!post || post.rawIndex < 0) {
       return;
     }
-    this._likeLocks = this._likeLocks || {};
-    if (this._likeLocks[post.id]) {
-      return;
-    }
-    this._likeLocks[post.id] = true;
 
-    const previousRawPost = this.data.rawPosts[post.rawIndex] || {};
-    const nextLiked = !post.isLiked;
+    // 乐观翻转立即生效 + per-post 串行队列(原 _likeLocks 硬锁拦截取消点击 = "不能取消")
+    this._applyOptimisticLike(post.rawIndex, !post.isLiked);
+
+    this._likeChain = this._likeChain || {};
+    const prev = (this._likeChain[post.id] || Promise.resolve()).catch(() => {});
+    const mine = prev.then(() =>
+      request({ method: "POST", path: `/posts/${post.id}/like`, auth: true })
+        .then((updatedPost) => {
+          if (this._likeChain[post.id] === mine) {
+            this._syncLikeFromServer(post.id, updatedPost);
+          }
+        })
+        .catch(() => {
+          if (this._likeChain[post.id] === mine) {
+            request({ path: `/posts/${post.id}`, auth: !!auth.getStoredUser() })
+              .then((p) => this._syncLikeFromServer(post.id, p))
+              .catch(() => {});
+          }
+          wx.showToast({ title: this.data.text.actionFail, icon: "none" });
+        }),
+    );
+    this._likeChain[post.id] = mine;
+  },
+
+  _applyOptimisticLike(rawIndex, nextLiked) {
+    const previousRawPost = this.data.rawPosts[rawIndex] || {};
     const currentLikes = Number((previousRawPost && previousRawPost.likes_count) || 0);
     const optimisticRawPosts = this.data.rawPosts.slice();
-    optimisticRawPosts[post.rawIndex] = {
+    optimisticRawPosts[rawIndex] = {
       ...previousRawPost,
       is_liked: nextLiked,
       likes_count: Math.max(0, currentLikes + (nextLiked ? 1 : -1)),
@@ -261,33 +298,17 @@ Page({
       posts: buildVisiblePosts(optimisticRawPosts, this.data.text, this.data.categoryFilter),
       rawPosts: optimisticRawPosts,
     });
+  },
 
-    request({
-      method: "POST",
-      path: `/posts/${post.id}/like`,
-      auth: true,
-      })
-      .then((updatedPost) => {
-        const rawPosts = this.data.rawPosts.slice();
-        rawPosts[post.rawIndex] = updatedPost;
-        const posts = buildVisiblePosts(rawPosts, this.data.text, this.data.categoryFilter);
-        this.setData({ posts, rawPosts });
-      })
-      .catch((error) => {
-        const rawPosts = this.data.rawPosts.slice();
-        rawPosts[post.rawIndex] = previousRawPost;
-        this.setData({
-          posts: buildVisiblePosts(rawPosts, this.data.text, this.data.categoryFilter),
-          rawPosts,
-        });
-        wx.showToast({
-          title: error.message || this.data.text.actionFail,
-          icon: "none",
-        });
-      })
-      .finally(() => {
-        delete this._likeLocks[post.id];
-      });
+  _syncLikeFromServer(postId, updatedPost) {
+    const idx = this.data.rawPosts.findIndex((r) => r && r.id === postId);
+    if (idx < 0) return;
+    const rawPosts = this.data.rawPosts.slice();
+    rawPosts[idx] = updatedPost;
+    this.setData({
+      posts: buildVisiblePosts(rawPosts, this.data.text, this.data.categoryFilter),
+      rawPosts,
+    });
   },
 
   openDetail(event) {

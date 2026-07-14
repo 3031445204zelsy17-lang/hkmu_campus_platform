@@ -8,6 +8,7 @@ from ..models import (
 from ..services.auth_service import get_current_user
 from ..services.rate_limiter import check_rate_limit
 from ..services.sanitizer import sanitize
+from ..services.content_security import audit_user_text, SCENE_FORUM
 
 router = APIRouter(prefix="/lostfound", tags=["lostfound"])
 
@@ -102,6 +103,7 @@ async def create_item(
     user: dict = Depends(get_current_user),
 ):
     check_rate_limit(f"lostfound:{user['id']}", max_requests=10, window_seconds=60)
+    await audit_user_text(user, f"{body.title} {body.description}", SCENE_FORUM)
     now = datetime.now(timezone.utc)
 
     async with get_db() as db:

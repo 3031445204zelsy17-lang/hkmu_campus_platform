@@ -45,6 +45,55 @@ class ProgrammeCatalogueOut(BaseModel):
     programmes: list[ProgrammeOut]
 
 
+# ── Course catalogue (read-only official course lists) ───────────────────────
+# Distinct from the planning catalogue above: these come from HKMU's public
+# Programme Requirements PDFs and have no term / prerequisite / per-category
+# credit info, so they drive a browse-only view (no graduation math).
+
+class CatalogueCourseOut(BaseModel):
+    course_code: str
+    display_name: str
+    credits: int
+    code_system: str
+    official_group: str
+
+
+class CatalogueBucketOut(BaseModel):
+    key: str
+    label_key: str
+    order: int
+    courses: list[CatalogueCourseOut]
+
+
+class CatalogueProgrammeOut(BaseModel):
+    programme_code: str
+    programme_name: str
+    name_zh_cn: str | None = None
+    name_zh_tw: str | None = None
+    school: str
+    course_count: int
+    has_full_planning: bool
+
+
+class CatalogueSchoolGroupOut(BaseModel):
+    school: str
+    programmes: list[CatalogueProgrammeOut]
+
+
+class CatalogueProgrammesResponse(BaseModel):
+    default_programme_code: str
+    schools: list[CatalogueSchoolGroupOut]
+
+
+class CatalogueCoursesResponse(BaseModel):
+    programme_code: str
+    programme_name: str
+    school: str
+    has_full_planning: bool
+    disclaimer_key: str
+    buckets: list[CatalogueBucketOut]
+
+
 class CategoryProgressOut(BaseModel):
     key: str
     min_credits: int
@@ -274,6 +323,106 @@ async def list_programmes():
     programmes = [_programme_to_out(code, prog) for code, prog in PROGRAMMES.items()]
     return ProgrammeCatalogueOut(
         default_code=DEFAULT_PROGRAMME_CODE, programmes=programmes,
+    )
+
+
+# NOTE: these two /catalogue routes MUST stay before @router.get("/{course_id}")
+# below — otherwise FastAPI captures "catalogue" as a course_id path param.
+@router.get("/catalogue/programmes", response_model=CatalogueProgrammesResponse)
+async def list_catalogue_programmes():
+    """All programmes with an official course catalogue (public, no auth).
+
+    Returns every HKMU programme extracted from the public Programme
+    Requirements PDFs, grouped by school. ``has_full_planning`` marks the few
+    programmes (currently DSAI) that additionally carry graduation-planning
+    data via /programmes + /graduation-status.
+    """
+    async with get_db() as db:
+        rows = await db.fetch(
+            """SELECT programme_code, programme_name, name_zh_cn, name_zh_tw,
+                      school, course_count, has_full_planning
+               FROM programmes_catalogue
+               ORDER BY school_order, prog_order"""
+        )
+    schools: dict[str, CatalogueSchoolGroupOut] = {}
+    for r in rows:
+        grp = schools.setdefault(
+            r["school"], CatalogueSchoolGroupOut(school=r["school"], programmes=[])
+        )
+        grp.programmes.append(CatalogueProgrammeOut(
+            programme_code=r["programme_code"],
+            programme_name=r["programme_name"],
+            name_zh_cn=r["name_zh_cn"],
+            name_zh_tw=r["name_zh_tw"],
+            school=r["school"],
+            course_count=r["course_count"],
+            has_full_planning=r["has_full_planning"],
+        ))
+    return CatalogueProgrammesResponse(
+        default_programme_code=DEFAULT_PROGRAMME_CODE,
+        schools=list(schools.values()),
+    )
+
+
+@router.get("/catalogue", response_model=CatalogueCoursesResponse)
+async def get_catalogue_courses(
+    programme_code: str = Query(..., min_length=4, max_length=20),
+):
+    """Official course catalogue for one programme (public, no auth).
+
+    Browse-only grouped course list sourced from HKMU's public PDFs — no
+    term / prerequisite / graduation info. Clients must surface the disclaimer.
+    """
+    async with get_db() as db:
+        prog = await db.fetchrow(
+            """SELECT programme_code, programme_name, school, has_full_planning
+               FROM programmes_catalogue WHERE programme_code = $1""",
+            programme_code,
+        )
+        if not prog:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Programme not in catalogue")
+        rows = await db.fetch(
+            """SELECT course_code, display_name, credits, code_system,
+                      official_group, canonical_bucket, bucket_order
+               FROM course_catalogue WHERE programme_code = $1
+               ORDER BY bucket_order, official_group, course_code_sort""",
+            programme_code,
+        )
+    buckets: dict[str, CatalogueBucketOut] = {}
+    # A course can appear under several official_groups in the source PDF (e.g.
+    # "Core (Middle Level)" and "Core (Higher Level)") that collapse into the
+    # same bucket — de-dup by course_code programme-wide so each course shows
+    # once (first occurrence in bucket/group order wins). Avoids repeated cards
+    # and WeChat wx:key="code" collisions.
+    seen_codes: set[str] = set()
+    for r in rows:
+        code = r["course_code"]
+        if code in seen_codes:
+            continue
+        seen_codes.add(code)
+        key = r["canonical_bucket"]
+        b = buckets.get(key)
+        if b is None:
+            b = buckets[key] = CatalogueBucketOut(
+                key=key,
+                label_key=f"planner.catalogue.bucket_{key}",
+                order=r["bucket_order"],
+                courses=[],
+            )
+        b.courses.append(CatalogueCourseOut(
+            course_code=r["course_code"],
+            display_name=r["display_name"],
+            credits=r["credits"],
+            code_system=r["code_system"],
+            official_group=r["official_group"],
+        ))
+    return CatalogueCoursesResponse(
+        programme_code=prog["programme_code"],
+        programme_name=prog["programme_name"],
+        school=prog["school"],
+        has_full_planning=prog["has_full_planning"],
+        disclaimer_key="planner.catalogue.disclaimer",
+        buckets=sorted(buckets.values(), key=lambda b: b.order),
     )
 
 

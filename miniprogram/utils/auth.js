@@ -46,7 +46,20 @@ function syncCurrentUser() {
     });
 }
 
+// PERF-4: bootstrapSession 单例去重——app.onLaunch + 首页 onShow 冷启动并发
+// 调用时复用同一个 /users/me promise(仿 request.js _refreshPromise 模式),
+// 避免冷启动发 2 个 /users/me。
+let _bootstrapPromise = null;
+
 function bootstrapSession() {
+  if (_bootstrapPromise) return _bootstrapPromise;
+  _bootstrapPromise = _doBootstrap().finally(() => {
+    _bootstrapPromise = null;
+  });
+  return _bootstrapPromise;
+}
+
+function _doBootstrap() {
   const session = requestStore.getSession();
 
   if (!session.accessToken) {

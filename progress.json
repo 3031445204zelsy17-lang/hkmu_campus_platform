@@ -483,7 +483,6 @@
           "多图 JSONB —— 本轮定为单图，将来升级再 ALTER"
         ],
         "verification_gap": "③ 已 live 验证：GET /posts/3/comments + POST 评论 curl 闭环（syf_review_test 号，create_comment+count+1+字段契约全通，测试评论已清；开发者工具手动 UI 验证仍待用户）。①② 仍欠 live。Azure/Supabase HTTPS 受 VPN 节点影响见 memory vpn-azure-https-block。④ 已静态验证（node --check + 三语 12 key 各 3 处 + wxml handler 全接线 + CSS 徽章定位修正），开发者工具编译/截图 + live PUT /users/me + 头像上传闭环 + 5-tab 入口/胶囊布局仍待用户。共享基础改动（app.json + custom-tab-bar）按协作规范需群里通知。⑤ 已静态验证（node --check + 三语 15 key 各 3 处 + handler 接线），live 注册闭环（+邮箱验证链路）仍待用户"
-
       },
       "phase2_c3": {
         "status": "done (2026-06-27 代码 cbf0aad + 部署 cec1cf7 + perf aaa55f4/3905818；用户实测 OK)",
@@ -774,14 +773,14 @@
   },
   "internal_beta_readiness": {
     "_doc": "内测就绪 checklist (2026-06-29 评估)。功能已够内测;非功能几点待补/确认。内测=体验版(不需备案审核);正式上线(全校公开)才需小程序备案+微信审核+严格质量门槛。",
-    "verdict": "功能✅够内测。非功能🔶补 B3 错误监控 + 确认 B4 health 探活后即可开始内测;B1/B2/B5/B6 逐步完善。",
+    "verdict": "✅ 内测就绪：B1-B6 全 done（2026-07-10）。可发体验版（体验成员制，不需备案审核）。正式上线（全校公开）才需小程序备案+微信审核+严格质量门槛。",
     "tasks": [
       {
         "id": "B1",
         "title": "实时私信:socket 合法域名 + Azure websockets",
         "type": "config(用户操作)",
         "owner": "SYF 操作",
-        "status": "pending",
+        "status": "done（用户配 socket 合法域名 + Azure websockets）",
         "detail": "① 微信公众平台→开发管理→开发设置→socket 合法域名 加 wss://hkmu-campus-sea.azurewebsites.net;② Azure webapp→配置→Web sockets=开。代码已 OK(前端 WS_PATH=/api/v1/messages/ws ↔ 后端 @router.websocket('/ws') 于 /api/v1 前缀,路径对齐)。配完私信从轮询升级为实时。"
       },
       {
@@ -789,7 +788,7 @@
         "title": "司徒 live 验证闭环",
         "type": "verify(双人)",
         "owner": "SYF+司徒",
-        "status": "pending",
+        "status": "done（司徒双人 live 验证社交/私信闭环）",
         "detail": "桌面 社交验证清单-Phase5-C6C7.md:邀请闭环(C.5→C.4→C.7→C.6)+ Phase3 两账号 DM 真实收发 + Phase1 配图/资料编辑/注册+邮箱验证。验完报结果(过/bug),即 C.8 收尾。"
       },
       {
@@ -797,7 +796,7 @@
         "title": "错误监控(微信原生运维中心 + Azure App Insights + realtime log 封装)",
         "type": "code+config",
         "owner": "SYF",
-        "status": "code done;待用户 2 项(看后台运维中心 + Azure 启用 App Insights)",
+        "status": "done（Azure App Insights Claude 查证 live：近3天有 sec_audit status=401 trace，最近 2026-07-09 08:24；微信原生运维中心用户确认）",
         "priority": "high",
         "detail": "不用第三方。① 小程序端:微信后台运维中心自动收 JS/网络/API 错误(体验版用户即收,零代码);② 代码:utils/log.js 封装 wx.getRealtimeLogManager + app.js onError/onUnhandledRejection 全局兜底 + request.js 非 2xx 失败上报(带 path/method/status)→ 后台实时日志带上下文;③ 后端:Azure webapp 门户启用 Application Insights。Sentry 留作将来原生不够细时的升级项。"
       },
@@ -806,7 +805,7 @@
         "title": "确认 /api/health 真探活已部署",
         "type": "verify",
         "owner": "SYF",
-        "status": "pending",
+        "status": "done（2026-07-10 Claude 验证：/api/health 返 200 {\"status\":\"ok\",\"database\":\"up\"}，真 SELECT 1 探活，订阅 PAYG 恢复后）",
         "detail": "代码已是真实 SELECT 1(DB 挂返 503,不再恒 200 掩盖 Supabase pause)。post_db13_ops 6-25 记 pending deploy;c5906ee(6-28)大概率含。确认 UptimeRobot 打 /api/health 返真探活(非恒 200)。"
       },
       {
@@ -814,7 +813,7 @@
         "title": "隐私声明",
         "type": "content",
         "owner": "SYF",
-        "status": "code done;待用户换官方邮箱 + IDE 编译/截图",
+        "status": "done（用户换官方邮箱 + 编译隐私声明）",
         "detail": "收集邮箱(HKMU 验证)+ GA4/Mixpanel 行为分析。内测前放简单隐私说明(收集什么/为什么/存哪),尤其涉及 HKMU 邮箱。✅ 2026-06-30 done:新建 pages/privacy(三语 privacy scope 20 key,6 段 收集/为什么/存储/分享/权利/联系)+ privacy.openAction 复用入口文案 + login 注册区底部入口 + profile profile-row 入口;privacy.wxss 纯 token var。静态全绿(node --check×4 + JSON 有效 + wxml view 平衡 23/23·24/24·53/53 + 三语 parity 20/20)。⚠️ 联系邮箱 support@hkmu-campus.example 为占位,正式上线前换官方邮箱;微信开发者工具编译/截图仍待用户。"
       },
       {
@@ -822,7 +821,7 @@
         "title": "确认 admin 能删任意帖/评论(UGC 应急下架)",
         "type": "verify",
         "owner": "SYF",
-        "status": "pending",
+        "status": "done（2026-07-10 Claude 端到端：admin testuser1 DELETE azuretest 的帖→204，GET→404，_is_admin 放行确认）",
         "detail": "现状:有 _is_admin(identity=='admin') + 匿名帖作者对 admin 可见(show_author=is_admin)。确认 admin 删任意帖/评论的端点存在 + 能用。内测期靠人盯内容够用。"
       }
     ],
@@ -848,5 +847,174 @@
       "选课 CS/网安 数据补全(docs/ops/选课选课)",
       "DM 高级:正在输入/实时已读/在线绿点/图片 DM/撤回/群聊(需后端扩展)"
     ]
+  },
+  "formal_release_readiness": {
+    "_doc": "正式上线(全校公开)就绪 checklist — 2026-07-13 成熟度评估产出。对标 internal_beta_readiness(B1-B6 内测已 done)。正式上线=全校公开需小程序备案+微信审核+严格质量门槛;内测=体验版不需备案。评估结论:项目成熟度被低估,监控/备份/基础设施/4bug 均已达标,离正式上线差'最后一公里'。完整施工图见 docs/ops/成熟上线-施工图.md(待写,task b)。前端体验评分 72/100(功能全但体验糙)",
+    "verdict": "🔴 未就绪:内测 done,正式上线待补 P0(3 发布 blocker)+P1 合规硬门槛(内容安全/web 错误/SMTP/备案)+P2 体验打磨。优先 FR1(内容安全,审核硬要求)+FR2(web 错误捕获)",
+    "assessment_snapshot": {
+      "_doc": "2026-07-13 成熟度评估快照(对标 docs/ops/正式上线可观测性-checklist.md)",
+      "functionality": "🟢90 — 多模块齐全双端,内测 B1-B6 done",
+      "observability": "🟢85 — App Insights(后端 azure-monitor-opentelemetry 07b76df)+微信运维中心(小程序)+utils/log.js+UptimeRobot(/api/v1/courses down 报警)。缺口:🟡AppRequests per-route + ❌web JS 错误捕获→FR2",
+      "backup_stability": "🟢80 — db-backup.yml 每天 pg_dump(PR#6)+Azure PAYG 恢复 + /api/health 真 SELECT 1 探活(B4)+Supabase keepalive 每 10min。剩余风险:Azure 单点 + 冷启动慢",
+      "frontend_ux": "🟡72 — 错误提示/空状态覆盖好,但静默失败多 + 小程序图片无占位 + 无骨架屏。网页端体验优于小程序→FR5/FR6/FR7",
+      "compliance": "🔴40 — 内容安全 msgSecCheck 未接(只靠 B6 事后删) + web 错误未捕获 + SMTP 保留域被拒 + 未备案。正式审核硬门槛集中于此→FR1-FR4"
+    },
+    "tasks": [
+      {
+        "id": "FR0a",
+        "phase": "P0",
+        "title": "合并 feature/course-catalogue-layer → main + 提交 chat.js/request.js 两改动 + 部署",
+        "type": "deploy",
+        "owner": "司徒+SYF",
+        "status": "pending",
+        "priority": "P0 阻断发版",
+        "detail": "feature 领先 main 18 提交(课程目录层+专业选择器 v2/v3/v4),PR#22 未合并;本会话 chat.js 聊天降级轮询 + request.js refresh 互斥 未提交未部署。见 docs/release/上线就绪清单.md 第四部分部署 checklist"
+      },
+      {
+        "id": "FR0b",
+        "phase": "P0",
+        "title": "uploadFile 合法域名配置",
+        "type": "config(用户操作)",
+        "owner": "SYF 操作",
+        "status": "pending",
+        "priority": "P0 阻断真机上传",
+        "detail": "微信公众平台→开发管理→服务器域名→uploadFile 加 https://hkmu-campus-sea.azurewebsites.net。开发者工具 urlCheck:false 会掩盖,本地测过≠真机过"
+      },
+      {
+        "id": "FR0c",
+        "phase": "P0",
+        "title": "refresh 竞态部署生效(代码已修)",
+        "type": "deploy",
+        "owner": "SYF",
+        "status": "code-done pending-deploy",
+        "priority": "P0 阻断登录稳定",
+        "detail": "request.js 已加 _refreshPromise 单例互斥,commit+部署后生产生效。见 release 清单阻断项 3"
+      },
+      {
+        "id": "FR1",
+        "phase": "P1",
+        "title": "内容安全 msgSecCheck/imgSecCheck 接入(UGC 事前审核)",
+        "type": "code",
+        "owner": "SYF",
+        "status": "code-done pending-deploy+prod-verify",
+        "priority": "P1 合规硬门槛(微信审核硬要求,不接被拒/下架)",
+        "implemented": "2026-07-13 code-done:新建 services/content_security.py(access_token get_stable_access_token 缓存+asyncio.Lock / check_text msg_sec_check v2 / audit_user_text 业务封装)+posts.py create_post(FORUM)+create_comment(COMMENT)+lostfound.py create_item(FORUM)+news.py create_news_comment(COMMENT) 4端点 sanitize后INSERT前接入。py_compile 4文件+import链+app创建(74路由)+6单元测试(pass/risky/review/61010/API失败/无openid)全过。范围=文本先行(图片异步FR1b延后;web端无openid跳过+日志FR1c延后)。策略:微信登录用户(oauth_provider=wechat_miniprogram)审核,web端跳过;API失败/61010降级放行+日志;suggest risky/review拒绝400。待部署+生产/测试号端到端(合规→201/违规→400)+AppTraces验hkmu.security日志",
+        "files": ["backend/app/services/wechat_service.py", "backend/app/routers/posts.py", "backend/app/routers/lostfound.py", "backend/app/routers/news.py"],
+        "evidence": "2026-07-13 grep 确认未接:backend 无 msg_sec_check/img_sec_check/media_check 调用,只有 security_audit 审计日志。目前靠 B6 事后人工删帖",
+        "detail": "wechat_service 加 msgSecCheck(文本)+imgSecCheck(图片) 调用(复用 access_token);posts/lostfound/news 发帖/评论/失物端点提交前调审核,违规拒发"
+      },
+      {
+        "id": "FR2",
+        "phase": "P1",
+        "title": "web JS 全局错误捕获 + 上报 App Insights",
+        "type": "code",
+        "owner": "SYF(改 app.js 群通知)",
+        "status": "code-done pending-deploy+prod-verify",
+        "implemented": "2026-07-14 code-done:后端代上报方案——新建 routers/log.py POST /client-error(收前端 {type,message,source,lineno,colno,stack,url},log.warning 进 hkmu.security logger→AppTraces,IP 限流 30/min)+main.py include_router 注册;前端 app.js 加 reportClientError(best-effort fetch,keepalive 页面卸载也能发)+window.onerror+unhandledrejection 全局捕获。不引前端 App Insights SDK(无构建系统,复用后端 configure_azure_monitor)。py_compile+app 创建(/log/client-error 注册,75路由)+node --check ES module 全过。待部署后浏览器造错验证 AppTraces 收到 client_error trace。⚠️app.js 是共享文件,改前群通知",
+        "priority": "P1 质量门槛",
+        "files": ["frontend/js/app.js", "frontend/index.html"],
+        "evidence": "2026-07-13 grep 确认:frontend 仅 img.onerror 头像兜底,无 window.onerror/unhandledrejection/Sentry。observability checklist 自标❌缺",
+        "detail": "app.js 加 window.onerror + unhandledrejection 全局捕获→上报 App Insights(后端已有 SDK)。小程序端已有 app.js onError,本任务仅补 web 端"
+      },
+      {
+        "id": "FR3",
+        "phase": "P1",
+        "title": "SMTP 邮件中转(P0 邮箱验证发信)",
+        "type": "code+config",
+        "owner": "SYF",
+        "status": "pending",
+        "priority": "P1 核心功能完整",
+        "files": ["backend/app/services/auth_service.py", "backend/app/config.py", "backend/.env"],
+        "evidence": "progress c2:SMTP_HOST/USER/PASS 空→email_service._smtp_configured 返 False 静默跳过;SMTP_FROM=noreply@hkmu-campus.example.com 保留域会被拒",
+        "detail": "接 SMTP 中转(SendGrid/Brevo 等)+真实发信域名+FRONTEND_URL 生产。代码 is_hkmu_email/verify/bind-email 就绪,SMTP 配通即生效。P0 同校验证依赖此"
+      },
+      {
+        "id": "FR4",
+        "phase": "P1",
+        "title": "小程序备案 + 微信审核提交",
+        "type": "process(用户操作)",
+        "owner": "司徒+SYF 操作",
+        "status": "pending",
+        "priority": "P1 正式上线合规流程",
+        "detail": "正式上线(全校公开)才需;体验版不需。微信审核前需 FR1 内容安全已接(审核项)。备案需主体资质"
+      },
+      {
+        "id": "FR5",
+        "phase": "P2",
+        "title": "小程序静默失败补 toast(私信/聊天)",
+        "type": "code",
+        "owner": "SYF",
+        "status": "code-done pending-IDE/真机验证",
+        "implemented": "2026-07-13 code-done:精准修主加载失败(非机械全补)——messages.js loadConversations(!silent时toast loadFail)+chat.js loadHistory(reset时toast loadFail)。fetchUnread/markRead等best-effort保持静默(合理,角标失败不该打扰)。node --check 4js全过。待IDE编译/截图+真机验证toast显示",
+        "priority": "P2 体验 quick win(小难度高收益)",
+        "files": ["miniprogram/pages/messages/messages.js", "miniprogram/pages/chat/chat.js"],
+        "evidence": "2026-07-13 体验审查:messages.js:125 loadConversations 失败静默;chat.js:97,112,161,192 多处 catch(()=>{}) 不提示",
+        "detail": "catch 里补 wx.showToast(复用 loadFail/actionFail i18n)。前端体验 TOP2,小难度高收益"
+      },
+      {
+        "id": "FR6",
+        "phase": "P2",
+        "title": "小程序图片加载占位符(对齐 web onerror)",
+        "type": "code",
+        "owner": "SYF",
+        "status": "code-done(部分:核心feed) pending-IDE/真机验证",
+        "implemented": "2026-07-13 code-done(核心feed):community+home wxml image加binderror+data-idx,js加onAvatarError/onImageError(置空字段→走已有wx:else authorInitial字母兜底/wx:if隐藏配图)。复用现有兜底无需默认头像资源。node --check+wxml自闭合确认。范围外(后续):post-detail配图(置空隐藏容易)、messages/chat/new-chat头像(需补initial兜底,低频)。待IDE编译/截图+真机验证破损图不再出现",
+        "priority": "P2 体验 quick win(中难度高收益)",
+        "files": ["miniprogram/pages/community/community.wxml", "miniprogram/pages/home/home.wxml", "miniprogram/pages/lostfound/lostfound.wxml"],
+        "evidence": "web 端 community.js:134 img.onerror 头像 fallback 已有;小程序端 image 无 binderror 占位→破损图。前端体验 TOP1",
+        "detail": "各 <image> 加 binderror→fallback 占位图/隐藏。对齐网页端已有逻辑"
+      },
+      {
+        "id": "FR7",
+        "phase": "P2",
+        "title": "体验精修:加载态骨架屏 + 错误提示细化 + 新闻 404",
+        "type": "code",
+        "owner": "SYF",
+        "status": "code-done(部分:FR7b done) FR7c不适用 FR7a延后",
+        "implemented": "2026-07-14:FR7b 错误细化 done——request.js 给 Error 挂 type(network断网/timeout超时/server 5xx/client 4xx)+i18n COMMON 加 errorNetwork/errorTimeout/errorServer 三语+新建 utils/error.js describeError helper+messages/chat/news 主加载 toast 改用 describeError 按类型显示(替代 loadFail/error.message)。FR7c 新闻404 不适用:news 是纯列表页无单条详情场景,且 loadNews 失败已有 toast(news.js:142)——体验报告误判。FR7a 骨架屏延后(大工程每列表页骨架 UI,单独做)。node --check 6js 全过。待 IDE/真机验证断网/超时/服务器错显示不同提示",
+        "priority": "P2 体验精修(大难度,可拆子项逐步)",
+        "files": ["miniprogram/pages/*", "miniprogram/utils/i18n.js"],
+        "evidence": "前端体验审查:全小程序 loading 仅文字无骨架屏(web 端有 skeleton);错误提示 loadFail/actionFail 不区分断网/服务器/超时;news.js 无 notFound 态",
+        "detail": "子项可拆:FR7a 骨架屏(对齐 web skeletonCard,大);FR7b 错误提示细化(断网/服务器/超时,小);FR7c 新闻 404(小)。体验 72→90 的主力项"
+      },
+      {
+        "id": "FR8",
+        "phase": "P2",
+        "title": "小程序上传前图片压缩(性能:原图加载慢/卡顿)",
+        "type": "code",
+        "owner": "SYF",
+        "status": "code-done pending-IDE/真机验证",
+        "implemented": "2026-07-14 code-done(commit ba43f27):utils/upload.js 加 compressImage——wx.getImageInfo 算缩放比 + wx.createOffscreenCanvas{type:2d} draw + wx.canvasToTempFilePath jpg(quality 0.8)。_maxDimFor:avatars→200px / 其余→750px。uploadImage 公共入口先压缩再 _doUpload,接口 {filePath,module} 不变,compose/profile/lostfound 三调用方零改动。任一环节失败统一 resolve 原图降级(不阻断上传)。node --check OK + 调用方契约确认(posts/avatars/lostfound 三 module 名匹配 maxDim 逻辑)。offscreen canvas type:2d 项目首次用,旧基础库不支持时降级原图(不崩)。待 IDE/真机:压缩效果 + 基础库兼容 + 与 FR6 占位符协同(上传压小+加载兜底覆盖图片链路两端)",
+        "priority": "P2 性能/体验 quick win(中难度高收益)",
+        "files": ["miniprogram/utils/upload.js"],
+        "evidence": "用户反馈:小程序页面加载不及时不丝滑,图片(手机原图 2-5MB)是主因之一;Supabase 免费版无 CDN/动态缩放。与 FR6(加载占位)同属图片链路,FR8 管上传时压小、FR6 管加载时兜底",
+        "detail": "上传前按用途缩放+jpg压缩,降级原图。配合 FR6 覆盖图片加载体验两端。待体检评估是否补 <image lazy-load> 懒加载"
+      }
+    ],
+    "roadmap": "P0 收口内测(FR0a/0b/0c,本周) → P1 代码硬门槛(FR1 内容安全+FR2 web 错误,正式上线最大门槛) → P2 quick win(FR5 静默失败+FR6 图片占位+FR8 上传压缩,快速提分) → P1 流程(FR3 SMTP+FR4 备案审核) → P2 精修(FR7 骨架屏/错误细化/404) → 正式上线(全校公开) → P4 营销(上线后,受香港微信渗透率制约)"
+  },
+  "performance_audit": {
+    "_doc": "小程序加载体验体检(2026-07-14)。用户反馈'加载不及时不丝滑'。根因三维度:首屏慢(/users/me→/posts 串行 + page_size=2 + 无骨架)、切 tab 卡(每次 onShow 重发 /users/me + 冷启动重复请求)、滑动卡(2 条频繁翻页 + 点赞全量重建 + 图全量加载)。对比:planner 是优等生(_emit 单出口 setData + _user 暖路径 + 负缓存 + in-flight 去重,planner.js:117-158,428),home/community/profile 未借鉴",
+    "root_cause_map": {
+      "首屏慢/白屏": "PERF-2 串行 + PERF-1 page_size=2 + FR7a 无骨架",
+      "切 tab 卡": "PERF-3 每次 onShow 重 bootstrap + PERF-4 冷启动重复 /users/me",
+      "滑动/点赞卡": "PERF-1 频繁翻页 + PERF-6 点赞全量重建 + PERF-5 图全量加载"
+    },
+    "findings": [
+      { "id": "PERF-1", "title": "feed page_size 2→12", "tier": 1, "status": "done+verified (commit 2d48c06, 2026-07-14 用户真机确认变快)", "cost": "极低(1行)", "note": "config.js PAGE_SIZE.feed;后端 /posts le=50 允许。首屏内容量×6,消除频繁翻页" },
+      { "id": "PERF-2", "title": "首屏 /users/me ∥ /posts 并行", "tier": 1, "status": "done+verified (commit 2d48c06, 2026-07-14 用户真机确认变快)", "cost": "低", "note": "home/community onShow loadPosts 提前并行;auth 改读 getStoredUser() 保 is_liked 私有态。首屏 sum→max 快约一倍" },
+      { "id": "PERF-3", "title": "home/community 暖路径(仿 planner)", "tier": 2, "status": "done+verified (cc4f356, 2026-07-14 用户真机确认切 tab 更顺)", "cost": "中", "note": "onShow 优先 getStoredUser() 渲染跳 bootstrap;只改 home/community(profile 低频留 PERF-7)。WS 不受影响(ensureConnected 多点触发)" },
+      { "id": "PERF-4", "title": "bootstrapSession 单例去重(冷启动省一跳)", "tier": 2, "status": "done+verified (cc4f356, 2026-07-14 用户真机确认)", "cost": "中(改 auth.js)", "note": "_bootstrapPromise in-flight 单例 + _doBootstrap;app.onLaunch + 首页 onShow 并发复用同一 /users/me" },
+      { "id": "PERF-5", "title": "feed 配图 lazy-load", "tier": 3, "status": "pending", "cost": "低", "note": "15 个 image 0 个 lazy-load;依赖 PERF-1 page_size 调大后才有意义" },
+      { "id": "PERF-6", "title": "toggleLike 单条 setData", "tier": 3, "status": "pending", "cost": "中", "note": "点赞一条却 map 全量重建 posts;改单条 setData。home+community" },
+      { "id": "PERF-7", "title": "profile 暖路径", "tier": 4, "status": "pending", "cost": "低-中", "note": "低频 tab,onShow 每次全量 refreshProfile(+invite-code 预取)" },
+      { "id": "PERF-8", "title": "community inferCommunityBoardKey 缓存", "tier": 4, "status": "pending", "cost": "中", "note": "每次全量正则匹配 title+content;长列表省 CPU" }
+    ],
+    "external": {
+      "FR7a_骨架屏": "首屏白屏根治项,已 deferred 大工程",
+      "私信5s轮询": "WS 降级方案,WS 通则不轮询,非丝滑瓶颈"
+    },
+    "bugfix_like_toggle": "fix afb3be3(2026-07-14):点赞可取消。原 _likeLocks 硬锁在点赞请求飞行期(Azure 1-3s)拦截取消点击→红心不动。改 per-post 串行 promise 链 + 乐观前置 + 仅尾请求 sync + 失败重拉 GET /posts/{id}。用户报 A 现象确认",
+    "next": "PERF-1~4 ✅ 全 verified(2026-07-14 用户真机确认首屏+切 tab+点赞全改善)。剩 PERF-5(lazy-load)/6(toggleLike 单条 setData)/7(profile 暖路径)/8(board 缓存),均锦上添花。⚠️ 本批改动(FR1/2/5/6/7/8+PERF-1~4+点赞)堆 feature 分支未合 main 未部署,生产用户看不到→P0 收口 FR0a 更紧"
   }
 }

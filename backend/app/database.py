@@ -275,6 +275,40 @@ CREATE TABLE IF NOT EXISTS feedback (
 );
 
 CREATE INDEX IF NOT EXISTS idx_feedback_created ON feedback(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS programmes_catalogue (
+    programme_code    TEXT PRIMARY KEY,
+    programme_name    TEXT NOT NULL,
+    name_zh_cn        TEXT,
+    name_zh_tw        TEXT,
+    school            TEXT NOT NULL,
+    school_order      INTEGER NOT NULL DEFAULT 0,
+    prog_order        INTEGER NOT NULL DEFAULT 0,
+    course_count      INTEGER NOT NULL DEFAULT 0,
+    has_full_planning BOOLEAN NOT NULL DEFAULT FALSE,
+    source_code_system TEXT
+);
+
+CREATE TABLE IF NOT EXISTS course_catalogue (
+    id               SERIAL PRIMARY KEY,
+    programme_code   TEXT NOT NULL REFERENCES programmes_catalogue(programme_code) ON DELETE CASCADE,
+    school           TEXT NOT NULL,
+    official_group   TEXT NOT NULL,
+    canonical_bucket TEXT NOT NULL,
+    bucket_order     INTEGER NOT NULL,
+    course_code      TEXT NOT NULL,
+    course_code_sort TEXT NOT NULL,
+    display_name     TEXT NOT NULL,
+    raw_name         TEXT,
+    credits          INTEGER NOT NULL,
+    code_system      TEXT NOT NULL,
+    source_line_no   INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_course_catalogue_prog ON course_catalogue(programme_code);
+CREATE INDEX IF NOT EXISTS idx_cc_prog_bucket ON course_catalogue(programme_code, bucket_order);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_cc_unique ON course_catalogue(programme_code, course_code, official_group);
+CREATE INDEX IF NOT EXISTS idx_pc_school ON programmes_catalogue(school_order, prog_order);
 """
 
 

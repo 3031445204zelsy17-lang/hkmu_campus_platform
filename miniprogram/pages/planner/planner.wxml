@@ -9,35 +9,22 @@
     </view>
   </view>
 
-  <!-- 专业选择 -->
-  <view class="web-panel planner-selector">
-    <view class="field-label">{{text.selectProgramme}}</view>
-    <picker
-      mode="selector"
-      range="{{programmeOptions}}"
-      range-key="label"
-      value="{{programmeIndex}}"
-      bindchange="onProgrammeChange"
-    >
-      <view class="selector-display">
-        <text class="selector-text">{{programmeOptions[programmeIndex].label}}</text>
-        <text class="selector-caret">▾</text>
-      </view>
-    </picker>
-  </view>
-
-  <!-- Hero：专业名 + 总进度 -->
+  <!-- Hero：专业名（点击切换）+ 总进度。专业搜索浮层由 hero 触发，默认收起，不再霸屏 -->
   <view class="planner-hero">
-    <view>
+    <view class="planner-hero-info" bindtap="onOpenProgrammeSearch" hover-class="planner-hero-hover">
       <view class="planner-kicker">{{programmeSchool}}</view>
-      <view class="planner-title">{{programmeName}}</view>
+      <view class="planner-title-row">
+        <text class="planner-title">{{programmeName}}</text>
+        <text class="planner-title-caret">▾</text>
+      </view>
       <view class="planner-copy">
-        <block wx:if="{{loggedIn && !comingSoon}}">{{creditsSummary}}</block>
+        <block wx:if="{{viewMode==='catalogue'}}">{{text.catalogueHeroCopy}}</block>
+        <block wx:elif="{{loggedIn && !comingSoon}}">{{creditsSummary}}</block>
         <block wx:elif="{{comingSoon}}">{{text.comingSoonCopy}}</block>
         <block wx:else>{{text.heroCopy}}</block>
       </view>
     </view>
-    <view wx:if="{{loggedIn && !comingSoon}}" class="planner-score">{{percent}}%</view>
+    <view wx:if="{{loggedIn && !comingSoon && viewMode==='planning'}}" class="planner-score">{{percent}}%</view>
   </view>
 
   <!-- 总览/我的课程 切换 -->
@@ -49,6 +36,44 @@
   <!-- 加载中 -->
   <view wx:if="{{loading}}" class="web-panel">
     <view class="panel-copy">{{text.loading}}</view>
+  </view>
+
+  <!-- 课程目录（非完整规划专业：全校 ~106 专业官方课程列表） -->
+  <view wx:elif="{{viewMode==='catalogue'}}" class="planner-catalogue">
+    <view class="catalogue-disclaimer">{{catalogueDisclaimer}}</view>
+
+    <view wx:if="{{catalogueLoading}}" class="web-panel">
+      <view class="panel-copy">{{text.loading}}</view>
+    </view>
+
+    <view wx:elif="{{catalogueLoadError}}" class="web-panel">
+      <view class="panel-copy">{{catalogueLoadError}}</view>
+    </view>
+
+    <block wx:else>
+      <view class="web-panel catalogue-stats">
+        <view class="cat-stat">
+          <text class="cat-stat-num">{{catalogueTotal}}</text>
+          <text class="cat-stat-label">{{text.totalCourses}}</text>
+        </view>
+        <view class="cat-stat">
+          <text class="cat-stat-num">{{catalogueBuckets.length}}</text>
+          <text class="cat-stat-label">{{text.catalogueGroupCount}}</text>
+        </view>
+      </view>
+
+      <view wx:for="{{catalogueBuckets}}" wx:for-item="b" wx:key="key" class="web-panel">
+        <view class="section-title">{{b.label}} ({{b.total}})</view>
+        <view wx:for="{{b.courses}}" wx:for-item="c" wx:key="code" class="course-row catalogue-row">
+          <view class="course-main">
+            <view class="course-code">{{c.code}}</view>
+            <view class="course-name">{{c.name}} · {{c.credits}}cr</view>
+          </view>
+          <view class="mini-pill gray">{{c.system}}</view>
+        </view>
+        <view wx:if="{{b.collapsed}}" class="catalogue-showall" data-bucket="{{b.key}}" bindtap="onToggleBucket">{{b.showAllLabel}}</view>
+      </view>
+    </block>
   </view>
 
   <!-- 敬请期待（占位专业） -->
@@ -149,4 +174,50 @@
       <view class="panel-copy">{{text.coursesEmpty}}</view>
     </view>
   </block>
+
+  <!-- 全屏专业搜索浮层：点 hero 触发。搜索引导 + 按学院分组卡片，选完或 ✕ 返回 -->
+  <view wx:if="{{programmeSearchOpen}}" class="ps-overlay">
+    <view class="ps-overlay-bar">
+      <view class="ps-back" bindtap="onCloseProgrammeSearch" hover-class="ps-back-hover">‹</view>
+      <text class="ps-overlay-title">{{text.selectProgramme}}</text>
+      <view class="ps-overlay-close" bindtap="onCloseProgrammeSearch">✕</view>
+    </view>
+    <view class="ps-overlay-search">
+      <view class="ps-search-wrap">
+        <view class="ps-search-icon">🔍</view>
+        <input class="ps-search-input" value="{{programmeQuery}}"
+               placeholder="{{text.programmeSearchPlaceholder}}"
+               placeholder-class="ps-search-ph"
+               focus="{{programmeSearchOpen}}"
+               bindinput="onProgrammeSearchInput" confirm-type="search" />
+      </view>
+      <view class="ps-search-hint">{{text.programmeSearchHintPre}}{{programmeTotal}}{{text.programmeSearchHintPost}}</view>
+    </view>
+    <scroll-view scroll-y class="ps-overlay-list">
+      <view wx:if="{{programmeSearchEmpty}}" class="ps-empty">
+        <view class="ps-empty-icon">🔍</view>
+        <view class="ps-empty-text">{{text.programmeSearchEmpty}}</view>
+      </view>
+      <block wx:for="{{programmeSearchResults}}" wx:for-item="grp" wx:key="school">
+        <view class="ps-group-card">
+          <view wx:if="{{grp.school}}" class="ps-group-head">
+            <text class="ps-group-name">{{grp.school}}</text>
+            <text class="ps-group-count">{{grp.programmes.length}}</text>
+          </view>
+          <view wx:for="{{grp.programmes}}" wx:for-item="p" wx:key="code"
+                class="ps-row {{p.selected?'ps-row-selected':''}}"
+                data-code="{{p.code}}" bindtap="onSelectProgramme">
+            <view class="ps-row-main">
+              <text class="ps-row-name">{{p.name}}</text>
+              <text wx:if="{{p.badge}}" class="ps-row-badge">{{p.badge}}</text>
+            </view>
+            <view class="ps-row-tail">
+              <text class="ps-row-code">{{p.code}}</text>
+              <text wx:if="{{p.selected}}" class="ps-row-check">✓</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </scroll-view>
+  </view>
 </view>

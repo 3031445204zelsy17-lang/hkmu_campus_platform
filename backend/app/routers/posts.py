@@ -12,6 +12,7 @@ from ..models import (
 from ..services.auth_service import get_current_user, oauth2_scheme
 from ..services.rate_limiter import check_rate_limit
 from ..services.sanitizer import sanitize_dict, sanitize
+from ..services.content_security import audit_user_text, SCENE_FORUM, SCENE_COMMENT
 
 _optional_oauth2 = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
@@ -217,6 +218,7 @@ async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
             {"title": body.title, "content": body.content, "category": body.category},
             "title", "content", "category",
         )
+        await audit_user_text(user, f"{body.title} {body.content}", SCENE_FORUM)
         now = datetime.now(timezone.utc)
 
         is_anonymous = body.is_anonymous
@@ -431,6 +433,7 @@ async def create_comment(
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Post not found")
 
         safe_content = sanitize(body.content)
+        await audit_user_text(user, body.content, SCENE_COMMENT)
         now = datetime.now(timezone.utc)
 
         async with db.transaction():

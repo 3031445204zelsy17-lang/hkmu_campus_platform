@@ -32,7 +32,8 @@ Component({
 
   lifetimes: {
     attached() {
-      const info = wx.getSystemInfoSync();
+      // wx.getSystemInfoSync 已废弃 → wx.getWindowInfo（本项目只用到 statusBarHeight / windowWidth，字段名相同）
+      const info = wx.getWindowInfo();
       const statusBarHeight = info.statusBarHeight || 24;
       let navBarHeight = 56;
       let rightReserve = 96;
