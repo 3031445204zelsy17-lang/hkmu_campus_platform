@@ -992,5 +992,28 @@
       }
     ],
     "roadmap": "P0 收口内测(FR0a/0b/0c,本周) → P1 代码硬门槛(FR1 内容安全+FR2 web 错误,正式上线最大门槛) → P2 quick win(FR5 静默失败+FR6 图片占位+FR8 上传压缩,快速提分) → P1 流程(FR3 SMTP+FR4 备案审核) → P2 精修(FR7 骨架屏/错误细化/404) → 正式上线(全校公开) → P4 营销(上线后,受香港微信渗透率制约)"
+  },
+  "performance_audit": {
+    "_doc": "小程序加载体验体检(2026-07-14)。用户反馈'加载不及时不丝滑'。根因三维度:首屏慢(/users/me→/posts 串行 + page_size=2 + 无骨架)、切 tab 卡(每次 onShow 重发 /users/me + 冷启动重复请求)、滑动卡(2 条频繁翻页 + 点赞全量重建 + 图全量加载)。对比:planner 是优等生(_emit 单出口 setData + _user 暖路径 + 负缓存 + in-flight 去重,planner.js:117-158,428),home/community/profile 未借鉴",
+    "root_cause_map": {
+      "首屏慢/白屏": "PERF-2 串行 + PERF-1 page_size=2 + FR7a 无骨架",
+      "切 tab 卡": "PERF-3 每次 onShow 重 bootstrap + PERF-4 冷启动重复 /users/me",
+      "滑动/点赞卡": "PERF-1 频繁翻页 + PERF-6 点赞全量重建 + PERF-5 图全量加载"
+    },
+    "findings": [
+      { "id": "PERF-1", "title": "feed page_size 2→12", "tier": 1, "status": "done (commit 2d48c06)", "cost": "极低(1行)", "note": "config.js PAGE_SIZE.feed;后端 /posts le=50 允许。首屏内容量×6,消除频繁翻页" },
+      { "id": "PERF-2", "title": "首屏 /users/me ∥ /posts 并行", "tier": 1, "status": "done (commit 2d48c06)", "cost": "低", "note": "home/community onShow loadPosts 提前并行;auth 改读 getStoredUser() 保 is_liked 私有态。首屏 sum→max 快约一倍。待 IDE/真机验证" },
+      { "id": "PERF-3", "title": "home/community/profile 借鉴 planner 暖路径", "tier": 2, "status": "pending", "cost": "中", "note": "bootstrapSession 每次无条件发 /users/me;加会话级 _user 缓存命中跳过。profile 走 stale-while-revalidate" },
+      { "id": "PERF-4", "title": "bootstrapSession 单例去重(冷启动省一跳)", "tier": 2, "status": "pending", "cost": "中(改 auth.js 共享 utils)", "note": "app.onLaunch + home.onShow 并发 2 个 /users/me;仿 request.js _refreshPromise 单例" },
+      { "id": "PERF-5", "title": "feed 配图 lazy-load", "tier": 3, "status": "pending", "cost": "低", "note": "15 个 image 0 个 lazy-load;依赖 PERF-1 page_size 调大后才有意义" },
+      { "id": "PERF-6", "title": "toggleLike 单条 setData", "tier": 3, "status": "pending", "cost": "中", "note": "点赞一条却 map 全量重建 posts;改单条 setData。home+community" },
+      { "id": "PERF-7", "title": "profile 暖路径", "tier": 4, "status": "pending", "cost": "低-中", "note": "低频 tab,onShow 每次全量 refreshProfile(+invite-code 预取)" },
+      { "id": "PERF-8", "title": "community inferCommunityBoardKey 缓存", "tier": 4, "status": "pending", "cost": "中", "note": "每次全量正则匹配 title+content;长列表省 CPU" }
+    ],
+    "external": {
+      "FR7a_骨架屏": "首屏白屏根治项,已 deferred 大工程",
+      "私信5s轮询": "WS 降级方案,WS 通则不轮询,非丝滑瓶颈"
+    },
+    "next": "PERF-1+2 已 done 待 IDE/真机验证;视效果决定是否进 PERF-3/4(切 tab 卡)或 PERF-5/6(滑动)"
   }
 }
