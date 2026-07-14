@@ -8,6 +8,36 @@ import { initTheme, toggleTheme, currentTheme } from "./utils/theme.js";
 import { initAnalytics, identify, track, resetIdentity } from "./utils/analytics.js";
 import { subscribePush, unsubscribePush } from "./utils/push.js";
 
+// --- FR2: 全局 JS 错误捕获 → best-effort 上报后端(→ App Insights AppTraces) ---
+function reportClientError(type, payload) {
+  try {
+    fetch("/api/v1/log/client-error", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      keepalive: true, // 页面卸载时(白屏/崩溃)也能发出
+      body: JSON.stringify({ type, url: location.href, ...payload }),
+    }).catch(() => {}); // best-effort,失败不影响主流程
+  } catch { /* 上报本身绝不能再抛错 */ }
+}
+
+window.addEventListener("error", (e) => {
+  reportClientError("error", {
+    message: e.message,
+    source: e.filename,
+    lineno: e.lineno,
+    colno: e.colno,
+    stack: e.error && e.error.stack,
+  });
+});
+
+window.addEventListener("unhandledrejection", (e) => {
+  const reason = e.reason;
+  reportClientError("unhandledrejection", {
+    message: (reason && (reason.message || String(reason))) || "unhandled rejection",
+    stack: reason && reason.stack,
+  });
+});
+
 // Pages
 import { renderHome } from "./pages/home.js";
 import { renderCommunity } from "./pages/community.js";
