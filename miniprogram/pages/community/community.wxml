@@ -72,7 +72,7 @@
             <view class="{{item.topicClass}}">{{item.category}}</view>
           </view>
           <view class="feed-title">{{item.title}}</view>
-          <image wx:if="{{item.imageUrl}}" class="feed-image" src="{{item.imageUrl}}" mode="widthFix" binderror="onImageError" data-idx="{{index}}" />
+          <image wx:if="{{item.imageUrl}}" class="feed-image" src="{{item.imageUrl}}" mode="widthFix" lazy-load binderror="onImageError" data-idx="{{index}}" />
           <view class="feed-body">{{item.content}}</view>
           <view class="post-actions">
             <view class="{{item.likeClass}}" data-index="{{index}}" catchtap="toggleLike" hover-class="post-action-press">
