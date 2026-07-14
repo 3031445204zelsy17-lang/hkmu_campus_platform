@@ -6,7 +6,7 @@ const PREVIEW_MODE = false;
 
 // 分页大小（值沿用历史；集中常量化便于将来统一调整）
 const PAGE_SIZE = {
-  feed: 2, // home / community 信息流
+  feed: 12, // home / community 信息流(PERF-1: 2→12,原值过小致首屏频繁翻页卡顿;后端 le=50 允许)
   list: 12, // news / lostfound 列表
   comments: 50, // 帖子评论
 };

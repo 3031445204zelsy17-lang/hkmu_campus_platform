@@ -43,15 +43,19 @@ Page({
       this._hasLoadedPosts = false;
     }
 
+    // PERF-2: 首屏 /users/me 与 /posts 并行(原串行,首屏耗时=sum 现在=max)。
+    // loadPosts 提前触发;其 auth 读 storage 登录态(见 loadPosts),不依赖 bootstrap
+    // 后的 setData,故登录用户首屏也能带上 is_liked 私有态。
+    if (!this._hasLoadedPosts) {
+      this._hasLoadedPosts = true;
+      this.loadPosts(true);
+    }
+
     auth.bootstrapSession().then((user) => {
       this.setData({
         user: user || null,
         userInitial: user ? user.initial : "H",
       });
-      if (!this._hasLoadedPosts) {
-        this._hasLoadedPosts = true;
-        this.loadPosts(true);
-      }
       this._consumePendingInvite(user || null); // C.7 消费邀请码
     });
   },
@@ -131,7 +135,9 @@ Page({
 
     return request({
       path: `/posts?${query.join("&")}`,
-      auth: !!this.data.user,
+      // PERF-2: 读 storage 登录态(非 this.data.user)——首屏并行时 user 尚未 setData,
+      // 仍能正确带 Bearer,登录用户首屏保留 is_liked 私有态。
+      auth: !!auth.getStoredUser(),
     })
       .then((data) => {
         const nextRawPosts = data.items || [];
