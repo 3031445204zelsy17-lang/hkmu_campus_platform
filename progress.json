@@ -976,8 +976,21 @@
         "files": ["miniprogram/pages/*", "miniprogram/utils/i18n.js"],
         "evidence": "前端体验审查:全小程序 loading 仅文字无骨架屏(web 端有 skeleton);错误提示 loadFail/actionFail 不区分断网/服务器/超时;news.js 无 notFound 态",
         "detail": "子项可拆:FR7a 骨架屏(对齐 web skeletonCard,大);FR7b 错误提示细化(断网/服务器/超时,小);FR7c 新闻 404(小)。体验 72→90 的主力项"
+      },
+      {
+        "id": "FR8",
+        "phase": "P2",
+        "title": "小程序上传前图片压缩(性能:原图加载慢/卡顿)",
+        "type": "code",
+        "owner": "SYF",
+        "status": "code-done pending-IDE/真机验证",
+        "implemented": "2026-07-14 code-done(commit ba43f27):utils/upload.js 加 compressImage——wx.getImageInfo 算缩放比 + wx.createOffscreenCanvas{type:2d} draw + wx.canvasToTempFilePath jpg(quality 0.8)。_maxDimFor:avatars→200px / 其余→750px。uploadImage 公共入口先压缩再 _doUpload,接口 {filePath,module} 不变,compose/profile/lostfound 三调用方零改动。任一环节失败统一 resolve 原图降级(不阻断上传)。node --check OK + 调用方契约确认(posts/avatars/lostfound 三 module 名匹配 maxDim 逻辑)。offscreen canvas type:2d 项目首次用,旧基础库不支持时降级原图(不崩)。待 IDE/真机:压缩效果 + 基础库兼容 + 与 FR6 占位符协同(上传压小+加载兜底覆盖图片链路两端)",
+        "priority": "P2 性能/体验 quick win(中难度高收益)",
+        "files": ["miniprogram/utils/upload.js"],
+        "evidence": "用户反馈:小程序页面加载不及时不丝滑,图片(手机原图 2-5MB)是主因之一;Supabase 免费版无 CDN/动态缩放。与 FR6(加载占位)同属图片链路,FR8 管上传时压小、FR6 管加载时兜底",
+        "detail": "上传前按用途缩放+jpg压缩,降级原图。配合 FR6 覆盖图片加载体验两端。待体检评估是否补 <image lazy-load> 懒加载"
       }
     ],
-    "roadmap": "P0 收口内测(FR0a/0b/0c,本周) → P1 代码硬门槛(FR1 内容安全+FR2 web 错误,正式上线最大门槛) → P2 quick win(FR5 静默失败+FR6 图片占位,快速提分) → P1 流程(FR3 SMTP+FR4 备案审核) → P2 精修(FR7 骨架屏/错误细化/404) → 正式上线(全校公开) → P4 营销(上线后,受香港微信渗透率制约)"
+    "roadmap": "P0 收口内测(FR0a/0b/0c,本周) → P1 代码硬门槛(FR1 内容安全+FR2 web 错误,正式上线最大门槛) → P2 quick win(FR5 静默失败+FR6 图片占位+FR8 上传压缩,快速提分) → P1 流程(FR3 SMTP+FR4 备案审核) → P2 精修(FR7 骨架屏/错误细化/404) → 正式上线(全校公开) → P4 营销(上线后,受香港微信渗透率制约)"
   }
 }
