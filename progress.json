@@ -866,9 +866,9 @@
         "title": "合并 feature/course-catalogue-layer → main + 提交 chat.js/request.js 两改动 + 部署",
         "type": "deploy",
         "owner": "司徒+SYF",
-        "status": "pending",
+        "status": "done (2026-07-14: PR#22 merge-commit 合 main 3cba822 + buildx push ACR + container set,生产镜像 3cba822,curl POST /log/client-error 204 验证新容器)",
         "priority": "P0 阻断发版",
-        "detail": "feature 领先 main 18 提交(课程目录层+专业选择器 v2/v3/v4),PR#22 未合并;本会话 chat.js 聊天降级轮询 + request.js refresh 互斥 未提交未部署。见 docs/release/上线就绪清单.md 第四部分部署 checklist"
+        "detail": "原 feature 领先 main 34 提交(课程目录层+FR1/2/5/6/7/8+PERF+点赞),PR#22 已 merge-commit 合 main;chat.js/request.js 早先已提交(f19ae0b/e392b4f)。buildx amd64 push ACR + container set 部署,生产镜像 3cba822。坑:VPN 注入的 macOS 系统代理 127.0.0.1:1082 致 container set 间歇 503(-management.azure.com 写操作),重试 2 发过;JP Tokyo 出口也间歇 503 非 HK 独有"
       },
       {
         "id": "FR0b",
@@ -886,7 +886,7 @@
         "title": "refresh 竞态部署生效(代码已修)",
         "type": "deploy",
         "owner": "SYF",
-        "status": "code-done pending-deploy",
+        "status": "done (2026-07-14 部署 3cba822 生效,request.js _refreshPromise 互斥在 f19ae0b 合入 main 并部署)",
         "priority": "P0 阻断登录稳定",
         "detail": "request.js 已加 _refreshPromise 单例互斥,commit+部署后生产生效。见 release 清单阻断项 3"
       },
