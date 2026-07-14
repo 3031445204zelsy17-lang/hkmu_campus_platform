@@ -179,15 +179,38 @@ Page({
     if (!post) {
       return;
     }
-    this._likeLocks = this._likeLocks || {};
-    if (this._likeLocks[post.id]) {
-      return;
-    }
-    this._likeLocks[post.id] = true;
 
+    // 乐观翻转立即生效。原 _likeLocks 硬锁会在点赞请求飞行期(Azure 往返 1-3s)拦截
+    // "取消"点击 → 红心不动 = "不能取消"。现改乐观前置 + per-post 串行队列。
+    this._applyOptimisticLike(index, !post.isLiked);
+
+    // per-post 串行队列:后端 toggle 基于 DB 翻转,并发请求会竞态(同时读未赞都 INSERT)。
+    // 串行保证翻转顺序 = 点击顺序;仅"链尾"请求完成时同步 UI,避免中途返回覆盖闪烁。
+    this._likeChain = this._likeChain || {};
+    const prev = (this._likeChain[post.id] || Promise.resolve()).catch(() => {});
+    const mine = prev.then(() =>
+      request({ method: "POST", path: `/posts/${post.id}/like`, auth: true })
+        .then((updatedPost) => {
+          if (this._likeChain[post.id] === mine) {
+            this._syncLikeFromServer(post.id, updatedPost);
+          }
+        })
+        .catch(() => {
+          // 失败:若仍为链尾,重拉单帖真实态纠回(防乐观与 DB 偏离)
+          if (this._likeChain[post.id] === mine) {
+            request({ path: `/posts/${post.id}`, auth: !!auth.getStoredUser() })
+              .then((p) => this._syncLikeFromServer(post.id, p))
+              .catch(() => {});
+          }
+          wx.showToast({ title: this.data.text.actionFail, icon: "none" });
+        }),
+    );
+    this._likeChain[post.id] = mine;
+  },
+
+  // 乐观更新单帖(翻转 is_liked + likes_count)并立即 setData
+  _applyOptimisticLike(index, nextLiked) {
     const previousRawPost = this.data.rawPosts[index] || {};
-    const previousLiked = !!post.isLiked;
-    const nextLiked = !previousLiked;
     const currentLikes = Number((previousRawPost && previousRawPost.likes_count) || 0);
     const optimisticRawPosts = this.data.rawPosts.slice();
     optimisticRawPosts[index] = {
@@ -199,33 +222,18 @@ Page({
       posts: optimisticRawPosts.map((item) => normalizePost(item, this.data.text)),
       rawPosts: optimisticRawPosts,
     });
+  },
 
-    request({
-      method: "POST",
-      path: `/posts/${post.id}/like`,
-      auth: true,
-    })
-      .then((updatedPost) => {
-        const rawPosts = this.data.rawPosts.slice();
-        rawPosts[index] = updatedPost;
-        const posts = rawPosts.map((item) => normalizePost(item, this.data.text));
-        this.setData({ posts, rawPosts });
-      })
-      .catch((error) => {
-        const rawPosts = this.data.rawPosts.slice();
-        rawPosts[index] = previousRawPost;
-        this.setData({
-          posts: rawPosts.map((item) => normalizePost(item, this.data.text)),
-          rawPosts,
-        });
-        wx.showToast({
-          title: error.message || this.data.text.actionFail,
-          icon: "none",
-        });
-      })
-      .finally(() => {
-        delete this._likeLocks[post.id];
-      });
+  // 用后端真实态同步单帖(按 id 定位,因列表 index 可能随翻页变动)
+  _syncLikeFromServer(postId, updatedPost) {
+    const idx = this.data.rawPosts.findIndex((r) => r && r.id === postId);
+    if (idx < 0) return;
+    const rawPosts = this.data.rawPosts.slice();
+    rawPosts[idx] = updatedPost;
+    this.setData({
+      posts: rawPosts.map((item) => normalizePost(item, this.data.text)),
+      rawPosts,
+    });
   },
 
   openComments() {
