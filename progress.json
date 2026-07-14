@@ -1001,8 +1001,8 @@
       "滑动/点赞卡": "PERF-1 频繁翻页 + PERF-6 点赞全量重建 + PERF-5 图全量加载"
     },
     "findings": [
-      { "id": "PERF-1", "title": "feed page_size 2→12", "tier": 1, "status": "done (commit 2d48c06)", "cost": "极低(1行)", "note": "config.js PAGE_SIZE.feed;后端 /posts le=50 允许。首屏内容量×6,消除频繁翻页" },
-      { "id": "PERF-2", "title": "首屏 /users/me ∥ /posts 并行", "tier": 1, "status": "done (commit 2d48c06)", "cost": "低", "note": "home/community onShow loadPosts 提前并行;auth 改读 getStoredUser() 保 is_liked 私有态。首屏 sum→max 快约一倍。待 IDE/真机验证" },
+      { "id": "PERF-1", "title": "feed page_size 2→12", "tier": 1, "status": "done+verified (commit 2d48c06, 2026-07-14 用户真机确认变快)", "cost": "极低(1行)", "note": "config.js PAGE_SIZE.feed;后端 /posts le=50 允许。首屏内容量×6,消除频繁翻页" },
+      { "id": "PERF-2", "title": "首屏 /users/me ∥ /posts 并行", "tier": 1, "status": "done+verified (commit 2d48c06, 2026-07-14 用户真机确认变快)", "cost": "低", "note": "home/community onShow loadPosts 提前并行;auth 改读 getStoredUser() 保 is_liked 私有态。首屏 sum→max 快约一倍" },
       { "id": "PERF-3", "title": "home/community/profile 借鉴 planner 暖路径", "tier": 2, "status": "pending", "cost": "中", "note": "bootstrapSession 每次无条件发 /users/me;加会话级 _user 缓存命中跳过。profile 走 stale-while-revalidate" },
       { "id": "PERF-4", "title": "bootstrapSession 单例去重(冷启动省一跳)", "tier": 2, "status": "pending", "cost": "中(改 auth.js 共享 utils)", "note": "app.onLaunch + home.onShow 并发 2 个 /users/me;仿 request.js _refreshPromise 单例" },
       { "id": "PERF-5", "title": "feed 配图 lazy-load", "tier": 3, "status": "pending", "cost": "低", "note": "15 个 image 0 个 lazy-load;依赖 PERF-1 page_size 调大后才有意义" },
@@ -1014,6 +1014,6 @@
       "FR7a_骨架屏": "首屏白屏根治项,已 deferred 大工程",
       "私信5s轮询": "WS 降级方案,WS 通则不轮询,非丝滑瓶颈"
     },
-    "next": "PERF-1+2 已 done 待 IDE/真机验证;视效果决定是否进 PERF-3/4(切 tab 卡)或 PERF-5/6(滑动)"
+    "next": "PERF-1+2 ✅ 真机验证通过(2026-07-14 用户确认变快);可选 PERF-3/4(切 tab 卡:暖路径+冷启动单例)或 PERF-5(lazy-load)/PERF-6(点赞单条 setData)"
   }
 }
