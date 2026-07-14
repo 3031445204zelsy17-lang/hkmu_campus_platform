@@ -107,9 +107,15 @@ Page({
       this.loadPosts(true);
     }
 
-    auth.bootstrapSession().then((user) => {
-      this.setData({ user: user || null });
-    });
+    // PERF-3: 暖路径——storage 有 user 直接用,跳过 bootstrapSession 的 /users/me
+    const cachedUser = auth.getStoredUser();
+    if (cachedUser) {
+      this.setData({ user: cachedUser });
+    } else {
+      auth.bootstrapSession().then((user) => {
+        this.setData({ user: user || null });
+      });
+    }
   },
 
   handleLanguageChange(event) {

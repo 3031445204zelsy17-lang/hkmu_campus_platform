@@ -51,13 +51,22 @@ Page({
       this.loadPosts(true);
     }
 
-    auth.bootstrapSession().then((user) => {
-      this.setData({
-        user: user || null,
-        userInitial: user ? user.initial : "H",
+    // PERF-3: 暖路径——优先用 storage 缓存 user 渲染,跳过 bootstrapSession 的 /users/me。
+    // storage 由 login/profile/bootstrapSession 更新,切 tab 不必每次重拉;
+    // token 过期由 request 层 401 自动 refresh 兜底,不影响登录态。
+    const cachedUser = auth.getStoredUser();
+    if (cachedUser) {
+      this.setData({ user: cachedUser, userInitial: cachedUser.initial });
+      this._consumePendingInvite(cachedUser); // C.7 消费邀请码
+    } else {
+      auth.bootstrapSession().then((user) => {
+        this.setData({
+          user: user || null,
+          userInitial: user ? user.initial : "H",
+        });
+        this._consumePendingInvite(user || null); // C.7 消费邀请码
       });
-      this._consumePendingInvite(user || null); // C.7 消费邀请码
-    });
+    }
   },
 
   handleLanguageChange(event) {
