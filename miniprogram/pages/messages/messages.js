@@ -4,6 +4,7 @@ const { resolveUrl } = require("../../utils/post");
 const { getInitial, formatChatTime } = require("../../utils/format");
 const messages = require("../../utils/messages");
 const auth = require("../../utils/auth");
+const { describeError } = require("../../utils/error");
 
 function normalizeConversation(c, text) {
   const name = c.partner_nickname || "HKMU";
@@ -122,10 +123,10 @@ Page({
           loading: false,
         });
       })
-      .catch(() => {
+      .catch((err) => {
         this.setData({ loading: false });
         if (!silent) {
-          wx.showToast({ title: getTexts("messages").loadFail, icon: "none" });
+          wx.showToast({ title: describeError(err, getTexts("messages")), icon: "none" });
         }
       });
   },

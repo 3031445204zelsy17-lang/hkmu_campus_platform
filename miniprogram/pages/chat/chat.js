@@ -4,6 +4,7 @@ const { resolveUrl } = require("../../utils/post");
 const { getInitial, formatChatTime } = require("../../utils/format");
 const messages = require("../../utils/messages");
 const auth = require("../../utils/auth");
+const { describeError } = require("../../utils/error");
 
 // WS 连不上服务端时(wx.connectSocket 握手不兼容,见 utils/messages.js connect),
 // 聊天页降级轮询拉新消息的间隔。WS 通时跳过,只用推送。
@@ -202,10 +203,10 @@ Page({
           });
         }
       })
-      .catch(() => {
+      .catch((err) => {
         this.setData({ loading: false });
         if (reset) {
-          wx.showToast({ title: getTexts("chat").loadFail, icon: "none" });
+          wx.showToast({ title: describeError(err, getTexts("chat")), icon: "none" });
         }
       });
   },

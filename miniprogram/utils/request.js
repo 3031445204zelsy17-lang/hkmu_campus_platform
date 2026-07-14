@@ -70,7 +70,11 @@ function rawRequest({ method = "GET", path, data = null, header = {} }) {
       ),
       success: resolve,
       fail: (error) => {
-        reject(new Error(error.errMsg || "Network request failed"));
+        const msg = error.errMsg || "Network request failed";
+        const e = new Error(msg);
+        // FR7b:错误归类,供调用方按类型显示友好文案(断网/超时区分)
+        e.type = /timeout|timed out/i.test(msg) ? "timeout" : "network";
+        reject(e);
       },
     });
   });
@@ -144,7 +148,10 @@ function request({ method = "GET", path, data = null, auth = false, retry = true
         : `Request failed (${response.statusCode})`;
       // 内测监控 B3:失败请求上报后台实时日志(带 path/method/status,便于定位)
       log.error("api", errMsg, { path, method, status: response.statusCode });
-      throw new Error(errMsg);
+      const e = new Error(errMsg);
+      // FR7b:5xx=服务器错,4xx=客户端业务错(如 400 违规/404/403)
+      e.type = response.statusCode >= 500 ? "server" : "client";
+      throw e;
     }
 
     return response.data;

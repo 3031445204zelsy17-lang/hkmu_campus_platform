@@ -3,6 +3,7 @@ const { formatDate } = require("../../utils/format");
 const { syncTabBar } = require("../../utils/tabbar");
 const { getLocale, getTexts } = require("../../utils/i18n");
 const { PAGE_SIZE } = require("../../utils/config");
+const { describeError } = require("../../utils/error");
 
 function normalizeNews(items, text = getTexts("news")) {
   return items.map((item) => ({
@@ -140,7 +141,7 @@ Page({
       })
       .catch((error) => {
         wx.showToast({
-          title: error.message || this.data.text.loadFail,
+          title: describeError(error, this.data.text),
           icon: "none",
         });
       })
