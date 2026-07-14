@@ -1003,8 +1003,8 @@
     "findings": [
       { "id": "PERF-1", "title": "feed page_size 2→12", "tier": 1, "status": "done+verified (commit 2d48c06, 2026-07-14 用户真机确认变快)", "cost": "极低(1行)", "note": "config.js PAGE_SIZE.feed;后端 /posts le=50 允许。首屏内容量×6,消除频繁翻页" },
       { "id": "PERF-2", "title": "首屏 /users/me ∥ /posts 并行", "tier": 1, "status": "done+verified (commit 2d48c06, 2026-07-14 用户真机确认变快)", "cost": "低", "note": "home/community onShow loadPosts 提前并行;auth 改读 getStoredUser() 保 is_liked 私有态。首屏 sum→max 快约一倍" },
-      { "id": "PERF-3", "title": "home/community 暖路径(仿 planner)", "tier": 2, "status": "done (commit cc4f356)", "cost": "中", "note": "onShow 优先 getStoredUser() 渲染跳 bootstrap;只改 home/community(profile 低频留 PERF-7)。WS 不受影响(ensureConnected 多点触发)" },
-      { "id": "PERF-4", "title": "bootstrapSession 单例去重(冷启动省一跳)", "tier": 2, "status": "done (commit cc4f356)", "cost": "中(改 auth.js)", "note": "_bootstrapPromise in-flight 单例 + _doBootstrap;app.onLaunch + 首页 onShow 并发复用同一 /users/me" },
+      { "id": "PERF-3", "title": "home/community 暖路径(仿 planner)", "tier": 2, "status": "done+verified (cc4f356, 2026-07-14 用户真机确认切 tab 更顺)", "cost": "中", "note": "onShow 优先 getStoredUser() 渲染跳 bootstrap;只改 home/community(profile 低频留 PERF-7)。WS 不受影响(ensureConnected 多点触发)" },
+      { "id": "PERF-4", "title": "bootstrapSession 单例去重(冷启动省一跳)", "tier": 2, "status": "done+verified (cc4f356, 2026-07-14 用户真机确认)", "cost": "中(改 auth.js)", "note": "_bootstrapPromise in-flight 单例 + _doBootstrap;app.onLaunch + 首页 onShow 并发复用同一 /users/me" },
       { "id": "PERF-5", "title": "feed 配图 lazy-load", "tier": 3, "status": "pending", "cost": "低", "note": "15 个 image 0 个 lazy-load;依赖 PERF-1 page_size 调大后才有意义" },
       { "id": "PERF-6", "title": "toggleLike 单条 setData", "tier": 3, "status": "pending", "cost": "中", "note": "点赞一条却 map 全量重建 posts;改单条 setData。home+community" },
       { "id": "PERF-7", "title": "profile 暖路径", "tier": 4, "status": "pending", "cost": "低-中", "note": "低频 tab,onShow 每次全量 refreshProfile(+invite-code 预取)" },
@@ -1015,6 +1015,6 @@
       "私信5s轮询": "WS 降级方案,WS 通则不轮询,非丝滑瓶颈"
     },
     "bugfix_like_toggle": "fix afb3be3(2026-07-14):点赞可取消。原 _likeLocks 硬锁在点赞请求飞行期(Azure 1-3s)拦截取消点击→红心不动。改 per-post 串行 promise 链 + 乐观前置 + 仅尾请求 sync + 失败重拉 GET /posts/{id}。用户报 A 现象确认",
-    "next": "PERF-1~4 ✅ code-done(PERF-1/2 真机验证变快;PERF-3/4 待验证切 tab 体感+WS 私信+冷启动 user)。剩 PERF-5(lazy-load)/6(toggleLike 单条 setData,_applyOptimisticLike 仍全量 map)/7(profile 暖路径)/8(board 缓存)"
+    "next": "PERF-1~4 ✅ 全 verified(2026-07-14 用户真机确认首屏+切 tab+点赞全改善)。剩 PERF-5(lazy-load)/6(toggleLike 单条 setData)/7(profile 暖路径)/8(board 缓存),均锦上添花。⚠️ 本批改动(FR1/2/5/6/7/8+PERF-1~4+点赞)堆 feature 分支未合 main 未部署,生产用户看不到→P0 收口 FR0a 更紧"
   }
 }
