@@ -1005,7 +1005,7 @@
       { "id": "PERF-2", "title": "首屏 /users/me ∥ /posts 并行", "tier": 1, "status": "done+verified (commit 2d48c06, 2026-07-14 用户真机确认变快)", "cost": "低", "note": "home/community onShow loadPosts 提前并行;auth 改读 getStoredUser() 保 is_liked 私有态。首屏 sum→max 快约一倍" },
       { "id": "PERF-3", "title": "home/community 暖路径(仿 planner)", "tier": 2, "status": "done+verified (cc4f356, 2026-07-14 用户真机确认切 tab 更顺)", "cost": "中", "note": "onShow 优先 getStoredUser() 渲染跳 bootstrap;只改 home/community(profile 低频留 PERF-7)。WS 不受影响(ensureConnected 多点触发)" },
       { "id": "PERF-4", "title": "bootstrapSession 单例去重(冷启动省一跳)", "tier": 2, "status": "done+verified (cc4f356, 2026-07-14 用户真机确认)", "cost": "中(改 auth.js)", "note": "_bootstrapPromise in-flight 单例 + _doBootstrap;app.onLaunch + 首页 onShow 并发复用同一 /users/me" },
-      { "id": "PERF-5", "title": "feed 配图 lazy-load", "tier": 3, "status": "pending", "cost": "低", "note": "15 个 image 0 个 lazy-load;依赖 PERF-1 page_size 调大后才有意义" },
+      { "id": "PERF-5", "title": "feed 配图 lazy-load", "tier": 3, "status": "done (commit 0911fff, feature/perf-polish 待合 main)", "cost": "低", "note": "home/community feed 配图 image 加 lazy-load;头像/表单缩略图不加。待小程序上传生效" },
       { "id": "PERF-6", "title": "toggleLike 单条 setData", "tier": 3, "status": "pending", "cost": "中", "note": "点赞一条却 map 全量重建 posts;改单条 setData。home+community" },
       { "id": "PERF-7", "title": "profile 暖路径", "tier": 4, "status": "pending", "cost": "低-中", "note": "低频 tab,onShow 每次全量 refreshProfile(+invite-code 预取)" },
       { "id": "PERF-8", "title": "community inferCommunityBoardKey 缓存", "tier": 4, "status": "pending", "cost": "中", "note": "每次全量正则匹配 title+content;长列表省 CPU" }
@@ -1015,6 +1015,13 @@
       "私信5s轮询": "WS 降级方案,WS 通则不轮询,非丝滑瓶颈"
     },
     "bugfix_like_toggle": "fix afb3be3(2026-07-14):点赞可取消。原 _likeLocks 硬锁在点赞请求飞行期(Azure 1-3s)拦截取消点击→红心不动。改 per-post 串行 promise 链 + 乐观前置 + 仅尾请求 sync + 失败重拉 GET /posts/{id}。用户报 A 现象确认",
-    "next": "PERF-1~4 ✅ 全 verified(2026-07-14 用户真机确认首屏+切 tab+点赞全改善)。剩 PERF-5(lazy-load)/6(toggleLike 单条 setData)/7(profile 暖路径)/8(board 缓存),均锦上添花。⚠️ 本批改动(FR1/2/5/6/7/8+PERF-1~4+点赞)堆 feature 分支未合 main 未部署,生产用户看不到→P0 收口 FR0a 更紧"
+    "session_2026_07_15_open": {
+      "_doc": "2026-07-15 会话末未决项(新对话接续用)。当前在 feature/perf-polish 分支(从 main 3cba822 开)",
+      "branch_feature_perf_polish": "2 commit 待 PR 合 main + 部署:PERF-5 lazy-load(0911fff) + post-detail 头像接 image+作者删帖(3900fcf)。后者修用户报的 bug:post-detail 头像只显字母没接 <image> + 无删帖 UI(后端 delete_post owner/admin 已就绪)",
+      "FR1_verify_blocked": "微信登录测违规帖仍发出(没拦)。非设计跳过(只审微信端,用户确是微信登录)。待查:_get_access_token/msgSecCheck 调用是否失败降级放行,或 openid 过期 61010,或 suggest=pass。DB 查被 VPN 挡(SSL connection_lost);stdout 日志待抓(az webapp log tail,用户发帖时)。appsettings WECHAT_MINIPROGRAM_APPID/SECRET 已配",
+      "FR2_telemetry_empty": "端点 POST /log/client-error 204 OK(部署验证),但 AppRequests+AppTraces 近 24h 全空=azure-monitor-opentelemetry SDK 没上报 telemetry。非 FR2 端点 bug。待查:容器 startup stdout 看 app_insights enabled/failed(restart 抓,会中断服务);可能 07-07 订阅被禁波及 ingestion。影响:content_security 等所有日志看不到",
+      "miniprogram_upload_pending": "task7:前端改动(PERF-1~5/点赞/FR5/6/7/8/post-detail fix)需微信开发者工具上传新版本+体验版分发才生效;FR0b uploadFile 合法域名待用户确认配了(没配真机上传全挂)"
+    },
+    "next": "PERF-1~5 ✅(5 在 feature/perf-polish 待合)。P0 后端部署完成(生产 3cba822)。4 个未决项见 session_2026_07_15_open:① feature/perf-polish(PR+部署) ② 小程序上传+FR0b 域名 ③ FR1 微信登录没拦排查 ④ FR2 telemetry 空排查"
   }
 }
