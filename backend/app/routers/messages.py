@@ -303,4 +303,4 @@ async def ws_endpoint(ws: WebSocket):
         except WebSocketDisconnect:
             pass
         finally:
-            manager.disconnect(user_id)
+            manager.disconnect(user_id, ws)
