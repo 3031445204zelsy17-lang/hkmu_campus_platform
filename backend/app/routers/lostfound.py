@@ -7,7 +7,6 @@ from ..models import (
 )
 from ..services.auth_service import get_current_user
 from ..services.rate_limiter import check_rate_limit
-from ..services.sanitizer import sanitize
 from ..services.content_security import audit_user_text, SCENE_FORUM
 
 router = APIRouter(prefix="/lostfound", tags=["lostfound"])
@@ -111,7 +110,7 @@ async def create_item(
             """INSERT INTO lostfound (author_id, title, description, item_type, category, location, image_url, created_at)
                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                RETURNING id""",
-            user["id"], sanitize(body.title), sanitize(body.description), body.item_type,
+            user["id"], body.title, body.description, body.item_type,
             body.category, body.location, body.image_url, now,
         )
         item_id = row["id"]
@@ -145,17 +144,17 @@ async def update_item(
 
         updates = {}
         if body.title is not None:
-            updates["title"] = sanitize(body.title)
+            updates["title"] = body.title
         if body.description is not None:
-            updates["description"] = sanitize(body.description)
+            updates["description"] = body.description
         if body.status is not None:
             updates["status"] = body.status
         if body.item_type is not None:
             updates["item_type"] = body.item_type
         if body.category is not None:
-            updates["category"] = sanitize(body.category)
+            updates["category"] = body.category
         if body.location is not None:
-            updates["location"] = sanitize(body.location)
+            updates["location"] = body.location
         if body.image_url is not None:
             updates["image_url"] = body.image_url
 

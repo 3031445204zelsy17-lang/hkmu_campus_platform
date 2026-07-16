@@ -20,7 +20,6 @@ from ..services.auth_service import (
     OAUTH_NO_PASSWORD, is_oauth_only,
     is_hkmu_email, derive_student_id,
 )
-from ..services.sanitizer import sanitize_dict, sanitize
 from ..services.rate_limiter import check_rate_limit
 from ..services.email_service import send_password_reset_email, send_verification_email
 from ..services.wechat_service import (
@@ -80,24 +79,19 @@ async def register(body: UserRegister):
                     detail="Student ID already registered",
                 )
 
-        safe = sanitize_dict(
-            {"username": body.username, "nickname": body.nickname, "student_id": body.student_id},
-            "username", "nickname", "student_id",
-        )
-
         now = datetime.now(timezone.utc)
         row = await db.fetchrow(
             """INSERT INTO users (username, password_hash, nickname, student_id, created_at, updated_at)
                VALUES ($1, $2, $3, $4, $5, $6) RETURNING id""",
-            safe["username"], hash_password(body.password), safe["nickname"], safe["student_id"], now, now,
+            body.username, hash_password(body.password), body.nickname, body.student_id, now, now,
         )
         user_id = row["id"]
 
     return UserOut(
         id=user_id,
-        username=safe["username"],
-        nickname=safe["nickname"],
-        student_id=safe["student_id"],
+        username=body.username,
+        nickname=body.nickname,
+        student_id=body.student_id,
         created_at=now.isoformat(),
         email=None,
         oauth_provider=None,
@@ -226,7 +220,7 @@ async def google_login(body: GoogleLogin):
         new_row = await db.fetchrow(
             """INSERT INTO users (username, password_hash, nickname, email, oauth_provider, oauth_id, created_at, updated_at)
                VALUES ($1, $2, $3, $4, 'google', $5, $6, $7) RETURNING id""",
-            username, OAUTH_NO_PASSWORD, sanitize(nickname), google_email, google_sub, now, now,
+            username, OAUTH_NO_PASSWORD, nickname, google_email, google_sub, now, now,
         )
         user_id = new_row["id"]
 
@@ -269,7 +263,7 @@ async def wechat_miniprogram_login(body: dict, request: Request):
     except WechatMiniProgramAuthError as exc:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, str(exc))
 
-    safe_nickname = sanitize(nickname)[:30] if nickname else None
+    safe_nickname = nickname[:30] if nickname else None
 
     async with get_db() as db:
         # 1. Match by WeChat openid
@@ -327,7 +321,7 @@ async def email_register(body: EmailRegister):
         base_name = re.sub(r'[^a-zA-Z0-9_]', '', body.email.split("@")[0])[:20]
         username = f"{base_name}_{secrets.token_hex(3)}"
 
-        safe_nick = sanitize(body.nickname)
+        safe_nick = body.nickname
         now = datetime.now(timezone.utc)
 
         new_row = await db.fetchrow(

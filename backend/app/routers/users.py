@@ -16,7 +16,6 @@ from ..models import (
 from ..services.auth_service import get_current_user, is_hkmu_email
 from ..services.email_service import send_verification_email
 from ..services.rate_limiter import check_rate_limit
-from ..services.sanitizer import sanitize
 from ..services.storage_service import validate_image, upload_to_supabase
 from .auth import _create_email_token
 
@@ -267,9 +266,9 @@ async def update_me(
 ):
     updates = {}
     if body.nickname is not None:
-        updates["nickname"] = sanitize(body.nickname)
+        updates["nickname"] = body.nickname
     if body.bio is not None:
-        updates["bio"] = sanitize(body.bio)
+        updates["bio"] = body.bio
     if body.avatar_url is not None:
         updates["avatar_url"] = body.avatar_url
     if body.programme_code is not None:
