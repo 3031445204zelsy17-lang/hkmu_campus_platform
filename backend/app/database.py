@@ -1,3 +1,4 @@
+import os
 import ssl as _ssl
 from urllib.parse import urlparse
 import asyncpg
@@ -312,16 +313,65 @@ CREATE INDEX IF NOT EXISTS idx_pc_school ON programmes_catalogue(school_order, p
 """
 
 
+# Supabase pooler presents a chain signed by Supabase's own CA (not a public CA),
+# so DB TLS verification (verify-full) needs Supabase's root as the trust anchor.
+# Bundled at build time; override path via DB_SSL_ROOT_CERT if you ever rotate it.
+_DB_SSL_ROOT_CERT_DEFAULT = os.path.join(
+    os.path.dirname(__file__), "certs", "supabase_root_2021.pem"
+)
+
+
+def _build_db_ssl_context():
+    """Build an SSLContext for a remote DB connection.
+
+    Controlled by DB_SSL_MODE (default ``verify-full``):
+      * verify-full : TLS + verify cert chain against the shipped Supabase root
+                      CA *and* check hostname (strongest; default).
+      * verify-ca   : TLS + verify cert chain, skip hostname check.
+      * require     : TLS encryption only, NO cert verification. Preserves the
+                      pre-F behaviour as a no-redeploy escape hatch.
+      * disable     : no TLS (not recommended).
+
+    Why X509_STRICT is cleared: ssl.create_default_context() sets
+    X509_V_FLAG_X509_STRICT, which rejects Supabase's *intermediate* CA because
+    it omits the keyUsage extension. That strictness is stricter than what
+    ``openssl verify`` and libpq/psql enforce by default — both accept the very
+    same chain. We drop the flag so verification matches OpenSSL's default: the
+    shipped root CA is properly formed (keyUsage = Certificate Sign, CRL Sign),
+    and chain signatures, validity, basicConstraints (CA:TRUE) and hostname are
+    all still checked, so the MITM protection that is the whole point of
+    verify-full stays intact. (See F in the security repair roadmap.)
+    """
+    mode = os.getenv("DB_SSL_MODE", "verify-full").strip().lower()
+    if mode == "disable":
+        return None
+
+    if mode == "require":
+        ctx = _ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = _ssl.CERT_NONE
+        return ctx
+
+    # verify-full / verify-ca → trust the shipped Supabase root CA.
+    ca_path = os.getenv("DB_SSL_ROOT_CERT", _DB_SSL_ROOT_CERT_DEFAULT)
+    ctx = _ssl.create_default_context(cafile=ca_path)
+    ctx.verify_flags &= ~_ssl.VERIFY_X509_STRICT  # see docstring
+    if mode == "verify-ca":
+        ctx.check_hostname = False
+    return ctx
+
+
 async def init_db():
     global _pool
-    # Auto-detect SSL: remote hosts need it, local CI/dev databases do not.
-    _ssl_ctx = None
+    # Local/Unix-socket DBs (dev, CI) never use SSL; remote hosts (Supabase
+    # pooler in prod) always negotiate TLS, verified by _build_db_ssl_context().
     parsed_url = urlparse(DATABASE_URL)
     local_hosts = {"", "localhost", "127.0.0.1", "::1"}
-    if parsed_url.hostname not in local_hosts and not DATABASE_URL.startswith("postgresql:///"):
-        _ssl_ctx = _ssl.create_default_context()
-        _ssl_ctx.check_hostname = False
-        _ssl_ctx.verify_mode = _ssl.CERT_NONE
+    is_remote = (
+        parsed_url.hostname not in local_hosts
+        and not DATABASE_URL.startswith("postgresql:///")
+    )
+    _ssl_ctx = _build_db_ssl_context() if is_remote else None
 
     _pool = await asyncpg.create_pool(
         DATABASE_URL,
