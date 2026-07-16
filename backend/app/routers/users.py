@@ -2,6 +2,7 @@ import secrets
 import string
 from datetime import datetime, timezone
 
+import httpx
 from asyncpg.exceptions import UniqueViolationError
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, status
 
@@ -289,7 +290,8 @@ async def upload_avatar(
 
     try:
         avatar_url = await upload_to_supabase(raw, content_type, "avatars", user["id"])
-    except RuntimeError:
+    except (RuntimeError, httpx.HTTPError):
+        # RuntimeError = Supabase returned non-2xx; httpx.HTTPError = network/timeout/transport
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Avatar upload failed, please retry")
 
     now = datetime.now(timezone.utc)
