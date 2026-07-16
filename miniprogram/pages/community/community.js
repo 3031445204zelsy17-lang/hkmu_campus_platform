@@ -288,16 +288,16 @@ Page({
   _applyOptimisticLike(rawIndex, nextLiked) {
     const previousRawPost = this.data.rawPosts[rawIndex] || {};
     const currentLikes = Number((previousRawPost && previousRawPost.likes_count) || 0);
-    const optimisticRawPosts = this.data.rawPosts.slice();
-    optimisticRawPosts[rawIndex] = {
+    const newRawPost = {
       ...previousRawPost,
       is_liked: nextLiked,
       likes_count: Math.max(0, currentLikes + (nextLiked ? 1 : -1)),
     };
-    this.setData({
-      posts: buildVisiblePosts(optimisticRawPosts, this.data.text, this.data.categoryFilter),
-      rawPosts: optimisticRawPosts,
-    });
+    const rawPosts = this.data.rawPosts.slice();
+    rawPosts[rawIndex] = newRawPost;
+    this.setData({ rawPosts });
+    // PERF-6: 单条 patch 可见列表(community posts 经 board filter,可见 index≠rawIndex)
+    this._patchVisiblePost(rawIndex, newRawPost);
   },
 
   _syncLikeFromServer(postId, updatedPost) {
@@ -305,9 +305,20 @@ Page({
     if (idx < 0) return;
     const rawPosts = this.data.rawPosts.slice();
     rawPosts[idx] = updatedPost;
+    this.setData({ rawPosts });
+    this._patchVisiblePost(idx, updatedPost);
+  },
+
+  // PERF-6: 单条 setData 可见列表里 rawIndex 匹配的那条,不全量 buildVisiblePosts。
+  // 当前 board filter 下不可见(visibleIdx<0)则只更 rawPosts,不动 posts。
+  _patchVisiblePost(rawIndex, rawPost) {
+    const visibleIdx = this.data.posts.findIndex((p) => p && p.rawIndex === rawIndex);
+    if (visibleIdx < 0) return;
     this.setData({
-      posts: buildVisiblePosts(rawPosts, this.data.text, this.data.categoryFilter),
-      rawPosts,
+      [`posts[${visibleIdx}]`]: normalizePost(rawPost, this.data.text, {
+        rawIndex,
+        sectionKey: rawPost._boardKey || inferCommunityBoardKey(rawPost),
+      }),
     });
   },
 

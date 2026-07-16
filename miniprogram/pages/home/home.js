@@ -218,18 +218,20 @@ Page({
   },
 
   // 乐观更新单帖(翻转 is_liked + likes_count)并立即 setData
+  // PERF-6: 单条 setData(`posts[i]`)只 patch 点赞这一条,不全量 map 重建整个 feed。
   _applyOptimisticLike(index, nextLiked) {
     const previousRawPost = this.data.rawPosts[index] || {};
     const currentLikes = Number((previousRawPost && previousRawPost.likes_count) || 0);
-    const optimisticRawPosts = this.data.rawPosts.slice();
-    optimisticRawPosts[index] = {
+    const newRawPost = {
       ...previousRawPost,
       is_liked: nextLiked,
       likes_count: Math.max(0, currentLikes + (nextLiked ? 1 : -1)),
     };
+    const rawPosts = this.data.rawPosts.slice();
+    rawPosts[index] = newRawPost;
     this.setData({
-      posts: optimisticRawPosts.map((item) => normalizePost(item, this.data.text)),
-      rawPosts: optimisticRawPosts,
+      rawPosts,
+      [`posts[${index}]`]: normalizePost(newRawPost, this.data.text),
     });
   },
 
@@ -240,8 +242,8 @@ Page({
     const rawPosts = this.data.rawPosts.slice();
     rawPosts[idx] = updatedPost;
     this.setData({
-      posts: rawPosts.map((item) => normalizePost(item, this.data.text)),
       rawPosts,
+      [`posts[${idx}]`]: normalizePost(updatedPost, this.data.text),
     });
   },
 
