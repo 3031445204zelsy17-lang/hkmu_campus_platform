@@ -59,7 +59,12 @@ def _fmt_ts(val):
 def _post_row_to_out(row, liked_set: set[int] | None = None,
                      viewer_id: int | None = None, is_admin: bool = False) -> PostOut:
     quoted = None
-    if row["parent_post_id"]:
+    # Only build the quoted block if the parent post still exists. delete_post()
+    # removes the parent but leaves the child's parent_post_id FK dangling, so the
+    # LEFT JOIN yields NULL parent fields → QuotedPostOut(title/id are required)
+    # would raise a 500. parent_id is non-NULL only when the LEFT JOIN matched a
+    # live parent row, so guard on it.
+    if row["parent_post_id"] and row["parent_id"]:
         # Hide the quoted (parent) post's author when that post is anonymous,
         # unless the viewer is an admin — mirrors the main post's anon visibility.
         parent_anon = bool(row["parent_is_anonymous"]) if "parent_is_anonymous" in row.keys() else False
