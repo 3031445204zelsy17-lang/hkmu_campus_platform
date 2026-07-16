@@ -1,9 +1,8 @@
-import os
 import secrets
 import string
-import uuid
 from datetime import datetime, timezone
 
+import httpx
 from asyncpg.exceptions import UniqueViolationError
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, status
 
@@ -18,6 +17,7 @@ from ..services.auth_service import get_current_user, is_hkmu_email
 from ..services.email_service import send_verification_email
 from ..services.rate_limiter import check_rate_limit
 from ..services.sanitizer import sanitize
+from ..services.storage_service import validate_image, upload_to_supabase
 from .auth import _create_email_token
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -30,9 +30,6 @@ async def _require_admin(user: dict) -> None:
     if not row or row["identity"] != "admin":
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Admin only")
 
-ALLOWED_UPLOAD_EXT = {"jpg", "jpeg", "png", "gif", "webp"}
-UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "frontend", "assets", "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 _USER_COLS = """id, username, nickname, student_id, avatar_url, bio, identity,
     created_at, email, oauth_provider, programme_code, hkmu_verified, invite_code"""
@@ -302,25 +299,23 @@ async def upload_avatar(
     file: UploadFile = File(...),
     user: dict = Depends(get_current_user),
 ):
-    if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Must be an image file")
+    # Upload to Supabase Storage (mirrors POST /api/v1/upload?module=avatars).
+    # Previously wrote to the container-local frontend/assets/uploads dir, which
+    # was lost on every redeploy/restart.
+    raw = await file.read()
+    content_type = file.content_type or "application/octet-stream"
 
-    content = await file.read()
-    if len(content) > 2 * 1024 * 1024:  # 2MB limit
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Image too large (max 2MB)")
+    err = validate_image(content_type, len(raw))
+    if err:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, err)
 
-    ext = file.filename.rsplit(".", 1)[-1] if file.filename and "." in file.filename else "png"
-    if ext.lower() not in ALLOWED_UPLOAD_EXT:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "File type not allowed")
-    filename = f"{uuid.uuid4().hex}.{ext}"
-    filepath = os.path.join(UPLOAD_DIR, filename)
+    try:
+        avatar_url = await upload_to_supabase(raw, content_type, "avatars", user["id"])
+    except (RuntimeError, httpx.HTTPError):
+        # RuntimeError = Supabase returned non-2xx; httpx.HTTPError = network/timeout/transport
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Avatar upload failed, please retry")
 
-    with open(filepath, "wb") as f:
-        f.write(content)
-
-    avatar_url = f"/assets/uploads/{filename}"
     now = datetime.now(timezone.utc)
-
     async with get_db() as db:
         await db.execute(
             "UPDATE users SET avatar_url = $1, updated_at = $2 WHERE id = $3",
