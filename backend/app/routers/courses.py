@@ -14,7 +14,6 @@ from pydantic import BaseModel
 class BatchProgressUpdate(BaseModel):
     items: list[UserCourseUpdate]
 from ..services.auth_service import get_current_user
-from ..services.sanitizer import sanitize
 
 router = APIRouter(prefix="/courses", tags=["courses"])
 
@@ -636,7 +635,7 @@ async def create_review(
     user: dict = Depends(get_current_user),
 ):
     now = datetime.now(timezone.utc)
-    safe_content = sanitize(body.content)
+    safe_content = body.content
 
     async with get_db() as db:
         exists = await db.fetchrow("SELECT id FROM courses WHERE id = $1", course_id)

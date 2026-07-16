@@ -73,7 +73,7 @@ python scripts/dev.py
 
 - CSS 隔离：用 `data-page` 属性做页面级样式隔离
 - UI 组件函数化：禁止散乱 DOM 拼接，所有可复用元素封装为函数
-- XSS 防护：后端存储前 HTML 转义，前端用 textContent 不用 innerHTML
+- XSS 防护：**仅渲染层转义**（前端 `textContent` / `escapeHtml()`+innerHTML，小程序 `{{}}` 自动转义），**后端存原文**——后端不要对用户文本做 `html.escape`（否则双重转义，用户看到 `&lt;` 实体）
 - API 前缀：`/api/v1/`
 - Git 提交格式：`feat: T0X - 描述` / `progress: T0X done`
 

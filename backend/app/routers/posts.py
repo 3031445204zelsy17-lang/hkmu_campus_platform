@@ -11,7 +11,6 @@ from ..models import (
 )
 from ..services.auth_service import get_current_user, oauth2_scheme
 from ..services.rate_limiter import check_rate_limit
-from ..services.sanitizer import sanitize_dict, sanitize
 from ..services.content_security import audit_user_text, SCENE_FORUM, SCENE_COMMENT
 
 _optional_oauth2 = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
@@ -225,10 +224,6 @@ async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
             if not exists:
                 raise HTTPException(status.HTTP_404_NOT_FOUND, "Original post not found")
 
-        safe = sanitize_dict(
-            {"title": body.title, "content": body.content, "category": body.category},
-            "title", "content", "category",
-        )
         await audit_user_text(user, f"{body.title} {body.content}", SCENE_FORUM)
         now = datetime.now(timezone.utc)
 
@@ -239,7 +234,7 @@ async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
         new_row = await db.fetchrow(
             """INSERT INTO posts (author_id, title, content, category, parent_post_id, is_anonymous, image_url, created_at, updated_at)
                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id""",
-            user["id"], safe["title"], safe["content"], safe["category"],
+            user["id"], body.title, body.content, body.category,
             body.parent_post_id, is_anonymous, body.image_url, now, now,
         )
         post_id = new_row["id"]
@@ -282,11 +277,11 @@ async def update_post(
 
         updates = {}
         if body.title is not None:
-            updates["title"] = sanitize(body.title)
+            updates["title"] = body.title
         if body.content is not None:
-            updates["content"] = sanitize(body.content)
+            updates["content"] = body.content
         if body.category is not None:
-            updates["category"] = sanitize(body.category)
+            updates["category"] = body.category
         if not updates:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "No fields to update")
 
@@ -451,7 +446,6 @@ async def create_comment(
         if not exists:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Post not found")
 
-        safe_content = sanitize(body.content)
         await audit_user_text(user, body.content, SCENE_COMMENT)
         now = datetime.now(timezone.utc)
 
@@ -459,7 +453,7 @@ async def create_comment(
             new_row = await db.fetchrow(
                 """INSERT INTO comments (post_id, author_id, content, created_at)
                    VALUES ($1, $2, $3, $4) RETURNING id""",
-                post_id, user["id"], safe_content, now,
+                post_id, user["id"], body.content, now,
             )
             comment_id = new_row["id"]
             await db.execute(

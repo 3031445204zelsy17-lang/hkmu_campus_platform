@@ -5,7 +5,6 @@ from ..database import get_db
 from ..models import NewsCreate, NewsOut, NewsCommentCreate, NewsCommentOut, PaginatedResponse
 from ..services.auth_service import get_current_user
 from ..services.rate_limiter import check_rate_limit
-from ..services.sanitizer import sanitize
 from ..services.content_security import audit_user_text, SCENE_COMMENT
 
 router = APIRouter(prefix="/news", tags=["news"])
@@ -101,8 +100,8 @@ async def create_news(
             """INSERT INTO news (author_id, title, summary, image_url, category, source_url, published_at, lang)
                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                RETURNING id""",
-            user["id"], sanitize(body.title), body.summary, body.image_url,
-            body.category, sanitize(body.source_url), now,
+            user["id"], body.title, body.summary, body.image_url,
+            body.category, body.source_url, now,
             body.lang if body.lang else "zh-hant",
         )
         news_id = row["id"]
@@ -198,7 +197,7 @@ async def create_news_comment(
 ):
     check_rate_limit(f"news_comment:{user['id']}", max_requests=15, window_seconds=60)
 
-    safe_content = sanitize(body.content)
+    safe_content = body.content
     await audit_user_text(user, body.content, SCENE_COMMENT)
     now = datetime.now(timezone.utc)
 
