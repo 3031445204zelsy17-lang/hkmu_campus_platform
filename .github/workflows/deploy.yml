@@ -50,6 +50,15 @@ jobs:
           cp .env.example .env
           python scripts/seed_courses.py
 
+      # Security roadmap G — lock the A/B/E fixes as automated regressions.
+      # Dev deps stay out of the prod image (Dockerfile only installs
+      # backend/requirements.txt). pytest runs against the postgres service
+      # above; any failure fails this job and blocks the PR/push.
+      - name: Run security regression tests (pytest)
+        run: |
+          pip install -r backend/requirements-dev.txt
+          pytest backend/tests -q
+
       - name: Start server health check
         run: |
           python -m uvicorn backend.app.main:app --port 8000 &
