@@ -138,6 +138,11 @@ async def update_item(
         if existing["author_id"] != user["id"]:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your item")
 
+        # Moderation on edit — mirrors create_item so users can't bypass content
+        # security by posting clean then editing in violations.
+        if body.title is not None or body.description is not None:
+            await audit_user_text(user, f"{body.title or ''} {body.description or ''}", SCENE_FORUM)
+
         updates = {}
         if body.title is not None:
             updates["title"] = sanitize(body.title)

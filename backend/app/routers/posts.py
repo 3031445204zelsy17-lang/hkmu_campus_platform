@@ -59,10 +59,19 @@ def _fmt_ts(val):
 def _post_row_to_out(row, liked_set: set[int] | None = None,
                      viewer_id: int | None = None, is_admin: bool = False) -> PostOut:
     quoted = None
-    if row["parent_post_id"]:
+    # Only build the quoted block if the parent post still exists. delete_post()
+    # removes the parent but leaves the child's parent_post_id FK dangling, so the
+    # LEFT JOIN yields NULL parent fields → QuotedPostOut(title/id are required)
+    # would raise a 500. parent_id is non-NULL only when the LEFT JOIN matched a
+    # live parent row, so guard on it.
+    if row["parent_post_id"] and row["parent_id"]:
+        # Hide the quoted (parent) post's author when that post is anonymous,
+        # unless the viewer is an admin — mirrors the main post's anon visibility.
+        parent_anon = bool(row["parent_is_anonymous"]) if "parent_is_anonymous" in row.keys() else False
+        show_parent_author = (not parent_anon) or is_admin
         quoted = QuotedPostOut(
             id=row["parent_id"],
-            author_nickname=row["parent_author"] if "parent_author" in row.keys() else None,
+            author_nickname=(row["parent_author"] if show_parent_author and "parent_author" in row.keys() else None),
             title=row["parent_title"],
             content_preview=(row["parent_content"] or "")[:150],
             created_at=_fmt_ts(row["parent_created"]) if "parent_created" in row.keys() else None,
@@ -156,7 +165,8 @@ async def list_posts(
             f"""SELECT {_POST_COLS}, u.nickname AS author_nickname, u.avatar_url,
                    pp.id AS parent_id, pp.title AS parent_title,
                    pp.content AS parent_content, pp.created_at AS parent_created,
-                   pu.nickname AS parent_author
+                   pu.nickname AS parent_author,
+                   pp.is_anonymous AS parent_is_anonymous
                 FROM posts p
                 JOIN users u ON u.id = p.author_id
                 LEFT JOIN posts pp ON pp.id = p.parent_post_id
@@ -189,7 +199,8 @@ async def get_post(post_id: int, user: dict | None = Depends(_get_optional_user)
             f"""SELECT {_POST_COLS}, u.nickname AS author_nickname, u.avatar_url,
                    pp.id AS parent_id, pp.title AS parent_title,
                    pp.content AS parent_content, pp.created_at AS parent_created,
-                   pu.nickname AS parent_author
+                   pu.nickname AS parent_author,
+                   pp.is_anonymous AS parent_is_anonymous
                FROM posts p
                JOIN users u ON u.id = p.author_id
                LEFT JOIN posts pp ON pp.id = p.parent_post_id
@@ -237,7 +248,8 @@ async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
             f"""SELECT {_POST_COLS}, u.nickname AS author_nickname, u.avatar_url,
                    pp.id AS parent_id, pp.title AS parent_title,
                    pp.content AS parent_content, pp.created_at AS parent_created,
-                   pu.nickname AS parent_author
+                   pu.nickname AS parent_author,
+                   pp.is_anonymous AS parent_is_anonymous
                FROM posts p
                JOIN users u ON u.id = p.author_id
                LEFT JOIN posts pp ON pp.id = p.parent_post_id
@@ -263,6 +275,11 @@ async def update_post(
         if existing["author_id"] != user["id"]:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your post")
 
+        # Moderation on edit — mirrors create_post so users can't bypass content
+        # security by posting clean then editing in violations.
+        if body.title is not None or body.content is not None:
+            await audit_user_text(user, f"{body.title or ''} {body.content or ''}", SCENE_FORUM)
+
         updates = {}
         if body.title is not None:
             updates["title"] = sanitize(body.title)
@@ -285,7 +302,8 @@ async def update_post(
             f"""SELECT {_POST_COLS}, u.nickname AS author_nickname, u.avatar_url,
                    pp.id AS parent_id, pp.title AS parent_title,
                    pp.content AS parent_content, pp.created_at AS parent_created,
-                   pu.nickname AS parent_author
+                   pu.nickname AS parent_author,
+                   pp.is_anonymous AS parent_is_anonymous
                FROM posts p JOIN users u ON u.id = p.author_id
                LEFT JOIN posts pp ON pp.id = p.parent_post_id
                LEFT JOIN users pu ON pu.id = pp.author_id
@@ -352,7 +370,8 @@ async def toggle_like(post_id: int, user: dict = Depends(get_current_user)):
             f"""SELECT {_POST_COLS}, u.nickname AS author_nickname, u.avatar_url,
                    pp.id AS parent_id, pp.title AS parent_title,
                    pp.content AS parent_content, pp.created_at AS parent_created,
-                   pu.nickname AS parent_author
+                   pu.nickname AS parent_author,
+                   pp.is_anonymous AS parent_is_anonymous
                FROM posts p JOIN users u ON u.id = p.author_id
                LEFT JOIN posts pp ON pp.id = p.parent_post_id
                LEFT JOIN users pu ON pu.id = pp.author_id

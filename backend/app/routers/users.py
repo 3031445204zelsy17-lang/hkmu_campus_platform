@@ -12,6 +12,7 @@ from ..database import get_db
 from ..models import (
     UserOut, UserUpdate, BindEmail,
     SuggestOut, InviteCodeOut, FriendshipOut, InviteAccept,
+    UserPublicOut,
 )
 from ..services.auth_service import get_current_user, is_hkmu_email
 from ..services.email_service import send_verification_email
@@ -57,8 +58,28 @@ def _user_out(row, include_email: bool = True) -> UserOut:
         kw["oauth_provider"] = row["oauth_provider"]
     kw["programme_code"] = row.get("programme_code")
     kw["hkmu_verified"] = row.get("hkmu_verified", False)
-    kw["invite_code"] = row.get("invite_code")
+    # NOTE: invite_code is intentionally NOT emitted here. It is only exposed
+    # via the dedicated /users/me/invite-code endpoint (self only). Returning
+    # another user's invite_code enabled a force-friend vector
+    # (/users/me/friends redeems any code → bidirectional friendship w/o consent).
     return UserOut(**kw)
+
+
+def _user_public_out(row) -> UserPublicOut:
+    """Public-safe view of ANOTHER user — no email / oauth / student_id /
+    programme_code / hkmu_verified / invite_code."""
+    created_at = row["created_at"]
+    if isinstance(created_at, datetime):
+        created_at = created_at.isoformat()
+    return UserPublicOut(
+        id=row["id"],
+        username=row["username"],
+        nickname=row["nickname"],
+        avatar_url=row["avatar_url"],
+        bio=row["bio"] or "",
+        identity=row["identity"],
+        created_at=created_at,
+    )
 
 
 @router.get("/me", response_model=UserOut)
@@ -325,8 +346,10 @@ async def search_users(
         return [_user_out(r, include_email=False) for r in rows]
 
 
-@router.get("/{user_id}", response_model=UserOut)
-async def get_user(user_id: int):
+@router.get("/{user_id}", response_model=UserPublicOut)
+async def get_user(user_id: int, user: dict = Depends(get_current_user)):
+    """View another user's public profile. Requires login; returns only
+    public-safe fields (no email / student_id / invite_code / ...)."""
     async with get_db() as db:
         row = await db.fetchrow(
             f"SELECT {_USER_COLS} FROM users WHERE id = $1",
@@ -334,7 +357,7 @@ async def get_user(user_id: int):
         )
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
-        return _user_out(row)
+        return _user_public_out(row)
 
 
 # ── Admin endpoints ─────────────────────────────────────────────────────────

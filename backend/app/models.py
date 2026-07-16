@@ -101,7 +101,20 @@ class UserOut(BaseModel):
     oauth_provider: Optional[str] = None
     programme_code: Optional[str] = None
     hkmu_verified: bool = False
-    invite_code: Optional[str] = None
+    # invite_code intentionally absent — only exposed via /users/me/invite-code (self).
+    # Returning another user's invite_code enabled a force-friend vector.
+
+
+class UserPublicOut(BaseModel):
+    """Public-safe view of ANOTHER user (no email / oauth / student_id /
+    programme_code / hkmu_verified / invite_code). Used for /users/{user_id}."""
+    id: int
+    username: str
+    nickname: str
+    avatar_url: Optional[str] = None
+    bio: str = ""
+    identity: str = "student"
+    created_at: Optional[str] = None
 
 
 class UserUpdate(BaseModel):
