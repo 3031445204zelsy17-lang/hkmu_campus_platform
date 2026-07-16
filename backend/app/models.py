@@ -276,8 +276,8 @@ class LostFoundCreate(BaseModel):
 
 
 class LostFoundUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
+    title: Optional[str] = Field(None, max_length=200)
+    description: Optional[str] = Field(None, max_length=2000)
     status: Optional[str] = Field(None, pattern=r"^(active|resolved)$")
     item_type: Optional[str] = Field(None, pattern=r"^(lost|found)$")
     category: Optional[str] = None
