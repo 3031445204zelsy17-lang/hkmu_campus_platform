@@ -60,12 +60,18 @@ function inferCommunityBoardKey(item) {
 }
 
 function buildVisiblePosts(rawPosts, text, activeBoard) {
-  const posts = rawPosts.map((item, index) =>
-    normalizePost(item, text, {
+  const posts = rawPosts.map((item, index) => {
+    // PERF-8: boardKey 基于 content,点赞/翻页/切 board 都不改 content →
+    // 缓存到 rawPost._boardKey,避免每次 buildVisiblePosts(applyLocale/switchBoard/
+    // 点赞同步)都对全量 rawPosts 重跑 5 条正则。content 编辑走别页,此处只读快照。
+    if (!item._boardKey) {
+      item._boardKey = inferCommunityBoardKey(item);
+    }
+    return normalizePost(item, text, {
       rawIndex: index,
-      sectionKey: inferCommunityBoardKey(item),
-    }),
-  );
+      sectionKey: item._boardKey,
+    });
+  });
 
   if (activeBoard === "all") {
     return posts;
@@ -288,16 +294,16 @@ Page({
   _applyOptimisticLike(rawIndex, nextLiked) {
     const previousRawPost = this.data.rawPosts[rawIndex] || {};
     const currentLikes = Number((previousRawPost && previousRawPost.likes_count) || 0);
-    const optimisticRawPosts = this.data.rawPosts.slice();
-    optimisticRawPosts[rawIndex] = {
+    const newRawPost = {
       ...previousRawPost,
       is_liked: nextLiked,
       likes_count: Math.max(0, currentLikes + (nextLiked ? 1 : -1)),
     };
-    this.setData({
-      posts: buildVisiblePosts(optimisticRawPosts, this.data.text, this.data.categoryFilter),
-      rawPosts: optimisticRawPosts,
-    });
+    const rawPosts = this.data.rawPosts.slice();
+    rawPosts[rawIndex] = newRawPost;
+    this.setData({ rawPosts });
+    // PERF-6: 单条 patch 可见列表(community posts 经 board filter,可见 index≠rawIndex)
+    this._patchVisiblePost(rawIndex, newRawPost);
   },
 
   _syncLikeFromServer(postId, updatedPost) {
@@ -305,9 +311,20 @@ Page({
     if (idx < 0) return;
     const rawPosts = this.data.rawPosts.slice();
     rawPosts[idx] = updatedPost;
+    this.setData({ rawPosts });
+    this._patchVisiblePost(idx, updatedPost);
+  },
+
+  // PERF-6: 单条 setData 可见列表里 rawIndex 匹配的那条,不全量 buildVisiblePosts。
+  // 当前 board filter 下不可见(visibleIdx<0)则只更 rawPosts,不动 posts。
+  _patchVisiblePost(rawIndex, rawPost) {
+    const visibleIdx = this.data.posts.findIndex((p) => p && p.rawIndex === rawIndex);
+    if (visibleIdx < 0) return;
     this.setData({
-      posts: buildVisiblePosts(rawPosts, this.data.text, this.data.categoryFilter),
-      rawPosts,
+      [`posts[${visibleIdx}]`]: normalizePost(rawPost, this.data.text, {
+        rawIndex,
+        sectionKey: rawPost._boardKey || inferCommunityBoardKey(rawPost),
+      }),
     });
   },
 

@@ -45,7 +45,13 @@ Page({
     this.applyLocale(getLocale());
     syncTabBar(this, 4);
 
-    this.refreshProfile();
+    // PERF-7: 暖路径——切 tab 优先用 storage 缓存 user 立即渲染,后台静默刷新
+    // (仿 home/community PERF-3)。有缓存则不显示 loading,避免已渲染内容闪烁。
+    const cachedUser = auth.getStoredUser();
+    if (cachedUser) {
+      this._renderUser(cachedUser);
+    }
+    this.refreshProfile(!cachedUser);
   },
 
   handleLanguageChange(event) {
@@ -74,18 +80,25 @@ Page({
     });
   },
 
-  refreshProfile() {
-    this.setData({ loading: true });
+  // PERF-7: 抽出 user 渲染逻辑(暖路径 + refreshProfile 共用,不含 prefetch)
+  _renderUser(user) {
+    this.setData({
+      identityLabel: identityLabel(user && user.identity, this.data.text),
+      joinedAtDisplay: user && user.created_at ? formatDate(user.created_at) : this.data.text.today,
+      joinedAtLabel: user && user.created_at ? formatDate(user.created_at) : "",
+      user: user || null,
+    });
+  },
+
+  refreshProfile(showLoading = true) {
+    if (showLoading) {
+      this.setData({ loading: true });
+    }
 
     return auth
       .bootstrapSession()
       .then((user) => {
-        this.setData({
-          identityLabel: identityLabel(user && user.identity, this.data.text),
-          joinedAtDisplay: user && user.created_at ? formatDate(user.created_at) : this.data.text.today,
-          joinedAtLabel: user && user.created_at ? formatDate(user.created_at) : "",
-          user: user || null,
-        });
+        this._renderUser(user);
         if (user) this._prefetchSharePath();
       })
       .catch((error) => {
@@ -95,7 +108,9 @@ Page({
         });
       })
       .finally(() => {
-        this.setData({ loading: false });
+        if (showLoading) {
+          this.setData({ loading: false });
+        }
       });
   },
 
