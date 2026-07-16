@@ -11,7 +11,10 @@
   <block wx:elif="{{post}}">
     <view class="feed-card detail-card">
       <view class="feed-head">
-        <view class="avatar" data-author-id="{{post.authorId}}" catchtap="openDM">{{post.authorInitial}}</view>
+        <view class="avatar" data-author-id="{{post.authorId}}" catchtap="openDM">
+          <image wx:if="{{post.authorAvatar}}" src="{{post.authorAvatar}}" mode="aspectFill" binderror="onAuthorAvatarError" />
+          <text wx:else>{{post.authorInitial}}</text>
+        </view>
         <view class="feed-main">
           <view class="feed-author-row">
             <view>
@@ -28,6 +31,10 @@
               <text class="{{post.likeIconClass}}">{{post.likeIcon}}</text>
               <text class="post-action-count">{{post.likeLabel}}</text>
             </view>
+            <view wx:if="{{user && post.authorId === user.id}}" class="post-action delete-action" catchtap="onDeletePost" hover-class="post-action-press">
+              <text class="social-glyph">🗑</text>
+              <text class="post-action-count">{{text.deleteAction}}</text>
+            </view>
           </view>
         </view>
       </view>
@@ -40,7 +47,10 @@
       <block wx:else>
         <view wx:if="{{comments.length === 0}}" class="comment-status">{{text.commentEmpty}}</view>
         <view wx:for="{{comments}}" wx:key="id" class="comment-item">
-          <view class="comment-avatar" data-author-id="{{item.authorId}}" catchtap="openDM">{{item.authorInitial}}</view>
+          <view class="comment-avatar" data-author-id="{{item.authorId}}" catchtap="openDM">
+            <image wx:if="{{item.authorAvatar}}" src="{{item.authorAvatar}}" mode="aspectFill" binderror="onCommentAvatarError" data-idx="{{index}}" />
+            <text wx:else>{{item.authorInitial}}</text>
+          </view>
           <view class="comment-main">
             <view class="comment-author">{{item.authorName}}</view>
             <view class="comment-content">{{item.content}}</view>

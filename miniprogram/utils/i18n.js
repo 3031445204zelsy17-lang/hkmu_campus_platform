@@ -195,6 +195,9 @@ const DICTIONARY = {
       commentSend: "\u53d1\u9001",
       commentSent: "\u8bc4\u8bba\u5df2\u53d1\u9001",
       loginPrompt: "\u767b\u5f55\u540e\u53c2\u4e0e\u8bc4\u8bba",
+      deleteAction: "\u5220\u9664",
+      deleteConfirm: "\u786e\u5b9a\u5220\u9664\u4f60\u7684\u8fd9\u7bc7\u5e16\u5b50\u5417?\u8fd9\u6761\u64cd\u4f5c\u65e0\u6cd5\u64a4\u9500\u3002",
+      deleteSuccess: "\u5df2\u5220\u9664",
     }),
     courseDetail: Object.assign({}, COMMON_ZH_HANS, {
       headerTitle: "\u8bfe\u7a0b\u8be6\u60c5",
@@ -637,6 +640,9 @@ DICTIONARY["zh-Hant"] = {
     commentSend: "\u50b3\u9001",
     commentSent: "\u8a55\u8ad6\u5df2\u9001\u51fa",
     loginPrompt: "\u767b\u5165\u5f8c\u53c3\u8207\u8a55\u8ad6",
+    deleteAction: "\u522a\u9664",
+    deleteConfirm: "\u78ba\u5b9a\u522a\u9664\u4f60\u7684\u9019\u7bc7\u5e16\u5b50\u55ce?\u9019\u689d\u64cd\u4f5c\u7121\u6cd5\u64a4\u92b7\u3002",
+    deleteSuccess: "\u5df2\u522a\u9664",
   }),
   courseDetail: Object.assign({}, COMMON_ZH_HANT, {
     headerTitle: "\u8ab2\u7a0b\u8a73\u60c5",
@@ -1061,6 +1067,9 @@ DICTIONARY.en = {
     commentSend: "Send",
     commentSent: "Comment sent",
     loginPrompt: "Sign in to join the discussion",
+    deleteAction: "Delete",
+    deleteConfirm: "Delete this post? This cannot be undone.",
+    deleteSuccess: "Deleted",
   }),
   courseDetail: Object.assign({}, COMMON_EN, {
     headerTitle: "Course",

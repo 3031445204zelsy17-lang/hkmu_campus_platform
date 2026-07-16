@@ -67,6 +67,52 @@ Page({
     openDMWith(event.currentTarget.dataset.authorId);
   },
 
+  // 头像加载失败 → 置空走字母兜底(对齐 home/community FR6)
+  onAuthorAvatarError() {
+    if (this.data.post) {
+      this.setData({ "post.authorAvatar": "" });
+    }
+  },
+
+  onCommentAvatarError(e) {
+    const idx = Number(e.currentTarget.dataset.idx);
+    if (!isNaN(idx)) {
+      this.setData({ [`comments[${idx}].authorAvatar`]: "" });
+    }
+  },
+
+  // 作者本人删帖(后端 posts.py delete_post: owner/admin 可删)
+  onDeletePost() {
+    if (!this.data.post || !this.data.user || this._deleting) {
+      return;
+    }
+    wx.showModal({
+      title: this.data.text.deleteAction,
+      content: this.data.text.deleteConfirm,
+      confirmText: this.data.text.deleteAction,
+      success: (res) => {
+        if (!res.confirm) return;
+        this._deleting = true;
+        request({ method: "DELETE", path: `/posts/${this.data.postId}`, auth: true })
+          .then(() => {
+            const app = getApp();
+            if (app && app.globalData) {
+              app.globalData.postsNeedRefresh = true;
+            }
+            wx.showToast({ title: this.data.text.deleteSuccess, icon: "success" });
+            wx.navigateBack();
+          })
+          .catch((error) => {
+            this._deleting = false;
+            wx.showToast({
+              title: (error && error.message) || this.data.text.actionFail,
+              icon: "none",
+            });
+          });
+      },
+    });
+  },
+
   applyLocale(locale = getLocale()) {
     const text = getTexts("postDetail", locale);
     const update = { locale, text };
