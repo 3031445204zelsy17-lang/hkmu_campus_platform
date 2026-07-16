@@ -60,12 +60,18 @@ function inferCommunityBoardKey(item) {
 }
 
 function buildVisiblePosts(rawPosts, text, activeBoard) {
-  const posts = rawPosts.map((item, index) =>
-    normalizePost(item, text, {
+  const posts = rawPosts.map((item, index) => {
+    // PERF-8: boardKey 基于 content,点赞/翻页/切 board 都不改 content →
+    // 缓存到 rawPost._boardKey,避免每次 buildVisiblePosts(applyLocale/switchBoard/
+    // 点赞同步)都对全量 rawPosts 重跑 5 条正则。content 编辑走别页,此处只读快照。
+    if (!item._boardKey) {
+      item._boardKey = inferCommunityBoardKey(item);
+    }
+    return normalizePost(item, text, {
       rawIndex: index,
-      sectionKey: inferCommunityBoardKey(item),
-    }),
-  );
+      sectionKey: item._boardKey,
+    });
+  });
 
   if (activeBoard === "all") {
     return posts;
