@@ -27,7 +27,11 @@ async def subscribe(
     sub = body.subscription
     if not sub.get("endpoint") or not sub.get("keys", {}).get("p256dh"):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid subscription")
-    await save_subscription(user["id"], sub)
+    try:
+        await save_subscription(user["id"], sub)
+    except ValueError as exc:
+        # SSRF-rejected endpoint or per-user cap exceeded (Codex [3][7][11][14])
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc))
     return {"status": "ok"}
 
 

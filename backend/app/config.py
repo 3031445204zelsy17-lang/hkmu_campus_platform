@@ -31,6 +31,15 @@ VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")
 VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "")
 VAPID_CLAIMS = {"sub": f"mailto:{os.getenv('VAPID_EMAIL', 'noreply@hkmu-campus.example.com')}"}
 
+# Web Push SSRF / DoS guards (Codex [3][7][11][14]):
+#  - PUSH_HTTP_TIMEOUT: per-endpoint HTTP POST timeout (pywebpush → requests),
+#    bounds slow/malicious endpoints that would otherwise hang the worker thread.
+#  - MAX_PUSH_SUBS_PER_USER: caps outbound push amplification — without it one
+#    user can register thousands of endpoints so a single push trigger fans out
+#    into thousands of server-originated HTTP calls.
+PUSH_HTTP_TIMEOUT = int(os.getenv("PUSH_HTTP_TIMEOUT", "10"))
+MAX_PUSH_SUBS_PER_USER = int(os.getenv("MAX_PUSH_SUBS_PER_USER", "10"))
+
 # Hot sort algorithm tuning
 HOT_GRAVITY = float(os.getenv("HOT_GRAVITY", "48"))   # hours per 1-point decay
 HOT_SEED = float(os.getenv("HOT_SEED", "1.0"))         # baseline score for new posts
