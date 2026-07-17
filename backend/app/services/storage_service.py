@@ -48,19 +48,43 @@ def validate_image(content_type: str, size: int) -> str | None:
     return None
 
 
+def _storage_path(
+    module: str, user_id: int, content_type: str, filename: str | None = None
+) -> str:
+    """Build the object key inside the uploads bucket.
+
+    Default: ``{module}/{user_id}/{uuid}.{ext}`` — a fresh object per upload,
+    correct for multi-image modules (posts / lostfound / news) where each file
+    is a distinct asset. Pass ``filename`` (no extension) to get a STABLE key
+    ``{module}/{user_id}/{filename}.{ext}`` so a re-upload overwrites the same
+    object instead of orphaning the previous one — used for avatars (Codex
+    [20][24]). If ``filename`` already carries an extension it is used as-is.
+    """
+    ext = _EXT_MAP.get(content_type, ".bin")
+    if filename is None:
+        name = f"{uuid.uuid4().hex}{ext}"
+    elif os.path.splitext(filename)[1]:
+        name = filename
+    else:
+        name = f"{filename}{ext}"
+    return f"{module}/{user_id}/{name}"
+
+
 async def upload_to_supabase(
     file_bytes: bytes,
     content_type: str,
     module: str,
     user_id: int,
+    *,
+    filename: str | None = None,
 ) -> str:
     """Upload *file_bytes* to Supabase Storage and return the public URL.
 
-    Path convention: ``uploads/{module}/{user_id}/{uuid}.{ext}``
+    Path convention: ``uploads/{module}/{user_id}/{name}.{ext}`` where ``name``
+    is a fresh UUID by default, or a stable ``filename`` (avatars) so re-uploads
+    overwrite in place instead of accumulating orphaned objects.
     """
-    ext = _EXT_MAP.get(content_type, ".bin")
-    filename = f"{uuid.uuid4().hex}{ext}"
-    storage_path = f"{module}/{user_id}/{filename}"
+    storage_path = _storage_path(module, user_id, content_type, filename)
 
     url = f"{SUPABASE_URL}/storage/v1/object/{BUCKET}/{storage_path}"
 
