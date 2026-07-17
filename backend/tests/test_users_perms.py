@@ -56,9 +56,10 @@ async def _make_user_with_secrets(make_user, label):
     return uid, f"{label}_{suffix}", f"INV{suffix}"
 
 
-def _assert_only_public(body, context=""):
-    """断言单个 user 视图只含 UserPublicOut 字段,无敏感字段。"""
-    leaked = set(body.keys()) - _PUBLIC_FIELDS
+def _assert_only_public(body, context="", extra=()):
+    """断言单个 user 视图只含 UserPublicOut 字段(+ extra 白名单,如
+    SuggestOut.reason 这种非隐私的 i18n 信号),无敏感字段。"""
+    leaked = set(body.keys()) - _PUBLIC_FIELDS - set(extra)
     assert not leaked, f"{context} 泄露字段: {leaked}"
     for secret in _SENSITIVE:
         assert secret not in body, f"{context} {secret} 泄露"
@@ -89,7 +90,7 @@ async def test_suggest_returns_only_public_fields(client, make_user):
     assert r.status_code == 200, r.text
     matched = [u for u in r.json() if u.get("id") == tid]
     assert matched, "target(hkmu_verified) 应在 suggest"
-    _assert_only_public(matched[0], "suggest")
+    _assert_only_public(matched[0], "suggest", extra={"reason"})
 
 
 async def test_friends_list_returns_only_public_fields(client, make_user):
