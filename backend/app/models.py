@@ -136,9 +136,9 @@ class PostCreate(BaseModel):
 
 
 class PostUpdate(BaseModel):
-    title: Optional[str] = Field(None, max_length=200)
-    content: Optional[str] = Field(None, max_length=10000)
-    category: Optional[str] = Field(None, max_length=30)
+    title: Optional[str] = Field(None, min_length=1, max_length=200)
+    content: Optional[str] = Field(None, min_length=1, max_length=10000)
+    category: Optional[str] = Field(None, min_length=1, max_length=30)
 
 
 class QuotedPostOut(BaseModel):
