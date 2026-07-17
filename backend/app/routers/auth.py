@@ -484,8 +484,14 @@ async def forgot_password(body: ForgotPassword):
 
 
 @router.post("/reset-password")
-async def reset_password(body: ResetPassword):
-    check_rate_limit("reset-password", max_requests=5, window_seconds=60)
+async def reset_password(body: ResetPassword, request: Request):
+    # [6] 按 client IP 分桶(原常量 key "reset-password" 让任意 5 请求耗尽整个 worker
+    # 预算,阻断所有用户重置密码)。per-IP 5/min 仍防爆破,但不再波及其他用户。
+    client_ip = (
+        request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+        or (request.client.host if request.client else "unknown")
+    )
+    check_rate_limit(f"reset-pw:ip:{client_ip}", max_requests=5, window_seconds=60)
 
     async with get_db() as db:
         async with db.transaction():
