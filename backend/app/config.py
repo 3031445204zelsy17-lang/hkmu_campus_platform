@@ -39,5 +39,15 @@ HOT_SEED = float(os.getenv("HOT_SEED", "1.0"))         # baseline score for new 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://sizuuojtadkntjjibxuv.supabase.co")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 
-# Admin setup: comma-separated usernames to auto-promote on startup
+# Admin setup. Prefer ADMIN_USER_IDS (immutable user_id — set it AFTER the target
+# account exists, by looking up its id). ADMIN_USERNAMES is a backward-compat
+# one-shot: the username MUST be pre-registered by a trusted party before startup,
+# else an attacker registering it first gets auto-promoted to admin ([4]).
+ADMIN_USER_IDS = []
+for _id in os.getenv("ADMIN_USER_IDS", "").split(","):
+    _id = _id.strip()
+    try:
+        ADMIN_USER_IDS.append(int(_id))
+    except ValueError:
+        pass
 ADMIN_USERNAMES = [u.strip() for u in os.getenv("ADMIN_USERNAMES", "").split(",") if u.strip()]

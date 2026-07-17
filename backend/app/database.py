@@ -2,7 +2,7 @@ import os
 import ssl as _ssl
 from urllib.parse import urlparse
 import asyncpg
-from .config import DATABASE_URL, DB_POOL_MIN, DB_POOL_MAX, ADMIN_USERNAMES
+from .config import DATABASE_URL, DB_POOL_MIN, DB_POOL_MAX, ADMIN_USER_IDS, ADMIN_USERNAMES
 
 _pool: asyncpg.Pool | None = None
 
@@ -395,7 +395,21 @@ async def init_db():
                     await conn.execute(stmt)
                 buffer = []
 
-    # Auto-promote configured admin users
+    # Auto-promote configured admins AT STARTUP. [4] login-time promotion removed —
+    # it let anyone register an ADMIN_USERNAMES entry and become admin on login.
+    # Prefer ADMIN_USER_IDS (immutable); ADMIN_USERNAMES is a one-shot fallback whose
+    # usernames MUST be pre-registered by a trusted party before startup.
+    import logging
+    _log = logging.getLogger("app")
+    if ADMIN_USER_IDS:
+        async with _pool.acquire() as conn:
+            for uid in ADMIN_USER_IDS:
+                result = await conn.execute(
+                    "UPDATE users SET identity = 'admin' WHERE id = $1 AND identity != 'admin'",
+                    uid,
+                )
+                if result.endswith("1"):
+                    _log.info(f"Auto-promoted user_id={uid} to admin")
     if ADMIN_USERNAMES:
         async with _pool.acquire() as conn:
             for username in ADMIN_USERNAMES:
@@ -404,5 +418,4 @@ async def init_db():
                     username,
                 )
                 if result.endswith("1"):
-                    import logging
-                    logging.getLogger("app").info(f"Auto-promoted '{username}' to admin")
+                    _log.info(f"Auto-promoted '{username}' to admin (username-based; prefer ADMIN_USER_IDS)")
