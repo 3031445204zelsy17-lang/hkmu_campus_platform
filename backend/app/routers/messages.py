@@ -6,7 +6,7 @@ from pydantic import ValidationError
 
 from ..database import get_db
 from ..models import MessageCreate, MessageOut, ConversationOut
-from ..services.auth_service import get_current_user, decode_access_token
+from ..services.auth_service import get_current_user, decode_access_token, access_token_expired
 from ..services.rate_limiter import check_rate_limit
 from ..services.websocket_manager import manager
 
@@ -246,6 +246,11 @@ async def ws_endpoint(ws: WebSocket):
     try:
         payload = decode_access_token(token)
         user_id = int(payload["sub"])
+        # [2] capture exp so the long-lived socket can be torn down once the
+        # access token expires mid-connection. Access tokens are stateless JWTs
+        # (no revocation list), so re-checking the already-verified exp on each
+        # inbound frame is sufficient — see access_token_expired().
+        exp = payload.get("exp")
     except Exception:
         await ws.close(code=4001)
         return
@@ -253,80 +258,104 @@ async def ws_endpoint(ws: WebSocket):
     await ws.accept()
     manager.connect(user_id, ws)
 
-    async with get_db() as db:
-        # Send initial unread count
-        row = await db.fetchrow(
-            "SELECT COUNT(*) AS cnt FROM messages WHERE receiver_id = $1 AND is_read = FALSE",
-            user_id,
-        )
+    try:
+        # [9] short DB borrow for the initial unread count only — do NOT hold a
+        # pool connection across the receive loop. The old code wrapped the
+        # whole while-loop in `async with get_db()`, so every connected WS
+        # client pinned a pool connection for the socket's entire lifetime
+        # (hours); with DB_POOL_MAX=10 a mere 10 chat clients starved every
+        # REST endpoint. Each op below now borrows for just its own statement(s).
+        async with get_db() as db:
+            row = await db.fetchrow(
+                "SELECT COUNT(*) AS cnt FROM messages WHERE receiver_id = $1 AND is_read = FALSE",
+                user_id,
+            )
         await manager.send_to_user(user_id, {"type": "unread_count", "count": row["cnt"]})
 
-        try:
-            while True:
-                raw = await ws.receive_text()
+        while True:
+            # [2] gate every frame on a fresh expiry check. If the token has
+            # expired, tell the client and close — no chat / mark_read is
+            # processed past expiry. Idle sockets are torn down on the next
+            # inbound frame; since [9] they hold no DB connection, so lingering
+            # is just a small amount of server memory until then.
+            if access_token_expired(exp):
                 try:
-                    data = json.loads(raw)
-                except json.JSONDecodeError:
-                    continue
+                    await manager.send_to_user(user_id, {"type": "auth_expired"})
+                    await ws.close(code=4001)
+                except Exception:
+                    pass
+                break
 
-                msg_type = data.get("type")
+            raw = await ws.receive_text()
+            try:
+                data = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
 
-                if msg_type == "ping":
-                    await manager.send_to_user(user_id, {"type": "pong"})
+            msg_type = data.get("type")
 
-                elif msg_type == "chat":
-                    try:
+            if msg_type == "ping":
+                await manager.send_to_user(user_id, {"type": "pong"})
+
+            elif msg_type == "chat":
+                try:
+                    async with get_db() as db:
                         receiver_id, content = await _validate_ws_chat(
                             user_id, data.get("receiver_id"), data.get("content", "").strip(), db
                         )
-                    except ValueError as exc:
-                        await manager.send_to_user(user_id, {"type": "error", "detail": str(exc)})
-                        continue
+                        now = datetime.now(timezone.utc)
+                        now_iso = now.isoformat()
+                        row = await db.fetchrow(
+                            """INSERT INTO messages (sender_id, receiver_id, content, created_at)
+                               VALUES ($1, $2, $3, $4)
+                               RETURNING id""",
+                            user_id, receiver_id, content, now,
+                        )
+                        msg_id = row["id"]
+                except ValueError as exc:
+                    await manager.send_to_user(user_id, {"type": "error", "detail": str(exc)})
+                    continue
 
-                    now = datetime.now(timezone.utc)
-                    now_iso = now.isoformat()
-                    row = await db.fetchrow(
-                        """INSERT INTO messages (sender_id, receiver_id, content, created_at)
-                           VALUES ($1, $2, $3, $4)
-                           RETURNING id""",
-                        user_id, receiver_id, content, now,
-                    )
-                    msg_id = row["id"]
+                chat_msg = {
+                    "type": "chat",
+                    "id": msg_id,
+                    "sender_id": user_id,
+                    "receiver_id": receiver_id,
+                    "content": content,
+                    "is_read": False,
+                    "created_at": now_iso,
+                }
+                await manager.send_to_user(receiver_id, chat_msg)
+                await manager.send_to_user(user_id, chat_msg)
 
-                    chat_msg = {
-                        "type": "chat",
-                        "id": msg_id,
+                # Web Push if receiver is offline — mirror REST send_message:
+                # re-check is_online at push time, and borrow its own short
+                # connection for the username lookup ([9] — never hold across WS).
+                if not manager.is_online(receiver_id):
+                    from ..services.push_service import send_push_to_user
+                    async with get_db() as db:
+                        sender_row = await db.fetchrow(
+                            "SELECT username FROM users WHERE id = $1", user_id
+                        )
+                    sender_name = sender_row["username"] if sender_row else "Someone"
+                    await send_push_to_user(receiver_id, {
+                        "type": "message",
+                        "title": f"{sender_name} sent you a message",
+                        "body": content[:100],
+                        "url": "/#/messages",
                         "sender_id": user_id,
-                        "receiver_id": receiver_id,
-                        "content": content,
-                        "is_read": False,
-                        "created_at": now_iso,
-                    }
-                    await manager.send_to_user(receiver_id, chat_msg)
-                    await manager.send_to_user(user_id, chat_msg)
+                    })
 
-                    # Web Push if receiver is offline
-                    if not manager.is_online(receiver_id):
-                        from ..services.push_service import send_push_to_user
-                        sender_row = await db.fetchrow("SELECT username FROM users WHERE id = $1", user_id)
-                        sender_name = sender_row["username"] if sender_row else "Someone"
-                        await send_push_to_user(receiver_id, {
-                            "type": "message",
-                            "title": f"{sender_name} sent you a message",
-                            "body": content[:100],
-                            "url": "/#/messages",
-                            "sender_id": user_id,
-                        })
-
-                elif msg_type == "mark_read":
-                    partner_id = data.get("partner_id")
-                    if partner_id:
+            elif msg_type == "mark_read":
+                partner_id = data.get("partner_id")
+                if partner_id:
+                    async with get_db() as db:
                         await db.execute(
                             "UPDATE messages SET is_read = TRUE WHERE sender_id = $1 AND receiver_id = $2 AND is_read = FALSE",
                             partner_id, user_id,
                         )
 
-        except WebSocketDisconnect:
-            pass
-        finally:
-            manager.disconnect(user_id, ws)
+    except WebSocketDisconnect:
+        pass
+    finally:
+        manager.disconnect(user_id, ws)

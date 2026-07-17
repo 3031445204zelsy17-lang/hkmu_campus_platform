@@ -1,4 +1,5 @@
 import hashlib
+import time
 from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 from passlib.context import CryptContext
@@ -105,29 +106,57 @@ async def create_refresh_token(user_id: int, conn=None) -> str:
     return raw
 
 
-async def verify_refresh_token(raw: str) -> int:
-    token_hash = hashlib.sha256(raw.encode()).hexdigest()
-    async with get_db() as db:
-        row = await db.fetchrow(
-            "SELECT user_id, expires_at FROM refresh_tokens WHERE token_hash = $1",
-            token_hash,
-        )
-        if not row:
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid refresh token")
-        expires = row["expires_at"]
-        if expires.tzinfo is None:
-            expires = expires.replace(tzinfo=timezone.utc)
-        if expires < datetime.now(timezone.utc):
-            await db.execute("DELETE FROM refresh_tokens WHERE token_hash = $1", token_hash)
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Refresh token expired")
-        return row["user_id"]
+def access_token_expired(exp) -> bool:
+    """True when a JWT ``exp`` claim (epoch seconds, as set by
+    ``create_access_token``) is in the past.
+
+    The WebSocket receive loop ([2]) uses this to tear down long-lived sockets
+    whose access token has expired mid-connection: a socket opened at login can
+    stay open for hours, but the access token inside it expires in
+    ``ACCESS_TOKEN_EXPIRE_MINUTES``. Without this re-check the socket keeps
+    accepting chat/mark_read frames after expiry. Access tokens are stateless
+    JWTs with no revocation list, so re-checking the already-verified ``exp`` on
+    each inbound frame is sufficient. A missing / non-numeric ``exp`` is treated
+    as "not expired" (matches jose, which only enforces ``exp`` when present).
+    """
+    return isinstance(exp, (int, float)) and time.time() >= exp
 
 
-async def rotate_refresh_token(raw: str, user_id: int) -> str:
+async def rotate_refresh_token(raw: str) -> tuple[int, str] | None:
+    """Atomically rotate a refresh token.
+
+    DELETE...RETURNING + expiry check + mint successor, all in one transaction.
+    This replaces the old verify-then-rotate flow (a SELECT in
+    ``verify_refresh_token`` followed by a separate DELETE here) which had a
+    TOCTOU window: two concurrent ``/auth/refresh`` calls with the *same*
+    refresh token both passed verification and both rotated, so a stolen token
+    stayed usable after the legitimate client had already rotated it.
+
+    Making verification and invalidation a single atomic step closes that
+    window — the row is deleted the instant it is read, so a racing caller
+    finds nothing to RETURN and fails. Returns ``(user_id, new_raw_token)`` on
+    success, or ``None`` if the token is invalid, already used, or expired.
+    """
+    if not raw:
+        return None
     token_hash = hashlib.sha256(raw.encode()).hexdigest()
+    now = datetime.now(timezone.utc)
     async with get_db() as db:
-        await db.execute("DELETE FROM refresh_tokens WHERE token_hash = $1", token_hash)
-        return await create_refresh_token(user_id, conn=db)
+        async with db.transaction():
+            row = await db.fetchrow(
+                "DELETE FROM refresh_tokens WHERE token_hash = $1 "
+                "RETURNING user_id, expires_at",
+                token_hash,
+            )
+            if not row:
+                return None
+            expires = row["expires_at"]
+            if expires.tzinfo is None:
+                expires = expires.replace(tzinfo=timezone.utc)
+            if expires < now:
+                return None
+            new_raw = await create_refresh_token(row["user_id"], conn=db)
+            return row["user_id"], new_raw
 
 
 async def revoke_refresh_token(raw: str) -> bool:
