@@ -352,12 +352,12 @@ class InviteCodeOut(BaseModel):
 
 class FriendshipOut(BaseModel):
     id: int
-    friend: UserOut
+    friend: UserPublicOut  # public-safe — no email/student_id/programme (leak fix [12])
     source: str
     created_at: Optional[str] = None
 
 
-class SuggestOut(UserOut):
+class SuggestOut(UserPublicOut):
     reason: Optional[str] = None
 
 
