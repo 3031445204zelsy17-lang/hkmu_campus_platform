@@ -124,13 +124,10 @@ async def login(body: UserLogin):
 
     _clear_failures(f"login:{body.username}")
 
-    # Auto-promote configured admin users on login
-    if ADMIN_USERNAMES and body.username in ADMIN_USERNAMES:
-        async with get_db() as db:
-            await db.execute(
-                "UPDATE users SET identity = 'admin' WHERE id = $1 AND identity != 'admin'",
-                row["id"],
-            )
+    # [4] login-time admin promotion REMOVED: it let anyone register an
+    # ADMIN_USERNAMES entry and become admin on login (privilege escalation via
+    # username squatting). Admins are now promoted only at startup (database.init_db)
+    # via ADMIN_USER_IDS (preferred, immutable) or pre-registered ADMIN_USERNAMES.
 
     token = create_access_token({"sub": str(row["id"]), "username": row["username"]})
     refresh = await create_refresh_token(row["id"])
