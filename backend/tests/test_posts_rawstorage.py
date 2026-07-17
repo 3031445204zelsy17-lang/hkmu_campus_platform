@@ -30,3 +30,29 @@ async def test_post_content_round_trips_raw_not_html_escaped(client, make_user):
     assert got.json()["content"] == raw, (
         "backend must return raw text; got html-escaped content (double-escape regression)"
     )
+
+
+async def test_post_update_rejects_empty_title(client, make_user):
+    """复验残留:PostUpdate.title 缺 min_length=1 → 空标题曾可持久化。修复后 422。
+
+    C 路线图给 LostFoundUpdate 加了长度校验,但漏了 PostUpdate 的下限;
+    PostCreate 有 min_length=1,PostUpdate 没有 → 编辑时能存空标题/空内容。
+    """
+    suffix = uuid.uuid4().hex[:8]
+    _uid, token = await make_user(f"editor_{suffix}")
+
+    create = await client.post(
+        "/api/v1/posts",
+        json={"title": "t", "content": "c", "category": "chat"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert create.status_code == 201, create.text
+    post_id = create.json()["id"]
+
+    # 空标题 → Pydantic min_length=1 拒绝(FastAPI 自动 422,不进端点逻辑)
+    upd = await client.put(
+        f"/api/v1/posts/{post_id}",
+        json={"title": ""},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert upd.status_code == 422, upd.text

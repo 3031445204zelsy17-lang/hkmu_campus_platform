@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query, status
+from pydantic import ValidationError
 
 from ..database import get_db
 from ..models import MessageCreate, MessageOut, ConversationOut
@@ -211,6 +212,30 @@ async def unread_count(user: dict = Depends(get_current_user)):
 # --- WebSocket ---
 
 
+async def _validate_ws_chat(user_id, receiver_id_raw, content, db):
+    """校验 WS chat 消息,对齐 REST send_message(复验残留问题修复)。
+
+    REST 端点靠 MessageCreate + check_rate_limit + 收件人存在 + 禁自发 4 道校验;
+    WS 端点原仅 `if not receiver_id or not content`,可写入自发/超长/不存在收件人消息。
+    返回规整后的 (receiver_id, content);任一校验不过抛 ValueError(detail)。
+    """
+    try:
+        receiver_id = int(receiver_id_raw)
+        content = MessageCreate(content=content).content  # min_length=1 / max_length=2000
+    except (TypeError, ValueError, ValidationError):
+        raise ValueError("Invalid message")
+    try:
+        check_rate_limit(f"msg:{user_id}", max_requests=30, window_seconds=60)
+    except HTTPException:
+        raise ValueError("Rate limit exceeded")
+    partner = await db.fetchrow("SELECT id FROM users WHERE id = $1", receiver_id)
+    if not partner:
+        raise ValueError("User not found")
+    if receiver_id == user_id:
+        raise ValueError("Cannot message yourself")
+    return receiver_id, content
+
+
 @router.websocket("/ws")
 async def ws_endpoint(ws: WebSocket):
     token = ws.query_params.get("token")
@@ -250,10 +275,12 @@ async def ws_endpoint(ws: WebSocket):
                     await manager.send_to_user(user_id, {"type": "pong"})
 
                 elif msg_type == "chat":
-                    receiver_id = data.get("receiver_id")
-                    content = data.get("content", "").strip()
-                    if not receiver_id or not content:
-                        await manager.send_to_user(user_id, {"type": "error", "detail": "Missing fields"})
+                    try:
+                        receiver_id, content = await _validate_ws_chat(
+                            user_id, data.get("receiver_id"), data.get("content", "").strip(), db
+                        )
+                    except ValueError as exc:
+                        await manager.send_to_user(user_id, {"type": "error", "detail": str(exc)})
                         continue
 
                     now = datetime.now(timezone.utc)
