@@ -15,7 +15,7 @@ from ..models import (
 )
 from ..services.auth_service import (
     hash_password, verify_password, create_access_token, get_current_user,
-    create_refresh_token, verify_refresh_token, rotate_refresh_token,
+    create_refresh_token, rotate_refresh_token,
     revoke_refresh_token,
     OAUTH_NO_PASSWORD, is_oauth_only,
     is_hkmu_email, derive_student_id,
@@ -386,7 +386,15 @@ async def refresh_access(body: dict):
     raw = body.get("refresh_token", "")
     if not raw:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Missing refresh_token")
-    user_id = await verify_refresh_token(raw)
+
+    # [23] atomic rotation: DELETE...RETURNING verifies AND invalidates the
+    # presented token in one step, closing the verify-then-rotate TOCTOU window
+    # where a replayed token could rotate twice. Returns None for invalid /
+    # already-used / expired tokens.
+    rotated = await rotate_refresh_token(raw)
+    if rotated is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired refresh token")
+    user_id, new_refresh = rotated
 
     async with get_db() as db:
         row = await db.fetchrow("SELECT username FROM users WHERE id = $1", user_id)
@@ -394,7 +402,6 @@ async def refresh_access(body: dict):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
 
     new_access = create_access_token({"sub": str(user_id), "username": row["username"]})
-    new_refresh = await rotate_refresh_token(raw, user_id)
     return Token(access_token=new_access, refresh_token=new_refresh)
 
 
