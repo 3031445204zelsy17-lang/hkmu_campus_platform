@@ -38,10 +38,21 @@ def _init_app_insights() -> None:
 
 
 @asynccontextmanager
+def _validate_secret_key(key: str) -> None:
+    """[13] fail-closed: 空/default SECRET_KEY → 拒绝启动。
+
+    JWT 用 SECRET_KEY 签名;若为 default/空,任何人可伪造 token(含 admin)冒充账号。
+    本地 .env / CI(ci-secret-key) / 生产 均已设非 default 值,此校验只拦未来误配。
+    """
+    if not key or key == "change-me-in-production":
+        raise RuntimeError(
+            "SECRET_KEY is empty or the default. Set a strong random SECRET_KEY "
+            "(e.g. `openssl rand -hex 32`) in the environment before starting."
+        )
+
+
 async def lifespan(app: FastAPI):
-    if SECRET_KEY == "change-me-in-production":
-        import warnings
-        warnings.warn("WARNING: Using default SECRET_KEY. Set SECRET_KEY in .env for production!")
+    _validate_secret_key(SECRET_KEY)
     await init_db()
     _init_app_insights()
     yield
