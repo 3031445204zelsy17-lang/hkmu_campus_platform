@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 import httpx
 from asyncpg.exceptions import UniqueViolationError
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, UploadFile, File, status
 
 from ..config import FRONTEND_URL
 from ..database import get_db
@@ -16,7 +16,7 @@ from ..models import (
 from ..services.auth_service import get_current_user, is_hkmu_email
 from ..services.email_service import send_verification_email
 from ..services.rate_limiter import check_rate_limit
-from ..services.storage_service import validate_image, upload_to_supabase
+from ..services.storage_service import validate_image, upload_to_supabase, delete_from_supabase
 from .auth import _create_email_token
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -295,12 +295,14 @@ async def update_me(
 
 @router.post("/me/avatar", response_model=UserOut)
 async def upload_avatar(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     user: dict = Depends(get_current_user),
 ):
-    # Upload to Supabase Storage (mirrors POST /api/v1/upload?module=avatars).
-    # Previously wrote to the container-local frontend/assets/uploads dir, which
-    # was lost on every redeploy/restart.
+    # Upload to Supabase Storage with a STABLE key avatars/{uid}/{uid}.ext so a
+    # re-upload overwrites the same object instead of orphaning the previous
+    # one (Codex [20][24] — the old UUID-per-upload path left every superseded
+    # avatar in the bucket forever; delete_from_supabase was never wired up).
     raw = await file.read()
     content_type = file.content_type or "application/octet-stream"
 
@@ -308,8 +310,18 @@ async def upload_avatar(
     if err:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, err)
 
+    # Capture the previous avatar before the new upload lands — deleted AFTER
+    # the new one is live so a failed upload never leaves the user pointing at
+    # a deleted object.
+    async with get_db() as db:
+        prev_avatar_url = await db.fetchval(
+            "SELECT avatar_url FROM users WHERE id = $1", user["id"]
+        )
+
     try:
-        avatar_url = await upload_to_supabase(raw, content_type, "avatars", user["id"])
+        avatar_url = await upload_to_supabase(
+            raw, content_type, "avatars", user["id"], filename=str(user["id"])
+        )
     except (RuntimeError, httpx.HTTPError):
         # RuntimeError = Supabase returned non-2xx; httpx.HTTPError = network/timeout/transport
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Avatar upload failed, please retry")
@@ -324,7 +336,17 @@ async def upload_avatar(
             f"SELECT {_USER_COLS} FROM users WHERE id = $1",
             user["id"],
         )
-        return _user_out(row)
+
+    # Best-effort delete the previous avatar object when its path differs from
+    # the new one — covers an extension change (jpg→png), a legacy UUID avatar,
+    # and any old stable-key object. Same-ext re-upload overwrote in place
+    # (prev == new) so there's nothing to delete. delete_from_supabase ignores
+    # non-bucket URLs (e.g. Google/WeChat OAuth avatars) safely. Runs after the
+    # response so cleanup latency never blocks the user.
+    if prev_avatar_url and prev_avatar_url != avatar_url:
+        background_tasks.add_task(delete_from_supabase, prev_avatar_url)
+
+    return _user_out(row)
 
 
 @router.get("/search", response_model=list[UserPublicOut])
