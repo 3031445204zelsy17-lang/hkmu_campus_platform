@@ -197,7 +197,7 @@ async def suggest_users(
         )
         results = []
         for r in rows:
-            base = _user_out(r, include_email=False).model_dump()
+            base = _user_public_out(r).model_dump()
             base["reason"] = "same_programme" if r["same_programme"] else "hkmu_peer"
             results.append(SuggestOut(**base))
         return results
@@ -219,7 +219,7 @@ async def list_my_friends(user: dict = Depends(get_current_user)):
             f"SELECT {_USER_COLS} FROM users WHERE id = ANY($1::int[])",
             friend_ids,
         )
-        user_map = {r["id"]: _user_out(r, include_email=False) for r in urows}
+        user_map = {r["id"]: _user_public_out(r) for r in urows}
         results = []
         for fr in frows:
             friend = user_map.get(fr["friend_id"])
@@ -248,7 +248,7 @@ async def add_friend_by_invite(body: InviteAccept, user: dict = Depends(get_curr
             inviter_id = inviter["id"]
             if inviter_id == user["id"]:
                 # self-invite: no-op (also guarded client-side)
-                return {"friend": _user_out(inviter).model_dump(), "created": False}
+                return {"friend": _user_public_out(inviter).model_dump(), "created": False}
             result = await db.execute(
                 "INSERT INTO friendships (user_id, friend_id, status, source) "
                 "VALUES ($1, $2, 'accepted', 'invite'), ($2, $1, 'accepted', 'invite') "
@@ -256,7 +256,7 @@ async def add_friend_by_invite(body: InviteAccept, user: dict = Depends(get_curr
                 user["id"], inviter_id,
             )
             created = not result.endswith("0")
-            return {"friend": _user_out(inviter).model_dump(), "created": created}
+            return {"friend": _user_public_out(inviter).model_dump(), "created": created}
 
 
 @router.put("/me", response_model=UserOut)
@@ -327,7 +327,7 @@ async def upload_avatar(
         return _user_out(row)
 
 
-@router.get("/search", response_model=list[UserOut])
+@router.get("/search", response_model=list[UserPublicOut])
 async def search_users(
     q: str = Query(..., min_length=1, max_length=50),
     user: dict = Depends(get_current_user),
@@ -337,7 +337,7 @@ async def search_users(
             f"SELECT {_USER_COLS} FROM users WHERE (username LIKE $1 OR nickname LIKE $2) AND id != $3 LIMIT 20",
             f"%{q}%", f"%{q}%", user["id"],
         )
-        return [_user_out(r, include_email=False) for r in rows]
+        return [_user_public_out(r) for r in rows]
 
 
 @router.get("/{user_id}", response_model=UserPublicOut)
