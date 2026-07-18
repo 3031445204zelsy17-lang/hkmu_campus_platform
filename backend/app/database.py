@@ -210,6 +210,12 @@ CREATE INDEX IF NOT EXISTS idx_news_comments_news ON news_comments(news_id);
 CREATE INDEX IF NOT EXISTS idx_news_comments_author ON news_comments(author_id);
 CREATE INDEX IF NOT EXISTS idx_email_tokens_user ON email_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_email_tokens_hash ON email_tokens(token_hash);
+
+-- Add email snapshot column to email_tokens for token-email binding (Codex [22])
+DO $$ BEGIN
+    ALTER TABLE email_tokens ADD COLUMN email TEXT;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_oauth ON users(oauth_provider, oauth_id) WHERE oauth_provider IS NOT NULL;
 

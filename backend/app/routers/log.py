@@ -18,7 +18,7 @@ logger = logging.getLogger("hkmu.security")
 
 
 class ClientError(BaseModel):
-    type: str = Field(default="error")  # "error" / "unhandledrejection"
+    type: str = Field(default="error", max_length=64)  # "error" / "unhandledrejection" (Codex [21])
     message: str = Field(default="", max_length=1000)
     source: str | None = Field(default=None, max_length=500)  # filename
     lineno: int | None = None

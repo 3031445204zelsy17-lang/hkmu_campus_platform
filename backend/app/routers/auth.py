@@ -33,7 +33,25 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # --- Login lockout (in-memory) ---
 _LOCKOUT_MAX = 5
 _LOCKOUT_WINDOW = 900  # 15 minutes
+# Backstop on tracked keys (Codex [17][18]): the failure dict only trimmed a
+# key's timestamps when THAT key retried, so a username/email spray left
+# abandoned entries forever (unbounded memory). Below, _prune_lockout drops
+# keys with no in-window attempts once the dict grows past this cap. Key SIZE
+# is bounded by max_length on UserLogin/EmailLogin (models.py).
+_MAX_LOCKOUT_KEYS = 5000
 _login_fails: dict[str, list[float]] = {}
+
+
+def _prune_lockout() -> None:
+    if len(_login_fails) < _MAX_LOCKOUT_KEYS:
+        return
+    cutoff = time.monotonic() - _LOCKOUT_WINDOW
+    for k in list(_login_fails):
+        kept = [t for t in _login_fails[k] if t > cutoff]
+        if not kept:
+            del _login_fails[k]
+        else:
+            _login_fails[k] = kept
 
 
 def _check_lockout(key: str):
@@ -49,6 +67,7 @@ def _check_lockout(key: str):
 
 
 def _record_failure(key: str):
+    _prune_lockout()
     _login_fails.setdefault(key, []).append(time.monotonic())
 
 
@@ -424,15 +443,18 @@ async def logout(body: dict):
 
 # --- Password Reset ---
 
-async def _create_email_token(user_id: int, token_type: str, ttl_hours: int, conn=None) -> str:
+async def _create_email_token(
+    user_id: int, token_type: str, ttl_hours: int, conn=None, email: str | None = None,
+) -> str:
     raw = secrets.token_hex(32)
     token_hash = hashlib.sha256(raw.encode()).hexdigest()
     expires = datetime.now(timezone.utc) + timedelta(hours=ttl_hours)
 
     async def _insert(db):
         await db.execute(
-            "INSERT INTO email_tokens (user_id, token_hash, token_type, expires_at) VALUES ($1, $2, $3, $4)",
-            user_id, token_hash, token_type, expires,
+            "INSERT INTO email_tokens (user_id, token_hash, token_type, expires_at, email) "
+            "VALUES ($1, $2, $3, $4, $5)",
+            user_id, token_hash, token_type, expires, email,
         )
 
     if conn:
@@ -443,13 +465,19 @@ async def _create_email_token(user_id: int, token_type: str, ttl_hours: int, con
     return raw
 
 
-async def _consume_email_token(raw: str, token_type: str, conn=None) -> int | None:
+async def _consume_email_token(
+    raw: str, token_type: str, conn=None,
+) -> tuple[int, str | None] | None:
+    """Consume a single-use email token. Returns ``(user_id, email_snapshot)``
+    where ``email_snapshot`` is the email bound at creation (Codex [22]) — None
+    for legacy/password-reset tokens that don't bind a specific email."""
     token_hash = hashlib.sha256(raw.encode()).hexdigest()
 
     async def _do(db):
         async with db.transaction():
             row = await db.fetchrow(
-                "SELECT user_id, expires_at FROM email_tokens WHERE token_hash = $1 AND token_type = $2",
+                "SELECT user_id, expires_at, email FROM email_tokens "
+                "WHERE token_hash = $1 AND token_type = $2",
                 token_hash, token_type,
             )
             if not row:
@@ -460,7 +488,7 @@ async def _consume_email_token(raw: str, token_type: str, conn=None) -> int | No
             await db.execute("DELETE FROM email_tokens WHERE token_hash = $1", token_hash)
             if expires < datetime.now(timezone.utc):
                 return None
-            return row["user_id"]
+            return row["user_id"], row["email"]
 
     if conn:
         return await _do(conn)
@@ -499,9 +527,10 @@ async def reset_password(body: ResetPassword, request: Request):
 
     async with get_db() as db:
         async with db.transaction():
-            user_id = await _consume_email_token(body.token, "password_reset", conn=db)
-            if user_id is None:
+            consumed = await _consume_email_token(body.token, "password_reset", conn=db)
+            if consumed is None:
                 raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or expired reset token")
+            user_id, _snapshot_email = consumed
 
             await db.execute(
                 "UPDATE users SET password_hash = $1, updated_at = $2 WHERE id = $3",
@@ -518,20 +547,38 @@ async def reset_password(body: ResetPassword, request: Request):
 @router.post("/verify-email")
 async def verify_email(body: VerifyEmail):
     async with get_db() as db:
-        user_id = await _consume_email_token(body.token, "email_verify", conn=db)
-        if user_id is None:
+        consumed = await _consume_email_token(body.token, "email_verify", conn=db)
+        if consumed is None:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or expired verification token")
+        user_id, snap_email = consumed
 
         # Phase 5 P0: HKMU email tier — verify also unlocks hkmu_verified and backfills student_id.
         # Works for both register and bind-email flows (method C: email already in users.email).
         row = await db.fetchrow("SELECT email, student_id FROM users WHERE id = $1", user_id)
+        # [22] bind-email snapshot: if this token was issued for a specific email
+        # and the user's current email no longer matches (a later bind superseded
+        # it), the token is stale — reject. NULL snapshot = register/legacy token.
+        if snap_email and (not row or row["email"] != snap_email):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or expired verification token")
         now = datetime.now(timezone.utc)
         if is_hkmu_email(row["email"] if row else None):
-            await db.execute(
-                "UPDATE users SET email_verified = TRUE, hkmu_verified = TRUE, "
-                "student_id = COALESCE(student_id, $2), updated_at = $3 WHERE id = $1",
-                user_id, derive_student_id(row["email"]), now,
-            )
+            # [19] a verified HKMU email authoritatively sets student_id from the
+            # derived value, overriding any user-supplied (possibly forged)
+            # student_id — but only when derivable, so a non-standard HKMU email
+            # (e.g. staff) doesn't wipe a legitimately-set id.
+            derived = derive_student_id(row["email"])
+            if derived:
+                await db.execute(
+                    "UPDATE users SET email_verified = TRUE, hkmu_verified = TRUE, "
+                    "student_id = $2, updated_at = $3 WHERE id = $1",
+                    user_id, derived, now,
+                )
+            else:
+                await db.execute(
+                    "UPDATE users SET email_verified = TRUE, hkmu_verified = TRUE, "
+                    "updated_at = $2 WHERE id = $1",
+                    user_id, now,
+                )
         else:
             await db.execute(
                 "UPDATE users SET email_verified = TRUE, updated_at = $2 WHERE id = $1",

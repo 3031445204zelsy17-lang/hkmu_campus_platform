@@ -25,8 +25,10 @@ class UserRegister(BaseModel):
 
 
 class UserLogin(BaseModel):
-    username: str
-    password: str
+    # max_length bounds the lockout-dict key (Codex [17][18]) — a giant
+    # username would otherwise inflate the in-memory failure tracker.
+    username: str = Field(min_length=1, max_length=30)
+    password: str = Field(min_length=1, max_length=128)
 
 
 class GoogleLogin(BaseModel):
@@ -34,7 +36,7 @@ class GoogleLogin(BaseModel):
 
 
 class EmailRegister(BaseModel):
-    email: str = Field(pattern=r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+    email: str = Field(pattern=r'^[^@\s]+@[^@\s]+\.[^@\s]+$', max_length=254)
     password: str = Field(min_length=8, max_length=128)
     nickname: str = Field(min_length=1, max_length=30)
     student_id: Optional[str] = None
@@ -52,12 +54,12 @@ class EmailRegister(BaseModel):
 
 
 class EmailLogin(BaseModel):
-    email: str
-    password: str
+    email: str = Field(min_length=3, max_length=254)
+    password: str = Field(min_length=1, max_length=128)
 
 
 class ForgotPassword(BaseModel):
-    email: str = Field(pattern=r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+    email: str = Field(pattern=r'^[^@\s]+@[^@\s]+\.[^@\s]+$', max_length=254)
 
 
 class ResetPassword(BaseModel):

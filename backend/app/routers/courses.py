@@ -8,11 +8,28 @@ from ..models import (
     CourseReviewCreate, CourseReviewOut, PaginatedResponse,
 )
 from ..data.programmes import PROGRAMMES, DEFAULT_PROGRAMME_CODE, get_programme
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+
+# Cap on a single batch progress update (Codex [25]) — without it a client could
+# POST thousands of items and force a long transaction of N existence checks +
+# N upserts. 100 is far above any legitimate planner sync.
+_MAX_BATCH_PROGRESS = 100
 
 
 class BatchProgressUpdate(BaseModel):
     items: list[UserCourseUpdate]
+
+    @field_validator("items")
+    @classmethod
+    def _cap_and_dedup(cls, items: list[UserCourseUpdate]) -> list[UserCourseUpdate]:
+        if len(items) > _MAX_BATCH_PROGRESS:
+            raise ValueError(f"Too many items (max {_MAX_BATCH_PROGRESS})")
+        # Dedup by course_id, last occurrence wins — mirrors the endpoint's
+        # ON CONFLICT DO UPDATE so a repeated course_id doesn't double-work.
+        seen: dict[str, UserCourseUpdate] = {}
+        for item in items:
+            seen[item.course_id] = item
+        return list(seen.values())
 from ..services.auth_service import get_current_user
 
 router = APIRouter(prefix="/courses", tags=["courses"])
