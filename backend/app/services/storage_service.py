@@ -48,6 +48,23 @@ def validate_image(content_type: str, size: int) -> str | None:
     return None
 
 
+async def read_bounded(file) -> bytes:
+    """Read an UploadFile, capping memory at ``MAX_FILE_SIZE + 1`` bytes (Codex
+    [5][15] — unbounded whole-file read).
+
+    The previous ``await file.read()`` loaded the *entire* upload into memory
+    before any size check, so a client could stream gigabytes and OOM the worker
+    (the size limit was only enforced after the bytes were already in RAM). Read
+    at most ``MAX_FILE_SIZE + 1``; if that much comes back the file is too large
+    → raises ValueError (caller maps to 413). Otherwise returns the full
+    (validly-sized) file bytes.
+    """
+    data = await file.read(MAX_FILE_SIZE + 1)
+    if len(data) > MAX_FILE_SIZE:
+        raise ValueError(f"File too large (max {MAX_FILE_SIZE // (1024 * 1024)} MB)")
+    return data
+
+
 def _storage_path(
     module: str, user_id: int, content_type: str, filename: str | None = None
 ) -> str:

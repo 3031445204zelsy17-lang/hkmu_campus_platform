@@ -16,6 +16,14 @@ DB_POOL_MAX = int(os.getenv("DB_POOL_MAX", "10"))
 # production as defense-in-depth against scraping / blunt abuse once tuned.
 RATE_LIMIT_PER_MIN = int(os.getenv("RATE_LIMIT_PER_MIN", "0"))
 
+# Feedback anti-abuse (Codex [16]): in-app feedback is auth-required but was
+# otherwise uncapped — any user could spam unbounded rows. Rate caps bursts,
+# quota caps lifetime count, retention prunes old rows so the table can't grow
+# forever. All overridable via env.
+FEEDBACK_PER_HOUR = int(os.getenv("FEEDBACK_PER_HOUR", "3"))
+MAX_FEEDBACK_PER_USER = int(os.getenv("MAX_FEEDBACK_PER_USER", "10"))
+FEEDBACK_RETENTION_DAYS = int(os.getenv("FEEDBACK_RETENTION_DAYS", "90"))
+
 API_PREFIX = "/api/v1"
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 
