@@ -122,7 +122,9 @@ async def bind_email(body: BindEmail, user: dict = Depends(get_current_user)):
             "UPDATE users SET email = $1, email_verified = FALSE, updated_at = $2 WHERE id = $3",
             body.email, now, user["id"],
         )
-        token = await _create_email_token(user["id"], "email_verify", ttl_hours=24, conn=db)
+        token = await _create_email_token(
+            user["id"], "email_verify", ttl_hours=24, conn=db, email=body.email,
+        )
         verify_url = f"{FRONTEND_URL}/#/verify-email?token={token}"
     await send_verification_email(body.email, verify_url)
     return {"message": "Verification email sent"}
