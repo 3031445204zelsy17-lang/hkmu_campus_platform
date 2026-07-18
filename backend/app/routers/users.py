@@ -16,7 +16,7 @@ from ..models import (
 from ..services.auth_service import get_current_user, is_hkmu_email
 from ..services.email_service import send_verification_email
 from ..services.rate_limiter import check_rate_limit
-from ..services.storage_service import validate_image, upload_to_supabase, delete_from_supabase
+from ..services.storage_service import validate_image, upload_to_supabase, delete_from_supabase, read_bounded
 from .auth import _create_email_token
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -303,7 +303,11 @@ async def upload_avatar(
     # re-upload overwrites the same object instead of orphaning the previous
     # one (Codex [20][24] — the old UUID-per-upload path left every superseded
     # avatar in the bucket forever; delete_from_supabase was never wired up).
-    raw = await file.read()
+    # Bounded read (Codex [5][15]) — never load an unbounded upload into memory.
+    try:
+        raw = await read_bounded(file)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, str(exc))
     content_type = file.content_type or "application/octet-stream"
 
     err = validate_image(content_type, len(raw))

@@ -14,7 +14,7 @@ by folder in the storage bucket.
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, status
 
 from ..services.auth_service import get_current_user
-from ..services.storage_service import validate_image, upload_to_supabase
+from ..services.storage_service import validate_image, upload_to_supabase, read_bounded
 
 router = APIRouter(prefix="/upload", tags=["upload"])
 
@@ -34,8 +34,12 @@ async def upload_image(
             f"Invalid module. Allowed: {', '.join(sorted(_VALID_MODULES))}",
         )
 
-    # Read file bytes (with size guard)
-    raw = await file.read()
+    # Read file bytes with a BOUNDED read (Codex [5][15]) — never load an
+    # unbounded upload into memory. 413 if it exceeds the cap.
+    try:
+        raw = await read_bounded(file)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, str(exc))
     content_type = file.content_type or "application/octet-stream"
 
     err = validate_image(content_type, len(raw))
