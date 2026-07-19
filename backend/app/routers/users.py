@@ -16,7 +16,7 @@ from ..models import (
 from ..services.auth_service import get_current_user, is_hkmu_email
 from ..services.email_service import send_verification_email
 from ..services.rate_limiter import check_rate_limit
-from ..services.storage_service import validate_image, upload_to_supabase, delete_from_supabase, read_bounded
+from ..services.storage_service import validate_image, upload_image_variants, delete_from_supabase, read_bounded
 from .auth import _create_email_token
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -325,9 +325,14 @@ async def upload_avatar(
         )
 
     try:
-        avatar_url = await upload_to_supabase(
+        # Multi-size pipeline (Phase 2): produces avatars/{uid}/{uid}@96.{ext}
+        # and @192.{ext}; the stable filename means a re-upload overwrites the
+        # same per-size objects (no orphan). result["url"] is the 192 variant
+        # (sharp enough for a profile header without srcset).
+        result = await upload_image_variants(
             raw, content_type, "avatars", user["id"], filename=str(user["id"])
         )
+        avatar_url = result["url"]
     except (RuntimeError, httpx.HTTPError):
         # RuntimeError = Supabase returned non-2xx; httpx.HTTPError = network/timeout/transport
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Avatar upload failed, please retry")

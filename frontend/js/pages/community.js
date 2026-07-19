@@ -5,6 +5,7 @@ import { t } from "../utils/i18n.js";
 import { skeletonCard, errorState } from "../components/skeleton.js";
 import { track } from "../utils/analytics.js";
 import { createImageUploader } from "../components/image_upload.js";
+import { responsiveSrcset } from "../utils/image.js";
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -228,6 +229,7 @@ function PostBody(post) {
   if (post.image_url) {
     const img = document.createElement("img");
     img.src = post.image_url;
+    img.srcset = responsiveSrcset(post.image_url);
     img.alt = post.title;
     img.className = "post-card-img";
     img.loading = "lazy";
@@ -1251,6 +1253,7 @@ function _LostFoundCard(item) {
   if (item.image_url) {
     const img = document.createElement("img");
     img.src = item.image_url;
+    img.srcset = responsiveSrcset(item.image_url);
     img.alt = item.title;
     img.className = "lf-card-img";
     img.loading = "lazy";
