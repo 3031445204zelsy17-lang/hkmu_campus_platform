@@ -45,6 +45,22 @@ jobs:
           for f in backend/app/routers/*.py; do python -m py_compile "$f"; done
           for f in backend/app/services/*.py; do python -m py_compile "$f"; done
 
+      # Phase 3a — build the Tailwind CSS bundle in CI so a broken build
+      # (bad config, missing custom CSS, missing class coverage) fails the
+      # PR here instead of at `docker build` or in prod. The Dockerfile's node
+      # stage re-runs the same build; this step gives faster, isolated feedback.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build Tailwind CSS bundle
+        run: |
+          cd frontend
+          npm ci --no-audit --no-fund
+          sh build-css.sh
+          test -s css/app.min.css
+
       - name: Seed and verify DB
         run: |
           cp .env.example .env
