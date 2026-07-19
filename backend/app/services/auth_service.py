@@ -76,14 +76,26 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         )
     uid = int(user_id)
     async with get_db() as db:
-        row = await db.fetchrow("SELECT id, username FROM users WHERE id = $1", uid)
+        row = await db.fetchrow(
+            "SELECT id, username, oauth_provider, oauth_id FROM users WHERE id = $1",
+            uid,
+        )
     if not row:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User no longer exists",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return {"id": row["id"], "username": row["username"]}
+    return {
+        "id": row["id"],
+        "username": row["username"],
+        # oauth_provider/oauth_id carry the WeChat openid so content_security
+        # (msg_sec_check) can moderate WeChat users' UGC. Without these the
+        # user dict has no openid and audit_user_text skips moderation for
+        # every request (FR1) — the no-openid skip branch fired unconditionally.
+        "oauth_provider": row["oauth_provider"],
+        "oauth_id": row["oauth_id"],
+    }
 
 
 async def create_refresh_token(user_id: int, conn=None) -> str:
