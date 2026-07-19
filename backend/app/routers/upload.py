@@ -14,7 +14,7 @@ by folder in the storage bucket.
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, status
 
 from ..services.auth_service import get_current_user
-from ..services.storage_service import validate_image, upload_to_supabase, read_bounded
+from ..services.storage_service import validate_image, upload_image_variants, read_bounded
 
 router = APIRouter(prefix="/upload", tags=["upload"])
 
@@ -46,5 +46,8 @@ async def upload_image(
     if err:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, err)
 
-    url = await upload_to_supabase(raw, content_type, module, user["id"])
-    return {"url": url}
+    # Multi-size image pipeline (Phase 2): EXIF-orient, strip metadata, resize
+    # to per-module display sizes, recompress JPEG q80. Returns the canonical
+    # feed-friendly URL plus a variants map; GIFs/unprocessable fall back to the
+    # original verbatim upload (variants empty).
+    return await upload_image_variants(raw, content_type, module, user["id"])
