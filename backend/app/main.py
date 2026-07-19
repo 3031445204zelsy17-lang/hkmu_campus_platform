@@ -22,12 +22,14 @@ logger = logging.getLogger("hkmu.security")
 def _init_app_insights(app: FastAPI) -> None:
     """Wire Azure Monitor OpenTelemetry (Application Insights) when a connection
     string is present. Dormant by default — no env, no telemetry, no behavior
-    change. configure_azure_monitor covers logging/exporter, but its FastAPI
-    auto-instrument only catches apps created *before* configure runs; our app
-    exists at lifespan startup, so we instrument it explicitly → per-request
-    spans land in AppRequests (FR2: AppRequests was 0 because the FastAPI
-    instrumentor subpackage was missing AND auto-instrument timing missed the
-    already-created app)."""
+    change. configure_azure_monitor covers logging/exporter + the FastAPI
+    instrumentor; we also call instrument_app explicitly.
+
+    MUST be called at import time (after the app is fully built — see the
+    tail-of-file call), NOT inside lifespan: Starlette builds middleware_stack
+    in FastAPI.__init__, so adding the OTel ASGI middleware in lifespan startup
+    is too late — it never enters uvicorn's serve stack and AppRequests stays
+    empty (FR2 v1 ran it from lifespan → AppRequests=0; v2 moves it here)."""
     conn = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING", "").strip()
     if not conn:
         return
@@ -59,7 +61,6 @@ def _validate_secret_key(key: str) -> None:
 async def lifespan(app: FastAPI):
     _validate_secret_key(SECRET_KEY)
     await init_db()
-    _init_app_insights(app)
     yield
     await close_db()
 
@@ -236,3 +237,8 @@ async def health():
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
 if os.path.isdir(frontend_path):
     app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+
+# Wire App Insights at import time — AFTER the app is fully built (middleware +
+# routers + mount). See _init_app_insights docstring for why this can't live in
+# lifespan (Starlette builds middleware_stack in FastAPI.__init__).
+_init_app_insights(app)

@@ -35,19 +35,27 @@ def _install_fakes(monkeypatch, instrumentor_calls):
 
 
 def test_init_app_insights_instruments_fastapi_when_configured(monkeypatch):
-    """Connection string set → FastAPIInstrumentor.instrument_app called once."""
+    """Connection string set → FastAPIInstrumentor.instrument_app called.
+
+    v2 also invokes _init_app_insights at import time (top-level call at the
+    tail of main.py), so importing main can itself append to `calls`; we use a
+    fresh app and clear first to isolate the function-under-test.
+    """
     calls = []
     _install_fakes(monkeypatch, calls)
     monkeypatch.setenv("APPLICATIONINSIGHTS_CONNECTION_STRING", "InstrumentationKey=fake")
 
-    from backend.app.main import app, _init_app_insights
+    from backend.app.main import _init_app_insights
+    from fastapi import FastAPI
 
-    _init_app_insights(app)
+    fresh_app = FastAPI()
+    calls.clear()  # ignore any import-time top-level call
+    _init_app_insights(fresh_app)
     assert len(calls) == 1, (
         "FastAPIInstrumentor.instrument_app must be called when configured — "
         "if 0, the FR2 regression returned (AppRequests would stay empty)"
     )
-    assert calls[0] is app
+    assert calls[0] is fresh_app
 
 
 def test_init_app_insights_dormant_without_connection_string(monkeypatch):
