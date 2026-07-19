@@ -49,6 +49,60 @@ import { api } from "./api.js";
 
 // Cached auth config
 let _googleClientId = "";
+// Background promise for the auth/config fetch + GIS SDK init. Kicked off at
+// DOMContentLoaded; showAuthModal awaits it so the Google button still renders
+// if the user opens login before the first-paint fetch has resolved.
+let _googleConfigPromise = null;
+
+// The GIS SDK is loaded via <script async defer> in index.html, so it races the
+// auth/config fetch. Resolve when window.google.accounts.id is ready (or give
+// up after a short timeout — initialize/renderButton both guard on window.google
+// and degrade gracefully if the SDK never loads).
+function _waitForGoogleSdk(timeoutMs = 3000) {
+  return new Promise((resolve) => {
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      resolve();
+      return;
+    }
+    const start = performance.now();
+    const t = setInterval(() => {
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        clearInterval(t);
+        resolve();
+      } else if (performance.now() - start > timeoutMs) {
+        clearInterval(t);
+        resolve();
+      }
+    }, 50);
+  });
+}
+
+// Load Google client ID + initialize GIS in the background. Cached so repeat
+// calls (DOMContentLoaded kickoff + showAuthModal await) share one fetch.
+function _loadGoogleConfig() {
+  if (!_googleConfigPromise) {
+    _googleConfigPromise = (async () => {
+      try {
+        const res = await fetch("/api/v1/auth/config");
+        if (res.ok) {
+          const cfg = await res.json();
+          _googleClientId = cfg.google_client_id || "";
+          // Initialize GIS once so renderButton() works in modal
+          if (_googleClientId) {
+            await _waitForGoogleSdk();
+            if (window.google) {
+              window.google.accounts.id.initialize({
+                client_id: _googleClientId,
+                callback: window.handleGoogleSignIn,
+              });
+            }
+          }
+        }
+      } catch { /* non-critical */ }
+    })();
+  }
+  return _googleConfigPromise;
+}
 
 // --- Route registration ---
 register("/", renderHome);
@@ -92,9 +146,13 @@ document.addEventListener("submit", async (e) => {
 });
 
 // --- Auth modal ---
-function showAuthModal(mode = "login") {
+async function showAuthModal(mode = "login") {
   const isLogin = mode === "login";
 
+  // Ensure the Google client ID is loaded. The fetch is kicked off at
+  // DOMContentLoaded; by the time a user opens login it's almost always already
+  // resolved. Awaiting here is user-initiated, so it never blocks first paint.
+  await _loadGoogleConfig();
   const googleClientId = _googleClientId;
 
   let formHtml = `
@@ -404,26 +462,17 @@ function renderVerifyEmail() {
 }
 
 // --- Init ---
-document.addEventListener("DOMContentLoaded", async () => {
+// First paint is unblocked: renderNav()+start() run BEFORE the auth/config
+// fetch resolves. The Google client ID + GIS init load in the background;
+// showAuthModal awaits that promise before rendering the Google button. Saves
+// the ~0.65s LCP cost of the auth/config round-trip that previously gated start().
+document.addEventListener("DOMContentLoaded", () => {
   initTheme();
   initLang();
   initSidebar();
   initAnalytics();
-  // Fetch Google Client ID from API (no longer in HTML meta)
-  try {
-    const res = await fetch("/api/v1/auth/config");
-    if (res.ok) {
-      const cfg = await res.json();
-      _googleClientId = cfg.google_client_id || "";
-      // Initialize GIS once so renderButton() works in modal
-      if (_googleClientId && window.google) {
-        window.google.accounts.id.initialize({
-          client_id: _googleClientId,
-          callback: window.handleGoogleSignIn,
-        });
-      }
-    }
-  } catch { /* non-critical */ }
   renderNav();
   start();
+  // Kick off Google config + GIS init in the background — never block first paint.
+  _loadGoogleConfig();
 });

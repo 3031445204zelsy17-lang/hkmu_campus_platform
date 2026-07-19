@@ -5,6 +5,7 @@ import secrets
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from starlette.responses import Response
 import os
@@ -84,6 +85,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# GZip compression. Added right after CORS so it sits just outside it in the
+# stack (Starlette wraps later-added middleware around earlier ones); the
+# outer @app.middleware http funcs still see a normal Response they can set
+# headers / read status_code on. Compresses JSON + JS/CSS >= 1KB — the biggest
+# payload win for 4G LCP without touching the frontend build. Only acts when
+# the client sends Accept-Encoding: gzip, so tests/clients that don't ask are
+# unaffected. WebSocket is a separate protocol and bypasses this entirely.
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
 @app.middleware("http")

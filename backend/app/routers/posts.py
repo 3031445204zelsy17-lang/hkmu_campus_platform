@@ -122,7 +122,7 @@ async def list_posts(
     async with get_db() as db:
         offset = (page - 1) * page_size
 
-        # ── build filter conditions (reusable for total & data queries) ──
+        # ── build filter conditions (reusable for data query + empty-page fallback) ──
         def _filter(start_n: int):
             conds, params, n = [], [], start_n
             if category:
@@ -133,13 +133,12 @@ async def list_posts(
             where = ("WHERE " + " AND ".join(conds)) if conds else ""
             return where, params, n
 
-        # ── total count ──
-        where, fparams, _ = _filter(start_n=1)
-        total = (await db.fetchrow(
-            f"SELECT COUNT(*) AS cnt FROM posts p {where}", *fparams
-        ))["cnt"]
-
         # ── data query ──
+        # COUNT(*) OVER() collapses the old separate COUNT round-trip into this
+        # SELECT: total_count is computed over the filtered set before LIMIT/
+        # OFFSET, identical to what SELECT COUNT(*) FROM posts ... {where}
+        # returned — saving one DB hop per list request (4→3 round-trips for a
+        # logged-in viewer; identity→JWT in Phase 4 takes it to 2).
         dparams: list = []
         dn = 1
         if sort == "hot":
@@ -165,7 +164,8 @@ async def list_posts(
                    pp.id AS parent_id, pp.title AS parent_title,
                    pp.content AS parent_content, pp.created_at AS parent_created,
                    pu.nickname AS parent_author,
-                   pp.is_anonymous AS parent_is_anonymous
+                   pp.is_anonymous AS parent_is_anonymous,
+                   COUNT(*) OVER() AS total_count
                 FROM posts p
                 JOIN users u ON u.id = p.author_id
                 LEFT JOIN posts pp ON pp.id = p.parent_post_id
@@ -175,6 +175,18 @@ async def list_posts(
                 LIMIT ${limit_n} OFFSET ${offset_n}""",
             *dparams,
         )
+
+        # The window function only yields total_count on non-empty pages. When
+        # the request is past the end (offset >= total) rows is empty and we
+        # fall back to a plain COUNT so pagination metadata (total/has_next)
+        # stays correct instead of reporting 0.
+        if rows:
+            total = rows[0]["total_count"]
+        else:
+            where, fparams, _ = _filter(start_n=1)
+            total = (await db.fetchrow(
+                f"SELECT COUNT(*) AS cnt FROM posts p {where}", *fparams
+            ))["cnt"]
 
         # batch like check (1 query instead of N)
         liked_set: set[int] = set()
