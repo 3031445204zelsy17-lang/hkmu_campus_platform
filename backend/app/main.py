@@ -19,18 +19,23 @@ from .services.rate_limiter import check_rate_limit
 logger = logging.getLogger("hkmu.security")
 
 
-def _init_app_insights() -> None:
+def _init_app_insights(app: FastAPI) -> None:
     """Wire Azure Monitor OpenTelemetry (Application Insights) when a connection
     string is present. Dormant by default — no env, no telemetry, no behavior
-    change. Once APPLICATIONINSIGHTS_CONNECTION_STRING is set, auto-instruments
-    requests / exceptions / logging / httpx so the App Insights blade fills with
-    real data (custom-container webapps can't use codeless injection)."""
+    change. configure_azure_monitor covers logging/exporter, but its FastAPI
+    auto-instrument only catches apps created *before* configure runs; our app
+    exists at lifespan startup, so we instrument it explicitly → per-request
+    spans land in AppRequests (FR2: AppRequests was 0 because the FastAPI
+    instrumentor subpackage was missing AND auto-instrument timing missed the
+    already-created app)."""
     conn = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING", "").strip()
     if not conn:
         return
     try:
         from azure.monitor.opentelemetry import configure_azure_monitor
         configure_azure_monitor()  # reads APPLICATIONINSIGHTS_CONNECTION_STRING from env
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+        FastAPIInstrumentor.instrument_app(app)
         logger.info("app_insights enabled")
     except Exception as e:
         # Never let monitoring break the app.
@@ -54,7 +59,7 @@ def _validate_secret_key(key: str) -> None:
 async def lifespan(app: FastAPI):
     _validate_secret_key(SECRET_KEY)
     await init_db()
-    _init_app_insights()
+    _init_app_insights(app)
     yield
     await close_db()
 
