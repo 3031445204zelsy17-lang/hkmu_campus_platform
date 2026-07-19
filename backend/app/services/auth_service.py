@@ -77,7 +77,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     uid = int(user_id)
     async with get_db() as db:
         row = await db.fetchrow(
-            "SELECT id, username, oauth_provider, oauth_id FROM users WHERE id = $1",
+            "SELECT id, username, identity, oauth_provider, oauth_id FROM users WHERE id = $1",
             uid,
         )
     if not row:
@@ -89,6 +89,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     return {
         "id": row["id"],
         "username": row["username"],
+        # identity is read on every request (this SELECT runs unconditionally
+        # per call), so callers can branch on admin WITHOUT a second DB hop
+        # (posts/news dropped their separate _is_admin SELECT) AND permission
+        # changes take effect immediately — there is no stale JWT claim. This
+        # is deliberately NOT a JWT claim for that freshness reason.
+        "identity": row["identity"],
         # oauth_provider/oauth_id carry the WeChat openid so content_security
         # (msg_sec_check) can moderate WeChat users' UGC. Without these the
         # user dict has no openid and audit_user_text skips moderation for

@@ -17,10 +17,11 @@ _COMMENT_COLS = """nc.id, nc.news_id, nc.author_id, nc.content,
     u.nickname AS author_nickname, u.avatar_url AS author_avatar"""
 
 
-async def _is_admin(user_id: int) -> bool:
-    async with get_db() as db:
-        row = await db.fetchrow("SELECT identity FROM users WHERE id = $1", user_id)
-    return row is not None and row["identity"] == "admin"
+def _is_admin(user: dict | None) -> bool:
+    """Admin check from the already-fetched user dict (get_current_user
+    includes identity in its SELECT) — no extra DB hop, and permission changes
+    take effect immediately since identity is re-read every request."""
+    return bool(user) and user.get("identity") == "admin"
 
 
 @router.get("", response_model=PaginatedResponse)
@@ -90,7 +91,7 @@ async def create_news(
     user: dict = Depends(get_current_user),
 ):
     check_rate_limit(f"news:{user['id']}", max_requests=10, window_seconds=60)
-    if not await _is_admin(user["id"]):
+    if not _is_admin(user):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Admin only")
 
     now = datetime.now(timezone.utc)
@@ -130,7 +131,7 @@ async def delete_news(
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "News not found")
 
-    is_admin = await _is_admin(user["id"])
+    is_admin = _is_admin(user)
     if row["author_id"] != user["id"] and not is_admin:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your news")
 

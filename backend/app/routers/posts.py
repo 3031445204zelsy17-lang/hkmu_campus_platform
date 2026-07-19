@@ -12,6 +12,7 @@ from ..models import (
 from ..services.auth_service import get_current_user, oauth2_scheme
 from ..services.rate_limiter import check_rate_limit
 from ..services.content_security import audit_user_text, SCENE_FORUM, SCENE_COMMENT
+from ..services.cache import TTLCache
 
 _optional_oauth2 = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
@@ -28,6 +29,14 @@ _COMMENT_COLS = """c.id, c.post_id, c.author_id, c.content,
     c.likes_count, c.created_at"""
 
 
+# Anonymous (no-viewer) list_posts responses are identical across clients —
+# cache a short-lived copy so the public feed scrolls without re-querying
+# Postgres every hit. Logged-in responses carry personal like-state and are
+# NEVER shared (the cache is only read/written when user is None). 15s TTL
+# bounds how long a freshly created post takes to appear for anon viewers.
+_ANON_LIST_CACHE = TTLCache(ttl_seconds=15, max_entries=64)
+
+
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 async def _batch_liked_set(post_ids: list[int], user_id: int) -> set[int]:
@@ -42,10 +51,16 @@ async def _batch_liked_set(post_ids: list[int], user_id: int) -> set[int]:
         return {r["post_id"] for r in rows}
 
 
-async def _is_admin(user_id: int) -> bool:
-    async with get_db() as db:
-        row = await db.fetchrow("SELECT identity FROM users WHERE id = $1", user_id)
-        return row is not None and row["identity"] == "admin"
+def _is_admin(user: dict | None) -> bool:
+    """Admin check from the already-fetched user dict — no extra DB hop.
+
+    ``get_current_user`` includes ``identity`` in its per-request SELECT, so we
+    read it straight off the dict. This both saves a query (list_posts drops
+    from 3 round-trips to 2 for a logged-in viewer) and keeps permission
+    changes effective immediately: identity is re-read from the DB on every
+    request, never cached in a JWT claim.
+    """
+    return bool(user) and user.get("identity") == "admin"
 
 
 def _fmt_ts(val):
@@ -119,6 +134,14 @@ async def list_posts(
     search: str | None = None,
     user: dict | None = Depends(_get_optional_user),
 ):
+    # Anonymous responses are cacheable; logged-in ones are not (personalized
+    # like-state). The cache key only exists when user is None.
+    if user is None:
+        cache_key = (page, page_size, sort, category or "", search or "")
+        cached = _ANON_LIST_CACHE.get(cache_key)
+        if cached is not None:
+            return cached
+
     async with get_db() as db:
         offset = (page - 1) * page_size
 
@@ -191,16 +214,19 @@ async def list_posts(
         # batch like check (1 query instead of N)
         liked_set: set[int] = set()
         viewer_id = user["id"] if user else None
-        is_admin_flag = await _is_admin(viewer_id) if viewer_id else False
+        is_admin_flag = _is_admin(user)
         if user and rows:
             liked_set = await _batch_liked_set([r["id"] for r in rows], user["id"])
 
         items = [_post_row_to_out(r, liked_set, viewer_id=viewer_id, is_admin=is_admin_flag).model_dump() for r in rows]
 
-    return PaginatedResponse(
+    resp = PaginatedResponse(
         items=items, total=total, page=page,
         page_size=page_size, has_next=(offset + page_size) < total,
     )
+    if user is None:
+        _ANON_LIST_CACHE.set(cache_key, resp)
+    return resp
 
 
 @router.get("/{post_id}", response_model=PostOut)
@@ -222,7 +248,7 @@ async def get_post(post_id: int, user: dict | None = Depends(_get_optional_user)
     if not row:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Post not found")
     viewer_id = user["id"] if user else None
-    is_admin_flag = await _is_admin(viewer_id) if viewer_id else False
+    is_admin_flag = _is_admin(user)
     return _post_row_to_out(row, set(), viewer_id=viewer_id, is_admin=is_admin_flag)
 
 
@@ -264,7 +290,7 @@ async def create_post(body: PostCreate, user: dict = Depends(get_current_user)):
                WHERE p.id = $1""",
             post_id,
         )
-        is_admin_flag = await _is_admin(user["id"])
+        is_admin_flag = _is_admin(user)
 
     return _post_row_to_out(row, set(), viewer_id=user["id"], is_admin=is_admin_flag)
 
@@ -317,7 +343,7 @@ async def update_post(
                WHERE p.id = $1""",
             post_id,
         )
-        is_admin_flag = await _is_admin(user["id"])
+        is_admin_flag = _is_admin(user)
 
     return _post_row_to_out(row, set(), viewer_id=user["id"], is_admin=is_admin_flag)
 
@@ -328,7 +354,7 @@ async def delete_post(post_id: int, user: dict = Depends(get_current_user)):
         row = await db.fetchrow("SELECT author_id FROM posts WHERE id = $1", post_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Post not found")
-        is_admin_flag = await _is_admin(user["id"])
+        is_admin_flag = _is_admin(user)
         if row["author_id"] != user["id"] and not is_admin_flag:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your post")
 
@@ -386,7 +412,7 @@ async def toggle_like(post_id: int, user: dict = Depends(get_current_user)):
             post_id,
         )
         now_liked = not already_liked
-        is_admin_flag = await _is_admin(user["id"])
+        is_admin_flag = _is_admin(user)
 
     return _post_row_to_out(row, {post_id} if now_liked else set(),
                             viewer_id=user["id"], is_admin=is_admin_flag)

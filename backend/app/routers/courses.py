@@ -8,6 +8,7 @@ from ..models import (
     CourseReviewCreate, CourseReviewOut, PaginatedResponse,
 )
 from ..data.programmes import PROGRAMMES, DEFAULT_PROGRAMME_CODE, get_programme
+from ..services.cache import TTLCache
 from pydantic import BaseModel, field_validator
 
 # Cap on a single batch progress update (Codex [25]) — without it a client could
@@ -344,6 +345,10 @@ async def list_programmes():
 
 # NOTE: these two /catalogue routes MUST stay before @router.get("/{course_id}")
 # below — otherwise FastAPI captures "catalogue" as a course_id path param.
+# Catalogue responses are static reference data seeded from HKMU's public PDFs
+# (107 programmes / ~4700 courses) — read on every planner open, written only
+# by a re-seed. Cache 10 min per instance so the hot path skips Postgres.
+_CATALOGUE_CACHE = TTLCache(ttl_seconds=600, max_entries=128)
 @router.get("/catalogue/programmes", response_model=CatalogueProgrammesResponse)
 async def list_catalogue_programmes():
     """All programmes with an official course catalogue (public, no auth).
@@ -353,6 +358,9 @@ async def list_catalogue_programmes():
     programmes (currently DSAI) that additionally carry graduation-planning
     data via /programmes + /graduation-status.
     """
+    cached = _CATALOGUE_CACHE.get("programmes")
+    if cached is not None:
+        return cached
     async with get_db() as db:
         rows = await db.fetch(
             """SELECT programme_code, programme_name, name_zh_cn, name_zh_tw,
@@ -374,10 +382,12 @@ async def list_catalogue_programmes():
             course_count=r["course_count"],
             has_full_planning=r["has_full_planning"],
         ))
-    return CatalogueProgrammesResponse(
+    resp = CatalogueProgrammesResponse(
         default_programme_code=DEFAULT_PROGRAMME_CODE,
         schools=list(schools.values()),
     )
+    _CATALOGUE_CACHE.set("programmes", resp)
+    return resp
 
 
 @router.get("/catalogue", response_model=CatalogueCoursesResponse)
@@ -389,6 +399,10 @@ async def get_catalogue_courses(
     Browse-only grouped course list sourced from HKMU's public PDFs — no
     term / prerequisite / graduation info. Clients must surface the disclaimer.
     """
+    cache_key = f"courses:{programme_code}"
+    cached = _CATALOGUE_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
     async with get_db() as db:
         prog = await db.fetchrow(
             """SELECT programme_code, programme_name, school, has_full_planning
@@ -432,7 +446,7 @@ async def get_catalogue_courses(
             code_system=r["code_system"],
             official_group=r["official_group"],
         ))
-    return CatalogueCoursesResponse(
+    resp = CatalogueCoursesResponse(
         programme_code=prog["programme_code"],
         programme_name=prog["programme_name"],
         school=prog["school"],
@@ -440,6 +454,8 @@ async def get_catalogue_courses(
         disclaimer_key="planner.catalogue.disclaimer",
         buckets=sorted(buckets.values(), key=lambda b: b.order),
     )
+    _CATALOGUE_CACHE.set(cache_key, resp)
+    return resp
 
 
 @router.get("/graduation-status", response_model=GraduationStatusOut)
