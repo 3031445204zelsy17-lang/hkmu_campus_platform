@@ -15,18 +15,17 @@
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
     <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180x180.png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config={theme:{extend:{colors:{'hkmu-blue':'#0066CC','hkmu-green':'#2E7D52','hkmu-light-blue':'#E3F2FD','hkmu-light-green':'#E8F5E9','page-bg':'#F5F7FA','text-primary':'#1A1A2E','text-secondary':'#6B7280'}}}}</script>
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/nav.css">
-    <link rel="stylesheet" href="css/auth.css">
-    <link rel="stylesheet" href="css/community.css">
-    <link rel="stylesheet" href="css/academic.css">
-    <link rel="stylesheet" href="css/profile.css">
-    <link rel="stylesheet" href="css/news.css">
-    <link rel="stylesheet" href="css/lostfound.css">
-    <link rel="stylesheet" href="css/messages.css">
+    <!-- Single bundled stylesheet (Tailwind utilities + the eight custom
+         component CSS files), built at image-build time by frontend/build-css.sh.
+         Replaces the cdn.tailwindcss.com Play CDN — a render-blocking JIT
+         compiler downloaded on every page load — plus the eight separate
+         <link> requests. System font stack via Tailwind preflight (Inter was
+         loaded before but never referenced by any font-family rule). -->
+    <link rel="stylesheet" href="css/app.min.css">
+    <!-- Lucide icons: pinned + deferred in <head> so it loads in parallel with
+         HTML parsing and is ready before the deferred app.js module runs
+         (nav.js/planner.js call window.lucide.createIcons() at DOMContentLoaded). -->
+    <script defer src="https://unpkg.com/lucide@0.468.0"></script>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <a href="#app-content" class="skip-link">Skip to main content</a>
@@ -57,7 +56,6 @@
         <main id="app-content" class="app-main"></main>
     </div>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="js/app.js" type="module"></script>
     <script>
       if ('serviceWorker' in navigator) {

@@ -1,0 +1,8 @@
+/*
+ * Tailwind entry (reference). The actual build concatenates these @tailwind
+ * directives with the custom component CSS at build time — see build-css.sh
+ * (and the comment there for why we don't @import here).
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

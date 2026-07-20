@@ -1,0 +1,11 @@
+{
+  "name": "hkmu-campus-frontend",
+  "private": true,
+  "description": "Tailwind CSS build only — the frontend itself ships as static ESM, no JS bundler.",
+  "scripts": {
+    "build:css": "sh build-css.sh"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}
