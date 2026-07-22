@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Today at HKMU Widget Prototype</title>
+  <link rel="stylesheet" href="today-widget.css">
+</head>
+<body>
+  <main class="demo-page">
+    <section class="today-widget" aria-label="Today at HKMU">
+      <article class="today-slide news active">
+        <div class="today-top">
+          <span class="today-label">School News</span>
+          <span class="today-time">Today 09:00</span>
+        </div>
+
+        <div class="today-body">
+          <h2>AI Career Sharing starts this afternoon</h2>
+          <p>Block C lecture hall opens at 13:45. Students from DSAI and Computing are already joining.</p>
+
+          <div class="today-detail">
+            <div class="today-row">
+              <span class="today-row-icon">N</span>
+              <div>
+                <strong>32 going</strong>
+                <span>6 classmates from your courses</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="today-bottom">
+          <button class="today-action" type="button">View news</button>
+          <div class="today-dots"></div>
+        </div>
+      </article>
+
+      <article class="today-slide schedule">
+        <div class="today-top">
+          <span class="today-label">My Schedule</span>
+          <span class="today-time">Today 11:30</span>
+        </div>
+
+        <div class="today-body">
+          <h2>STAT2520SEF tutorial in 30 minutes</h2>
+          <p>Your next class is in Block A. The widget can also show exams and custom activities here.</p>
+
+          <div class="today-detail">
+            <div class="today-row">
+              <span class="today-row-icon">A</span>
+              <div>
+                <strong>Room A0412</strong>
+                <span>Reminder set for 10 minutes before</span>
+              </div>
+            </div>
+            <div class="today-row">
+              <span class="today-row-icon">Q</span>
+              <div>
+                <strong>Quiz on Friday</strong>
+                <span>Revision group available tonight</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="today-bottom">
+          <button class="today-action" type="button">Open planner</button>
+          <div class="today-dots"></div>
+        </div>
+      </article>
+
+      <article class="today-slide club">
+        <div class="today-top">
+          <span class="today-label">Club Reminder</span>
+          <span class="today-time">Tonight 18:30</span>
+        </div>
+
+        <div class="today-body">
+          <h2>AI Club prototype night</h2>
+          <p>Bring your laptop and join a small team. Good for students looking for project teammates.</p>
+
+          <div class="today-detail">
+            <div class="today-row">
+              <span class="today-row-icon">G</span>
+              <div>
+                <strong>Project teammate match</strong>
+                <span>3 teams still looking for members</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="today-bottom">
+          <button class="today-action" type="button">Join group</button>
+          <div class="today-dots"></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="demo-notes">
+      <h1>Today at HKMU</h1>
+      <p>This prototype saves the idea for a 3:4 vertical dashboard widget on the homepage.</p>
+      <ul>
+        <li>School news from the news API</li>
+        <li>Class, exam, and custom schedule reminders</li>
+        <li>Club and group activity reminders</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="today-widget.js"></script>
+</body>
+</html>
