@@ -14,6 +14,7 @@ when creating / updating their own records.
 import os
 import uuid
 import logging
+import hashlib
 from io import BytesIO
 
 import httpx
@@ -59,6 +60,26 @@ _DEFAULT_SIZES = (640, 1280)
 _MAIN_LABEL = {"avatars": "192"}
 _MAIN_DEFAULT = "640"
 
+# Pipeline version embedded in avatar paths so a processing change (resize /
+# quality / format) rotates to a new path segment (v1 → v2) instead of serving
+# stale bytes at the same URL. Combined with a content hash, an avatar URL is
+# fully immutable: same URL → same bytes, forever.
+_PIPELINE_VERSION = "v1"
+
+# Long cache (1 year) for IMMUTABLE-URL uploads only — uuid-keyed feed images
+# (posts/lostfound/news) and versioned-hash avatars. MUST co-apply with an
+# immutable path: never set long cache on an overwritable stable path, or a
+# re-upload would serve stale bytes from the CDN. Empirically verified:
+# multipart upload with this cacheControl makes the public URL GET return
+# `public, max-age=31536000` + cf-cache HIT (HEAD ignores cacheControl, but
+# image display uses GET). See memory cachecontrol-supabase-controllable.
+_IMMUTABLE_CACHE = "31536000"
+
+
+def _content_hash(b: bytes) -> str:
+    """Short content-addressed hash (sha256[:16]) for immutable avatar paths."""
+    return hashlib.sha256(b).hexdigest()[:16]
+
 
 # ── Public helpers ────────────────────────────────────────────────
 
@@ -93,12 +114,13 @@ def _storage_path(
 ) -> str:
     """Build the object key inside the uploads bucket.
 
-    Default: ``{module}/{user_id}/{uuid}.{ext}`` — a fresh object per upload,
-    correct for multi-image modules (posts / lostfound / news) where each file
-    is a distinct asset. Pass ``filename`` (no extension) to get a STABLE key
-    ``{module}/{user_id}/{filename}.{ext}`` so a re-upload overwrites the same
-    object instead of orphaning the previous one — used for avatars (Codex
-    [20][24]). If ``filename`` already carries an extension it is used as-is.
+    Default: ``{module}/{user_id}/{uuid}.{ext}`` — a fresh, immutable object per
+    upload, correct for multi-image modules (posts / lostfound / news) where each
+    file is a distinct asset. ``filename`` (stable key) is retained for legacy
+    callers but **avatars no longer use it**: ``upload_image_variants`` builds a
+    versioned content-hash path ``avatars/{uid}/{v1}/{hash}@{label}.{ext}`` so a
+    re-upload never overwrites (new content → new hash → new URL; same content →
+    same URL, idempotent). If ``filename`` carries an extension it is used as-is.
     """
     ext = _EXT_MAP.get(content_type, ".bin")
     if filename is None:
@@ -173,23 +195,62 @@ def process_image(raw: bytes, content_type: str, module: str):
     return variants
 
 
-async def _upload_blob(storage_path: str, file_bytes: bytes, content_type: str) -> str:
-    """PUT one object to Supabase Storage, return its public URL."""
+async def _upload_blob(
+    storage_path: str, file_bytes: bytes, content_type: str, *, cache_control: str | None = None
+) -> str:
+    """POST one object to Supabase Storage, return its public URL.
+
+    When ``cache_control`` is given (immutable-URL uploads), the object is
+    uploaded as multipart with ``cacheControl`` as a form field — the only
+    mechanism empirically confirmed to make the public URL's GET honor the
+    header (raw-body POST without it → Supabase defaults to ``no-cache``).
+    """
     url = f"{SUPABASE_URL}/storage/v1/object/{BUCKET}/{storage_path}"
+    headers = {
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        "apikey": SUPABASE_SERVICE_KEY,
+    }
     async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.post(
-            url,
-            content=file_bytes,
-            headers={
-                "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-                "apikey": SUPABASE_SERVICE_KEY,
-                "Content-Type": content_type,
-            },
-        )
+        if cache_control:
+            resp = await client.post(
+                url,
+                headers=headers,
+                files={"file": (os.path.basename(storage_path), file_bytes, content_type)},
+                data={"cacheControl": cache_control},
+            )
+        else:
+            resp = await client.post(
+                url,
+                content=file_bytes,
+                headers={**headers, "Content-Type": content_type},
+            )
     if resp.status_code not in (200, 201):
-        log.error("Supabase upload failed: %s %s", resp.status_code, resp.text)
-        raise RuntimeError(f"Upload failed: {resp.status_code}")
+        # Supabase returns HTTP 400 with body {"statusCode":"409","error":"Duplicate"}
+        # when the key already exists (default POST refuses overwrite; no x-upsert).
+        # For immutable content-addressed paths (avatar versioned-hash) the existing
+        # object IS the identical content — the path encodes the hash — so reuse it
+        # and never overwrite. (uuid-keyed feed paths never collide.) This honors
+        # "禁止覆盖旧头像对象": a re-upload of identical bytes reuses, never overwrites.
+        body = resp.text
+        is_duplicate = resp.status_code in (400, 409) and "Duplicate" in body
+        if is_duplicate:
+            log.info("storage object exists, reuse (no overwrite): %s", storage_path)
+        else:
+            log.error("Supabase upload failed: %s %s", resp.status_code, body)
+            raise RuntimeError(f"Upload failed: {resp.status_code}")
     return f"{SUPABASE_URL}/storage/v1/object/public/{BUCKET}/{storage_path}"
+
+
+async def verify_public_url(url: str) -> bool:
+    """HEAD the public URL; True only if the object is live (200). Used to
+    confirm an upload is reachable before pointing a DB row at it."""
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.head(url)
+        return resp.status_code == 200
+    except Exception:
+        log.warning("public URL verify failed: %s", url, exc_info=True)
+        return False
 
 
 async def upload_to_supabase(
@@ -208,9 +269,15 @@ async def upload_to_supabase(
 
     Stores bytes verbatim — no resizing/recompression. Callers that want the
     multi-size image pipeline should use ``upload_image_variants`` instead.
+
+    Long cache is set ONLY for the default immutable (uuid) path; a stable
+    ``filename`` path stays no-cache because a stable path is overwritable and
+    long cache + overwrite would serve stale bytes (long cache must co-apply
+    with an immutable URL).
     """
     storage_path = _storage_path(module, user_id, content_type, filename)
-    return await _upload_blob(storage_path, file_bytes, content_type)
+    cache_control = None if filename else _IMMUTABLE_CACHE
+    return await _upload_blob(storage_path, file_bytes, content_type, cache_control=cache_control)
 
 
 async def upload_image_variants(
@@ -231,22 +298,44 @@ async def upload_image_variants(
     anything Pillow can't process, preserving the old single-URL contract so
     callers keep working.
 
-    Versioned paths ``{base}@{label}.{ext}`` mean a re-upload with the same
-    stable key overwrites the same per-size object (no orphan), and the 2x URL
-    is derivable client-side by swapping the label (``@640`` → ``@1280``).
+    Paths are IMMUTABLE so a long cache (``_IMMUTABLE_CACHE``) is safe:
+      - posts/lostfound/news/courses: ``{module}/{uid}/{uuid}@{label}.{ext}``
+        (fresh uuid per upload; ``filename`` ignored).
+      - avatars: ``avatars/{uid}/{_PIPELINE_VERSION}/{content_hash}@{label}.{ext}``
+        — content-hash of the main variant + pipeline version segment means a
+        re-upload NEVER overwrites (new content → new hash → new URL; identical
+        content → same URL, idempotent). Same URL → same bytes, forever.
+    The 2x URL stays derivable client-side by swapping the label (``@640`` → ``@1280``).
     """
     variants = process_image(raw, content_type, module)
     if not variants:
-        url = await upload_to_supabase(raw, content_type, module, user_id, filename=filename)
+        # GIF / unprocessable → verbatim. Avatars: versioned content-hash path
+        # (immutable). Others: uuid path via upload_to_supabase.
+        if module == "avatars":
+            chash = _content_hash(raw)
+            ext = _EXT_MAP.get(content_type, ".bin")
+            sp = f"avatars/{user_id}/{_PIPELINE_VERSION}/{chash}{ext}"
+            url = await _upload_blob(sp, raw, content_type, cache_control=_IMMUTABLE_CACHE)
+        else:
+            url = await upload_to_supabase(raw, content_type, module, user_id, filename=filename)
         return {"url": url, "variants": {}}
 
-    base = _storage_path(module, user_id, content_type, filename)
-    root, _ = os.path.splitext(base)
+    # Variant path base — immutable either way.
+    if module == "avatars":
+        main_label = _MAIN_LABEL["avatars"]
+        main_bytes = next((vb for lb, vb, _ in variants if lb == main_label), variants[-1][1])
+        chash = _content_hash(main_bytes)
+        root = f"avatars/{user_id}/{_PIPELINE_VERSION}/{chash}"
+    else:
+        base = _storage_path(module, user_id, content_type, filename)
+        root, _ = os.path.splitext(base)
 
     out = {}
     for label, vbytes, vct in variants:
         ext = ".png" if vct == "image/png" else ".jpg"
-        out[label] = await _upload_blob(f"{root}@{label}{ext}", vbytes, vct)
+        out[label] = await _upload_blob(
+            f"{root}@{label}{ext}", vbytes, vct, cache_control=_IMMUTABLE_CACHE
+        )
 
     main_label = _MAIN_LABEL.get(module, _MAIN_DEFAULT)
     main_url = out.get(main_label) or out[max(out, key=int)]

@@ -16,7 +16,7 @@ from ..models import (
 from ..services.auth_service import get_current_user, is_hkmu_email
 from ..services.email_service import send_verification_email
 from ..services.rate_limiter import check_rate_limit
-from ..services.storage_service import validate_image, upload_image_variants, delete_from_supabase, read_bounded
+from ..services.storage_service import validate_image, upload_image_variants, delete_from_supabase, read_bounded, verify_public_url
 from .auth import _create_email_token
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -325,17 +325,22 @@ async def upload_avatar(
         )
 
     try:
-        # Multi-size pipeline (Phase 2): produces avatars/{uid}/{uid}@96.{ext}
-        # and @192.{ext}; the stable filename means a re-upload overwrites the
-        # same per-size objects (no orphan). result["url"] is the 192 variant
-        # (sharp enough for a profile header without srcset).
-        result = await upload_image_variants(
-            raw, content_type, "avatars", user["id"], filename=str(user["id"])
-        )
+        # Multi-size pipeline: produces avatars/{uid}/v1/{hash}@96.{ext} and
+        # @192.{ext} under a versioned content-hash path — a re-upload NEVER
+        # overwrites (new content → new hash → new URL; identical content →
+        # idempotent), and the URL is immutable so it ships with long CDN cache.
+        # result["url"] is the 192 variant (sharp for a profile header, no srcset).
+        result = await upload_image_variants(raw, content_type, "avatars", user["id"])
         avatar_url = result["url"]
     except (RuntimeError, httpx.HTTPError):
         # RuntimeError = Supabase returned non-2xx; httpx.HTTPError = network/timeout/transport
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Avatar upload failed, please retry")
+
+    # Verify the new object is reachable BEFORE pointing the DB at it — a failed
+    # verify leaves avatar_url untouched (user keeps the old avatar), never a
+    # dead URL. (decision: 上传并验证成功后再更新 DB)
+    if not await verify_public_url(avatar_url):
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Avatar upload verify failed, please retry")
 
     now = datetime.now(timezone.utc)
     async with get_db() as db:
