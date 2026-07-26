@@ -27,7 +27,13 @@ let _reconnectTimer = null;
 let _reconnectDelay = RECONNECT_BASE_MS;
 let _pollTimer = null;
 let _pollRefCount = 0;
+const _owners = new Set(); // 消息域页面实例(messages/chat 的 this);空集=无人持有=应断开
+let _disconnectTimer = null; // 离开消息域后的延迟断开定时器(抗 navigateTo 切换间隙)
+const DISCONNECT_DELAY_MS = 300; // 宽限期:旧页 onHide → 新页 onShow 之间的桥接
 let _unread = 0;
+let _unreadPromise = null; // fetchUnread singleflight:飞行中的请求复用同一 promise
+let _unreadAt = 0; // 上次发起 unread 请求的时刻(冷却用)
+const UNREAD_COOLDOWN_MS = 1500; // 冷却:短时间内的多次调用复用缓存,避免冷启动三路并发
 const _seen = new Set();
 const _listeners = { chat: [], unread: [], open: [], close: [] };
 
@@ -210,6 +216,8 @@ function connect() {
     task = wx.connectSocket({
       url,
       fail: () => {
+        // generation guard:若期间已有新连接替换 _task,丢弃这次迟到的失败回调
+        if (_task !== task) return;
         if (_state === "connecting") {
           _setState("closed");
           _scheduleReconnect();
@@ -227,16 +235,22 @@ function connect() {
   }
   _task = task;
 
-  _task.onOpen(() => {
+  task.onOpen(() => {
+    if (_task !== task) return; // 旧连接的迟到回调:忽略
     _setState("open");
     _reconnectDelay = RECONNECT_BASE_MS;
     _startHeartbeat();
   });
-  _task.onMessage((res) => _handleMessage(res.data));
-  _task.onError(() => {
+  task.onMessage((res) => {
+    if (_task !== task) return; // 旧连接的迟到回调:忽略
+    _handleMessage(res.data);
+  });
+  task.onError(() => {
+    if (_task !== task) return; // 旧连接的迟到回调:忽略
     // onClose 随后会触发,重连在那里处理
   });
-  _task.onClose(() => {
+  task.onClose(() => {
+    if (_task !== task) return; // 旧连接的迟到回调:忽略(否则会清空新连接并误触重连)
     _stopHeartbeat();
     _task = null;
     _setState("closed");
@@ -250,8 +264,34 @@ function ensureConnected() {
 }
 
 function disconnect() {
+  _owners.clear(); // 放弃所有 lease(登出 / 彻底断)
+  if (_disconnectTimer) {
+    clearTimeout(_disconnectTimer);
+    _disconnectTimer = null;
+  }
   _cancelReconnect();
   _teardown(true);
+}
+
+// 进消息域(onShow 调):登记 owner,取消任何待断开,确保连接
+function acquire(owner) {
+  _owners.add(owner);
+  if (_disconnectTimer) {
+    clearTimeout(_disconnectTimer);
+    _disconnectTimer = null;
+  }
+  ensureConnected();
+}
+
+// 出消息域(onHide/onUnload 调):移除 owner,空集则延迟断开(期间有 acquire 会取消)
+function release(owner) {
+  _owners.delete(owner); // 幂等:重复删无副作用,不误减他人
+  if (_owners.size === 0 && !_disconnectTimer) {
+    _disconnectTimer = setTimeout(() => {
+      _disconnectTimer = null;
+      if (_owners.size === 0) disconnect(); // 宽限期已过仍无人持有 → 真断
+    }, DISCONNECT_DELAY_MS);
+  }
 }
 
 function _cancelReconnect() {
@@ -263,6 +303,7 @@ function _cancelReconnect() {
 
 function _scheduleReconnect() {
   if (_userClose) return;
+  if (_owners.size === 0) return; // 不在消息域:绝不重连(本次新增)
   _cancelReconnect();
   if (!_wsUrl()) return; // 未登录就不转
   _reconnectTimer = setTimeout(() => {
@@ -337,11 +378,21 @@ function markRead(partnerId) {
 }
 
 function fetchUnread() {
-  return request({ path: "/messages/unread-count", auth: true }).then((r) => {
-    const count = (r && r.count) || 0;
-    setUnread(count);
-    return count;
-  });
+  // singleflight:飞行中复用同一 promise;冷却期内复用内存值。
+  // 冷启动 bootstrap / onAppShow / 消息页 onShow 三路并发只发一次。
+  if (_unreadPromise) return _unreadPromise;
+  if (Date.now() - _unreadAt < UNREAD_COOLDOWN_MS) return Promise.resolve(getUnread());
+  _unreadAt = Date.now();
+  _unreadPromise = request({ path: "/messages/unread-count", auth: true })
+    .then((r) => {
+      const count = (r && r.count) || 0;
+      setUnread(count);
+      return count;
+    })
+    .finally(() => {
+      _unreadPromise = null;
+    });
+  return _unreadPromise;
 }
 
 // 应用回到前台时尝试重连(系统可能在后台杀掉 WS)
@@ -350,7 +401,10 @@ function _wireAppShow() {
   if (_appShowWired) return;
   _appShowWired = true;
   try {
-    wx.onAppShow(() => ensureConnected());
+    wx.onAppShow(() => {
+      if (_owners.size > 0) ensureConnected(); // 仅消息域回前台重连
+      if (wx.getStorageSync(TOKEN_KEY)) fetchUnread().catch(() => {}); // 切前台刷角标(singleflight 去重)
+    });
   } catch (e) {}
 }
 _wireAppShow();
@@ -361,6 +415,8 @@ module.exports = {
   connect,
   ensureConnected,
   disconnect,
+  acquire,
+  release,
   send,
   getUnread,
   setUnread,

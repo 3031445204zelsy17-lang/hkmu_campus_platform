@@ -47,7 +47,7 @@ Page({
     this.setData({ text: getTexts("messages"), locale: this._locale, loggedIn });
 
     if (loggedIn) {
-      messages.ensureConnected();
+      messages.acquire(this);
       messages.startPolling();
       messages.fetchUnread().catch(() => {});
       this._wireEvents();
@@ -60,11 +60,13 @@ Page({
   onHide() {
     this._unwireEvents();
     messages.stopPolling();
+    messages.release(this);
   },
 
   onUnload() {
     this._unwireEvents();
     messages.stopPolling();
+    messages.release(this);
   },
 
   onPullDownRefresh() {

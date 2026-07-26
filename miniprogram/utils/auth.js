@@ -73,7 +73,7 @@ function _doBootstrap() {
 
   return syncCurrentUser()
     .then((user) => {
-      if (user) messages.ensureConnected();
+      if (user) messages.fetchUnread().catch(() => {}); // 冷启动只设角标,不连 WS(WS 仅消息域连)
       return user;
     })
     .catch(() => {
@@ -108,7 +108,7 @@ function loginWithWechat() {
             return syncCurrentUser();
           })
           .then((user) => {
-            messages.ensureConnected();
+            messages.fetchUnread().catch(() => {}); // 只设角标,WS 仅消息域连
             resolve(user);
           })
           .catch(reject);
@@ -139,7 +139,7 @@ function loginWithAccount({ mode, account, password }) {
       return syncCurrentUser();
     })
     .then((user) => {
-      messages.ensureConnected();
+      messages.fetchUnread().catch(() => {}); // 只设角标,WS 仅消息域连
       return user;
     });
 }

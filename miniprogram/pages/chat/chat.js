@@ -89,7 +89,8 @@ Page({
 
     this.fetchPartner();
     this.loadHistory(true);
-    messages.ensureConnected();
+    // 不在 onLoad 连 WS:onShow 会 acquire(this) 登记 owner;WS 仅消息域持有。
+    // loadHistory / markRead 走 REST,不依赖 WS。
     messages.startPolling();
     this._startChatPoll();
     this._wireEvents();
@@ -103,7 +104,7 @@ Page({
     this._locale = getLocale();
     this.setData({ text: getTexts("chat"), locale: this._locale });
     if (!this.data.loggedIn || this.data.isSelf) return;
-    messages.ensureConnected();
+    messages.acquire(this);
     messages.startPolling();
     this._startChatPoll();
     this._wireEvents();
@@ -118,12 +119,14 @@ Page({
     this._unwireEvents();
     messages.stopPolling();
     this._stopChatPoll();
+    messages.release(this);
   },
 
   onUnload() {
     this._unwireEvents();
     messages.stopPolling();
     this._stopChatPoll();
+    messages.release(this);
     if (this._pending) {
       this._pending.forEach((p) => p.timer && clearTimeout(p.timer));
       this._pending.clear();
