@@ -61,4 +61,52 @@ function normalizePost(item, text, opts) {
   return out;
 }
 
-module.exports = { normalizePost, compactNumber, resolveUrl };
+// ── Feed revision(替代旧 postsNeedRefresh 布尔)──────────────────────────
+// 单调递增计数器,任何写操作(发帖/删帖/点赞/评论)成功后 bump。
+// 列表页(home/community)各自记 _lastFeedRevision,onShow 时与全局比较——
+// 「比较不清零」→ 一个 tab 消费不会吞掉另一个 tab 的刷新信号(根因:旧布尔先到先清零)。
+function getPostsRevision() {
+  const app = getApp();
+  return (app && app.globalData && app.globalData.postsRevision) || 0;
+}
+
+// payload 预留(未来 event bus 单条 surgical 更新用)。返回新 revision。
+// 调用方:列表页(home/community)点赞 bump 后应把「自己」的 _lastFeedRevision
+// 也置为返回值——自己已是新态,无需下次 onShow 无谓自刷;其他 tab 则会被触发。
+function bumpPostsRevision(payload) {
+  const app = getApp();
+  if (!app || !app.globalData) return 0;
+  const next = (app.globalData.postsRevision || 0) + 1;
+  app.globalData.postsRevision = next;
+  return next;
+}
+
+// 分页合并按 id 去重:已有则更新(新版本覆盖、保留原位置),没有则追加。
+// 修 hot 排序位移 / 分页不稳 / 跨 tab 增量回写导致的重复帖。
+function mergePostsById(existing, incoming) {
+  const merged = (existing || []).slice();
+  const indexById = new Map();
+  for (let i = 0; i < merged.length; i++) {
+    if (merged[i] && merged[i].id != null) indexById.set(merged[i].id, i);
+  }
+  (incoming || []).forEach((item) => {
+    if (!item || item.id == null) return;
+    const idx = indexById.get(item.id);
+    if (idx !== undefined) {
+      merged[idx] = item; // 更新已有(保留原位置)
+    } else {
+      indexById.set(item.id, merged.length);
+      merged.push(item); // 追加新帖
+    }
+  });
+  return merged;
+}
+
+module.exports = {
+  normalizePost,
+  compactNumber,
+  resolveUrl,
+  getPostsRevision,
+  bumpPostsRevision,
+  mergePostsById,
+};
