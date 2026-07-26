@@ -1,9 +1,8 @@
 <app-header bind:languagechange="handleLanguageChange" />
 
 <view class="page-shell feed-shell">
-  <view class="top-bar">
+  <view class="top-bar home-top-bar">
     <view class="brand-lockup">
-      <view class="eyebrow">{{text.brand}}</view>
       <view class="app-title">{{text.title}}</view>
     </view>
   </view>

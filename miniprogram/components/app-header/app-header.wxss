@@ -6,12 +6,12 @@
   z-index: 900;
   border-bottom-left-radius: 36rpx;
   border-bottom-right-radius: 36rpx;
-  border-bottom: 1rpx solid rgba(229, 239, 227, 0.86);
+  border-bottom: 1rpx solid #D7E4D6;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(247, 250, 246, 0.86)),
-    rgba(255, 255, 255, 0.82);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 247, 0.94)),
+    rgba(255, 255, 255, 0.92);
   box-shadow:
-    0 12rpx 34rpx rgba(30, 70, 40, 0.07),
+    0 12rpx 34rpx rgba(24, 56, 34, 0.095),
     inset 0 2rpx 0 rgba(255, 255, 255, 0.76);
   backdrop-filter: blur(36rpx);
   -webkit-backdrop-filter: blur(36rpx);
@@ -42,13 +42,22 @@
   text-align: left;
 }
 
+.header-brand {
+  position: absolute;
+  left: 32rpx;
+  top: 50%;
+  width: 92rpx;
+  height: 54rpx;
+  transform: translateY(-50%);
+}
+
 .language-switch {
   position: absolute;
   top: 50%;
   width: 104px;
   height: 31px;
   padding: 3px;
-  border: 1rpx solid rgba(229, 239, 227, 0.96);
+  border: 1rpx solid #D7E4D6;
   border-radius: 999rpx;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -124,5 +133,9 @@
 
 /* Shift the title right when the back button is shown so they don't overlap. */
 .app-header-row.has-back .header-title {
+  left: 104rpx;
+}
+
+.app-header-row.has-back .header-brand {
   left: 104rpx;
 }

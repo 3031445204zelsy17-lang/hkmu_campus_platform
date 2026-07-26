@@ -9,7 +9,7 @@
 .community-board-row {
   display: inline-flex;
   gap: 16rpx;
-  padding: 4rpx 44rpx 8rpx;
+  padding: 4rpx var(--pad-shell) 8rpx;
   box-sizing: border-box;
 }
 
@@ -17,10 +17,10 @@
   width: 150rpx;
   min-height: 116rpx;
   padding: 16rpx 12rpx;
-  border: 1rpx solid rgba(90, 130, 90, 0.12);
+  border: 1rpx solid var(--border-soft);
   border-radius: 32rpx;
-  background: #FFFFFF;
-  box-shadow: 0 12rpx 34rpx rgba(30, 70, 40, 0.05);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
   color: #6B7280;
   display: inline-flex;
   flex-direction: column;
@@ -32,10 +32,10 @@
 }
 
 .community-board-item.active {
-  border-color: rgba(127, 191, 77, 0.28);
-  background: #F4FAF1;
+  border-color: #B9D9AC;
+  background: var(--pill-green-bg);
   box-shadow:
-    0 14rpx 38rpx rgba(30, 70, 40, 0.07),
+    0 14rpx 38rpx rgba(24, 56, 34, 0.10),
     inset 0 2rpx 0 rgba(255, 255, 255, 0.72);
   color: #3D7A2E;
 }
@@ -64,12 +64,4 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* feedTabs(最新/热门)选中态:绿底白字,覆盖全局弱 segment-item.active
-   (白底绿字+8% 淡阴影,选中几乎看不出)。board-item.active 已有浅绿底可辨,不动。*/
-.segmented .segment-item.active {
-  background: var(--green-deep);
-  color: #FFFFFF;
-  box-shadow: 0 8rpx 22rpx rgba(61, 122, 46, 0.18);
 }
