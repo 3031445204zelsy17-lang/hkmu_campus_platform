@@ -1,0 +1,3 @@
+/* 用户服务协议 — 与隐私声明同属「声明类纯展示页」,直接复用 privacy 的 sheet
+   样式,避免重复 CSS。class 名沿用 privacy-*(内部命名,用户不可见)。 */
+@import "/pages/privacy/privacy.wxss";
