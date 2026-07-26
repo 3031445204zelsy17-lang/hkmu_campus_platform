@@ -316,6 +316,22 @@ CREATE INDEX IF NOT EXISTS idx_course_catalogue_prog ON course_catalogue(program
 CREATE INDEX IF NOT EXISTS idx_cc_prog_bucket ON course_catalogue(programme_code, bucket_order);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_cc_unique ON course_catalogue(programme_code, course_code, official_group);
 CREATE INDEX IF NOT EXISTS idx_pc_school ON programmes_catalogue(school_order, prog_order);
+
+-- reports user-submitted flags of illegal or abusive content for admin review
+-- FR4 UGC report entry target_type extensible MVP frontend wires post only
+CREATE TABLE IF NOT EXISTS reports (
+    id SERIAL PRIMARY KEY,
+    reporter_id INTEGER NOT NULL REFERENCES users(id),
+    target_type TEXT NOT NULL CHECK(target_type IN ('post','comment','lostfound','news_comment','user')),
+    target_id INTEGER NOT NULL,
+    reason_code TEXT NOT NULL CHECK(reason_code IN ('spam','abuse','porn','illegal','other')),
+    detail TEXT,
+    status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','resolved','dismissed')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(reporter_id, target_type, target_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_reports_status_created ON reports(status, created_at DESC);
 """
 
 

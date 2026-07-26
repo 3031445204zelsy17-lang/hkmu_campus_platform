@@ -381,3 +381,35 @@ class FeedbackOut(BaseModel):
     content: str
     contact: Optional[str] = None
     created_at: Optional[str] = None
+
+
+# --- Reports (举报) ---
+# UGC report of illegal/abusive content for admin review. target_type is an
+# extensible enum (MVP frontend wires 'post' only); reason_code is a fixed set
+# mirrored in miniprogram i18n. Report detail is admin-eyes-only (never shown to
+# other users), so it is NOT routed through WeChat msg_sec_check — see
+# routers/reports.py for the rationale.
+
+class ReportCreate(BaseModel):
+    target_type: str = Field(pattern=r"^(post|comment|lostfound|news_comment|user)$")
+    target_id: int = Field(ge=1)
+    reason_code: str = Field(pattern=r"^(spam|abuse|porn|illegal|other)$")
+    detail: Optional[str] = Field(default=None, max_length=500)
+
+
+class ReportOut(BaseModel):
+    id: int
+    target_type: str
+    target_id: int
+    reason_code: str
+    detail: Optional[str] = None
+    status: str = "open"
+    created_at: Optional[str] = None
+    # admin-view convenience fields (reporter nickname + a short label of the
+    # reported target, e.g. a post title). Only populated by the admin list view.
+    reporter_nickname: Optional[str] = None
+    target_label: Optional[str] = None
+
+
+class ReportStatusUpdate(BaseModel):
+    status: str = Field(pattern=r"^(resolved|dismissed)$")

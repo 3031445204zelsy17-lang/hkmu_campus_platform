@@ -12,7 +12,7 @@ import os
 
 from .database import init_db, close_db
 from .config import API_PREFIX, SECRET_KEY, RATE_LIMIT_PER_MIN
-from .routers import auth, posts, courses, users, news, lostfound, messages, push, upload, feedback, log
+from .routers import auth, posts, courses, users, news, lostfound, messages, push, upload, feedback, log, reports
 from .services.rate_limiter import check_rate_limit
 
 # Security/observability logger. Propagates to uvicorn root → stdout → Azure Log
@@ -221,6 +221,7 @@ app.include_router(messages.router, prefix=API_PREFIX)
 app.include_router(push.router, prefix=API_PREFIX)
 app.include_router(upload.router, prefix=API_PREFIX)
 app.include_router(feedback.router, prefix=API_PREFIX)
+app.include_router(reports.router, prefix=API_PREFIX)
 app.include_router(log.router, prefix=API_PREFIX)
 
 
