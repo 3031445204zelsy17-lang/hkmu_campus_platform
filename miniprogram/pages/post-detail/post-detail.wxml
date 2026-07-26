@@ -35,6 +35,10 @@
               <text class="social-glyph">🗑</text>
               <text class="post-action-count">{{text.deleteAction}}</text>
             </view>
+            <view wx:if="{{user && post.authorId !== user.id && !reportSubmitted}}" class="post-action report-action" catchtap="onReportPost" hover-class="post-action-press">
+              <text class="social-glyph">🚩</text>
+              <text class="post-action-count">{{text.reportAction}}</text>
+            </view>
           </view>
         </view>
       </view>

@@ -39,6 +39,7 @@ Page({
     locale: getLocale(),
     text: getTexts("postDetail"),
     user: null,
+    reportSubmitted: false,
   },
 
   onLoad(options) {
@@ -111,6 +112,67 @@ Page({
           });
       },
     });
+  },
+
+  // 举报这篇帖子(仅非作者可见)。原因走 actionSheet,可选补充说明,
+  // 提交 POST /reports。重复举报(后端 UNIQUE 去重 409)→ 标记已举报并提示。
+  onReportPost() {
+    if (!this.data.user) {
+      wx.navigateTo({ url: "/pages/login/login" });
+      return;
+    }
+    if (this.data.reportSubmitted) {
+      wx.showToast({ title: this.data.text.reportAlready, icon: "none" });
+      return;
+    }
+    const reasons = this.data.text.reportReasons || [];
+    if (!reasons.length) return;
+    const text = this.data.text;
+    wx.showActionSheet({
+      itemList: reasons.map((r) => r.label),
+      success: (res) => {
+        const reason = reasons[res.tapIndex];
+        if (!reason) return;
+        wx.showModal({
+          title: text.reportSheetTitle,
+          editable: true,
+          placeholderText: text.reportDetailPrompt,
+          confirmText: text.reportSubmit,
+          success: (mres) => {
+            if (!mres.confirm) return;
+            this._submitReport(reason.code, (mres.content || "").trim() || null);
+          },
+        });
+      },
+    });
+  },
+
+  _submitReport(reasonCode, detail) {
+    const text = this.data.text;
+    request({
+      method: "POST",
+      path: "/reports",
+      data: {
+        target_type: "post",
+        target_id: this.data.postId,
+        reason_code: reasonCode,
+        detail,
+      },
+      auth: true,
+    })
+      .then(() => {
+        this.setData({ reportSubmitted: true });
+        wx.showToast({ title: text.reportSuccess, icon: "success" });
+      })
+      .catch((error) => {
+        const msg = String((error && error.message) || "");
+        if (/already reported|409|已举报|已檢舉/i.test(msg)) {
+          this.setData({ reportSubmitted: true });
+          wx.showToast({ title: text.reportAlready, icon: "none" });
+          return;
+        }
+        wx.showToast({ title: msg || text.reportFail, icon: "none" });
+      });
   },
 
   applyLocale(locale = getLocale()) {
