@@ -5,6 +5,7 @@ const { PAGE_SIZE } = require("../../utils/config");
 const auth = require("../../utils/auth");
 const { uploadImage } = require("../../utils/upload");
 const { openDMWith } = require("../../utils/dm");
+const report = require("../../utils/report");
 
 function normalizeItems(items, text = getTexts("lostfound"), currentUserId = null) {
   return items.map((item) => {
@@ -112,6 +113,17 @@ Page({
 
   openDM(event) {
     openDMWith(event.currentTarget.dataset.authorId);
+  },
+
+  // 长按失物帖 → 举报(走通用 report util,后端 target_type=lostfound)
+  onReportLostFound(e) {
+    if (!this.data.currentUserId) {
+      wx.navigateTo({ url: "/pages/login/login" });
+      return;
+    }
+    const id = Number(e.currentTarget.dataset.id);
+    if (!id) return;
+    report.openReport("lostfound", id);
   },
 
   applyLocale(locale = getLocale()) {

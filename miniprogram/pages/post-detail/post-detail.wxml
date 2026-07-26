@@ -11,7 +11,7 @@
   <block wx:elif="{{post}}">
     <view class="feed-card detail-card">
       <view class="feed-head">
-        <view class="avatar" data-author-id="{{post.authorId}}" catchtap="openDM">
+        <view class="avatar" data-author-id="{{post.authorId}}" catchtap="openDM" bindlongpress="onReportAuthor">
           <image wx:if="{{post.authorAvatar}}" src="{{post.authorAvatar}}" mode="aspectFill" binderror="onAuthorAvatarError" />
           <text wx:else>{{post.authorInitial}}</text>
         </view>

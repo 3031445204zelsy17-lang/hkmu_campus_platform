@@ -184,6 +184,17 @@ Page({
       });
   },
 
+  // 长按作者头像 → 举报这个用户(匿名帖 authorId 为 null,守卫跳过)
+  onReportAuthor(e) {
+    if (!this.data.user) {
+      wx.navigateTo({ url: "/pages/login/login" });
+      return;
+    }
+    const authorId = Number(e.currentTarget.dataset.authorId);
+    if (!authorId) return;
+    report.openReport("user", authorId);
+  },
+
   applyLocale(locale = getLocale()) {
     const text = getTexts("postDetail", locale);
     const update = { locale, text };
