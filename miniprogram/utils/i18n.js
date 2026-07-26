@@ -555,6 +555,22 @@ const DICTIONARY = {
       copyContact: "如有问题或投诉,请邮件 support@hkmu-campus.example(内测联系方式,正式上线后更新为官方邮箱)。",
       openAction: "用户协议",
     },
+    report: {
+      entryLabel: "举报",
+      sheetTitle: "选择举报原因",
+      reasons: [
+        { code: "spam", label: "垃圾广告" },
+        { code: "abuse", label: "人身攻击 / 谩骂" },
+        { code: "porn", label: "色情低俗" },
+        { code: "illegal", label: "违法信息" },
+        { code: "other", label: "其他" }
+      ],
+      detailPrompt: "补充说明（可选）",
+      submit: "提交举报",
+      success: "举报已提交，感谢",
+      already: "你已举报过",
+      fail: "举报提交失败，请稍后重试",
+    },
   },
   "zh-Hant": {},
   en: {},
@@ -1033,6 +1049,22 @@ DICTIONARY["zh-Hant"] = {
     sectionContact: "14. 聯絡我們",
     copyContact: "如有問題或投訴,請電郵 support@hkmu-campus.example(內測聯絡方式,正式上線後更新為官方郵箱)。",
     openAction: "用戶協議",
+  },
+  report: {
+    entryLabel: "檢舉",
+    sheetTitle: "選擇檢舉原因",
+    reasons: [
+      { code: "spam", label: "垃圾廣告" },
+      { code: "abuse", label: "人身攻擊 / 謾罵" },
+      { code: "porn", label: "色情低俗" },
+      { code: "illegal", label: "違法資訊" },
+      { code: "other", label: "其他" }
+    ],
+    detailPrompt: "補充說明（選填）",
+    submit: "提交檢舉",
+    success: "檢舉已提交，感謝",
+    already: "你已檢舉過",
+    fail: "檢舉提交失敗，請稍後再試",
   },
 };
 
@@ -1525,6 +1557,22 @@ DICTIONARY.en = {
     sectionContact: "14. Contact us",
     copyContact: "For questions or complaints, email support@hkmu-campus.example (beta contact; updated to an official address after launch).",
     openAction: "Terms of Service",
+  },
+  report: {
+    entryLabel: "Report",
+    sheetTitle: "Choose a report reason",
+    reasons: [
+      { code: "spam", label: "Spam / ads" },
+      { code: "abuse", label: "Abuse / harassment" },
+      { code: "porn", label: "Explicit content" },
+      { code: "illegal", label: "Illegal content" },
+      { code: "other", label: "Other" }
+    ],
+    detailPrompt: "Add details (optional)",
+    submit: "Submit",
+    success: "Report submitted — thanks",
+    already: "You already reported this",
+    fail: "Could not submit report, try again",
   },
 };
 
