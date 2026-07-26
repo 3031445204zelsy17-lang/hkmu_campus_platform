@@ -1,7 +1,9 @@
 """Unit tests for content_security.audit_user_text — mocks check_text, no network.
 
 Run: python3 scripts/test_content_security.py
-Covers 6 branches: pass / risky / review / errcode-61010 / API-failure / no-openid.
+Fail-closed semantics: only suggest=="pass" allows; risky/review → 400; every
+service anomaly (errcode incl 61010 / API failure / illegal JSON / missing or
+unknown verdict / non-dict response) → 503; non-WeChat user → skip.
 """
 import asyncio
 import sys
@@ -37,10 +39,12 @@ async def main():
 
     cases = {}
 
+    # --- allow: only explicit pass ---
     r, _ = await _run(wechat_user, "hello", cs.SCENE_FORUM,
                       fake_response={"errcode": 0, "result": {"suggest": "pass"}})
     cases["1. pass → allow"] = r == "allow"
 
+    # --- violation → 400 ---
     r, _ = await _run(wechat_user, "bad", cs.SCENE_FORUM,
                       fake_response={"errcode": 0, "result": {"suggest": "risky"}})
     cases["2. risky → 400"] = r == 400
@@ -49,18 +53,39 @@ async def main():
                       fake_response={"errcode": 0, "result": {"suggest": "review"}})
     cases["3. review → 400"] = r == 400
 
+    # --- service anomaly → 503 (fail-closed) ---
     r, _ = await _run(wechat_user, "x", cs.SCENE_FORUM,
                       fake_response={"errcode": 61010, "errmsg": "openid expired"})
-    cases["4. errcode 61010 (openid expired) → allow"] = r == "allow"
+    cases["4. errcode 61010 → 503 (fail-closed)"] = r == 503
+
+    r, _ = await _run(wechat_user, "x", cs.SCENE_FORUM,
+                      fake_response={"errcode": -1, "errmsg": "unknown"})
+    cases["5. unknown errcode → 503"] = r == 503
 
     r, _ = await _run(wechat_user, "x", cs.SCENE_FORUM,
                       fake_raises=cs.WechatContentSecurityError("timeout"))
-    cases["5. API failure → allow (degrade)"] = r == "allow"
+    cases["6. API/transport failure → 503"] = r == 503
 
-    # web user (no openid): even a risky verdict is never requested → skip
+    r, _ = await _run(wechat_user, "x", cs.SCENE_FORUM,
+                      fake_raises=ValueError("illegal json"))
+    cases["7. illegal JSON → 503"] = r == 503
+
+    r, _ = await _run(wechat_user, "x", cs.SCENE_FORUM,
+                      fake_response={"errcode": 0})  # no result key
+    cases["8. missing result → 503"] = r == 503
+
+    r, _ = await _run(wechat_user, "x", cs.SCENE_FORUM,
+                      fake_response={"errcode": 0, "result": {"suggest": "weird"}})
+    cases["9. unknown suggest → 503"] = r == 503
+
+    r, _ = await _run(wechat_user, "x", cs.SCENE_FORUM,
+                      fake_response=["not", "a", "dict"])
+    cases["10. non-dict response → 503"] = r == 503
+
+    # --- skip: non-WeChat user (FR1c) ---
     r, calls = await _run(web_user, "x", cs.SCENE_FORUM,
                           fake_response={"errcode": 0, "result": {"suggest": "risky"}})
-    cases["6. no openid (web user) → skip, check_text not called"] = (
+    cases["11. no openid (web user) → skip, check_text not called"] = (
         r == "allow" and len(calls) == 0
     )
 

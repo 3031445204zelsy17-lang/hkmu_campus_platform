@@ -1,10 +1,16 @@
 """WeChat content security (text) — msg_sec_check v2.
 
-UGC text moderation for the mini program. Non-WeChat users (web/email/Google)
-have no openid and are skipped (+ logged); FR1c will cover them with a local
-sensitive-word layer. On API failure / timeout / openid-expired we degrade to
-allow-and-log so a WeChat outage never blocks posting — same philosophy as the
-WS→polling fallback. Only a clear ``risky``/``review`` verdict rejects the post.
+UGC text moderation for the mini program, **fail-closed** for WeChat users.
+
+Non-WeChat users (web/email/Google) have no openid and are skipped (+ logged);
+FR1c will cover them with a local sensitive-word layer. For WeChat users the
+gate is default-deny: only an explicit ``suggest == "pass"`` allows the post.
+Violation verdicts (``risky`` / ``review``) → HTTP 400. Any service anomaly —
+transport failure, access-token failure, timeout, illegal JSON, any WeChat
+errcode (incl. 61010 openid-expired), missing/non-dict result, or an unknown
+suggest → HTTP 503 ("内容审核暂时不可用，请稍后重试"): the post is blocked, not
+published. Rationale: a moderation gate that silently allows on service failure
+is an open path to publish unmoderated UGC during a WeChat outage.
 """
 
 import asyncio
@@ -112,12 +118,18 @@ async def check_text(openid: str, content: str, scene: int) -> dict:
 
 
 async def audit_user_text(user: dict, text: str, scene: int) -> None:
-    """Moderate UGC text for the current user.
+    """Moderate UGC text for the current user — fail-closed for WeChat users.
 
-    - Non-WeChat user (no openid): skip + log
-    - API failure / openid-expired (61010) / other errcode: degrade to allow + log
-    - suggest in (risky, review): reject with HTTP 400
-    - pass / unknown: allow
+    Decision table (WeChat user with openid):
+      suggest == "pass"                  → allow (the ONLY allow path)
+      suggest in ("risky", "review")     → HTTP 400 内容包含违规信息
+      service anomaly *                  → HTTP 503 内容审核暂时不可用
+    * service anomaly = transport / token / timeout failure, illegal JSON,
+      any non-zero errcode (incl. 61010), missing/non-dict result, or unknown
+      suggest. A moderation gate that silently allows on service failure is an
+      open path to publish unmoderated UGC during a WeChat outage → block.
+
+    Non-WeChat user (no openid): skip + log (FR1c local layer deferred).
     """
     provider = user.get("oauth_provider")
     openid = user.get("oauth_id")
@@ -126,36 +138,60 @@ async def audit_user_text(user: dict, text: str, scene: int) -> None:
             "content_security skip (no openid): user=%s provider=%s",
             user.get("id"), provider,
         )
-        return
+        return  # FR1c: non-WeChat users — local sensitive-word layer deferred
 
+    # --- service / transport / parse failure → 503 (fail-closed) ---
     try:
         result = await check_text(openid, text, scene)
-    except WechatContentSecurityError as exc:
-        logger.warning(
-            "content_security API error, allow+log: user=%s err=%s",
+    except (WechatContentSecurityError, ValueError, httpx.HTTPError) as exc:
+        logger.exception(
+            "content_security check failed (fail-closed 503): user=%s err=%s",
             user.get("id"), exc,
         )
-        return
+        raise HTTPException(status_code=503, detail="内容审核暂时不可用，请稍后重试")
 
+    if not isinstance(result, dict):
+        logger.error(
+            "content_security non-dict response (fail-closed 503): user=%s resp=%r",
+            user.get("id"), result,
+        )
+        raise HTTPException(status_code=503, detail="内容审核暂时不可用，请稍后重试")
+
+    # --- any WeChat errcode (incl. 61010 openid-expired) → 503 ---
     errcode = result.get("errcode")
     if errcode:
         if errcode == _ERRCODE_OPENID_EXPIRED:
-            logger.info(
-                "content_security openid expired (61010), allow: user=%s",
+            logger.warning(
+                "content_security openid expired (61010), fail-closed 503: user=%s",
                 user.get("id"),
             )
         else:
-            logger.warning(
-                "content_security errcode=%s errmsg=%s, allow+log: user=%s",
+            logger.error(
+                "content_security errcode=%s errmsg=%s, fail-closed 503: user=%s",
                 errcode, result.get("errmsg"), user.get("id"),
             )
-        return
+        raise HTTPException(status_code=503, detail="内容审核暂时不可用，请稍后重试")
 
-    suggest = (result.get("result") or {}).get("suggest")
+    # --- verdict: only an explicit pass allows ---
+    result_obj = result.get("result")
+    if not isinstance(result_obj, dict):
+        logger.error(
+            "content_security missing/illegal result (fail-closed 503): user=%s resp=%r",
+            user.get("id"), result,
+        )
+        raise HTTPException(status_code=503, detail="内容审核暂时不可用，请稍后重试")
+    suggest = result_obj.get("suggest")
+    if suggest == "pass":
+        return
     if suggest in _SUGGEST_VIOLATION:
         logger.info(
             "content_security rejected: user=%s scene=%s suggest=%s",
             user.get("id"), scene, suggest,
         )
         raise HTTPException(status_code=400, detail="内容包含违规信息，请修改后重试")
-    # pass / unknown → allow
+    # unknown suggest → fail-closed
+    logger.error(
+        "content_security unknown suggest (fail-closed 503): user=%s suggest=%r",
+        user.get("id"), suggest,
+    )
+    raise HTTPException(status_code=503, detail="内容审核暂时不可用，请稍后重试")
