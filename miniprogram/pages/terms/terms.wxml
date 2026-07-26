@@ -15,6 +15,9 @@
     <view class="privacy-section-title">{{text.sectionAccept}}</view>
     <view class="privacy-body">{{text.copyAccept}}</view>
 
+    <view class="privacy-section-title">{{text.sectionService}}</view>
+    <view class="privacy-body">{{text.copyService}}</view>
+
     <view class="privacy-section-title">{{text.sectionAccount}}</view>
     <view class="privacy-body">{{text.copyAccount}}</view>
 
@@ -24,11 +27,23 @@
     <view class="privacy-section-title">{{text.sectionContent}}</view>
     <view class="privacy-body">{{text.copyContent}}</view>
 
+    <view class="privacy-section-title">{{text.sectionModeration}}</view>
+    <view class="privacy-body">{{text.copyModeration}}</view>
+
+    <view class="privacy-section-title">{{text.sectionPrivacy}}</view>
+    <view class="privacy-body">{{text.copyPrivacy}}</view>
+
+    <view class="privacy-section-title">{{text.sectionMinor}}</view>
+    <view class="privacy-body">{{text.copyMinor}}</view>
+
     <view class="privacy-section-title">{{text.sectionProhibited}}</view>
     <view class="privacy-body">{{text.copyProhibited}}</view>
 
     <view class="privacy-section-title">{{text.sectionLiability}}</view>
     <view class="privacy-body">{{text.copyLiability}}</view>
+
+    <view class="privacy-section-title">{{text.sectionEnforcement}}</view>
+    <view class="privacy-body">{{text.copyEnforcement}}</view>
 
     <view class="privacy-section-title">{{text.sectionChanges}}</view>
     <view class="privacy-body">{{text.copyChanges}}</view>
