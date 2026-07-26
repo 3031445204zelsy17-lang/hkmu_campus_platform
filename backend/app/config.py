@@ -24,6 +24,17 @@ FEEDBACK_PER_HOUR = int(os.getenv("FEEDBACK_PER_HOUR", "3"))
 MAX_FEEDBACK_PER_USER = int(os.getenv("MAX_FEEDBACK_PER_USER", "10"))
 FEEDBACK_RETENTION_DAYS = int(os.getenv("FEEDBACK_RETENTION_DAYS", "90"))
 
+# Report (举报) anti-abuse. Same shape as feedback: auth-required + rate cap on
+# bursts + lifetime quota. The UNIQUE(reporter_id, target_type, target_id) in
+# the schema already stops one user from double-reporting the SAME target, so
+# these caps only limit how many DISTINCT targets a single user can flag.
+# Report reason text is intentionally NOT run through WeChat msg_sec_check — see
+# routers/reports.py for the rationale (admin-eyes-only + avoid blocking reports
+# during a content-security outage).
+REPORT_PER_HOUR = int(os.getenv("REPORT_PER_HOUR", "5"))
+MAX_REPORTS_PER_USER = int(os.getenv("MAX_REPORTS_PER_USER", "100"))
+REPORT_DETAIL_MAX = int(os.getenv("REPORT_DETAIL_MAX", "500"))
+
 API_PREFIX = "/api/v1"
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 
