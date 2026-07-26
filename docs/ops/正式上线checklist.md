@@ -20,6 +20,26 @@
 - [ ] **B(兜底):若你持有中国大陆身份证** → 境内个人主体,小程序只留「工具」类(选课 ✅ / 失物 ✅ / 反馈 ✅),**砍论坛 / 私信 / 资讯**,主流量回网页版(PWA,已有)。成本最低,小程序价值缩水。
 - [ ] ⚠️ 主体类型在微信公众平台注册流程第一步就会暴露(选主体时境外个人无入口)——注册前最终确认。
 
+> **✅ 已定(2026-07-26,两次确认):B 境内个人**。小程序只做工具(选课/失物/反馈),砍论坛/私信/资讯挪网页版。执行见下。
+
+## 🔴 P0 B 路径执行(核心 = 后端迁移微信云托管;2026-07-26 核查 + 自核代码)
+
+**核查结论(已自核 `database.py`/`Dockerfile`/`content_security.py` 属实)**:
+- **DB 是 asyncpg + Supabase Postgres(⚠️ 非 CLAUDE.md 写的 SQLite,文档过期),Dockerfile 标准 2-stage** → 跨云零数据迁移、容器直接复用。
+- **微信云托管首选**(对症 ICP 死结):`wx.cloud.callContainer` 走微信内网 → **根本免 ICP 备案**([官方明文](https://developers.weixin.qq.com/minigame/dev/wxcloudrun/src/development/call/mini.html));个人主体明文允许;Dockerfile 直接用;原生 openid 注入(省掉 `get_current_user` 漏 openid 坑)。月 ~70–150 元(前 3 月免费额度),2–3 周上线。
+- ⇒ **小程序工具部分 ICP 备案整个绕过**(原 P0 域名死结在 B 小程序侧消失)。
+
+**执行步骤**:
+- [ ] 开通微信云托管(cloud.weixin.qq.com,个人主体),建环境 + 服务(`containerPort=8000`)
+- [ ] **前端**:封装统一 api 层,`wx.request`→`wx.cloud.callContainer`(当前 `miniprogram/utils/config.js` API_BASE 指向 Azure,需切)
+- [ ] **CI**:GitHub Actions push 目标改 `ccr.ccs.tencentyun.com/tcb-*` + `wxcloud run:deploy`(1–2 天)
+- [ ] **生产**:`min-instances ≥ 1`(防 WS 断 + asyncio 后台任务被 scale-to-zero 杀);WS 仅 wss(已兼容);env 按版本绑定(CI 注入更稳)
+- [ ] **失物招领类目灰区**:云托管免 ICP,但微信**类目层**仍审;"工具-信息查询"原文"不含用户发布",失物(公开 UGC)可能被驳 → 提审定,或砍失物只留选课+反馈
+
+**网页版 PWA(承载论坛/私信/资讯)= 个人备案走不通**:
+- [ ] 决策:① 只对境外/HK 开放(不备案,承受大陆访问降级);或 ② 借校方/公司主体走**企业备案**(个人备案过不了重 UGC);或 ③ 暂不上网页版,小程序先跑
+- [ ] **FR1c 必补**(网页版上线前):邮箱/Google 用户 UGC 当前裸奔(`content_security.py:135-141` 无 openid skip,deferred)→ 接本地词库 + 阿里云内容安全/网易易盾/腾讯天御,fail-closed
+
 ## 🔴 P0 法务定稿(owner:你 / 法务;卡审核)
 - [ ] **用户协议**(#63,14 段研究后草案)→ 法务复核定稿 → 把正式文本(三语言)+ 官方邮箱给开发,替换进 `utils/i18n.js`
 - [ ] **隐私政策**(已有)同步过一眼,确认与实际数据处理一致
@@ -87,8 +107,11 @@
 2. **功能类目 vs 社交/IM**(P0):论坛(UGC)需社交类 + 备案;**私信(IM)即使企业也常需 ICP/SP 证,HK 极难拿** → 大概率挪网页版。资讯涉时政同样卡。
 3. **域名 / ICP**(P0):境外主体大概率豁免 ICP;真未知 = 后台能否加进合法域名(零成本实测,1h)。
 4. **法务用户协议**(P0):#63 是研究后草案,非权威法律文本,正式版前必须复核定稿。
-5. **上线范围(双轨)**:小程序(受主体/类目限,承载工具/选课/失物)+ 网页版 PWA(承载社交/论坛/私信/资讯)。web 公开则 **FR1c**(邮箱/Google UGC 本地敏感词审核)要补(目前 deferred)。
+5. **网页版 UGC + 个人备案走不通**(P0):网页版承载论坛/私信/资讯(重 UGC),个人备案明文禁公开 UGC → ① 限境外不公开大陆,或 ② 借校方/公司主体企业备案。
+6. **FR1c 必补**(网页版上线前):邮箱/Google 用户 UGC 当前裸奔(`content_security.py` 无 openid skip)→ 接本地词库 + 云厂商敏感词 API(fail-closed)。
 
 ## 开发侧待办(等上面给输入)
 - [ ] 收到用户协议**正式文本**(三语言)+ **官方邮箱** → 替换 `utils/i18n.js` 的 terms 块
-- [ ] (若需)自有域名 + ICP 备案完成 → 调整后端域名绑定 + 小程序 `utils/config.js` 的 `API_BASE`
+- [ ] **B 后端迁移微信云托管**:封装 api 层(`wx.request`→`wx.cloud.callContainer`)+ CI 改 push 目标 + `min-instances≥1` + 失物类目灰区评估
+- [ ] (网页版若公开)**FR1c**:邮箱/Google UGC 本地敏感词审核(fail-closed)
+- [ ] (若走自有域而非云托管)自有域名 + ICP 备案 → 调整 `utils/config.js` 的 `API_BASE`
