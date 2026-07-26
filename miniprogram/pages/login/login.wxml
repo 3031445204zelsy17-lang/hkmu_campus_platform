@@ -90,4 +90,5 @@
   </view>
 
   <view class="privacy-entry" bindtap="openPrivacy">{{privacyAction}}</view>
+  <view class="privacy-entry" bindtap="openTerms">{{termsAction}}</view>
 </view>

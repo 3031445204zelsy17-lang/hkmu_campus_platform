@@ -47,6 +47,7 @@ Page({
     nickname: "",
     password: "",
     privacyAction: getTexts("privacy").openAction,
+    termsAction: getTexts("terms").openAction,
     studentId: "",
     text: getTexts("login"),
     usernameModeClass: "segment-item active",
@@ -69,6 +70,7 @@ Page({
     this.setData(Object.assign({
       locale,
       privacyAction: getTexts("privacy", locale).openAction,
+      termsAction: getTexts("terms", locale).openAction,
       text,
     }, getModeMeta(this.data.mode, text)));
   },
@@ -109,6 +111,10 @@ Page({
 
   openPrivacy() {
     wx.navigateTo({ url: "/pages/privacy/privacy" });
+  },
+
+  openTerms() {
+    wx.navigateTo({ url: "/pages/terms/terms" });
   },
 
   finishLogin() {

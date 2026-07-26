@@ -14,6 +14,7 @@
     "pages/chat/chat",
     "pages/new-chat/new-chat",
     "pages/privacy/privacy",
+    "pages/terms/terms",
     "pages/feedback/feedback"
   ],
   "window": {
