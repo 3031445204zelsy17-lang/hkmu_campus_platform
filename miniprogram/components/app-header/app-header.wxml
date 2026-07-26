@@ -3,7 +3,14 @@
     <view wx:if="{{showBack}}" class="app-back" bindtap="onBack" hover-class="app-back-press">
       <view class="app-back-arrow"></view>
     </view>
-    <view class="header-title" style="right: {{titleRight}}px;">{{title}}</view>
+    <image
+      wx:if="{{title === 'HKMU Campus'}}"
+      class="header-brand"
+      src="/assets/brand/hkmu-campus-mark-transparent.png"
+      mode="aspectFit"
+      aria-label="HKMU Campus"
+    />
+    <view wx:else class="header-title" style="right: {{titleRight}}px;">{{title}}</view>
     <view class="language-switch" style="right: {{languageRight}}px;">
       <view
         wx:for="{{languageOptions}}"

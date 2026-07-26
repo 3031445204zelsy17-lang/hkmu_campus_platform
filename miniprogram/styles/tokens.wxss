@@ -19,7 +19,7 @@
 
 page {
   /* === Color === */
-  --page-bg: #F7FAF6;
+  --page-bg: #F2F6F1;
   --text-primary: #142033;
   --text-secondary: #6B7280;
   --eyebrow: rgba(61, 122, 46, 0.72);
@@ -28,11 +28,12 @@ page {
   --green-deep: #3D7A2E;           /* 次按钮/绿系文字 */
   --green-mid: #6DB344;            /* hero 终点 */
   --pill-green-bg: #F0F7ED;
-  --segmented-bg: #EEF5EC;
+  --segmented-bg: #E8F1E6;
   --surface: #FFFFFF;
-  --border-soft: rgba(90, 130, 90, 0.12);
-  --border-hair: #E5EFE3;
-  --divider: #E5EFE3;
+  --surface-subtle: #F8FBF7;
+  --border-soft: #DCE7DB;
+  --border-hair: #D7E4D6;
+  --divider: #DCE7DB;
   --danger-text: #B42318;
   --danger-bg: #FFF7F7;
   --danger-border: rgba(180, 60, 60, 0.12);
@@ -42,28 +43,28 @@ page {
   --hero-gradient: linear-gradient(135deg, #7FBF4D 0%, #6DB344 100%);
 
   /* === Shadows === */
-  --shadow-card: 0 16rpx 48rpx rgba(30, 70, 40, 0.06);
+  --shadow-card: 0 12rpx 30rpx rgba(24, 56, 34, 0.085);
   --shadow-btn-primary: 0 10rpx 24rpx rgba(15, 143, 190, 0.16);
-  --shadow-btn-secondary: 0 8rpx 22rpx rgba(30, 70, 40, 0.04);
-  --shadow-segment-active: 0 8rpx 22rpx rgba(30, 70, 40, 0.08);
+  --shadow-btn-secondary: 0 8rpx 22rpx rgba(24, 56, 34, 0.065);
+  --shadow-segment-active: 0 8rpx 22rpx rgba(24, 56, 34, 0.10);
   --shadow-avatar: 0 10rpx 24rpx rgba(127, 191, 77, 0.18);
   --shadow-hero: 0 18rpx 44rpx rgba(61, 122, 46, 0.12);
   --focus-ring: 0 0 0 6rpx rgba(127, 191, 77, 0.10);
 
   /* === Radius === */
   --radius-pill: 999rpx;
-  --radius-card-lg: 44rpx;
-  --radius-card-md: 40rpx;
-  --radius-entry: 28rpx;
+  --radius-card-lg: 32rpx;
+  --radius-card-md: 32rpx;
+  --radius-entry: 24rpx;
 
   /* === Type === */
   --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-  --fs-app-title: 60rpx;
+  --fs-app-title: 52rpx;
   --fs-app-title-compact: 44rpx;
-  --fs-feed-title: 36rpx;
+  --fs-feed-title: 34rpx;
   --fs-section: 34rpx;
   --fs-feed-author: 32rpx;
-  --fs-feed-body: 30rpx;
+  --fs-feed-body: 28rpx;
   --fs-subtitle: 27rpx;
   --fs-body: 28rpx;
   --fs-search: 28rpx;
@@ -76,7 +77,7 @@ page {
   --fs-eyebrow: 21rpx;
 
   /* === Spacing === */
-  --pad-shell: 44rpx;
+  --pad-shell: 36rpx;
   --shell-bottom: 208rpx;
   --shell-bottom-feed: 224rpx;
 
