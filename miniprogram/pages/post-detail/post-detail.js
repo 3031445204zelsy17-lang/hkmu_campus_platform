@@ -5,6 +5,7 @@ const { formatDate, getInitial } = require("../../utils/format");
 const { normalizePost, resolveUrl, bumpPostsRevision } = require("../../utils/post");
 const { openDMWith } = require("../../utils/dm");
 const { PAGE_SIZE } = require("../../utils/config");
+const report = require("../../utils/report");
 
 // Map a backend CommentOut row into the view shape used by post-detail.wxml.
 // (Moved here from community.js as part of Phase 1 ⑦ — community now links to
@@ -80,6 +81,17 @@ Page({
     if (!isNaN(idx)) {
       this.setData({ [`comments[${idx}].authorAvatar`]: "" });
     }
+  },
+
+  // 长按评论 → 举报该评论(走通用 report util,后端 target_type=comment)
+  onReportComment(e) {
+    if (!this.data.user) {
+      wx.navigateTo({ url: "/pages/login/login" });
+      return;
+    }
+    const commentId = Number(e.currentTarget.dataset.id);
+    if (!commentId) return;
+    report.openReport("comment", commentId);
   },
 
   // 作者本人删帖(后端 posts.py delete_post: owner/admin 可删)
