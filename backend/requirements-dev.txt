@@ -3,5 +3,7 @@
 # test tooling here keeps the prod image lean. CI (and local devs) install both.
 pytest>=8.0
 pytest-asyncio>=0.23
+# ruff — backend lint gate (config in /ruff.toml; CI runs `ruff check backend/`).
+ruff>=0.6
 # httpx is already in backend/requirements.txt and is reused here as the
 # in-process ASGI test client.

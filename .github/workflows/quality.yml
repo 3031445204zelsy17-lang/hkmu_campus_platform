@@ -1,0 +1,36 @@
+name: Quality
+
+# Fast, lightweight quality gates that run independently of the heavy Deploy
+# workflow (postgres + pytest + docker build). Two parallel jobs, no services:
+#   - miniprogram: every .json parses + every .js has valid syntax
+#   - lint:        ruff check backend/ (bug-catching rules only — see ruff.toml)
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  miniprogram:
+    name: Miniprogram syntax + JSON
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Validate miniprogram .json + .js
+        run: node scripts/check_miniprogram.mjs
+
+  lint:
+    name: Backend lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ruff
+        run: pip install -r backend/requirements-dev.txt
+      - name: ruff check
+        run: ruff check backend/

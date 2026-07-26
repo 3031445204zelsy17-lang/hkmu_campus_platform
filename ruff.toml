@@ -1,0 +1,13 @@
+# Ruff — backend lint gate. Deliberately minimal: only rules that catch real
+# bugs, not style.
+#   E9 = syntax errors
+#   F8 = undefined names (F821), redefinitions (F811), unused locals (F841)
+# Style rules (E501 line length, UP pyupgrade, I isort, SIM, B) are intentionally
+# NOT enabled: on this existing codebase they surface ~180 pre-existing nits
+# across many modules and would block PRs on churn unrelated to correctness
+# (and B008 false-positives every FastAPI Depends() default). Tighten later,
+# deliberately, once that style debt is paid down.
+target-version = "py312"
+
+[lint]
+select = ["E9", "F8"]
