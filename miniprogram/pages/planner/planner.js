@@ -32,6 +32,21 @@ function fillTemplate(tpl, vars) {
   return tpl.replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null ? vars[k] : ""));
 }
 
+function getAppHeaderHeight() {
+  const info = wx.getWindowInfo();
+  const statusBarHeight = info.statusBarHeight || 24;
+  let navBarHeight = 56;
+
+  if (wx.getMenuButtonBoundingClientRect) {
+    const menu = wx.getMenuButtonBoundingClientRect();
+    if (menu && menu.height && menu.top) {
+      navBarHeight = Math.max(menu.height + (menu.top - statusBarHeight) * 2, 56);
+    }
+  }
+
+  return statusBarHeight + navBarHeight;
+}
+
 // prerequisites 是 JSON 文本列(如 '["COMP1080SEF"]'),复刻网页 planner.js:1451
 function parsePrereqs(raw) {
   try {
@@ -144,6 +159,7 @@ Page({
 
   onShow() {
     syncTabBar(this, 3);
+    this._setTabBarHidden(this._programmeSearchOpen);
     this._locale = getLocale();
     // course-detail 页标记课程后回返:作废会话级进度缓存,强制重拉(仪表盘/卡片状态)
     const app = getApp();
@@ -231,6 +247,7 @@ Page({
     const pickerList = this._pickerList || [];
     if (pickerList.length && !this._selectedCode && !this._userProgrammeCode) {
       this._programmeSearchOpen = true;
+      this._setTabBarHidden(true);
       this._emit();
     }
   },
@@ -297,12 +314,21 @@ Page({
     // 点 hero → 打开全屏专业搜索浮层，清空上次搜索词
     this._programmeSearchOpen = true;
     this._programmeQuery = "";
+    this._setTabBarHidden(true);
     this._emit();
   },
 
   onCloseProgrammeSearch() {
     this._programmeSearchOpen = false;
+    this._setTabBarHidden(false);
     this._emit();
+  },
+
+  _setTabBarHidden(hidden) {
+    const tabBar = typeof this.getTabBar === "function" ? this.getTabBar() : null;
+    if (tabBar) {
+      tabBar.setData({ externallyHidden: !!hidden });
+    }
   },
 
   onSelectProgramme(e) {
@@ -312,6 +338,7 @@ Page({
     this._selectedCode = code;
     this._programmeQuery = "";
     this._programmeSearchOpen = false; // 选完关浮层
+    this._setTabBarHidden(false);
     if (this._user) {
       if (entry && entry.has_full_planning) {
         // 完整规划专业：持久化（best-effort）后按新专业重算进度
@@ -508,6 +535,7 @@ Page({
       programmeSearchResults: searchGroups,
       programmeSearchEmpty,
       programmeSearchOpen: this._programmeSearchOpen,
+      programmeOverlayTop: getAppHeaderHeight(),
       programmeCode: entry ? entry.code : "",
       programmeName: entry ? entry.name : "",
       programmeSchool: entry ? entry.school || "" : "",

@@ -1,4 +1,4 @@
-<view class="tabbar-shell">
+<view class="tabbar-shell {{externallyHidden ? 'is-hidden' : ''}}">
   <view
     class="tabbar-pill {{hydrating ? 'is-hydrating' : ''}} {{dragging ? 'is-dragging' : ''}} {{switching ? 'is-switching' : ''}}"
     catchtouchstart="handleTouchStart"
