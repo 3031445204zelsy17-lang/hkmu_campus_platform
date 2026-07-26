@@ -2,6 +2,7 @@ const auth = require("../../utils/auth");
 const { request } = require("../../utils/request");
 const { getLocale, getTexts } = require("../../utils/i18n");
 const { uploadImage } = require("../../utils/upload");
+const { bumpPostsRevision } = require("../../utils/post");
 
 const CATEGORY_KEYS = ["campus", "course", "life", "activity", "help"];
 
@@ -135,10 +136,7 @@ Page({
         auth: true,
       })
         .then(() => {
-          const app = getApp();
-          if (app.globalData) {
-            app.globalData.postsNeedRefresh = true;
-          }
+          bumpPostsRevision({ type: "create" });
           wx.showToast({
             title: this.data.text.success,
             icon: "success",

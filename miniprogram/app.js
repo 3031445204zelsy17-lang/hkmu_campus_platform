@@ -3,7 +3,7 @@ const log = require("./utils/log");
 
 App({
   globalData: {
-    postsNeedRefresh: false,
+    postsRevision: 0, // Feed 版本号:写操作(发帖/删帖/点赞/评论)成功后 bump。列表页比较不清零(替代旧 postsNeedRefresh 布尔)
     user: null,
     pendingInvite: null, // Phase 5: 暂存邀请码,home 页 onShow 消费
   },

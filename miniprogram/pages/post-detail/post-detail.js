@@ -2,7 +2,7 @@ const auth = require("../../utils/auth");
 const { request } = require("../../utils/request");
 const { getLocale, getTexts } = require("../../utils/i18n");
 const { formatDate, getInitial } = require("../../utils/format");
-const { normalizePost, resolveUrl } = require("../../utils/post");
+const { normalizePost, resolveUrl, bumpPostsRevision } = require("../../utils/post");
 const { openDMWith } = require("../../utils/dm");
 const { PAGE_SIZE } = require("../../utils/config");
 
@@ -95,10 +95,7 @@ Page({
         this._deleting = true;
         request({ method: "DELETE", path: `/posts/${this.data.postId}`, auth: true })
           .then(() => {
-            const app = getApp();
-            if (app && app.globalData) {
-              app.globalData.postsNeedRefresh = true;
-            }
+            bumpPostsRevision({ type: "delete", postId: this.data.postId });
             wx.showToast({ title: this.data.text.deleteSuccess, icon: "success" });
             wx.navigateBack();
           })
@@ -236,6 +233,7 @@ Page({
           rawPost: updatedPost,
           post: normalizePost(updatedPost, this.data.text),
         });
+        bumpPostsRevision({ type: "like", postId: this.data.postId });
       })
       .catch((error) => {
         this.setData({
@@ -295,11 +293,8 @@ Page({
           submitting: false,
         });
 
-        // Nudge community to refetch on return so its comment counts stay fresh.
-        const app = getApp();
-        if (app && app.globalData) {
-          app.globalData.postsNeedRefresh = true;
-        }
+        // Bump feed revision:返回列表时刷新评论数(home/community 都受益)
+        bumpPostsRevision({ type: "comment", postId: this.data.postId });
 
         wx.showToast({
           title: this.data.text.commentSent,

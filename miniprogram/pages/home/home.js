@@ -2,7 +2,7 @@ const auth = require("../../utils/auth");
 const { request } = require("../../utils/request");
 const { syncTabBar } = require("../../utils/tabbar");
 const { getLocale, getTexts } = require("../../utils/i18n");
-const { normalizePost, resolveUrl } = require("../../utils/post");
+const { normalizePost, resolveUrl, getPostsRevision, bumpPostsRevision, mergePostsById } = require("../../utils/post");
 const { PAGE_SIZE } = require("../../utils/config");
 const { openDMWith } = require("../../utils/dm");
 const social = require("../../utils/social");
@@ -37,9 +37,9 @@ Page({
     this.applyLocale(getLocale());
     syncTabBar(this, 0);
 
-    const app = getApp();
-    if (app.globalData && app.globalData.postsNeedRefresh) {
-      app.globalData.postsNeedRefresh = false;
+    // revision 比较(不清零):别处发帖/删帖/点赞/评论 bump 后,探测到比自己新 → 触发重拉。
+    // 不在此处记已消费——仅 loadPosts 成功渲染后记(失败则下次 onShow 仍重试)。
+    if (getPostsRevision() > (this._lastFeedRevision || 0)) {
       this._hasLoadedPosts = false;
     }
 
@@ -128,9 +128,15 @@ Page({
   },
 
   loadPosts(reset) {
-    if (this.data.loading) {
+    // append 去重(在途时丢弃后续 append);reset 不受 loading 拦截——总要发并作废在途。
+    if (!reset && this.data.loading) {
       return Promise.resolve();
     }
+
+    // generation guard:reset 自增代次,响应回调比对代次——旧请求迟到响应一律丢弃,
+    // 修 sort 切换 / 下拉刷新 / 触底叠切换时「旧响应覆盖新 tab」竞态。
+    this._feedGen = this._feedGen || 0;
+    const gen = reset ? ++this._feedGen : this._feedGen;
 
     const nextPage = reset ? 1 : this.data.page;
     const query = [`page=${nextPage}`, `page_size=${PAGE_SIZE.feed}`, `sort=${this.data.sort}`];
@@ -149,8 +155,10 @@ Page({
       auth: !!auth.getStoredUser(),
     })
       .then((data) => {
+        if (gen !== this._feedGen) return; // 旧代次:不写 data/page/hasNext
         const nextRawPosts = data.items || [];
-        const rawPosts = reset ? nextRawPosts : this.data.rawPosts.concat(nextRawPosts);
+        // 按 id 去重合并(reset 全量替换;append 去重),修 hot 位移/分页不稳重复帖。
+        const rawPosts = reset ? nextRawPosts : mergePostsById(this.data.rawPosts, nextRawPosts);
         const posts = rawPosts.map((item) => normalizePost(item, this.data.text));
 
         this.setData({
@@ -159,15 +167,18 @@ Page({
           posts,
           rawPosts,
         });
+        this._lastFeedRevision = getPostsRevision(); // 仅成功响应后记已消费
       })
       .catch((error) => {
+        if (gen !== this._feedGen) return; // 旧代次:不写错误态
         wx.showToast({
           title: error.message || this.data.text.loadFail,
           icon: "none",
         });
       })
       .finally(() => {
-        this.setData({ loading: false });
+        // 仅当前代次清 loading:旧代次不清(reset 作废 append 后,由 reset 自己的 finally 释放)
+        if (gen === this._feedGen) this.setData({ loading: false });
       });
   },
 
@@ -202,6 +213,8 @@ Page({
         .then((updatedPost) => {
           if (this._likeChain[post.id] === mine) {
             this._syncLikeFromServer(post.id, updatedPost);
+            // cross-tab 同步:别处(community/详情页)刷新点赞态;自己已是新态,记已消费免自刷。
+            this._lastFeedRevision = bumpPostsRevision({ type: "like", postId: post.id });
           }
         })
         .catch(() => {
