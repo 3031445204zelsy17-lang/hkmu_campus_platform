@@ -198,6 +198,20 @@ const DICTIONARY = {
       deleteAction: "\u5220\u9664",
       deleteConfirm: "\u786e\u5b9a\u5220\u9664\u4f60\u7684\u8fd9\u7bc7\u5e16\u5b50\u5417?\u8fd9\u6761\u64cd\u4f5c\u65e0\u6cd5\u64a4\u9500\u3002",
       deleteSuccess: "\u5df2\u5220\u9664",
+      reportAction: "\u4e3e\u62a5",
+      reportSheetTitle: "\u9009\u62e9\u4e3e\u62a5\u539f\u56e0",
+      reportReasons: [
+        { code: "spam", label: "\u5783\u573e\u5e7f\u544a" },
+        { code: "abuse", label: "\u4eba\u8eab\u653b\u51fb / \u8c29\u9a82" },
+        { code: "porn", label: "\u8272\u60c5\u4f4e\u4fd7" },
+        { code: "illegal", label: "\u8fdd\u6cd5\u4fe1\u606f" },
+        { code: "other", label: "\u5176\u4ed6" }
+      ],
+      reportDetailPrompt: "\u8865\u5145\u8bf4\u660e\uff08\u53ef\u9009\uff09",
+      reportSubmit: "\u63d0\u4ea4\u4e3e\u62a5",
+      reportSuccess: "\u4e3e\u62a5\u5df2\u63d0\u4ea4\uff0c\u611f\u8c22",
+      reportAlready: "\u4f60\u5df2\u4e3e\u62a5\u8fc7\u8fd9\u7bc7\u5e16\u5b50",
+      reportFail: "\u4e3e\u62a5\u63d0\u4ea4\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5",
     }),
     courseDetail: Object.assign({}, COMMON_ZH_HANS, {
       headerTitle: "\u8bfe\u7a0b\u8be6\u60c5",
@@ -643,6 +657,20 @@ DICTIONARY["zh-Hant"] = {
     deleteAction: "\u522a\u9664",
     deleteConfirm: "\u78ba\u5b9a\u522a\u9664\u4f60\u7684\u9019\u7bc7\u5e16\u5b50\u55ce?\u9019\u689d\u64cd\u4f5c\u7121\u6cd5\u64a4\u92b7\u3002",
     deleteSuccess: "\u5df2\u522a\u9664",
+    reportAction: "\u6aa2\u8209",
+    reportSheetTitle: "\u9078\u64c7\u6aa2\u8209\u539f\u56e0",
+    reportReasons: [
+      { code: "spam", label: "\u5783\u573e\u5ee3\u544a" },
+      { code: "abuse", label: "\u4eba\u8eab\u653b\u64ca / \u8b3e\u7f75" },
+      { code: "porn", label: "\u8272\u60c5\u4f4e\u4fd7" },
+      { code: "illegal", label: "\u9055\u6cd5\u8cc7\u8a0a" },
+      { code: "other", label: "\u5176\u4ed6" }
+    ],
+    reportDetailPrompt: "\u88dc\u5145\u8aaa\u660e\uff08\u9078\u586b\uff09",
+    reportSubmit: "\u63d0\u4ea4\u6aa2\u8209",
+    reportSuccess: "\u6aa2\u8209\u5df2\u63d0\u4ea4\uff0c\u611f\u8b1d",
+    reportAlready: "\u4f60\u5df2\u6aa2\u8209\u904e\u9019\u7bc7\u5e16\u5b50",
+    reportFail: "\u6aa2\u8209\u63d0\u4ea4\u5931\u6557\uff0c\u8acb\u7a0d\u5f8c\u518d\u8a66",
   }),
   courseDetail: Object.assign({}, COMMON_ZH_HANT, {
     headerTitle: "\u8ab2\u7a0b\u8a73\u60c5",
@@ -1070,6 +1098,20 @@ DICTIONARY.en = {
     deleteAction: "Delete",
     deleteConfirm: "Delete this post? This cannot be undone.",
     deleteSuccess: "Deleted",
+    reportAction: "Report",
+    reportSheetTitle: "Choose a report reason",
+    reportReasons: [
+      { code: "spam", label: "Spam / ads" },
+      { code: "abuse", label: "Abuse / harassment" },
+      { code: "porn", label: "Explicit content" },
+      { code: "illegal", label: "Illegal content" },
+      { code: "other", label: "Other" }
+    ],
+    reportDetailPrompt: "Add details (optional)",
+    reportSubmit: "Submit",
+    reportSuccess: "Report submitted — thanks",
+    reportAlready: "You already reported this post",
+    reportFail: "Could not submit report, try again",
   }),
   courseDetail: Object.assign({}, COMMON_EN, {
     headerTitle: "Course",
