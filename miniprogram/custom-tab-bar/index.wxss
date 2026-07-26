@@ -9,6 +9,10 @@
   pointer-events: none;
 }
 
+.tabbar-shell.is-hidden {
+  display: none;
+}
+
 .tabbar-pill {
   position: relative;
   width: 100%;
@@ -16,16 +20,16 @@
   height: 112rpx;
   margin: 0 auto;
   padding: 8rpx 0;
-  border: 1rpx solid rgba(229, 239, 227, 0.94);
+  border: 1rpx solid #D7E4D6;
   border-radius: 46rpx;
   display: flex;
   align-items: center;
   justify-content: space-around;
   gap: 0;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.94);
   box-shadow:
-    0 18rpx 52rpx rgba(30, 70, 40, 0.10),
+    0 20rpx 56rpx rgba(24, 56, 34, 0.14),
     inset 0 2rpx 0 rgba(255, 255, 255, 0.78);
   backdrop-filter: blur(36rpx);
   -webkit-backdrop-filter: blur(36rpx);
@@ -41,7 +45,7 @@
   z-index: 0;
   width: 118rpx;
   height: 88rpx;
-  border: 1rpx solid rgba(127, 191, 77, 0.18);
+  border: 1rpx solid rgba(127, 191, 77, 0.30);
   border-radius: 36rpx;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(240, 247, 237, 0.86)),

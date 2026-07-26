@@ -10,7 +10,7 @@
   </view>
 
   <!-- Hero：专业名（点击切换）+ 总进度。专业搜索浮层由 hero 触发，默认收起，不再霸屏 -->
-  <view class="planner-hero">
+  <view class="planner-hero {{loggedIn && !comingSoon && viewMode==='planning' ? 'has-score' : ''}}">
     <view class="planner-hero-info" bindtap="onOpenProgrammeSearch" hover-class="planner-hero-hover">
       <view class="planner-kicker">{{programmeSchool}}</view>
       <view class="planner-title-row">
@@ -176,11 +176,11 @@
   </block>
 
   <!-- 全屏专业搜索浮层：点 hero 触发。搜索引导 + 按学院分组卡片，选完或 ✕ 返回 -->
-  <view wx:if="{{programmeSearchOpen}}" class="ps-overlay">
+  <view wx:if="{{programmeSearchOpen}}" class="ps-overlay" style="top: {{programmeOverlayTop}}px;">
     <view class="ps-overlay-bar">
-      <view class="ps-back" bindtap="onCloseProgrammeSearch" hover-class="ps-back-hover">‹</view>
+      <view class="ps-overlay-bar-spacer"></view>
       <text class="ps-overlay-title">{{text.selectProgramme}}</text>
-      <view class="ps-overlay-close" bindtap="onCloseProgrammeSearch">✕</view>
+      <view class="ps-overlay-close" bindtap="onCloseProgrammeSearch">×</view>
     </view>
     <view class="ps-overlay-search">
       <view class="ps-search-wrap">
@@ -193,7 +193,7 @@
       </view>
       <view class="ps-search-hint">{{text.programmeSearchHintPre}}{{programmeTotal}}{{text.programmeSearchHintPost}}</view>
     </view>
-    <scroll-view scroll-y class="ps-overlay-list">
+    <scroll-view scroll-y enhanced show-scrollbar="{{false}}" class="ps-overlay-list">
       <view wx:if="{{programmeSearchEmpty}}" class="ps-empty">
         <view class="ps-empty-icon">🔍</view>
         <view class="ps-empty-text">{{text.programmeSearchEmpty}}</view>
@@ -209,12 +209,12 @@
                 data-code="{{p.code}}" bindtap="onSelectProgramme">
             <view class="ps-row-main">
               <text class="ps-row-name">{{p.name}}</text>
-              <text wx:if="{{p.badge}}" class="ps-row-badge">{{p.badge}}</text>
+              <view class="ps-row-meta">
+                <text class="ps-row-code">{{p.code}}</text>
+                <text wx:if="{{p.badge}}" class="ps-row-badge">{{p.badge}}</text>
+              </view>
             </view>
-            <view class="ps-row-tail">
-              <text class="ps-row-code">{{p.code}}</text>
-              <text wx:if="{{p.selected}}" class="ps-row-check">✓</text>
-            </view>
+            <text wx:if="{{p.selected}}" class="ps-row-check">✓</text>
           </view>
         </view>
       </block>
