@@ -113,3 +113,69 @@ async def test_non_wechat_user_skips_check(client, make_user, monkeypatch):
     )
     assert calls["n"] == 0, "non-WeChat user must skip msg_sec_check"
     assert res.status_code == 201, res.text
+
+
+# --- fail-closed: service anomalies must BLOCK (503), not degrade to allow ---
+
+async def _post_as_wechat(client, make_user, monkeypatch, fake_check_text):
+    """Shared harness: flip a user to WeChat, patch check_text, POST a draft."""
+    _uid, token = await _make_wechat_user(make_user, "wx")
+    from backend.app.services import content_security
+    monkeypatch.setattr(content_security, "check_text", fake_check_text)
+    return await client.post(
+        "/api/v1/posts",
+        json={"title": "t", "content": "some text", "category": "chat"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+
+async def test_wechat_user_review_post_rejected(client, make_user, monkeypatch):
+    """suggest=review → 400 (保守拦截,与 risky 同语义,补覆盖)。"""
+    async def fake(openid, content, scene):
+        return {"errcode": 0, "result": {"suggest": "review"}}
+    res = await _post_as_wechat(client, make_user, monkeypatch, fake)
+    assert res.status_code == 400, res.text
+    assert "违规" in res.json()["detail"]
+
+
+async def test_wechat_user_transport_failure_blocked(client, make_user, monkeypatch):
+    """msg_sec_check transport/token/timeout failure → 503, post blocked."""
+    from backend.app.services import content_security
+
+    async def fake(openid, content, scene):
+        raise content_security.WechatContentSecurityError("timeout")
+    res = await _post_as_wechat(client, make_user, monkeypatch, fake)
+    assert res.status_code == 503, res.text
+    assert "暂时不可用" in res.json()["detail"]
+
+
+async def test_wechat_user_errcode_61010_blocked(client, make_user, monkeypatch):
+    """61010 openid-expired → 503 (并入服务异常,不提示重登)。"""
+    async def fake(openid, content, scene):
+        return {"errcode": 61010, "errmsg": "openid expired"}
+    res = await _post_as_wechat(client, make_user, monkeypatch, fake)
+    assert res.status_code == 503, res.text
+
+
+async def test_wechat_user_unknown_errcode_blocked(client, make_user, monkeypatch):
+    """未知 errcode → 503(fail-closed,不放行)。"""
+    async def fake(openid, content, scene):
+        return {"errcode": -1, "errmsg": "unknown"}
+    res = await _post_as_wechat(client, make_user, monkeypatch, fake)
+    assert res.status_code == 503, res.text
+
+
+async def test_wechat_user_missing_result_blocked(client, make_user, monkeypatch):
+    """errcode=0 但缺 result → 503(只有显式 pass 才放行)。"""
+    async def fake(openid, content, scene):
+        return {"errcode": 0}
+    res = await _post_as_wechat(client, make_user, monkeypatch, fake)
+    assert res.status_code == 503, res.text
+
+
+async def test_wechat_user_unknown_suggest_blocked(client, make_user, monkeypatch):
+    """未知 suggest → 503(default-deny)。"""
+    async def fake(openid, content, scene):
+        return {"errcode": 0, "result": {"suggest": "weird"}}
+    res = await _post_as_wechat(client, make_user, monkeypatch, fake)
+    assert res.status_code == 503, res.text
