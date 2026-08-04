@@ -29,6 +29,13 @@ const COMMON_ZH_HANS = {
   repostAction: "\u8f6c\u53d1\u60f3\u6cd5",
   defaultAuthor: "HKMU \u540c\u5b66",
   defaultCategory: "\u6821\u56ed",
+  categories: {
+    campus: "校园",
+    course: "课程",
+    life: "生活",
+    activity: "活动",
+    help: "求助",
+  },
 };
 
 const COMMON_ZH_HANT = {
@@ -46,6 +53,13 @@ const COMMON_ZH_HANT = {
   repostAction: "\u8f49\u767c\u60f3\u6cd5",
   defaultAuthor: "HKMU \u540c\u5b78",
   defaultCategory: "\u6821\u5712",
+  categories: {
+    campus: "校園",
+    course: "課程",
+    life: "生活",
+    activity: "活動",
+    help: "求助",
+  },
 };
 
 const COMMON_EN = {
@@ -63,6 +77,13 @@ const COMMON_EN = {
   repostAction: "Repost idea",
   defaultAuthor: "HKMU Student",
   defaultCategory: "Campus",
+  categories: {
+    campus: "Campus",
+    course: "Course",
+    life: "Life",
+    activity: "Activity",
+    help: "Help",
+  },
 };
 
 const DICTIONARY = {
@@ -173,6 +194,9 @@ const DICTIONARY = {
       commentPlaceholder: "\u5199\u4e0b\u4f60\u7684\u8bc4\u8bba...",
       commentSend: "\u53d1\u9001",
       commentSent: "\u8bc4\u8bba\u5df2\u53d1\u9001",
+      termsModalTitle: "\u793e\u533a\u89c4\u8303\u63d0\u793a",
+      termsModalContent: "\u53d1\u5e03\u5185\u5bb9\u8bf7\u9075\u5b88\u793e\u533a\u89c4\u8303:\u7981\u6b62\u8fdd\u6cd5\u3001\u8272\u60c5\u3001\u66b4\u529b\u3001\u5e7f\u544a\u3001\u4e0d\u5b9e\u4fe1\u606f\u7b49;\u8fdd\u89c4\u5c06\u88ab\u5220\u9664,\u4e25\u91cd\u8005\u5c01\u7981\u8d26\u53f7\u3002",
+      termsModalConfirm: "\u6211\u77e5\u9053\u4e86",
       boards: {
         all: { icon: "ALL", label: "\u5168\u90e8" },
         discussion: { icon: "D", label: "\u8ba8\u8bba" },
@@ -244,6 +268,7 @@ const DICTIONARY = {
     }),
     compose: {
       eyebrow: "NEW POST",
+      warningNotice: "发布内容请遵守社区规范:禁止违法、色情、暴力、广告、不实信息等;违规将被删除,严重者封禁账号。",
       postAnonymously: "匿名发布",
       anonHint: "勾选后,他人看不到你的昵称和头像",
       addImage: "\u6dfb\u52a0\u56fe\u7247",
@@ -683,6 +708,9 @@ DICTIONARY["zh-Hant"] = {
     commentPlaceholder: "\u5beb\u4e0b\u4f60\u7684\u8a55\u8ad6...",
     commentSend: "\u50b3\u9001",
     commentSent: "\u8a55\u8ad6\u5df2\u9001\u51fa",
+    termsModalTitle: "\u793e\u5340\u898f\u7bc4\u63d0\u793a",
+    termsModalContent: "\u767c\u5e03\u5167\u5bb9\u8acb\u9075\u5b88\u793e\u5340\u898f\u7bc4:\u7981\u6b62\u9055\u6cd5\u3001\u8272\u60c5\u3001\u66b4\u529b\u3001\u5ee3\u544a\u3001\u4e0d\u5be6\u8cc7\u8a0a\u7b49;\u9055\u898f\u5c07\u88ab\u522a\u9664,\u56b4\u91cd\u8005\u5c01\u7981\u5e33\u865f\u3002",
+    termsModalConfirm: "\u6211\u77e5\u9053\u4e86",
     boards: {
       all: { icon: "ALL", label: "\u5168\u90e8" },
       discussion: { icon: "D", label: "\u8a0e\u8ad6" },
@@ -754,6 +782,7 @@ DICTIONARY["zh-Hant"] = {
   }),
   compose: {
     eyebrow: "NEW POST",
+    warningNotice: "\u767c\u5e03\u5167\u5bb9\u8acb\u9075\u5b88\u793e\u5340\u898f\u7bc4:\u7981\u6b62\u9055\u6cd5\u3001\u8272\u60c5\u3001\u66b4\u529b\u3001\u5ee3\u544a\u3001\u4e0d\u5be6\u8cc7\u8a0a\u7b49;\u9055\u898f\u5c07\u88ab\u522a\u9664,\u56b4\u91cd\u8005\u5c01\u7981\u5e33\u865f\u3002",
     addImage: "\u6dfb\u52a0\u5716\u7247",
     postAnonymously: "\u533f\u540d\u767c\u5e03",
     anonHint: "\u52fe\u9078\u5f8c,\u4ed6\u4eba\u770b\u4e0d\u5230\u4f60\u7684\u66b1\u7a31\u548c\u982d\u50cf",
@@ -1175,6 +1204,9 @@ DICTIONARY.en = {
     commentPlaceholder: "Write a comment...",
     commentSend: "Send",
     commentSent: "Comment sent",
+    termsModalTitle: "Community Guidelines",
+    termsModalContent: "Please follow community rules: no illegal, sexual, violent, promotional, or false content. Violations are removed; serious cases lead to account suspension.",
+    termsModalConfirm: "Got it",
     boards: {
       all: { icon: "ALL", label: "All" },
       discussion: { icon: "D", label: "Discussion" },
@@ -1246,6 +1278,7 @@ DICTIONARY.en = {
   }),
   compose: {
     eyebrow: "NEW POST",
+    warningNotice: "Please follow community rules: no illegal, sexual, violent, promotional, or false content. Violations are removed; serious cases lead to account suspension.",
     addImage: "Add image",
     title: "Post Campus Update",
     postAnonymously: "Post anonymously",

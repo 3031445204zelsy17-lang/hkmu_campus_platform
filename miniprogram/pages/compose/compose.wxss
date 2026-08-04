@@ -2,6 +2,19 @@
   margin-top: 20rpx;
 }
 
+/* F5: 发帖页顶部违规提醒(始终可见,发帖前即时看到社区规范)。*/
+.compose-notice {
+  margin-top: 16rpx;
+  padding: 18rpx 24rpx;
+  background: var(--surface);
+  border: 1rpx solid var(--border-soft);
+  border-left: 6rpx solid var(--accent-blue);
+  border-radius: var(--radius-entry);
+  font-size: var(--fs-feed-meta);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
 .compose-image-add {
   display: flex;
   flex-direction: column;

@@ -127,7 +127,10 @@ Page({
         method: "POST",
         path: "/posts",
         data: {
-          category: this.data.category,
+          // F7: store the stable category KEY (e.g. "campus"), not the localized
+          // label — the label is re-derived per viewer locale in normalizePost.
+          // Old posts stored the label and still render fine via the fallback.
+          category: this.data.categoryKey,
           content,
           is_anonymous: this.data.isAnonymous,
           title,

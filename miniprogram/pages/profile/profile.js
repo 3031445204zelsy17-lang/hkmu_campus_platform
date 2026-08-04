@@ -35,6 +35,7 @@ Page({
     loading: false,
     locale: getLocale(),
     privacyAction: getTexts("privacy").openAction,
+    termsAction: getTexts("terms").openAction,
     feedbackAction: getTexts("feedback").title,
     text: getTexts("profile"),
     user: null,
@@ -245,6 +246,13 @@ Page({
   openPrivacy() {
     wx.navigateTo({
       url: "/pages/privacy/privacy",
+    });
+  },
+
+  // 用户协议(登录后入口;登录页另有入口)。terms 页正文含第 9 段禁止行为。
+  openTerms() {
+    wx.navigateTo({
+      url: "/pages/terms/terms",
     });
   },
 

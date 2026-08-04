@@ -394,7 +394,10 @@ Page({
       const label = text[labelKey] || b.key.replace(/-/g, " ");
       const all = (b.courses || []).map((c) => ({
         code: c.course_code,
-        name: c.display_name,
+        // F8: zh-CN viewers get the OpenCC-simplified name when available;
+        // everyone else (and English-only courses with name_zh_cn=null) falls
+        // back to display_name (Traditional humanities / English as stored).
+        name: (this._locale === "zh-Hans" && c.name_zh_cn) ? c.name_zh_cn : c.display_name,
         credits: c.credits,
         system: c.code_system,
       }));
