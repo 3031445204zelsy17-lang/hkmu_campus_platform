@@ -86,6 +86,10 @@ Page({
     // draftImageUrl: existing remote image when editing; draftImageTempPath is a
     // newly-picked local file that overrides it on submit.
     currentUserId: null,
+    // Page-level admin flag (from decorateUser.isAdmin). The list uses it to
+    // surface a delete action on OTHER people's items — edit/mark-resolved stay
+    // author-only (lostfound.wxml splits the action row on item.isMine).
+    isAdmin: false,
     draftCategory: "",
     draftDescription: "",
     draftImageTempPath: "",
@@ -102,7 +106,10 @@ Page({
     // Resolve the current user id so the list can flag the viewer's own items
     // (isMine) and show edit/resolve/delete actions on them.
     auth.bootstrapSession().then((user) => {
-      this.setData({ currentUserId: (user && user.id) || null });
+      this.setData({
+        currentUserId: (user && user.id) || null,
+        isAdmin: !!(user && user.isAdmin),
+      });
       this.applyLocale(getLocale());
     });
   },

@@ -11,6 +11,15 @@ from ..services.content_security import audit_user_text, SCENE_FORUM
 
 router = APIRouter(prefix="/lostfound", tags=["lostfound"])
 
+
+def _is_admin(user: dict | None) -> bool:
+    # Mirrors posts._is_admin: identity is re-read from the DB on every request
+    # (never cached in a JWT claim), so admin changes take effect immediately.
+    # Duplicated here rather than cross-imported so the lostfound router stays
+    # self-contained (same pattern posts.py already follows internally).
+    return bool(user) and user.get("identity") == "admin"
+
+
 _LF_COLS = """lf.id, lf.author_id, lf.title, lf.description, lf.item_type,
     lf.category, lf.location, lf.image_url, lf.status,
     lf.created_at,
@@ -186,7 +195,10 @@ async def delete_item(
         row = await db.fetchrow("SELECT author_id FROM lostfound WHERE id = $1", item_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Item not found")
-        if row["author_id"] != user["id"]:
+        # Author OR admin may delete (mirrors posts.delete_post). Editors/markers
+        # stay author-only — the frontend splits the action row accordingly.
+        is_admin_flag = _is_admin(user)
+        if row["author_id"] != user["id"] and not is_admin_flag:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your item")
 
         await db.execute("DELETE FROM lostfound WHERE id = $1", item_id)
