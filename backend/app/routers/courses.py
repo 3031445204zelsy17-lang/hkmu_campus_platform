@@ -70,6 +70,10 @@ class ProgrammeCatalogueOut(BaseModel):
 class CatalogueCourseOut(BaseModel):
     course_code: str
     display_name: str
+    # Simplified-Chinese name for zh-CN viewers (OpenCC t2s of display_name for
+    # the CJK courses; None for English-only courses → front end falls back to
+    # display_name). Traditional/EN viewers always use display_name.
+    name_zh_cn: str | None = None
     credits: int
     code_system: str
     official_group: str
@@ -412,7 +416,7 @@ async def get_catalogue_courses(
         if not prog:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Programme not in catalogue")
         rows = await db.fetch(
-            """SELECT course_code, display_name, credits, code_system,
+            """SELECT course_code, display_name, name_zh_cn, credits, code_system,
                       official_group, canonical_bucket, bucket_order
                FROM course_catalogue WHERE programme_code = $1
                ORDER BY bucket_order, official_group, course_code_sort""",
@@ -442,6 +446,7 @@ async def get_catalogue_courses(
         b.courses.append(CatalogueCourseOut(
             course_code=r["course_code"],
             display_name=r["display_name"],
+            name_zh_cn=r["name_zh_cn"],
             credits=r["credits"],
             code_system=r["code_system"],
             official_group=r["official_group"],

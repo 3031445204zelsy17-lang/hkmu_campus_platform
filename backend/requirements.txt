@@ -14,5 +14,10 @@ feedparser>=6.0.8
 aiosmtplib==3.0.2
 pywebpush>=2.0.0
 Pillow>=10.2.0
+# Traditional→Simplified Chinese for course names (scripts/migrate_name_zh_cn.py
+# + seed_catalogue.py). Runtime never imports it; shipped here so any ops env
+# that pip-installs backend deps can re-run the catalogue seed without losing
+# name_zh_cn (the seed falls back to NULL when OpenCC is absent).
+opencc-python-reimplemented>=0.1
 azure-monitor-opentelemetry>=1.0.0
 opentelemetry-instrumentation-fastapi

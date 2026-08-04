@@ -307,6 +307,7 @@ CREATE TABLE IF NOT EXISTS course_catalogue (
     course_code_sort TEXT NOT NULL,
     display_name     TEXT NOT NULL,
     raw_name         TEXT,
+    name_zh_cn       TEXT,
     credits          INTEGER NOT NULL,
     code_system      TEXT NOT NULL,
     source_line_no   INTEGER

@@ -110,6 +110,25 @@ def clean_name(raw_name: str, code_token: str) -> str:
     return name
 
 
+# Traditional→Simplified for the ~545 CJK (humanities) courses so zh-CN viewers
+# see 简体; English-only courses have no CJK → return None and the front end
+# falls back to display_name. OpenCC is lazy/optional so --check (parser-only,
+# no DB) still runs without the dep installed.
+try:
+    from opencc import OpenCC as _OpenCC
+    _T2S = _OpenCC("t2s")
+except Exception:  # noqa: BLE001 — optional dep, --check must work without it
+    _T2S = None
+
+_CJK_RE = re.compile(r"[一-鿿]")
+
+
+def to_simplified(name):
+    if not name or _T2S is None or not _CJK_RE.search(name):
+        return None
+    return _T2S.convert(name)
+
+
 def detect_code_system(code_token: str) -> str:
     parts = code_token.split(" ", 1)
     rest = parts[1] if len(parts) > 1 else code_token
@@ -170,6 +189,7 @@ def parse_skill_md(path: str):
                 "course_code_sort": code_token.replace(" ", ""),
                 "display_name": clean_name(name_raw, code_token),
                 "raw_name": name_raw[:500],
+                "name_zh_cn": to_simplified(clean_name(name_raw, code_token)),
                 "credits": credits,
                 "code_system": detect_code_system(code_token),
                 "source_line_no": idx + 1,
@@ -296,6 +316,7 @@ async def seed(programmes, order, courses):
                     c["programme_code"], c["school"], c["official_group"],
                     c["canonical_bucket"], c["bucket_order"], c["course_code"],
                     c["course_code_sort"], c["display_name"], c["raw_name"],
+                    c["name_zh_cn"],
                     c["credits"], c["code_system"], c["source_line_no"],
                 )
                 for c in courses
@@ -306,8 +327,8 @@ async def seed(programmes, order, courses):
                     """INSERT INTO course_catalogue
                        (programme_code, school, official_group, canonical_bucket,
                         bucket_order, course_code, course_code_sort, display_name,
-                        raw_name, credits, code_system, source_line_no)
-                       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+                        raw_name, name_zh_cn, credits, code_system, source_line_no)
+                       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
                        ON CONFLICT (programme_code, course_code, official_group)
                        DO NOTHING""",
                     course_rows[i:i + BATCH],
