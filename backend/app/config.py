@@ -67,6 +67,14 @@ HOT_SEED = float(os.getenv("HOT_SEED", "1.0"))         # baseline score for new 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://sizuuojtadkntjjibxuv.supabase.co")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 
+# Content moderation kill switch (temporary degradation). Set
+# ENABLE_CONTENT_MODERATION=false to bypass WeChat msg_sec_check entirely — UGC
+# then passes UNFILTERED. Use only as a controlled stopgap when the moderation
+# service is unreachable (e.g. Azure outbound IPs not in WeChat IP whitelist →
+# fail-closed 503). Flip back to true once a working moderation path (third-party
+# provider / FR1c local layer) is in place.
+ENABLE_CONTENT_MODERATION = os.getenv("ENABLE_CONTENT_MODERATION", "true").lower() == "true"
+
 # Admin setup. Prefer ADMIN_USER_IDS (immutable user_id — set it AFTER the target
 # account exists, by looking up its id). ADMIN_USERNAMES is a backward-compat
 # one-shot: the username MUST be pre-registered by a trusted party before startup,

@@ -21,6 +21,8 @@ import time
 import httpx
 from fastapi import HTTPException
 
+from ..config import ENABLE_CONTENT_MODERATION
+
 
 logger = logging.getLogger("hkmu.security")
 
@@ -130,7 +132,17 @@ async def audit_user_text(user: dict, text: str, scene: int) -> None:
       open path to publish unmoderated UGC during a WeChat outage → block.
 
     Non-WeChat user (no openid): skip + log (FR1c local layer deferred).
+
+    Kill switch: ENABLE_CONTENT_MODERATION=false bypasses moderation entirely
+    (temporary degradation — see config.ENABLE_CONTENT_MODERATION).
     """
+    if not ENABLE_CONTENT_MODERATION:
+        logger.warning(
+            "content moderation DISABLED via env — UGC from user=%s passes unfiltered",
+            user.get("id"),
+        )
+        return
+
     provider = user.get("oauth_provider")
     openid = user.get("oauth_id")
     if provider != _PROVIDER_WECHAT or not openid:
