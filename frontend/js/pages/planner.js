@@ -150,10 +150,20 @@ function _getProgrammeCourses() {
   return _courses.filter((c) => ids.has(c.id));
 }
 
+/** Whether a category's graduation requirement is met (mirrors backend _category_satisfied). */
+function _categorySatisfied(cat, earned, completedCount) {
+  const required = cat.minCredits;
+  const pickN = cat.pickN;
+  const total = cat.courses.length;
+  if (pickN != null) return completedCount >= pickN && earned >= required;
+  if (total === 0) return required === 0;
+  return completedCount === total && earned >= required;
+}
+
 /** Calculate earned & required credits for a category */
 function _calcCategoryCredits(catKey) {
   const cat = _programme.categories[catKey];
-  if (!cat) return { earned: 0, required: 0 };
+  if (!cat) return { earned: 0, required: 0, satisfied: true };
 
   let earned = 0;
   let completedCount = 0;
@@ -167,22 +177,35 @@ function _calcCategoryCredits(catKey) {
     }
   }
 
-  return { earned, required: cat.minCredits, completedCount, totalCourses: cat.courses.length, pickN: cat.pickN };
+  return {
+    earned,
+    required: cat.minCredits,
+    completedCount,
+    totalCourses: cat.courses.length,
+    pickN: cat.pickN,
+    satisfied: _categorySatisfied(cat, earned, completedCount),
+  };
 }
 
 /** Overall graduation progress */
 function _calcGraduationProgress() {
-  let totalEarned = 0;
-  let totalRequired = 0;
+  // De-duplicate totalEarned across categories: a completed course's credits
+  // count once even if listed in multiple categories (mirrors backend).
+  const completedGlobal = new Map(); // courseId -> credits
   const categories = [];
 
   for (const [catKey, cat] of Object.entries(_programme.categories)) {
     const info = _calcCategoryCredits(catKey);
-    totalEarned += info.earned;
-    totalRequired += cat.minCredits;
+    for (const courseId of cat.courses) {
+      if (_getProgress(courseId) === "completed") {
+        const course = _courses.find((c) => c.id === courseId);
+        if (course) completedGlobal.set(courseId, course.credits);
+      }
+    }
     categories.push({ key: catKey, ...info, color: cat.color, courses: cat.courses, pickN: cat.pickN });
   }
 
+  const totalEarned = [...completedGlobal.values()].reduce((a, b) => a + b, 0);
   return {
     totalEarned,
     totalRequired: _programme.totalCredits,
@@ -197,10 +220,15 @@ function _getRecommendations(maxResults = 3) {
   const grad = _calcGraduationProgress();
 
   for (const cat of grad.categories) {
-    if (cat.earned >= cat.required) continue;
+    if (cat.satisfied) continue;
+
+    // For a pick_n pool, cap recommendations at the remaining slot count.
+    const deficit = cat.pickN != null ? Math.max(0, cat.pickN - cat.completedCount) : Infinity;
+    let recommendedHere = 0;
 
     // Find not-started courses in this category whose prereqs are met
     for (const courseId of cat.courses) {
+      if (recommendedHere >= deficit) break;
       const course = _courses.find((c) => c.id === courseId);
       if (!course) continue;
 
@@ -210,7 +238,8 @@ function _getRecommendations(maxResults = 3) {
       const prereqs = _parsePrereqs(course.prerequisites);
       if (prereqs.length > 0 && !_prereqsMet(prereqs)) continue;
 
-      recs.push({ course, catKey: cat.key, needed: cat.required - cat.earned });
+      recs.push({ course, catKey: cat.key, needed: Math.max(0, cat.required - cat.earned) });
+      recommendedHere++;
       if (recs.length >= maxResults) return recs;
     }
   }
@@ -929,7 +958,7 @@ function _renderGraduationDashboard(container, grad) {
 
   for (const cat of grad.categories) {
     const row = document.createElement("div");
-    row.className = "category-progress-row";
+    row.className = "category-progress-row" + (cat.satisfied ? " cat-satisfied" : "");
 
     const rowHeader = document.createElement("div");
     rowHeader.className = "flex justify-between items-center mb-1";
@@ -940,12 +969,11 @@ function _renderGraduationDashboard(container, grad) {
     rowHeader.appendChild(catLabel);
 
     const creditLabel = document.createElement("span");
-    creditLabel.className = "text-sm text-gray-500";
-    if (cat.pickN) {
-      creditLabel.textContent = t("planner.pick_courses", { pick: cat.pickN, total: cat.totalCourses }) + ` — ${cat.earned}/${cat.required}`;
-    } else {
-      creditLabel.textContent = `${cat.earned}/${cat.required} cr`;
-    }
+    creditLabel.className = "text-sm " + (cat.satisfied ? "text-emerald-600 font-medium" : "text-gray-500");
+    const crText = cat.pickN
+      ? t("planner.pick_courses", { pick: cat.pickN, total: cat.totalCourses }) + ` — ${cat.earned}/${cat.required}`
+      : `${cat.earned}/${cat.required} cr`;
+    creditLabel.textContent = cat.satisfied ? `✓ ${crText}` : crText;
     rowHeader.appendChild(creditLabel);
 
     row.appendChild(rowHeader);
@@ -958,6 +986,12 @@ function _renderGraduationDashboard(container, grad) {
 
   overviewRow.appendChild(catList);
   overviewCard.appendChild(overviewRow);
+
+  const estimateNote = document.createElement("p");
+  estimateNote.className = "text-xs text-gray-400 mt-4";
+  estimateNote.textContent = t("planner.estimate_disclaimer");
+  overviewCard.appendChild(estimateNote);
+
   section.appendChild(overviewCard);
   container.appendChild(section);
 }

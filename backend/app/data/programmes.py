@@ -18,6 +18,11 @@ Course IDs must match the ``id`` column in the ``courses`` table
 
 PROGRAMMES = {
     # ── DSAI (Data Science & AI) — fully populated ────────────────────────
+    # Graduation requirements mirror HKMU's public Programme Requirements
+    # PDF (https://www.hkmu.edu.hk/st/computing/programmes/). Note: the PDF's
+    # own category breakdown sums to 123 cr (84+12+6+6+6+9) while its stated
+    # total is 120 cr — an inconsistency in the official PDF itself. We
+    # reproduce the breakdown verbatim; total_credits stays 120.
     "BSCHDSAIJ": {
         "code": "BSCHDSAIJ",
         "name": {
@@ -41,8 +46,10 @@ PROGRAMMES = {
                     # Year 3
                     "COMP3200SEF", "COMP3500SEF", "STAT3660SEF", "COMP3130SEF",
                     "COMP3510SEF", "COMP3920SEF", "STAT3110SEF", "COMP4820SEF",
-                    # Year 4
-                    "COMP3810SEF", "COMP4330SEF", "COMP4610SEF", "COMP4930SEF",
+                    # Year 4 (COMP4610SEF is the 6-cr Project — see `project`
+                    # category below; it must NOT also live in core, or its
+                    # credits get double-counted toward graduation.)
+                    "COMP3810SEF", "COMP4330SEF", "COMP4930SEF",
                     "COMP4210SEF", "COMP4600SEF",
                 ],
             },

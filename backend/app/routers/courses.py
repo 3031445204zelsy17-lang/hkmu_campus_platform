@@ -8,8 +8,11 @@ from ..models import (
     CourseReviewCreate, CourseReviewOut, PaginatedResponse,
 )
 from ..data.programmes import PROGRAMMES, DEFAULT_PROGRAMME_CODE, get_programme
+from ..data.ge_courses import (
+    GE_FIELD_ORDER, PROGRAMME_GE_FIELDS, ge_courses_for,
+)
 from ..services.cache import TTLCache
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 # Cap on a single batch progress update (Codex [25]) — without it a client could
 # POST thousands of items and force a long transaction of N existence checks +
@@ -123,6 +126,8 @@ class CategoryProgressOut(BaseModel):
     pick_n: int | None = None
     completed_count: int
     total_courses: int
+    satisfied: bool = False
+    missing_course_ids: list[str] = Field(default_factory=list)
 
 
 class RecommendedCourseOut(BaseModel):
@@ -142,6 +147,23 @@ class GraduationStatusOut(BaseModel):
     percent: float
     categories: list[CategoryProgressOut]
     recommendations: list[RecommendedCourseOut]
+    all_categories_satisfied: bool = False
+
+
+class GECourseOut(BaseModel):
+    code: str
+    name_en: str
+    name_zh: str
+    field: str
+    school: str
+    blocked: bool = False  # in the student's own programme field → cannot take
+
+
+class GEListOut(BaseModel):
+    programme_code: str | None = None
+    own_fields: list[str] = Field(default_factory=list)
+    field_order: list[str] = Field(default_factory=list)
+    courses: list[GECourseOut]
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -273,46 +295,89 @@ def _parse_prereqs(raw) -> list[str]:
     return []
 
 
+def _category_satisfied(cat: dict, earned: int, completed_count: int) -> bool:
+    """Whether a category's graduation requirement is met.
+
+    - pick_n pool (electives): need >= pick_n courses AND >= min_credits
+    - required pool (core/project/...): every listed course completed AND
+      >= min_credits. With DSAI's current data the pool's own credit sum
+      equals min_credits, so "all completed" and "credits met" coincide —
+      but both are checked so a future pool larger than min_credits can't
+      be satisfied by skipping a required course.
+    - empty pool: satisfied iff no credits are required.
+    """
+    required = cat.get("min_credits", 0)
+    pick_n = cat.get("pick_n")
+    total = len(cat.get("courses", []))
+    if pick_n is not None:
+        return completed_count >= pick_n and earned >= required
+    if total == 0:
+        return required == 0
+    return completed_count == total and earned >= required
+
+
 def _compute_graduation(
     prog: dict, course_rows: dict, progress: dict
-) -> tuple[list[CategoryProgressOut], int, list[RecommendedCourseOut]]:
+) -> tuple[list[CategoryProgressOut], int, list[RecommendedCourseOut], bool]:
     """Mirror of the web client's graduation math.
 
     course_rows: {course_id: {"id","code","name","credits","prerequisites"}}
     progress:    {course_id: status}
-    Returns (categories, total_earned, recommendations).
+    Returns (categories, total_earned, recommendations, all_satisfied).
+
+    total_earned is de-duplicated across categories: a completed course's
+    credits count once even if (erroneously) listed in multiple categories,
+    so the grand total never exceeds the student's real earned credits.
+    Per-category earned_credits still reflect that category's own pool.
     """
     categories: list[CategoryProgressOut] = []
     recs: list[RecommendedCourseOut] = []
-    total_earned = 0
+    completed_global: dict[str, int] = {}  # course_id -> credits (deduped)
+    all_satisfied = True
 
     for key, cat in prog.get("categories", {}).items():
         required = cat.get("min_credits", 0)
+        pick_n = cat.get("pick_n")
+        course_ids = cat.get("courses", [])
         earned = 0
         completed_count = 0
-        for cid in cat.get("courses", []):
+        missing: list[str] = []
+        for cid in course_ids:
             course = course_rows.get(cid)
             if not course:
                 continue
             if progress.get(cid) == "completed":
                 earned += course["credits"]
                 completed_count += 1
+                completed_global[cid] = course["credits"]
+            else:
+                missing.append(cid)
+
+        satisfied = _category_satisfied(cat, earned, completed_count)
+        if not satisfied:
+            all_satisfied = False
 
         categories.append(CategoryProgressOut(
             key=key,
             min_credits=required,
             earned_credits=earned,
             color=cat.get("color", "blue"),
-            pick_n=cat.get("pick_n"),
+            pick_n=pick_n,
             completed_count=completed_count,
-            total_courses=len(cat.get("courses", [])),
+            total_courses=len(course_ids),
+            satisfied=satisfied,
+            missing_course_ids=missing,
         ))
-        total_earned += earned
 
-        # Recommend not-started courses whose prereqs are met, while unsatisfied.
-        if earned < required:
-            for cid in cat.get("courses", []):
+        # Recommend not-started courses (prereqs met) only while the category
+        # is unsatisfied; for a pick_n pool, cap at the remaining slot count.
+        if not satisfied:
+            deficit = max(0, pick_n - completed_count) if pick_n is not None else None
+            recommended_here = 0
+            for cid in course_ids:
                 if len(recs) >= 3:
+                    break
+                if deficit is not None and recommended_here >= deficit:
                     break
                 course = course_rows.get(cid)
                 if not course:
@@ -328,10 +393,12 @@ def _compute_graduation(
                     name=course["name"],
                     credits=course["credits"],
                     category_key=key,
-                    needed_credits=required - earned,
+                    needed_credits=max(0, required - earned),
                 ))
+                recommended_here += 1
 
-    return categories, total_earned, recs
+    total_earned = sum(completed_global.values())
+    return categories, total_earned, recs, all_satisfied
 
 
 @router.get("/programmes", response_model=ProgrammeCatalogueOut)
@@ -515,7 +582,7 @@ async def get_graduation_status(
             recommendations=[],
         )
 
-    categories, total_earned, recs = _compute_graduation(prog, course_rows, progress)
+    categories, total_earned, recs, all_satisfied = _compute_graduation(prog, course_rows, progress)
     total_required = prog.get("total_credits", 0)
     pct = min(100.0, total_earned / total_required * 100) if total_required > 0 else 0.0
 
@@ -527,6 +594,25 @@ async def get_graduation_status(
         percent=round(pct, 1),
         categories=categories,
         recommendations=recs,
+        all_categories_satisfied=all_satisfied,
+    )
+
+
+@router.get("/ge", response_model=GEListOut)
+async def list_ge_courses(programme_code: str | None = None):
+    """General Education course pool (3-credit-unit, 2026/27 AY). Public.
+
+    Returns every GE course on offer, each flagged ``blocked`` if it falls in
+    the given programme's own 'field of study' — the student may not take GE
+    from their own field. Group/field order follows the official guide.
+    """
+    own = PROGRAMME_GE_FIELDS.get(programme_code or "", [])
+    courses = [GECourseOut(**c) for c in ge_courses_for(programme_code)]
+    return GEListOut(
+        programme_code=programme_code,
+        own_fields=own,
+        field_order=list(GE_FIELD_ORDER),
+        courses=courses,
     )
 
 
