@@ -7,6 +7,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
 from app.database import init_db  # noqa: E402 — sys.path set above
+from app.data.ge_courses import GE_COURSES  # noqa: E402 — real 2026/27 GE pool
 from passlib.context import CryptContext
 from dotenv import load_dotenv
 
@@ -85,6 +86,26 @@ async def seed():
             except Exception as e:
                 print(f"  skip {c['id']}: {e}")
 
+        # Insert GE courses (real 2026/27 pool from ge_courses.py — gives each
+        # a courses-table id so PUT /courses/progress can mark them, and the
+        # graduation calc can count them toward general-ed). GE courses are
+        # cross-programme, so year/semester carry sentinel defaults that the
+        # planner's by-year grouping ignores.
+        ge_inserted = 0
+        for g in GE_COURSES:
+            gid = g["code"].replace(" ", "")
+            try:
+                await conn.execute(
+                    """INSERT INTO courses (id, code, name, credits, category, year, semester, prerequisites, description)
+                       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                       ON CONFLICT (id) DO NOTHING""",
+                    gid, g["code"], g["name_en"], 3, "general-ed",
+                    0, "any", "[]", f"{g['name_zh']} · {g['field']}",
+                )
+                ge_inserted += 1
+            except Exception as e:
+                print(f"  skip GE {gid}: {e}")
+
         # Create test user
         test_pw = pwd_ctx.hash("test123456")
         try:
@@ -99,8 +120,9 @@ async def seed():
 
         # Verify
         count = await conn.fetchval("SELECT COUNT(*) FROM courses")
+        ge_count = await conn.fetchval("SELECT COUNT(*) FROM courses WHERE category = 'general-ed'")
         user_count = await conn.fetchval("SELECT COUNT(*) FROM users")
-        print(f"Seeded {inserted} courses ({count} in DB), {user_count} users")
+        print(f"Seeded {inserted} courses + {ge_inserted} GE ({count} in DB, {ge_count} GE), {user_count} users")
 
     finally:
         await conn.close()

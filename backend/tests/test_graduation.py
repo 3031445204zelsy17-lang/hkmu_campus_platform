@@ -10,6 +10,7 @@ DB or HTTP client needed. Locks in the fixes for:
 """
 from backend.app.data.programmes import PROGRAMMES
 from backend.app.routers.courses import _category_satisfied, _compute_graduation
+from backend.app.data.ge_courses import ge_courses_for
 
 
 def _row(cid, credits=3, prereqs=None):
@@ -104,3 +105,89 @@ def test_elective_pickn_satisfied_not_recommended():
     assert bykey["elective"].satisfied is True
     assert all(r.category_key != "elective" for r in recs), \
         "elective still recommended despite being satisfied"
+
+
+# --- GE dynamic pool (pool="ge"): field-diverse picks, own field blocked ------
+# These use the REAL DSAI programme + real ge_courses_for() data, so they also
+# guard the ge_courses.py / programmes.py wiring end-to-end.
+
+def test_ge_pool_two_different_fields_satisfied():
+    """Completing 2 GE courses from different fields satisfies general-ed
+    (pick_n=2, 6cr) and the 6 credits count toward the grand total."""
+    prog = PROGRAMMES["BSCHDSAIJ"]
+    ge = ge_courses_for("BSCHDSAIJ")
+    picks, fields = [], set()
+    for c in ge:
+        if c["blocked"] or c["field"] in fields:
+            continue
+        picks.append(c); fields.add(c["field"])
+        if len(picks) == 2:
+            break
+    assert len(picks) == 2, "test data needs >=2 unblocked GE fields"
+    rows = {c["id"]: _row(c["id"], credits=3) for c in picks}
+    progress = {c["id"]: "completed" for c in picks}
+    cats, total, recs, all_sat = _compute_graduation(prog, rows, progress)
+    ge_cat = {c.key: c for c in cats}["general-ed"]
+    assert ge_cat.completed_count == 2
+    assert ge_cat.earned_credits == 6
+    assert ge_cat.satisfied is True
+    assert total == 6  # GE credits reach the grand total (deduped)
+
+
+def test_ge_pool_same_field_only_counts_one():
+    """Two completed GE courses from the SAME field: the official 'distinct
+    field' rule drops the second -> only 1 counts, pool stays unsatisfied."""
+    prog = PROGRAMMES["BSCHDSAIJ"]
+    ge = ge_courses_for("BSCHDSAIJ")
+    by_field = {}
+    for c in ge:
+        if not c["blocked"]:
+            by_field.setdefault(c["field"], []).append(c)
+    same = next((v for v in by_field.values() if len(v) >= 2), None)
+    assert same, "test data needs a GE field with >=2 unblocked courses"
+    picks = same[:2]
+    rows = {c["id"]: _row(c["id"], credits=3) for c in picks}
+    progress = {c["id"]: "completed" for c in picks}
+    cats, total, recs, all_sat = _compute_graduation(prog, rows, progress)
+    ge_cat = {c.key: c for c in cats}["general-ed"]
+    assert ge_cat.completed_count == 1  # field dedup drops the 2nd
+    assert ge_cat.earned_credits == 3
+    assert ge_cat.satisfied is False  # needs 2 distinct fields, has 1
+
+
+def test_ge_pool_own_field_blocked():
+    """DSAI's own field is Mathematics & Statistics; a completed GE there is
+    blocked and must not count toward earned credits or the grand total."""
+    prog = PROGRAMMES["BSCHDSAIJ"]
+    ge = ge_courses_for("BSCHDSAIJ")
+    blocked_pick = next(c for c in ge if c["blocked"])
+    rows = {blocked_pick["id"]: _row(blocked_pick["id"], credits=3)}
+    progress = {blocked_pick["id"]: "completed"}
+    cats, total, recs, all_sat = _compute_graduation(prog, rows, progress)
+    ge_cat = {c.key: c for c in cats}["general-ed"]
+    assert ge_cat.completed_count == 0
+    assert ge_cat.earned_credits == 0
+    assert ge_cat.satisfied is False
+    assert total == 0  # blocked course never reaches the grand total
+
+
+def test_ge_pool_recommendations_avoid_used_and_blocked_fields():
+    """With 1 GE completed, general-ed recommends a follow-up GE whose field
+    is neither the already-used field nor a blocked (own-programme) field."""
+    prog = PROGRAMMES["BSCHDSAIJ"]
+    ge = ge_courses_for("BSCHDSAIJ")
+    first = next(c for c in ge if not c["blocked"])
+    # In production graduation-status fetches ALL GE rows (all_ids splices them
+    # in), so recommendations can read any candidate's credits; mirror that.
+    rows = {c["id"]: _row(c["id"], credits=3) for c in ge}
+    progress = {first["id"]: "completed"}
+    cats, total, recs, all_sat = _compute_graduation(prog, rows, progress)
+    ge_recs = [r for r in recs if r.category_key == "general-ed"]
+    assert len(ge_recs) >= 1, "unsatisfied GE pool should recommend a course"
+    used_field = first["field"]
+    blocked_fields = {c["field"] for c in ge if c["blocked"]}
+    for r in ge_recs:
+        match = next((c for c in ge if c["id"] == r.course_id), None)
+        assert match, f"recommended {r.course_id} is not in the GE pool"
+        assert match["field"] != used_field, "recommended a same-field GE"
+        assert match["field"] not in blocked_fields, "recommended a blocked GE"

@@ -200,7 +200,10 @@ def ge_courses_for(programme_code: str | None) -> list[dict]:
     ranked = {f: i for i, f in enumerate(GE_FIELD_ORDER)}
     out = []
     for c in GE_COURSES:
-        out.append({**c, "blocked": c["field"] in own})
+        # `id` mirrors the courses-table PK (code with spaces stripped) so the
+        # frontend GE picker can PUT /courses/progress and _compute_graduation
+        # can join GE picks back to their credits via course_rows.
+        out.append({**c, "blocked": c["field"] in own, "id": c["code"].replace(" ", "")})
     out.sort(key=lambda c: (ranked.get(c["field"], 99), c["code"]))
     return out
 

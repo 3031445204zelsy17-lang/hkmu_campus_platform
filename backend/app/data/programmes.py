@@ -75,7 +75,13 @@ PROGRAMMES = {
             "general-ed": {
                 "min_credits": 6,
                 "color": "pink",
-                "courses": ["GEN001", "GEN002"],
+                "pick_n": 2,  # take 2 GE courses, each from a DIFFERENT field
+                # Dynamic GE pool: _compute_graduation resolves the real GE
+                # course list from ge_courses_for() + the courses table (seeded
+                # by seed_courses.py). GEN001/GEN002 were placeholders — retired
+                # (kept harmlessly in seed, no longer referenced here).
+                "pool": "ge",
+                "courses": [],
             },
             "university-core": {
                 "min_credits": 9,
@@ -88,7 +94,6 @@ PROGRAMMES = {
             "IT1020SEF": "completed",
             "MATH1410SEF": "completed",
             "ENGL1101AEF": "completed",
-            "GEN001": "completed",
             "UNI1002ABW": "completed",
             "UNI1012ABW": "completed",
             "COMP2090SEF": "in_progress",
@@ -96,7 +101,6 @@ PROGRAMMES = {
             "STAT1510SEF": "in_progress",
             "STAT2610SEF": "in_progress",
             "ENGL1202EEF": "in_progress",
-            "GEN002": "in_progress",
         },
     },
 

@@ -151,6 +151,7 @@ class GraduationStatusOut(BaseModel):
 
 
 class GECourseOut(BaseModel):
+    id: str  # courses-table PK (code w/o spaces); drives PUT /courses/progress
     code: str
     name_en: str
     name_zh: str
@@ -338,20 +339,44 @@ def _compute_graduation(
     for key, cat in prog.get("categories", {}).items():
         required = cat.get("min_credits", 0)
         pick_n = cat.get("pick_n")
+        is_ge = cat.get("pool") == "ge"
         course_ids = cat.get("courses", [])
         earned = 0
         completed_count = 0
         missing: list[str] = []
-        for cid in course_ids:
-            course = course_rows.get(cid)
-            if not course:
-                continue
-            if progress.get(cid) == "completed":
-                earned += course["credits"]
+        used_fields: set[str] = set()  # GE: fields already counting toward earned
+        ge_list: list[dict] = []
+
+        if is_ge:
+            # Dynamic GE pool — resolved from ge_courses_for() (field/blocked
+            # metadata) joined with course_rows (credits). GEN001/GEN002 were
+            # placeholders; real GE courses live in the courses table.
+            ge_list = ge_courses_for(prog.get("code"))
+            ge_meta = {c["id"]: {"field": c["field"], "blocked": c["blocked"]} for c in ge_list}
+            for cid, meta in ge_meta.items():
+                if progress.get(cid) != "completed" or meta["blocked"]:
+                    continue
+                # Official GE rule: each course must be from a DIFFERENT field.
+                # A second completed GE in an already-counted field is ignored.
+                if meta["field"] in used_fields:
+                    continue
+                used_fields.add(meta["field"])
+                course = course_rows.get(cid)
+                if course:
+                    earned += course["credits"]
+                    completed_global[cid] = course["credits"]
                 completed_count += 1
-                completed_global[cid] = course["credits"]
-            else:
-                missing.append(cid)
+        else:
+            for cid in course_ids:
+                course = course_rows.get(cid)
+                if not course:
+                    continue
+                if progress.get(cid) == "completed":
+                    earned += course["credits"]
+                    completed_count += 1
+                    completed_global[cid] = course["credits"]
+                else:
+                    missing.append(cid)
 
         satisfied = _category_satisfied(cat, earned, completed_count)
         if not satisfied:
@@ -364,17 +389,28 @@ def _compute_graduation(
             color=cat.get("color", "blue"),
             pick_n=pick_n,
             completed_count=completed_count,
-            total_courses=len(course_ids),
+            total_courses=len(ge_list) if is_ge else len(course_ids),
             satisfied=satisfied,
             missing_course_ids=missing,
         ))
 
-        # Recommend not-started courses (prereqs met) only while the category
-        # is unsatisfied; for a pick_n pool, cap at the remaining slot count.
+        # Recommend not-started courses only while the category is unsatisfied;
+        # for a pick_n pool, cap at the remaining slot count.
         if not satisfied:
             deficit = max(0, pick_n - completed_count) if pick_n is not None else None
             recommended_here = 0
-            for cid in course_ids:
+            # GE recommends unblocked, not-started courses whose field isn't
+            # already earned (field diversity); required pools walk course_ids.
+            if is_ge:
+                cand_ids = [
+                    c["id"] for c in ge_list
+                    if not c["blocked"]
+                    and progress.get(c["id"]) not in ("completed", "in_progress")
+                    and c["field"] not in used_fields
+                ]
+            else:
+                cand_ids = course_ids
+            for cid in cand_ids:
                 if len(recs) >= 3:
                     break
                 if deficit is not None and recommended_here >= deficit:
@@ -382,11 +418,12 @@ def _compute_graduation(
                 course = course_rows.get(cid)
                 if not course:
                     continue
-                if progress.get(cid) in ("completed", "in_progress"):
-                    continue
-                prereqs = _parse_prereqs(course.get("prerequisites"))
-                if prereqs and not all(progress.get(p) == "completed" for p in prereqs):
-                    continue
+                if not is_ge:
+                    if progress.get(cid) in ("completed", "in_progress"):
+                        continue
+                    prereqs = _parse_prereqs(course.get("prerequisites"))
+                    if prereqs and not all(progress.get(p) == "completed" for p in prereqs):
+                        continue
                 recs.append(RecommendedCourseOut(
                     course_id=course["id"],
                     code=course["code"],
@@ -557,6 +594,10 @@ async def get_graduation_status(
                 cid for cat in prog.get("categories", {}).values()
                 for cid in cat.get("courses", [])
             ]
+            # A pool="ge" category carries an empty courses list; splice in the
+            # real GE ids so their rows (credits) get fetched for the calc.
+            if any(c.get("pool") == "ge" for c in prog.get("categories", {}).values()):
+                all_ids += [c["id"] for c in ge_courses_for(resolved_code)]
             if all_ids:
                 rows = await db.fetch(
                     "SELECT id, code, name, credits, prerequisites "
