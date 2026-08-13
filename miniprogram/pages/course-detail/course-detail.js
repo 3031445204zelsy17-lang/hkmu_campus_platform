@@ -71,6 +71,31 @@ function buildDimDrafts(draftDims, text) {
   }));
 }
 
+// T16: 避坑标签云 — 固定白名单全量渲染(0 票也出,可点即投票),tone 控配色。
+// 键名与后端 models.REVIEW_TAGS 一一对应,i18n key = "tag_" + 键名。
+const TAG_DEFS = [
+  { key: "generous_grading", tone: "good" },
+  { key: "tough_grading", tone: "bad" },
+  { key: "heavy_workload", tone: "warn" },
+  { key: "light_workload", tone: "good" },
+  { key: "high_gain", tone: "good" },
+  { key: "open_book", tone: "good" },
+  { key: "group_project", tone: "bad" },
+  { key: "attendance_strict", tone: "warn" },
+];
+
+function buildTagCloud(raw, text) {
+  const byTag = {};
+  ((raw && raw.tags) || []).forEach((t) => { byTag[t.tag] = t; });
+  return TAG_DEFS.map((d) => ({
+    tag: d.key,
+    tone: d.tone,
+    label: text["tag_" + d.key] || d.key,
+    count: (byTag[d.key] && byTag[d.key].count) || 0,
+    voted: !!(byTag[d.key] && byTag[d.key].voted),
+  }));
+}
+
 // 课程行 → 视图模型。categories/semester/year 标签复用 planner scope(同源学术词汇,不重复造 key)
 function normalizeCourse(raw, plannerText, text) {
   const semKey = String(raw.semester || "").toLowerCase();
@@ -132,6 +157,7 @@ Page({
     reviewsTotal: 0,
     reviewsLoading: true,
     ratingStats: null,
+    tagCloud: [],
     myReviewId: null,
     draftDims: { teaching: 0, workload: 0, gain: 0 },
     dimDrafts: [],
@@ -158,9 +184,12 @@ Page({
         this.loadCourse();
         this.loadReviews();
         this.loadRatingStats();
+        this.loadTagCloud();
       } else if (user && !wasLoggedIn) {
-        // 登录态变化(未登录 → 已登录):重拉课评以拿到 isMine/myReviewId
+        // 登录态变化(未登录 → 已登录):重拉课评以拿到 isMine/myReviewId;
+        // 标签云要带 token 重拉才有 voted 标记
         this.loadReviews();
+        this.loadTagCloud();
       }
 
       if (user) {
@@ -191,6 +220,9 @@ Page({
     if (this._rawStats) {
       update.ratingStats = buildRatingStats(this._rawStats, text);
     }
+    if (this._rawTagCloud) {
+      update.tagCloud = buildTagCloud(this._rawTagCloud, text);
+    }
 
     this.setData(update);
   },
@@ -209,7 +241,7 @@ Page({
   },
 
   onPullDownRefresh() {
-    const tasks = [this.loadCourse(), this.loadReviews(), this.loadRatingStats()];
+    const tasks = [this.loadCourse(), this.loadReviews(), this.loadRatingStats(), this.loadTagCloud()];
     if (this.data.loggedIn) {
       tasks.push(this.loadProgress());
     }
@@ -328,6 +360,63 @@ Page({
         this.setData({ ratingStats: buildRatingStats(stats, this.data.text) });
       })
       .catch(() => {});
+  },
+
+  // T16: 避坑标签云(登录态带 token 才有 voted 标记;失败不阻塞)
+  loadTagCloud() {
+    if (!this.data.courseId) {
+      return Promise.resolve();
+    }
+    return request({
+      path: `/courses/${encodeURIComponent(this.data.courseId)}/review-tags`,
+      auth: this.data.loggedIn,
+    })
+      .then((raw) => {
+        this._rawTagCloud = raw;
+        this.setData({ tagCloud: buildTagCloud(raw, this.data.text) });
+      })
+      .catch(() => {});
+  },
+
+  // T16: 点标签 → 投票/撤票(乐观更新,失败回滚)
+  onTagVote(e) {
+    if (!this.data.loggedIn) {
+      this.goLogin();
+      return;
+    }
+    const tag = e.currentTarget.dataset.tag;
+    const cur = (this.data.tagCloud || []).find((t) => t.tag === tag);
+    if (!tag || !cur || this._tagLock) {
+      return;
+    }
+    this._tagLock = true;
+    const prevCloud = this.data.tagCloud;
+    const nextVoted = !cur.voted;
+    this.setData({
+      tagCloud: prevCloud.map((t) =>
+        t.tag === tag
+          ? Object.assign({}, t, {
+              voted: nextVoted,
+              count: Math.max(0, t.count + (nextVoted ? 1 : -1)),
+            })
+          : t,
+      ),
+    });
+    request({
+      method: nextVoted ? "POST" : "DELETE",
+      path: `/courses/${encodeURIComponent(this.data.courseId)}/review-tags/${tag}`,
+      auth: true,
+    })
+      .then(() => {
+        this._rawTagCloud = null; // 原始缓存失效,下次进页重拉对齐计数
+      })
+      .catch(() => {
+        this.setData({ tagCloud: prevCloud }); // 回滚
+        wx.showToast({ title: this.data.text.actionFail, icon: "none" });
+      })
+      .finally(() => {
+        this._tagLock = false;
+      });
   },
 
   // ── 内联标记(复用 PUT /courses/progress,与 planner 同语义)──

@@ -326,3 +326,51 @@
   gap: 10rpx;
   margin-bottom: 6rpx;
 }
+
+/* ── T16: 避坑标签云(点投票;tone: good/warn/bad) ── */
+.tags-hint {
+  margin-bottom: 14rpx;
+  font-size: var(--fs-feed-meta);
+  color: var(--text-secondary);
+}
+
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+}
+
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 10rpx 20rpx;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-feed-meta);
+  font-weight: 600;
+  border: 2rpx solid transparent;
+}
+
+.tag-pill.good {
+  background: var(--pill-green-bg);
+  color: var(--green-deep);
+}
+
+.tag-pill.warn {
+  background: rgba(245, 158, 11, 0.14);
+  color: #B45309;
+}
+
+.tag-pill.bad {
+  background: var(--danger-pill-bg);
+  color: var(--danger-text);
+}
+
+.tag-pill.tag-voted {
+  border-color: currentColor;
+}
+
+.tag-count {
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}

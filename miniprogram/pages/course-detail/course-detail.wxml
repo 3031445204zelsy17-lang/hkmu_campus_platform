@@ -92,6 +92,26 @@
       </block>
     </view>
 
+    <!-- T16: 避坑标签云(点投票,全量 8 标签) -->
+    <view class="web-panel tags-section">
+      <view class="reviews-header">
+        <text class="section-title">{{text.tagsTitle}}</text>
+      </view>
+      <view class="tags-hint">{{text.tagsHint}}</view>
+      <view class="tag-cloud">
+        <view
+          wx:for="{{tagCloud}}"
+          wx:key="tag"
+          class="tag-pill {{item.tone}} {{item.voted ? 'tag-voted' : ''}}"
+          data-tag="{{item.tag}}"
+          bindtap="onTagVote"
+        >
+          <text>{{item.voted ? '✓ ' : ''}}{{item.label}}</text>
+          <text class="tag-count">{{item.count}}</text>
+        </view>
+      </view>
+    </view>
+
     <!-- 发课评(登录 + 未评过)— T15 三维 composer(给分/工作量/收获) -->
     <view wx:if="{{loggedIn && !myReviewId}}" class="web-panel review-composer">
       <view class="star-hint">{{text.reviewDimHint}}</view>
