@@ -232,7 +232,7 @@
       "name": "教程配置端点",
       "description": "GET /courses/ge/guide 返 select_url(CLASS_SEARCH)+pdf_url+tutorial_steps(4步文案)，无图片",
       "dependencies": [],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T23",

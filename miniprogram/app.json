@@ -15,7 +15,8 @@
     "pages/new-chat/new-chat",
     "pages/privacy/privacy",
     "pages/terms/terms",
-    "pages/feedback/feedback"
+    "pages/feedback/feedback",
+    "pages/ge-guide/ge-guide"
   ],
   "window": {
     "navigationBarTitleText": "HKMU Campus",
