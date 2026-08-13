@@ -30,6 +30,9 @@
   margin: 0 0 22rpx;
   padding: 32rpx;
   border-radius: var(--radius-card-lg);
+  /* T08: 绿渐变（原型 --hero-grad），替代纯色 #2E7D52 */
+  background: linear-gradient(135deg, #7fbf4d 0%, #6db344 100%);
+  box-shadow: 0 24rpx 64rpx rgba(109, 179, 68, 0.28);
 }
 
 .planner-shell .planner-title {
@@ -58,6 +61,62 @@
   font-size: 26rpx;
   line-height: 52rpx;
   box-sizing: border-box;
+}
+
+/* ── T08: hero 毕业统计 + conic 进度环（渐变背景见上方 .planner-hero） ── */
+.planner-shell .hero-remain {
+  margin-top: 12rpx;
+  padding-right: 160rpx; /* 避让右侧进度环 */
+  font-size: 34rpx;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #ffffff;
+}
+
+.planner-shell .hero-cr {
+  margin-top: 6rpx;
+  padding-right: 160rpx;
+  font-size: 24rpx;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.planner-shell .hero-ring {
+  position: absolute;
+  right: 32rpx;
+  bottom: 32rpx;
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.planner-shell .hero-ring-in {
+  width: 98rpx;
+  height: 98rpx;
+  border-radius: 50%;
+  /* 内圆取渐变尾色，视觉上从卡面"挖"出环 */
+  background: #6db344;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.planner-shell .hero-ring-pct {
+  font-size: 26rpx;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #ffffff;
+}
+
+.planner-shell .hero-ring-lab {
+  margin-top: 2rpx;
+  font-size: 18rpx;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 /* 专业选择器 */

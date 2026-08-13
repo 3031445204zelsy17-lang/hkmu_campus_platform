@@ -854,12 +854,14 @@ Page({
       programmeSearchEmpty = !!pq && searchGroups.length === 0;
     }
 
+    // T07: 入学学期 → 当前学年/毕业年（T08 hero 毕业年、T10 下学期建议、T11 年份 tab 数据源）。
+    // entry_term 未存（老用户/未走引导）→ null，消费方 wx:if 降级隐藏。
+    const studyInfo = computeStudyInfo(this._user && this._user.entry_term, new Date());
+
     const view = {
       locale,
       text,
-      // T07: 入学学期 → 当前学年/毕业年（T08 hero 毕业年、T10 下学期建议、T11 年份 tab 数据源）。
-      // entry_term 未存（老用户/未走引导）→ null，消费方 wx:if 降级隐藏。
-      studyInfo: computeStudyInfo(this._user && this._user.entry_term, new Date()),
+      studyInfo,
       loading: this._loading,
       loggedIn: !!this._user,
       programmeOptions: pickerList,
@@ -959,6 +961,24 @@ Page({
         earned: status.earned_credits,
         total: status.total_credits,
       });
+      // T08: hero 绿渐变卡统计 —— 距毕业学分 + 进度行（有 entry_term 才拼毕业年）
+      const gradSemLabel = studyInfo
+        ? (studyInfo.gradSem === "spring" ? text.heroSemSpring : text.heroSemAutumn)
+        : "";
+      const gradLabel = studyInfo
+        ? (locale === "en"
+            ? gradSemLabel + " " + studyInfo.gradYear
+            : studyInfo.gradYear + " " + gradSemLabel)
+        : "";
+      view.heroStat = {
+        remainText: fillTemplate(text.heroRemaining, {
+          n: Math.max((status.total_credits || 0) - (status.earned_credits || 0), 0),
+        }),
+        progressLine: fillTemplate(text.heroProgress, {
+          earned: status.earned_credits,
+          total: status.total_credits,
+        }) + (gradLabel ? " · " + gradLabel : ""),
+      };
       view.categoriesView = (status.categories || []).map((c) => ({
         key: c.key,
         label: text.categories[c.key] || c.key,

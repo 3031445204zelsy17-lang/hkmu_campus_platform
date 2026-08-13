@@ -79,21 +79,37 @@
     </view>
   </view>
 
-  <!-- Hero：专业名（纯展示）+ 总进度。换专业入口移至 profile 页（T03）；首次无专业时由 _maybePromptProgramme 自动弹引导浮层 -->
+  <!-- Hero：专业名（纯展示）+ 毕业统计。换专业入口移至 profile 页（T03）；首次无专业时由 _maybePromptProgramme 自动弹引导浮层 -->
   <view class="planner-hero {{loggedIn && !comingSoon && viewMode==='planning' ? 'has-score' : ''}}">
     <view class="planner-hero-info">
       <view class="planner-kicker">{{programmeSchool}}</view>
       <view class="planner-title-row">
         <text class="planner-title">{{programmeName}}</text>
       </view>
-      <view class="planner-copy">
+      <!-- T08: 距毕业学分 + 进度行(· 毕业年)；无 status 时回退原 copy 分支 -->
+      <block wx:if="{{heroStat}}">
+        <view class="hero-remain">{{heroStat.remainText}}</view>
+        <view class="hero-cr">{{heroStat.progressLine}}</view>
+      </block>
+      <view wx:else class="planner-copy">
         <block wx:if="{{viewMode==='catalogue'}}">{{text.catalogueHeroCopy}}</block>
         <block wx:elif="{{loggedIn && !comingSoon}}">{{creditsSummary}}</block>
         <block wx:elif="{{comingSoon}}">{{text.comingSoonCopy}}</block>
         <block wx:else>{{text.heroCopy}}</block>
       </view>
     </view>
-    <view wx:if="{{loggedIn && !comingSoon && viewMode==='planning'}}" class="planner-score">{{percent}}%</view>
+    <!-- T08: conic-gradient 毕业进度环（替代 planner-score 药丸；status 未到时仍回退药丸） -->
+    <view
+      wx:if="{{heroStat}}"
+      class="hero-ring"
+      style="background: conic-gradient(#ffffff {{percent}}%, rgba(255,255,255,0.32) 0)"
+    >
+      <view class="hero-ring-in">
+        <text class="hero-ring-pct">{{percent}}%</text>
+        <text class="hero-ring-lab">{{text.heroRingLabel}}</text>
+      </view>
+    </view>
+    <view wx:elif="{{loggedIn && !comingSoon && viewMode==='planning'}}" class="planner-score">{{percent}}%</view>
   </view>
 
   <!-- 总览/我的课程 切换 -->
