@@ -212,6 +212,7 @@ Page({
   _idToCourse: null,        // {course_id: course 对象}
   _progress: null,          // /courses/progress/me → {course_id: status}
   _activeYear: null,        // T11: 课表展示学年(1-4);首次算出 studyInfo 时按当前学年初始化
+  _viewTab: "plan",         // T12: 二级视图 "plan"(合并规划屏) | "courses"(全课程列表);"通识"项开 GE 浮层
   _searchKeyword: "",
   _searchTimer: null,
   _courseCatalogue: null,        // /courses/catalogue/programmes (全校 ~107 专业 browse 目录)
@@ -777,6 +778,19 @@ Page({
     }
   },
 
+  // T12: 二级 seg(规划/课程/通识)— 通识项直接开 GE 浮层,不切内联视图
+  onViewSegTap(e) {
+    const tab = e.currentTarget.dataset.tab;
+    if (tab === "ge") {
+      this.onOpenGePicker();
+      return;
+    }
+    if ((tab === "plan" || tab === "courses") && tab !== this._viewTab) {
+      this._viewTab = tab;
+      this._emit();
+    }
+  },
+
   onSearchInput(e) {
     const kw = (e.detail.value || "").trim().toLowerCase();
     if (this._searchTimer) clearTimeout(this._searchTimer);
@@ -905,6 +919,7 @@ Page({
       categoriesView: [],
       recommendations: [],
       heroCopy: "",
+      viewSeg: this._viewTab,
       activeYear: 0,
       yearsView: [],
       searchKeyword: this._searchKeyword,
@@ -1057,7 +1072,10 @@ Page({
         active: n === this._activeYear,
       }));
       if (this._idToCourse && this._progress) {
-        view.coursesView = buildCoursesView(prog, this._idToCourse, this._progress, this._searchKeyword, text, { year: this._activeYear });
+        // T12: 规划视图出当前学年两学期;课程视图出全量分组(带搜索)
+        view.coursesView = this._viewTab === "courses"
+          ? buildCoursesView(prog, this._idToCourse, this._progress, this._searchKeyword, text)
+          : buildCoursesView(prog, this._idToCourse, this._progress, this._searchKeyword, text, { year: this._activeYear });
       }
     } else if (prog.coming_soon) {
       view.heroCopy = text.comingSoonCopy;

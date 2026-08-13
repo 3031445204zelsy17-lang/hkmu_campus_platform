@@ -187,72 +187,109 @@
     </view>
   </view>
 
-  <!-- T11: 已登录合并一屏 — 分类竖条 + 建议 + 年份 seg + 该学年两学期课表（去总览/课程 tab 分离） -->
+  <!-- T11+T12: 已登录 — 二级 seg(规划/课程/通识)；通识项点按开 GE 浮层 -->
   <block wx:elif="{{loggedIn}}">
-    <view class="web-panel">
-      <view class="section-title">{{text.categoriesTitle}}</view>
-      <!-- T09: 6 类竖条（2 列网格）；通识格点按开 GE 浮层 -->
-      <view class="cat-grid">
+    <view class="seg-bar view-seg">
+      <view class="seg-item {{viewSeg==='plan'?'seg-on':''}}" data-tab="plan" bindtap="onViewSegTap">{{text.segPlan}}</view>
+      <view class="seg-item {{viewSeg==='courses'?'seg-on':''}}" data-tab="courses" bindtap="onViewSegTap">{{text.segCourses}}</view>
+      <view class="seg-item" data-tab="ge" bindtap="onViewSegTap">{{text.segGe}} ▸</view>
+    </view>
+
+    <!-- 规划视图：分类竖条 + 建议 + 年份 seg + 该学年两学期课表 -->
+    <block wx:if="{{viewSeg==='plan'}}">
+      <view class="web-panel">
+        <view class="section-title">{{text.categoriesTitle}}</view>
+        <!-- T09: 6 类竖条（2 列网格）；通识格点按开 GE 浮层 -->
+        <view class="cat-grid">
+          <view
+            wx:for="{{categoriesView}}"
+            wx:key="key"
+            class="cat-cell {{item.hasGePool ? 'cat-cell-ge' : ''}}"
+            data-ge="{{item.hasGePool}}"
+            bindtap="onCatCellTap"
+            hover-class="{{item.hasGePool ? 'cat-cell-hover' : 'none'}}"
+          >
+            <view class="cat-bar">
+              <view class="cat-bar-fill cat-{{item.color}}" style="height: {{item.pct}}%"></view>
+            </view>
+            <view class="cat-line">
+              <text class="cat-label">{{item.label}}</text>
+              <text class="cat-cr">{{item.earned}}/{{item.required}}{{item.done ? ' ✓' : ''}}</text>
+            </view>
+            <text wx:if="{{item.hasGePool}}" class="cat-ge-arrow">▸</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- T10: 系统建议卡（"排进下学期"一句话） -->
+      <view wx:if="{{advice}}" class="advice-card">
+        <text class="advice-ic">◆</text>
+        <text class="advice-txt"><text class="advice-strong">{{advice.heading}}</text>{{advice.text}}</text>
+      </view>
+
+      <!-- 年份 seg：Y1-Y4，当前学年带标记 -->
+      <view class="seg-bar year-seg">
         <view
-          wx:for="{{categoriesView}}"
-          wx:key="key"
-          class="cat-cell {{item.hasGePool ? 'cat-cell-ge' : ''}}"
-          data-ge="{{item.hasGePool}}"
-          bindtap="onCatCellTap"
-          hover-class="{{item.hasGePool ? 'cat-cell-hover' : 'none'}}"
-        >
-          <view class="cat-bar">
-            <view class="cat-bar-fill cat-{{item.color}}" style="height: {{item.pct}}%"></view>
-          </view>
-          <view class="cat-line">
-            <text class="cat-label">{{item.label}}</text>
-            <text class="cat-cr">{{item.earned}}/{{item.required}}{{item.done ? ' ✓' : ''}}</text>
-          </view>
-          <text wx:if="{{item.hasGePool}}" class="cat-ge-arrow">▸</text>
-        </view>
+          wx:for="{{yearsView}}"
+          wx:key="n"
+          class="seg-item {{item.active ? 'seg-on' : ''}}"
+          data-year="{{item.n}}"
+          bindtap="onYearTap"
+        >{{item.label}}<text wx:if="{{item.current}}" class="seg-cur">{{text.yearCurrentTag}}</text></view>
       </view>
-    </view>
 
-    <!-- T10: 系统建议卡（"排进下学期"一句话） -->
-    <view wx:if="{{advice}}" class="advice-card">
-      <text class="advice-ic">◆</text>
-      <text class="advice-txt"><text class="advice-strong">{{advice.heading}}</text>{{advice.text}}</text>
-    </view>
-
-    <!-- 年份 seg：Y1-Y4，当前学年带标记 -->
-    <view class="seg-bar year-seg">
-      <view
-        wx:for="{{yearsView}}"
-        wx:key="n"
-        class="seg-item {{item.active ? 'seg-on' : ''}}"
-        data-year="{{item.n}}"
-        bindtap="onYearTap"
-      >{{item.label}}<text wx:if="{{item.current}}" class="seg-cur">{{text.yearCurrentTag}}</text></view>
-    </view>
-
-    <!-- 该学年两学期课表 -->
-    <block wx:for="{{coursesView.semesters}}" wx:for-item="sem" wx:key="label">
-      <view class="term-header">
-        <text class="term-name">{{sem.label}}</text>
-        <text class="term-cr">{{sem.crTotal}} cr</text>
-      </view>
-      <view wx:for="{{sem.courses}}" wx:for-item="c" wx:key="courseId"
-            class="course-row course-tap"
-            data-course-id="{{c.courseId}}" data-code="{{c.code}}"
-            bindtap="openCourseDetail">
-        <view class="course-main">
-          <view class="course-code">{{c.code}}</view>
-          <view class="course-name">{{c.name}} · {{c.credits}}cr</view>
-          <view wx:if="{{c.prereqLabel}}" class="prereq-row {{c.prereqsMet?'met':'unmet'}}">{{c.prereqLabel}}</view>
+      <!-- 该学年两学期课表 -->
+      <block wx:for="{{coursesView.semesters}}" wx:for-item="sem" wx:key="label">
+        <view class="term-header">
+          <text class="term-name">{{sem.label}}</text>
+          <text class="term-cr">{{sem.crTotal}} cr</text>
         </view>
-        <view wx:if="{{c.statusKey==='completed'}}" class="mini-pill green">{{c.statusLabel}}</view>
-        <view wx:elif="{{c.statusKey==='in_progress'}}" class="mini-pill amber">{{c.statusLabel}}</view>
+        <view wx:for="{{sem.courses}}" wx:for-item="c" wx:key="courseId"
+              class="course-row course-tap"
+              data-course-id="{{c.courseId}}" data-code="{{c.code}}"
+              bindtap="openCourseDetail">
+          <view class="course-main">
+            <view class="course-code">{{c.code}}</view>
+            <view class="course-name">{{c.name}} · {{c.credits}}cr</view>
+            <view wx:if="{{c.prereqLabel}}" class="prereq-row {{c.prereqsMet?'met':'unmet'}}">{{c.prereqLabel}}</view>
+          </view>
+          <view wx:if="{{c.statusKey==='completed'}}" class="mini-pill green">{{c.statusLabel}}</view>
+          <view wx:elif="{{c.statusKey==='in_progress'}}" class="mini-pill amber">{{c.statusLabel}}</view>
+        </view>
+      </block>
+
+      <view wx:if="{{coursesView.empty}}" class="web-panel">
+        <view class="panel-copy">{{text.coursesEmpty}}</view>
       </view>
     </block>
 
-    <view wx:if="{{coursesView.empty}}" class="web-panel">
-      <view class="panel-copy">{{text.coursesEmpty}}</view>
-    </view>
+    <!-- 课程视图：全课程列表（跨学年分组 + 搜索 + 标记） -->
+    <block wx:else>
+      <view class="web-panel planner-search">
+        <input class="search-input" value="{{searchKeyword}}"
+               placeholder="{{text.searchPlaceholder}}" bindinput="onSearchInput" />
+      </view>
+
+      <block wx:for="{{coursesView.semesters}}" wx:for-item="sem" wx:key="label">
+        <view class="sem-header">{{sem.label}}</view>
+        <view wx:for="{{sem.courses}}" wx:for-item="c" wx:key="courseId"
+              class="course-row course-tap"
+              data-course-id="{{c.courseId}}" data-code="{{c.code}}"
+              bindtap="openCourseDetail">
+          <view class="course-main">
+            <view class="course-code">{{c.code}}</view>
+            <view class="course-name">{{c.name}} · {{c.credits}}cr</view>
+            <view wx:if="{{c.prereqLabel}}" class="prereq-row {{c.prereqsMet?'met':'unmet'}}">{{c.prereqLabel}}</view>
+          </view>
+          <view wx:if="{{c.statusKey==='completed'}}" class="mini-pill green">{{c.statusLabel}}</view>
+          <view wx:elif="{{c.statusKey==='in_progress'}}" class="mini-pill amber">{{c.statusLabel}}</view>
+        </view>
+      </block>
+
+      <view wx:if="{{coursesView.empty}}" class="web-panel">
+        <view class="panel-copy">{{text.coursesEmpty}}</view>
+      </view>
+    </block>
   </block>
 
   <!-- 全屏专业搜索浮层：点 hero 触发。搜索引导 + 按学院分组卡片，选完或 ✕ 返回 -->
