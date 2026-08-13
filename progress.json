@@ -13,12 +13,12 @@
     "M1-专业选择", "M2-主屏", "M3-课评", "M4-评分榜", "M5-GE教程", "B-排课台", "C-全专业"
   ],
   "tasks": [
-    {"id": "T01", "phase": "M1-专业选择", "name": "后端 users 加 entry_term", "description": "database.py users DDL 加 entry_term 列(如 2025-autumn) + models UserUpdate + users.py PUT /users/me 接受。默认 null", "dependencies": [], "passes": false},
-    {"id": "T02", "phase": "M1-专业选择", "name": "planner hero 去 ▾ 切换", "description": "planner hero 专业名纯展示(去 onOpenProgrammeSearch ▾)，仅首次自动弹引导", "dependencies": ["T01"], "passes": false},
-    {"id": "T03", "phase": "M1-专业选择", "name": "profile 加切换专业入口", "description": "profile 我的页加'我的专业+切换'行 → 复用 programmeSearch + 确认 → PUT /users/me programme_code", "dependencies": ["T01"], "passes": false},
-    {"id": "T04", "phase": "M1-专业选择", "name": "屏④引导骨架", "description": "planner 检测无 programme → 全屏引导(3步 ob-prog)，替代 _maybePromptProgramme", "dependencies": ["T01"], "passes": false},
-    {"id": "T05", "phase": "M1-专业选择", "name": "引导步骤①选专业+②选学期", "description": "步骤1 复用 programmeSearch;步骤2 选入学学期(年份+autumn/spring)", "dependencies": ["T04"], "passes": false},
-    {"id": "T06", "phase": "M1-专业选择", "name": "步骤③生成课表+完成", "description": "template + entry_term 对齐当前年/毕业年 → 完成进主屏", "dependencies": ["T05"], "passes": false},
+    {"id": "T01", "phase": "M1-专业选择", "name": "后端 users 加 entry_term", "description": "database.py users DDL 加 entry_term 列(如 2025-autumn) + models UserUpdate + users.py PUT /users/me 接受。默认 null", "dependencies": [], "passes": true},
+    {"id": "T02", "phase": "M1-专业选择", "name": "planner hero 去 ▾ 切换", "description": "planner hero 专业名纯展示(去 onOpenProgrammeSearch ▾)，仅首次自动弹引导", "dependencies": ["T01"], "passes": true},
+    {"id": "T03", "phase": "M1-专业选择", "name": "profile 加切换专业入口", "description": "profile 我的页加'我的专业+切换'行 → 复用 programmeSearch + 确认 → PUT /users/me programme_code", "dependencies": ["T01"], "passes": true},
+    {"id": "T04", "phase": "M1-专业选择", "name": "屏④引导骨架", "description": "planner 检测无 programme → 全屏引导(3步 ob-prog)，替代 _maybePromptProgramme", "dependencies": ["T01"], "passes": true},
+    {"id": "T05", "phase": "M1-专业选择", "name": "引导步骤①选专业+②选学期", "description": "步骤1 复用 programmeSearch;步骤2 选入学学期(年份+autumn/spring)", "dependencies": ["T04"], "passes": true},
+    {"id": "T06", "phase": "M1-专业选择", "name": "步骤③生成课表+完成", "description": "template + entry_term 对齐当前年/毕业年 → 完成进主屏", "dependencies": ["T05"], "passes": true},
 
     {"id": "T07", "phase": "M2-主屏", "name": "entry_term→当前学年+毕业年", "description": "planner.js 算当前学年(基于 entry_term+现在)+毕业年", "dependencies": ["T06"], "passes": false},
     {"id": "T08", "phase": "M2-主屏", "name": "hero 绿渐变卡", "description": "距毕业学分 + 进度环(CSS conic-gradient) + 毕业年", "dependencies": ["T07"], "passes": false},
