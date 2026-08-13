@@ -188,7 +188,10 @@ Page({
   _programmeQuery: "",           // 专业搜索词（实时过滤）
   _programmeSearchTimer: null,   // 搜索防抖 timer
   _programmeSearchOpen: false,   // 全屏专业搜索浮层开关（点 hero 触发，默认收起）
-  _programmePrompted: false,     // 首屏引导：本会话是否已判过自动弹浮层（防反复弹）
+  _programmePrompted: false,     // 首屏引导：本会话是否已判过自动弹引导（防反复弹）
+  _onboardingActive: false,      // T04: 新生引导全屏开关（无 programme 时激活，替代弹浮层）
+  _onboardingStep: 1,            // T04: 引导当前步 1/2/3
+  _obStatusBar: 0,               // T04: 状态栏高度(px)，引导 nav 避让用
   _geList: null,                 // /courses/ge 结果（GEListOut）— GE 选择浮层数据源
   _geListCode: null,             // _geList 对应专业码（切专业后失效重拉）
   _gePickerOpen: false,          // GE 选择浮层开关（overview 通识分类行触发）
@@ -198,8 +201,11 @@ Page({
 
   onShow() {
     syncTabBar(this, 3);
-    this._setTabBarHidden(this._programmeSearchOpen || this._gePickerOpen);
+    this._setTabBarHidden(this._programmeSearchOpen || this._gePickerOpen || this._onboardingActive);
     this._locale = getLocale();
+    if (!this._obStatusBar) {
+      this._obStatusBar = (wx.getWindowInfo().statusBarHeight || 24);
+    }
     // course-detail 页标记课程后回返:作废会话级进度缓存,强制重拉(仪表盘/卡片状态)
     const app = getApp();
     if (app && app.globalData && app.globalData.coursesNeedRefresh) {
@@ -285,7 +291,10 @@ Page({
     this._programmePrompted = true;
     const pickerList = this._pickerList || [];
     if (pickerList.length && !this._selectedCode && !this._userProgrammeCode) {
-      this._programmeSearchOpen = true;
+      // T04: 进全屏 3 步引导(选专业/选学期/生成),替代原"突然弹选专业浮层"。
+      // 步骤内容 T05(①②)/T06(③)填;专业搜索浮层改由引导步骤①内触发。
+      this._onboardingActive = true;
+      this._onboardingStep = 1;
       this._setTabBarHidden(true);
       this._emit();
     }
@@ -364,6 +373,26 @@ Page({
     this._programmeSearchOpen = false;
     this._setTabBarHidden(false);
     this._emit();
+  },
+
+  // ── 屏④:新生引导(T04 骨架)── 步骤前进/后退;完成关闭进主屏 ──
+  onObNext() {
+    if (this._onboardingStep < 3) {
+      this._onboardingStep += 1;
+      this._emit();
+    } else {
+      // 步骤③完成:关闭引导,进主屏(T06 在此加"按 Study Plan 生成课表"逻辑)
+      this._onboardingActive = false;
+      this._setTabBarHidden(false);
+      this._emit();
+    }
+  },
+
+  onObBack() {
+    if (this._onboardingStep > 1) {
+      this._onboardingStep -= 1;
+      this._emit();
+    }
   },
 
   _setTabBarHidden(hidden) {
@@ -732,6 +761,11 @@ Page({
       searchKeyword: this._searchKeyword,
       coursesView: { semesters: [], empty: true },
       gePicker: { open: false },
+      onboarding: {
+        active: !!this._onboardingActive,
+        step: this._onboardingStep || 1,
+        statusBar: this._obStatusBar || 0,
+      },
     };
 
     if (!entry || this._loading) {

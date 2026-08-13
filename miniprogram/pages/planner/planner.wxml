@@ -1,5 +1,40 @@
 <app-header bind:languagechange="handleLanguageChange" />
 
+<!-- 屏④:新生引导(无 programme 时全屏接管,替代突然弹选专业)。T04 骨架;步骤内容 T05/T06 填 -->
+<view wx:if="{{onboarding.active}}" class="ob-screen">
+  <view class="ob-nav" style="padding-top: {{onboarding.statusBar}}px;">
+    <view class="ob-nav-title">{{text.obTitle}}</view>
+  </view>
+  <scroll-view scroll-y class="ob-scroll">
+    <view class="ob-prog">
+      <view class="ob-prog-seg {{onboarding.step>=1?'on':''}}"></view>
+      <view class="ob-prog-seg {{onboarding.step>=2?'on':''}}"></view>
+      <view class="ob-prog-seg {{onboarding.step>=3?'on':''}}"></view>
+    </view>
+    <block wx:if="{{onboarding.step===1}}">
+      <view class="ob-q">{{text.obStep1Q}}</view>
+      <view class="ob-sub">{{text.obStep1Sub}}</view>
+      <view class="ob-placeholder">[T05] 选专业 · programme-picker</view>
+    </block>
+    <block wx:elif="{{onboarding.step===2}}">
+      <view class="ob-q">{{text.obStep2Q}}</view>
+      <view class="ob-sub">{{text.obStep2Sub}}</view>
+      <view class="ob-placeholder">[T05] 选入学学期</view>
+    </block>
+    <block wx:elif="{{onboarding.step===3}}">
+      <view class="ob-q">{{text.obStep3Q}}</view>
+      <view class="ob-sub">{{text.obStep3Sub}}</view>
+      <view class="ob-placeholder">[T06] 生成课表</view>
+    </block>
+  </scroll-view>
+  <view class="ob-next">
+    <view class="ob-next-btns">
+      <view wx:if="{{onboarding.step>1}}" class="ob-btn" hover-class="ob-btn-hover" bindtap="onObBack">{{text.obPrev}}</view>
+      <view class="ob-btn pri" hover-class="ob-btn-hover" bindtap="onObNext">{{onboarding.step<3 ? text.obNext : text.obFinish}}</view>
+    </view>
+  </view>
+</view>
+
 <view class="page-shell planner-shell">
   <view class="top-bar tight">
     <view class="brand-lockup">

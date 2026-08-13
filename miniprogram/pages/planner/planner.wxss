@@ -633,3 +633,54 @@
   text-decoration: line-through;
   color: var(--text-secondary);
 }
+
+/* ═══ 屏④:新生引导(全屏,替代突然弹选专业)T04 骨架 ═══ */
+.ob-screen {
+  position: fixed;
+  left: 0; right: 0; top: 0; bottom: 0;
+  z-index: 1000;
+  display: flex; flex-direction: column;
+  background: var(--page-bg);
+}
+.ob-nav {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 88rpx;
+  box-sizing: border-box;
+}
+.ob-nav-title {
+  color: var(--text-primary);
+  font-size: var(--fs-section);
+  font-weight: 700;
+}
+.ob-scroll {
+  flex: 1; min-height: 0;
+  padding: 20rpx 36rpx 32rpx;
+  box-sizing: border-box;
+}
+.ob-prog { display: flex; gap: 10rpx; margin: 12rpx 0 36rpx; }
+.ob-prog-seg { flex: 1; height: 8rpx; border-radius: 4rpx; background: var(--border-soft); }
+.ob-prog-seg.on { background: var(--accent-green); }
+.ob-q { font-size: 40rpx; font-weight: 700; line-height: 1.3; color: var(--text-primary); margin-bottom: 12rpx; }
+.ob-sub { font-size: var(--fs-subtitle); color: var(--text-secondary); line-height: 1.55; margin-bottom: 32rpx; }
+.ob-placeholder {
+  padding: 64rpx 32rpx; text-align: center;
+  color: var(--text-secondary); font-size: var(--fs-body);
+  background: var(--surface); border: 1rpx dashed var(--border-soft);
+  border-radius: var(--radius-entry);
+}
+.ob-next {
+  padding: 20rpx 36rpx calc(40rpx + env(safe-area-inset-bottom));
+}
+.ob-next-btns { display: flex; gap: 16rpx; }
+.ob-btn {
+  flex: 1; text-align: center; padding: 24rpx 0;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-btn); font-weight: 600;
+  background: var(--surface-subtle); color: var(--text-primary);
+  border: 1rpx solid var(--border-soft);
+}
+.ob-btn.pri {
+  background: var(--accent-blue); color: #fffaf0; border: none;
+  box-shadow: var(--shadow-btn-primary);
+}
+.ob-btn-hover { opacity: 0.86; }
