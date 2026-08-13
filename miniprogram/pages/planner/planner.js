@@ -406,10 +406,8 @@ Page({
       this._onboardingStep = 3;
       this._emit();
     } else {
-      // 步骤③完成:关闭引导,进主屏(T06 在此加"按 Study Plan 生成课表"逻辑)
-      this._onboardingActive = false;
-      this._setTabBarHidden(false);
-      this._emit();
+      // 步骤③:生成课表 + 持久化 programme_code/entry_term + 进主屏
+      this._obFinish();
     }
   },
 
@@ -442,6 +440,48 @@ Page({
   onObPickSem(e) {
     this._onboardingSemester = e.currentTarget.dataset.sem;
     this._emit();
+  },
+
+  // T06: 入学学期展示串(年份 + 本地化学期)
+  _obEntryTermDisplay() {
+    const text = getTexts("planner", this._locale);
+    const sem = this._onboardingSemester === "spring" ? text.obSpring : text.obAutumn;
+    return (this._onboardingYear || "") + " " + (sem || "");
+  },
+
+  // T06: 步骤③完成 — 持久化 programme_code + entry_term,按专业生成课表,进主屏
+  _obFinish() {
+    const text = getTexts("planner", this._locale);
+    const code = this._onboardingProgrammeCode;
+    if (!code) return;
+    const entryTerm = this._onboardingYear + "-" + this._onboardingSemester; // 2025-autumn
+    const entry = (this._pickerList || []).find((p) => p.code === code);
+    const hasFull = entry ? entry.has_full_planning : false;
+
+    wx.showLoading({ title: text.obGenerating, mask: true });
+    request({
+      method: "PUT",
+      path: "/users/me",
+      data: { programme_code: code, entry_term: entryTerm },
+      auth: true,
+    })
+      .then(() => {
+        // 选中专业生效 + 清旧 status 触发重拉(完整规划专业走 graduation-status;
+        // catalogue 专业 _emit 自动进目录视图)
+        this._selectedCode = code;
+        this._userProgrammeCode = code;
+        this._status = null;
+        this._onboardingActive = false;
+        this._setTabBarHidden(false);
+        this._emit();
+        wx.hideLoading();
+        wx.showToast({ title: text.obGenSuccess, icon: "success" });
+        if (hasFull) this._loadStatus();
+      })
+      .catch((err) => {
+        wx.hideLoading();
+        wx.showToast({ title: (err && err.message) || text.obGenFail, icon: "none" });
+      });
   },
 
   _setTabBarHidden(hidden) {
@@ -819,6 +859,7 @@ Page({
         years: this._onboardingYears || [],
         year: this._onboardingYear || 0,
         semester: this._onboardingSemester || "",
+        entryTermDisplay: this._obEntryTermDisplay(),
         canNext: this._obCanNext(),
       },
     };

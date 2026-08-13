@@ -51,13 +51,21 @@
     <block wx:elif="{{onboarding.step===3}}">
       <view class="ob-q">{{text.obStep3Q}}</view>
       <view class="ob-sub">{{text.obStep3Sub}}</view>
-      <view class="ob-placeholder">[T06] 生成课表</view>
+
+      <view class="ob-prev-pick">
+        <view class="ob-prev-pick-label">{{text.obProgrammeLabel}}</view>
+        <view class="ob-prev-pick-val">{{onboarding.programmeName}}</view>
+      </view>
+      <view class="ob-prev-pick">
+        <view class="ob-prev-pick-label">{{text.obTermLabel}}</view>
+        <view class="ob-prev-pick-val">{{onboarding.entryTermDisplay}}</view>
+      </view>
     </block>
   </scroll-view>
   <view class="ob-next">
     <view class="ob-next-btns">
       <view wx:if="{{onboarding.step>1}}" class="ob-btn" hover-class="ob-btn-hover" bindtap="onObBack">{{text.obPrev}}</view>
-      <view class="ob-btn pri {{onboarding.canNext?'':'ob-btn-disabled'}}" hover-class="ob-btn-hover" bindtap="onObNext">{{onboarding.step<3 ? text.obNext : text.obFinish}}</view>
+      <view class="ob-btn pri {{onboarding.canNext?'':'ob-btn-disabled'}}" hover-class="ob-btn-hover" bindtap="onObNext">{{onboarding.step<3 ? text.obNext : text.obGenAction}}</view>
     </view>
   </view>
 </view>
