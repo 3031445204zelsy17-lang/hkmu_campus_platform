@@ -182,6 +182,31 @@ class GEListOut(BaseModel):
     courses: list[GECourseOut]
 
 
+class GERankTagOut(BaseModel):
+    tag: str
+    count: int
+
+
+class GERankItemOut(BaseModel):
+    id: str
+    code: str
+    name_en: str
+    name_zh: str
+    field: str
+    score: float  # (给分+收获+(5-工作量))/3, 1-5, 越高越值得修
+    review_count: int  # 该课全部评论数(含老 5 星)
+    teaching_avg: float
+    workload_avg: float
+    gain_avg: float
+    top_tags: list[GERankTagOut] = Field(default_factory=list)
+
+
+class GERankingOut(BaseModel):
+    programme_code: str | None = None
+    total: int = 0
+    items: list[GERankItemOut] = Field(default_factory=list)
+
+
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def _course_row_to_out(row) -> CourseOut:
@@ -675,6 +700,58 @@ async def list_ge_courses(programme_code: str | None = None):
         field_order=list(GE_FIELD_ORDER),
         courses=courses,
     )
+
+
+@router.get("/ge/ranking", response_model=GERankingOut)
+async def ge_ranking(programme_code: str | None = None):
+    """GE 评分榜(T18):三维简单平均 (给分+收获+(5-工作量))/3,降序。
+
+    进榜条件:课程不属本专业禁选领域(blocked 过滤)且三维均分齐全 —
+    老 5 星-only 或缺维度的课不产生分数(前端退回领域视图,T20)。
+    附每课前 3 个避坑标签计数。公开无鉴权。
+    """
+    pool = [c for c in ge_courses_for(programme_code) if not c["blocked"]]
+    ids = [c["id"] for c in pool]
+    stats: dict = {}
+    tags: dict[str, list] = {}
+    if ids:
+        async with get_db() as db:
+            stat_rows = await db.fetch(
+                """SELECT course_id,
+                          COUNT(*) AS cnt,
+                          AVG(rating_teaching) AS teaching_avg,
+                          AVG(rating_workload) AS workload_avg,
+                          AVG(rating_gain) AS gain_avg
+                   FROM course_reviews WHERE course_id = ANY($1)
+                   GROUP BY course_id""",
+                ids,
+            )
+            stats = {r["course_id"]: r for r in stat_rows}
+            tag_rows = await db.fetch(
+                """SELECT course_id, tag, COUNT(*) AS cnt FROM course_review_tags
+                   WHERE course_id = ANY($1) GROUP BY course_id, tag""",
+                ids,
+            )
+            for tr in tag_rows:
+                tags.setdefault(tr["course_id"], []).append((tr["tag"], tr["cnt"]))
+
+    items = []
+    for c in pool:
+        s = stats.get(c["id"])
+        if not s or s["teaching_avg"] is None or s["workload_avg"] is None or s["gain_avg"] is None:
+            continue
+        t, w, g = (float(s["teaching_avg"]), float(s["workload_avg"]), float(s["gain_avg"]))
+        top = sorted(tags.get(c["id"], []), key=lambda x: -x[1])[:3]
+        items.append(GERankItemOut(
+            id=c["id"], code=c["code"], name_en=c["name_en"], name_zh=c["name_zh"],
+            field=c["field"],
+            score=round((t + g + (5 - w)) / 3, 1),
+            review_count=s["cnt"],
+            teaching_avg=round(t, 1), workload_avg=round(w, 1), gain_avg=round(g, 1),
+            top_tags=[GERankTagOut(tag=tg, count=cn) for tg, cn in top],
+        ))
+    items.sort(key=lambda i: (-i.score, i.code))
+    return GERankingOut(programme_code=programme_code, total=len(items), items=items)
 
 
 @router.get("/{course_id}", response_model=CourseOut)
