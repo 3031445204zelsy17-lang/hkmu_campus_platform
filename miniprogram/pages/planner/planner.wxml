@@ -9,13 +9,12 @@
     </view>
   </view>
 
-  <!-- Hero：专业名（点击切换）+ 总进度。专业搜索浮层由 hero 触发，默认收起，不再霸屏 -->
+  <!-- Hero：专业名（纯展示）+ 总进度。换专业入口移至 profile 页（T03）；首次无专业时由 _maybePromptProgramme 自动弹引导浮层 -->
   <view class="planner-hero {{loggedIn && !comingSoon && viewMode==='planning' ? 'has-score' : ''}}">
-    <view class="planner-hero-info" bindtap="onOpenProgrammeSearch" hover-class="planner-hero-hover">
+    <view class="planner-hero-info">
       <view class="planner-kicker">{{programmeSchool}}</view>
       <view class="planner-title-row">
         <text class="planner-title">{{programmeName}}</text>
-        <text class="planner-title-caret">▾</text>
       </view>
       <view class="planner-copy">
         <block wx:if="{{viewMode==='catalogue'}}">{{text.catalogueHeroCopy}}</block>
