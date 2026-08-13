@@ -269,6 +269,28 @@ class CourseReviewOut(BaseModel):
     tags: List[str] = Field(default_factory=list)
 
 
+class CourseTagAggregate(BaseModel):
+    tag: str
+    count: int
+    voted: bool = False  # 当前查看者是否已投(未登录恒 False)
+
+
+class CourseReviewTagsOut(BaseModel):
+    course_id: str
+    total_votes: int = 0
+    tags: List[CourseTagAggregate] = Field(default_factory=list)
+
+
+class CourseReviewStatsOut(BaseModel):
+    """三维均分(T15 course-detail 头部);无评分的维度为 None。"""
+    course_id: str
+    review_count: int = 0
+    rating_avg: Optional[float] = None  # 老 5 星均分(兼容展示)
+    teaching_avg: Optional[float] = None
+    workload_avg: Optional[float] = None
+    gain_avg: Optional[float] = None
+
+
 # --- News ---
 
 class NewsCreate(BaseModel):

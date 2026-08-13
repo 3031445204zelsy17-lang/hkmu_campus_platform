@@ -1,11 +1,14 @@
 import json
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.security import OAuth2PasswordBearer
 
 from ..database import get_db
 from ..models import (
     CourseOut, UserCourseUpdate, UserCourseOut,
     CourseReviewCreate, CourseReviewOut, PaginatedResponse,
+    REVIEW_TAGS,
+    CourseTagAggregate, CourseReviewTagsOut, CourseReviewStatsOut,
 )
 from ..data.programmes import PROGRAMMES, DEFAULT_PROGRAMME_CODE, get_programme
 from ..data.ge_courses import (
@@ -37,6 +40,18 @@ class BatchProgressUpdate(BaseModel):
 from ..services.auth_service import get_current_user
 
 router = APIRouter(prefix="/courses", tags=["courses"])
+
+# 可选鉴权(标签云 voted 标记):未带 token/过期 → None,不 401(同 posts.py 范式)
+_optional_oauth2 = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
+
+
+async def _get_optional_user(token: str | None = Depends(_optional_oauth2)) -> dict | None:
+    if not token:
+        return None
+    try:
+        return await get_current_user(token)
+    except HTTPException:
+        return None
 
 
 # ── Programme catalogue & graduation response models ─────────────────────────
@@ -183,7 +198,7 @@ def _course_row_to_out(row) -> CourseOut:
     )
 
 
-def _review_row_to_out(row) -> CourseReviewOut:
+def _review_row_to_out(row, author_tags: list[str] | None = None) -> CourseReviewOut:
     created_at = row["created_at"]
     if isinstance(created_at, datetime):
         created_at = created_at.isoformat()
@@ -192,14 +207,19 @@ def _review_row_to_out(row) -> CourseReviewOut:
         course_id=row["course_id"],
         author_id=row["author_id"],
         rating=row["rating"],
+        rating_teaching=row["rating_teaching"] if "rating_teaching" in row.keys() else None,
+        rating_workload=row["rating_workload"] if "rating_workload" in row.keys() else None,
+        rating_gain=row["rating_gain"] if "rating_gain" in row.keys() else None,
         content=row["content"],
         helpful_count=row["helpful_count"],
         created_at=created_at,
         author_nickname=row["author_nickname"],
+        tags=author_tags or [],
     )
 
 
-_REVIEW_COLS = """cr.id, cr.course_id, cr.author_id, cr.rating, cr.content,
+_REVIEW_COLS = """cr.id, cr.course_id, cr.author_id, cr.rating,
+    cr.rating_teaching, cr.rating_workload, cr.rating_gain, cr.content,
     cr.helpful_count, cr.created_at,
     u.nickname AS author_nickname"""
 
@@ -781,7 +801,21 @@ async def list_reviews(
                 LIMIT $2 OFFSET $3""",
             course_id, page_size, offset,
         )
-        items = [_review_row_to_out(r).model_dump() for r in rows]
+        # T14: 作者标签票一次批量取(避免逐行 N+1)
+        tag_map: dict[int, list[str]] = {}
+        author_ids = [r["author_id"] for r in rows]
+        if author_ids:
+            tag_rows = await db.fetch(
+                """SELECT user_id, tag FROM course_review_tags
+                   WHERE course_id = $1 AND user_id = ANY($2)""",
+                course_id, author_ids,
+            )
+            for tr in tag_rows:
+                tag_map.setdefault(tr["user_id"], []).append(tr["tag"])
+        items = [
+            _review_row_to_out(r, tag_map.get(r["author_id"])).model_dump()
+            for r in rows
+        ]
 
     return PaginatedResponse(
         items=items, total=total, page=page,
@@ -819,13 +853,29 @@ async def create_review(
             )
 
         row = await db.fetchrow(
-            """INSERT INTO course_reviews (course_id, author_id, rating, content, created_at)
-               VALUES ($1, $2, $3, $4, $5)
+            """INSERT INTO course_reviews
+                   (course_id, author_id, rating, rating_teaching,
+                    rating_workload, rating_gain, content, created_at)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                RETURNING id""",
-            course_id, user["id"], body.rating, safe_content, now,
+            course_id, user["id"], body.rating,
+            body.rating_teaching, body.rating_workload, body.rating_gain,
+            safe_content, now,
         )
         review_id = row["id"]
 
+        # T14: 作者标签随评论落票(重复投过幂等跳过)
+        for tag in body.tags:
+            await db.execute(
+                """INSERT INTO course_review_tags (course_id, user_id, tag)
+                   VALUES ($1, $2, $3) ON CONFLICT DO NOTHING""",
+                course_id, user["id"], tag,
+            )
+
+        author_tags = [tr["tag"] for tr in await db.fetch(
+            "SELECT tag FROM course_review_tags WHERE course_id = $1 AND user_id = $2",
+            course_id, user["id"],
+        )]
         r = await db.fetchrow(
             f"""SELECT {_REVIEW_COLS}
                 FROM course_reviews cr
@@ -833,7 +883,7 @@ async def create_review(
                 WHERE cr.id = $1""",
             review_id,
         )
-        return _review_row_to_out(r)
+        return _review_row_to_out(r, author_tags)
 
 
 @router.delete(
@@ -855,3 +905,114 @@ async def delete_review(
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your review")
 
         await db.execute("DELETE FROM course_reviews WHERE id = $1", review_id)
+
+
+# ── 避坑标签投票 + 三维统计(T14) ──────────────────────────────────────────────
+
+def _require_valid_tag(tag: str) -> None:
+    if tag not in REVIEW_TAGS:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY, f"unknown tag: {tag}",
+        )
+
+
+async def _require_course(db, course_id: str) -> None:
+    exists = await db.fetchrow("SELECT id FROM courses WHERE id = $1", course_id)
+    if not exists:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Course not found")
+
+
+@router.get("/{course_id}/review-tags", response_model=CourseReviewTagsOut)
+async def list_review_tags(
+    course_id: str,
+    user: dict | None = Depends(_get_optional_user),
+):
+    """标签云聚合(计数倒序)+ 当前查看者 voted 标记;未登录只看计数。"""
+    async with get_db() as db:
+        await _require_course(db, course_id)
+        rows = await db.fetch(
+            """SELECT tag, COUNT(*) AS cnt FROM course_review_tags
+               WHERE course_id = $1 GROUP BY tag ORDER BY cnt DESC, tag""",
+            course_id,
+        )
+        voted: set[str] = set()
+        if user:
+            voted = {
+                r["tag"] for r in await db.fetch(
+                    """SELECT tag FROM course_review_tags
+                       WHERE course_id = $1 AND user_id = $2""",
+                    course_id, user["id"],
+                )
+            }
+    return CourseReviewTagsOut(
+        course_id=course_id,
+        total_votes=sum(r["cnt"] for r in rows),
+        tags=[
+            CourseTagAggregate(tag=r["tag"], count=r["cnt"], voted=r["tag"] in voted)
+            for r in rows
+        ],
+    )
+
+
+@router.post("/{course_id}/review-tags/{tag}", status_code=status.HTTP_201_CREATED)
+async def vote_review_tag(
+    course_id: str,
+    tag: str,
+    user: dict = Depends(get_current_user),
+):
+    _require_valid_tag(tag)
+    async with get_db() as db:
+        await _require_course(db, course_id)
+        # 一人一票:重复投幂等
+        await db.execute(
+            """INSERT INTO course_review_tags (course_id, user_id, tag)
+               VALUES ($1, $2, $3) ON CONFLICT DO NOTHING""",
+            course_id, user["id"], tag,
+        )
+    return {"ok": True, "tag": tag}
+
+
+@router.delete(
+    "/{course_id}/review-tags/{tag}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def unvote_review_tag(
+    course_id: str,
+    tag: str,
+    user: dict = Depends(get_current_user),
+):
+    _require_valid_tag(tag)
+    async with get_db() as db:
+        await db.execute(
+            """DELETE FROM course_review_tags
+               WHERE course_id = $1 AND user_id = $2 AND tag = $3""",
+            course_id, user["id"], tag,
+        )
+
+
+def _avg1(v) -> float | None:
+    return None if v is None else round(float(v), 1)
+
+
+@router.get("/{course_id}/review-stats", response_model=CourseReviewStatsOut)
+async def review_stats(course_id: str):
+    """三维均分 + 老 5 星均分;无数据的维度为 None(T15 头部直接判空降级)。"""
+    async with get_db() as db:
+        await _require_course(db, course_id)
+        row = await db.fetchrow(
+            """SELECT COUNT(*) AS cnt,
+                      AVG(rating) AS rating_avg,
+                      AVG(rating_teaching) AS teaching_avg,
+                      AVG(rating_workload) AS workload_avg,
+                      AVG(rating_gain) AS gain_avg
+               FROM course_reviews WHERE course_id = $1""",
+            course_id,
+        )
+    return CourseReviewStatsOut(
+        course_id=course_id,
+        review_count=row["cnt"],
+        rating_avg=_avg1(row["rating_avg"]),
+        teaching_avg=_avg1(row["teaching_avg"]),
+        workload_avg=_avg1(row["workload_avg"]),
+        gain_avg=_avg1(row["gain_avg"]),
+    )
