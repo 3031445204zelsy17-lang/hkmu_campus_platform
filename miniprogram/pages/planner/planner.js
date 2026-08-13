@@ -62,6 +62,32 @@ function prereqsMet(prereqIds, progress) {
   return prereqIds.every((id) => progress[id] === "completed");
 }
 
+// ── T07: entry_term → 当前学年 + 毕业年 ────────────────────────────────
+// entry_term 形如 "2025-autumn" / "2025-spring"（T06 引导步骤③写入）。
+// HKMU 两学期制下的学年归属：
+//   秋入学 E：Y1 = {E 秋, E+1 春} → 4 年最后一学期 = E+4 春
+//   春入学 E：Y1 = {E 春, E 秋}   → 4 年最后一学期 = E+3 秋
+// 当前时间归属：8 月起进入新学年的秋学期；1-7 月仍属上一学年（春/暑期）。
+// 纯函数：entry_term 缺失/格式错 → null（展示层自行降级隐藏年份信息）。
+function computeStudyInfo(entryTerm, now) {
+  const m = /^(\d{4})-(autumn|spring)$/.exec(String(entryTerm || "").trim());
+  if (!m) return null;
+  const entryYear = parseInt(m[1], 10);
+  const springEntry = m[2] === "spring";
+  const curYear = now.getFullYear();
+  const curMonth = now.getMonth() + 1; // 1-12
+  const studyYear = springEntry
+    ? curYear - entryYear + 1                       // 春入学：学年随公历年切换
+    : (curMonth >= 8 ? curYear - entryYear + 1 : curYear - entryYear); // 秋入学：8 月进新学年
+  return {
+    entryYear,
+    entrySem: m[2],
+    studyYear, // 1 起整数；0 = 秋季准新生（选了未来年份），>4 = 超期在读——展示层自行处理
+    gradYear: springEntry ? entryYear + 3 : entryYear + 4,
+    gradSem: springEntry ? "autumn" : "spring",
+  };
+}
+
 const SEMESTER_ORDER = { autumn: 0, spring: 1, summer: 2 };
 
 function semesterRank(name) {
@@ -458,6 +484,14 @@ Page({
     const entry = (this._pickerList || []).find((p) => p.code === code);
     const hasFull = entry ? entry.has_full_planning : false;
 
+    // 未登录：引导无关闭入口，硬走 PUT 必 401 会把人困在步骤③ — 对齐
+    // onSelectProgramme 的未登录路径仅本会话生效（entry_term 不落库，
+    // T07 studyInfo 维持 null，hero 不显毕业年）
+    if (!this._user) {
+      this._obApplyResult(code, hasFull, null);
+      return;
+    }
+
     wx.showLoading({ title: text.obGenerating, mask: true });
     request({
       method: "PUT",
@@ -465,23 +499,28 @@ Page({
       data: { programme_code: code, entry_term: entryTerm },
       auth: true,
     })
-      .then(() => {
-        // 选中专业生效 + 清旧 status 触发重拉(完整规划专业走 graduation-status;
-        // catalogue 专业 _emit 自动进目录视图)
-        this._selectedCode = code;
-        this._userProgrammeCode = code;
-        this._status = null;
-        this._onboardingActive = false;
-        this._setTabBarHidden(false);
-        this._emit();
-        wx.hideLoading();
-        wx.showToast({ title: text.obGenSuccess, icon: "success" });
-        if (hasFull) this._loadStatus();
-      })
+      .then((user) => this._obApplyResult(code, hasFull, user))
       .catch((err) => {
         wx.hideLoading();
         wx.showToast({ title: (err && err.message) || text.obGenFail, icon: "none" });
       });
+  },
+
+  // 引导完成落屏：选中专业生效 + 清旧 status 触发重拉(完整规划专业走
+  // graduation-status; catalogue 专业 _emit 自动进目录视图)。user 非空时同步
+  // 缓存（PUT 返回含 entry_term 的 UserOut，T07 当前学年/毕业年无需等下次
+  // bootstrap 即可算出）
+  _obApplyResult(code, hasFull, user) {
+    if (user) this._user = user;
+    this._selectedCode = code;
+    this._userProgrammeCode = code;
+    this._status = null;
+    this._onboardingActive = false;
+    this._setTabBarHidden(false);
+    this._emit();
+    wx.hideLoading();
+    wx.showToast({ title: getTexts("planner", this._locale).obGenSuccess, icon: "success" });
+    if (hasFull) this._loadStatus();
   },
 
   _setTabBarHidden(hidden) {
@@ -818,6 +857,9 @@ Page({
     const view = {
       locale,
       text,
+      // T07: 入学学期 → 当前学年/毕业年（T08 hero 毕业年、T10 下学期建议、T11 年份 tab 数据源）。
+      // entry_term 未存（老用户/未走引导）→ null，消费方 wx:if 降级隐藏。
+      studyInfo: computeStudyInfo(this._user && this._user.entry_term, new Date()),
       loading: this._loading,
       loggedIn: !!this._user,
       programmeOptions: pickerList,
