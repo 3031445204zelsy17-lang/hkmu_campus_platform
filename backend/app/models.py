@@ -102,6 +102,7 @@ class UserOut(BaseModel):
     email: Optional[str] = None
     oauth_provider: Optional[str] = None
     programme_code: Optional[str] = None
+    entry_term: Optional[str] = None
     hkmu_verified: bool = False
     # invite_code intentionally absent — only exposed via /users/me/invite-code (self).
     # Returning another user's invite_code enabled a force-friend vector.
@@ -124,6 +125,7 @@ class UserUpdate(BaseModel):
     bio: Optional[str] = Field(None, max_length=300)
     avatar_url: Optional[str] = None
     programme_code: Optional[str] = None
+    entry_term: Optional[str] = None
 
 
 # --- Posts ---

@@ -31,7 +31,7 @@ async def _require_admin(user: dict) -> None:
 
 
 _USER_COLS = """id, username, nickname, student_id, avatar_url, bio, identity,
-    created_at, email, oauth_provider, programme_code, hkmu_verified, invite_code"""
+    created_at, email, oauth_provider, programme_code, entry_term, hkmu_verified, invite_code"""
 
 
 def _user_out(row, include_email: bool = True) -> UserOut:
@@ -53,6 +53,7 @@ def _user_out(row, include_email: bool = True) -> UserOut:
         kw["email"] = row["email"]
         kw["oauth_provider"] = row["oauth_provider"]
     kw["programme_code"] = row.get("programme_code")
+    kw["entry_term"] = row.get("entry_term")
     kw["hkmu_verified"] = row.get("hkmu_verified", False)
     # NOTE: invite_code is intentionally NOT emitted here. It is only exposed
     # via the dedicated /users/me/invite-code endpoint (self only). Returning
@@ -275,6 +276,8 @@ async def update_me(
         updates["avatar_url"] = body.avatar_url
     if body.programme_code is not None:
         updates["programme_code"] = body.programme_code
+    if body.entry_term is not None:
+        updates["entry_term"] = body.entry_term
 
     if not updates:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "No fields to update")

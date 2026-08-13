@@ -225,6 +225,12 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_column THEN NULL;
 END $$;
 
+-- Add entry_term column for planner onboarding to record intake term
+DO $$ BEGIN
+    ALTER TABLE users ADD COLUMN entry_term TEXT;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
 -- Add image_url column for post images (safe for existing DBs)
 DO $$ BEGIN
     ALTER TABLE posts ADD COLUMN image_url TEXT;
