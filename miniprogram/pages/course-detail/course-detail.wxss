@@ -260,3 +260,69 @@
   font-size: var(--fs-feed-meta);
   text-align: center;
 }
+
+/* ── T15: 三维评分卡(给分/工作量/收获) + 三维 composer ── */
+.rating-stats {
+  padding: 20rpx 0 8rpx;
+}
+
+.dim-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 18rpx;
+}
+
+.dim-label {
+  width: 200rpx;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+}
+
+.dim-name {
+  font-size: var(--fs-feed-meta);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dim-hint {
+  font-size: 18rpx;
+  color: var(--text-secondary);
+}
+
+.dim-track {
+  flex: 1;
+  height: 14rpx;
+  border-radius: var(--radius-pill);
+  background: var(--segmented-bg);
+  overflow: hidden;
+}
+
+.dim-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--green-mid);
+}
+
+.dim-val {
+  width: 64rpx;
+  flex: none;
+  text-align: right;
+  font-size: var(--fs-feed-meta);
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.dim-picker {
+  margin-bottom: 16rpx;
+}
+
+.dim-picker-label {
+  display: flex;
+  align-items: baseline;
+  gap: 10rpx;
+  margin-bottom: 6rpx;
+}

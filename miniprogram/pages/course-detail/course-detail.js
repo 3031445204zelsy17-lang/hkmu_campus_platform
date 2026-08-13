@@ -32,6 +32,45 @@ function buildComposerStars(draftRating) {
   return [1, 2, 3, 4, 5].map((v) => ({ value: v, filled: v <= r }));
 }
 
+// T15: GET review-stats → 三维汇总卡视图。某维无人评(avg=null)则不出行;
+// 三维全无但有老 5 星 → legacy 字段走老样式展示(T17 兼容)。
+function buildRatingStats(stats, text) {
+  if (!stats || !stats.review_count) return null;
+  const defs = [
+    { key: "teaching", label: text.dimTeaching, hint: text.gradingHint, avg: stats.teaching_avg },
+    { key: "workload", label: text.dimWorkload, hint: text.workloadHint, avg: stats.workload_avg },
+    { key: "gain", label: text.dimGain, hint: "", avg: stats.gain_avg },
+  ];
+  const dims = defs
+    .filter((d) => d.avg != null)
+    .map((d) => ({
+      key: d.key,
+      label: d.label,
+      hint: d.hint,
+      value: Number(d.avg).toFixed(1),
+      pct: Math.round((Number(d.avg) / 5) * 100),
+    }));
+  return {
+    count: stats.review_count,
+    dims,
+    legacyAvg: stats.rating_avg != null ? Number(stats.rating_avg).toFixed(1) : "",
+    legacyStars: stats.rating_avg != null ? buildStarsText(Math.round(stats.rating_avg)) : "",
+  };
+}
+
+// T15: composer 三维草稿(给分/工作量/收获),每组 5 星,0 = 未选
+function buildDimDrafts(draftDims, text) {
+  const d = draftDims || {};
+  return [
+    { key: "teaching", label: text.dimTeaching, hint: text.gradingHint },
+    { key: "workload", label: text.dimWorkload, hint: text.workloadHint },
+    { key: "gain", label: text.dimGain, hint: "" },
+  ].map((dim) => Object.assign({}, dim, {
+    value: d[dim.key] || 0,
+    stars: buildComposerStars(d[dim.key] || 0),
+  }));
+}
+
 // 课程行 → 视图模型。categories/semester/year 标签复用 planner scope(同源学术词汇,不重复造 key)
 function normalizeCourse(raw, plannerText, text) {
   const semKey = String(raw.semester || "").toLowerCase();
@@ -92,12 +131,11 @@ Page({
     reviews: [],
     reviewsTotal: 0,
     reviewsLoading: true,
-    avgRatingLabel: "",
-    avgStarsText: "",
+    ratingStats: null,
     myReviewId: null,
-    draftRating: 0,
+    draftDims: { teaching: 0, workload: 0, gain: 0 },
+    dimDrafts: [],
     draftContent: "",
-    composerStars: [],
     submitting: false,
     locale: getLocale(),
     text: getTexts("courseDetail"),
@@ -119,6 +157,7 @@ Page({
         this._loaded = true;
         this.loadCourse();
         this.loadReviews();
+        this.loadRatingStats();
       } else if (user && !wasLoggedIn) {
         // 登录态变化(未登录 → 已登录):重拉课评以拿到 isMine/myReviewId
         this.loadReviews();
@@ -148,7 +187,10 @@ Page({
       );
     }
     update.statusSegments = this._buildSegments(this.data.status, text);
-    update.composerStars = buildComposerStars(this.data.draftRating);
+    update.dimDrafts = buildDimDrafts(this.data.draftDims, text);
+    if (this._rawStats) {
+      update.ratingStats = buildRatingStats(this._rawStats, text);
+    }
 
     this.setData(update);
   },
@@ -167,7 +209,7 @@ Page({
   },
 
   onPullDownRefresh() {
-    const tasks = [this.loadCourse(), this.loadReviews()];
+    const tasks = [this.loadCourse(), this.loadReviews(), this.loadRatingStats()];
     if (this.data.loggedIn) {
       tasks.push(this.loadProgress());
     }
@@ -256,22 +298,11 @@ Page({
           (r) => this.data.user && r.author_id === this.data.user.id,
         );
 
-        let avgRatingLabel = "";
-        let avgStarsText = "";
-        if (total > 0) {
-          const sum = items.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
-          const avg = sum / total;
-          avgRatingLabel = avg.toFixed(1);
-          avgStarsText = buildStarsText(Math.round(avg));
-        }
-
         this.setData({
           reviews,
           reviewsTotal: total,
           reviewsLoading: false,
           myReviewId: mine ? mine.id : null,
-          avgRatingLabel,
-          avgStarsText,
         });
       })
       .catch((error) => {
@@ -281,6 +312,22 @@ Page({
           icon: "none",
         });
       });
+  },
+
+  // T15: 三维均分卡(失败不阻塞,列表/老汇总照常)
+  loadRatingStats() {
+    if (!this.data.courseId) {
+      return Promise.resolve();
+    }
+    return request({
+      path: `/courses/${encodeURIComponent(this.data.courseId)}/review-stats`,
+      auth: false,
+    })
+      .then((stats) => {
+        this._rawStats = stats;
+        this.setData({ ratingStats: buildRatingStats(stats, this.data.text) });
+      })
+      .catch(() => {});
   },
 
   // ── 内联标记(复用 PUT /courses/progress,与 planner 同语义)──
@@ -332,14 +379,17 @@ Page({
       });
   },
 
-  // ── 课评 composer ──
+  // ── 课评 composer(三维:给分/工作量/收获)──
 
-  onPickStar(e) {
+  onPickDimStar(e) {
+    const key = e.currentTarget.dataset.key;
     const value = Number(e.currentTarget.dataset.value);
-    if (!value || this.data.submitting) {
+    if (!key || !value || this.data.submitting) {
       return;
     }
-    this.setData({ draftRating: value, composerStars: buildComposerStars(value) });
+    const draftDims = Object.assign({}, this.data.draftDims);
+    draftDims[key] = value;
+    this.setData({ draftDims, dimDrafts: buildDimDrafts(draftDims, this.data.text) });
   },
 
   onDraftInput(e) {
@@ -356,8 +406,8 @@ Page({
     }
 
     const content = (this.data.draftContent || "").trim();
-    const rating = Number(this.data.draftRating) || 0;
-    if (rating < 1 || rating > 5 || !content) {
+    const d = this.data.draftDims || {};
+    if (!content || !(d.teaching || d.workload || d.gain)) {
       wx.showToast({ title: this.data.text.reviewInvalid, icon: "none" });
       return;
     }
@@ -367,16 +417,22 @@ Page({
     request({
       method: "POST",
       path: `/courses/${encodeURIComponent(this.data.courseId)}/reviews`,
-      data: { rating, content },
+      data: {
+        rating_teaching: d.teaching || null,
+        rating_workload: d.workload || null,
+        rating_gain: d.gain || null,
+        content,
+      },
       auth: true,
     })
       .then(() => {
         this.setData({
           submitting: false,
-          draftRating: 0,
+          draftDims: { teaching: 0, workload: 0, gain: 0 },
+          dimDrafts: buildDimDrafts({ teaching: 0, workload: 0, gain: 0 }, this.data.text),
           draftContent: "",
-          composerStars: buildComposerStars(0),
         });
+        this.loadRatingStats();
         return this.loadReviews().then(() => {
           wx.showToast({ title: this.data.text.reviewSent, icon: "success" });
         });
@@ -420,10 +476,11 @@ Page({
           .then(() => {
             wx.showToast({ title: this.data.text.deleteSuccess, icon: "success" });
             this.setData({
-              draftRating: 0,
+              draftDims: { teaching: 0, workload: 0, gain: 0 },
+              dimDrafts: buildDimDrafts({ teaching: 0, workload: 0, gain: 0 }, this.data.text),
               draftContent: "",
-              composerStars: buildComposerStars(0),
             });
+            this.loadRatingStats();
             this.loadReviews();
           })
           .catch((error) => {

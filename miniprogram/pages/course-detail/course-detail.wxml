@@ -47,10 +47,26 @@
         <text class="reviews-count">· {{reviewsTotal}}</text>
       </view>
 
-      <view wx:if="{{reviewsTotal > 0}}" class="rating-summary">
-        <text class="rating-avg">{{avgRatingLabel}}</text>
-        <text class="rating-stars">{{avgStarsText}}</text>
-        <text class="rating-count">{{reviewsTotal}} {{text.reviewsSuffix}}</text>
+      <!-- T15: 三维评分卡(某维无评分不出行;三维全无但有老 5 星 → 老样式) -->
+      <view wx:if="{{ratingStats}}" class="rating-stats">
+        <block wx:if="{{ratingStats.dims.length}}">
+          <view wx:for="{{ratingStats.dims}}" wx:key="key" class="dim-row">
+            <view class="dim-label">
+              <text class="dim-name">{{item.label}}</text>
+              <text wx:if="{{item.hint}}" class="dim-hint">{{item.hint}}</text>
+            </view>
+            <view class="dim-track">
+              <view class="dim-fill" style="width: {{item.pct}}%"></view>
+            </view>
+            <text class="dim-val">{{item.value}}</text>
+          </view>
+          <view class="rating-count">{{ratingStats.count}} {{text.reviewsSuffix}}</view>
+        </block>
+        <block wx:elif="{{ratingStats.legacyAvg}}">
+          <text class="rating-avg">{{ratingStats.legacyAvg}}</text>
+          <text class="rating-stars">{{ratingStats.legacyStars}}</text>
+          <view class="rating-count">{{ratingStats.count}} {{text.reviewsSuffix}}</view>
+        </block>
       </view>
 
       <view wx:if="{{reviewsLoading}}" class="review-status">{{text.reviewsLoading}}</view>
@@ -76,17 +92,25 @@
       </block>
     </view>
 
-    <!-- 发课评(登录 + 未评过) -->
+    <!-- 发课评(登录 + 未评过)— T15 三维 composer(给分/工作量/收获) -->
     <view wx:if="{{loggedIn && !myReviewId}}" class="web-panel review-composer">
-      <view wx:if="{{draftRating === 0}}" class="star-hint">{{text.reviewRatingHint}}</view>
-      <view class="star-picker">
-        <view
-          wx:for="{{composerStars}}"
-          wx:key="value"
-          class="star {{item.filled ? 'star-on' : ''}}"
-          data-value="{{item.value}}"
-          bindtap="onPickStar"
-        >★</view>
+      <view class="star-hint">{{text.reviewDimHint}}</view>
+      <view wx:for="{{dimDrafts}}" wx:for-item="dim" wx:key="key" class="dim-picker">
+        <view class="dim-picker-label">
+          <text class="dim-name">{{dim.label}}</text>
+          <text wx:if="{{dim.hint}}" class="dim-hint">{{dim.hint}}</text>
+        </view>
+        <view class="star-picker">
+          <view
+            wx:for="{{dim.stars}}"
+            wx:for-item="s"
+            wx:key="value"
+            class="star {{s.filled ? 'star-on' : ''}}"
+            data-key="{{dim.key}}"
+            data-value="{{s.value}}"
+            bindtap="onPickDimStar"
+          >★</view>
+        </view>
       </view>
       <textarea
         class="review-textarea"
