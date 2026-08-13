@@ -40,6 +40,8 @@ Page({
     text: getTexts("profile"),
     user: null,
     sharePath: "", // Phase 5: 预取的邀请分享路径(onShareAppMessage 用)
+    pickerOpen: false, // T03: 专业选择浮层开关
+    programmeName: "", // T03: 当前专业名（catalogue code→name 映射）
   },
 
   onShow() {
@@ -100,7 +102,10 @@ Page({
       .bootstrapSession()
       .then((user) => {
         this._renderUser(user);
-        if (user) this._prefetchSharePath();
+        if (user) {
+          this._prefetchSharePath();
+          this._loadProgrammeName();
+        }
       })
       .catch((error) => {
         wx.showToast({
@@ -287,6 +292,67 @@ Page({
       .catch(() => {
         // 静默失败:未验证/网络异常时分享按钮走默认 path(不带 inv)
       });
+  },
+
+  // ── T03: 我的专业展示 + 切换（programme-picker 组件）──
+
+  // 拉全校专业建 code→name 映射,展示"我的专业"名（仅登录态调）
+  _loadProgrammeName() {
+    if (this._progNameMap) {
+      this._applyProgrammeName();
+      return;
+    }
+    request({ path: "/courses/catalogue/programmes", auth: false })
+      .then((data) => {
+        const map = {};
+        ((data && data.schools) || []).forEach((sch) => {
+          (sch.programmes || []).forEach((p) => {
+            map[p.programme_code] = p.programme_name;
+          });
+        });
+        this._progNameMap = map;
+        this._applyProgrammeName();
+      })
+      .catch(() => {
+        // 静默失败:拉不到专业名时 value 显 programmeUnset
+      });
+  },
+
+  _applyProgrammeName() {
+    const code = this.data.user && this.data.user.programme_code;
+    const name = (code && this._progNameMap && this._progNameMap[code]) || "";
+    this.setData({ programmeName: name });
+  },
+
+  onOpenProgrammePicker() {
+    this.setData({ pickerOpen: true });
+    this._setPickerTabBarHidden(true);
+  },
+
+  onProgrammePickerClose() {
+    this.setData({ pickerOpen: false });
+    this._setPickerTabBarHidden(false);
+  },
+
+  onProgrammeSelect(e) {
+    const { code, name } = e.detail;
+    const text = this.data.text;
+    this.setData({ pickerOpen: false });
+    this._setPickerTabBarHidden(false);
+    request({ method: "PUT", path: "/users/me", data: { programme_code: code }, auth: true })
+      .then(() => {
+        wx.showToast({ title: text.saveSuccess, icon: "success" });
+        this.setData({ programmeName: name || "" }); // 即时反馈
+        return this.refreshProfile(false); // 兜底:同步 storage + 重拉 user
+      })
+      .catch((err) => {
+        wx.showToast({ title: (err && err.message) || text.saveFail, icon: "none" });
+      });
+  },
+
+  _setPickerTabBarHidden(hidden) {
+    const tabBar = typeof this.getTabBar === "function" ? this.getTabBar() : null;
+    if (tabBar) tabBar.setData({ externallyHidden: !!hidden });
   },
 
   // Phase 5 P0: 补绑 HKMU 邮箱,解锁同校验证层

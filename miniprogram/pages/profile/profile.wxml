@@ -48,6 +48,10 @@
           <view class="profile-row-label">{{text.studentIdLabel}}</view>
           <view class="profile-row-value">{{user.studentIdLabel}}</view>
         </view>
+        <view class="profile-row" bindtap="onOpenProgrammePicker">
+          <view class="profile-row-label">{{text.programmeLabel}}</view>
+          <view class="profile-row-value">{{programmeName || text.programmeUnset}} ›</view>
+        </view>
         <view class="profile-row">
           <view class="profile-row-label">{{text.bioLabel}}</view>
           <view class="profile-row-value">{{user.bioLabel}}</view>
@@ -127,4 +131,13 @@
       </view>
     </view>
   </view>
+
+  <!-- T03: 专业切换浮层（programme-picker 自包含组件，open 控制显隐） -->
+  <programme-picker
+    open="{{pickerOpen}}"
+    selected-code="{{user.programme_code}}"
+    locale="{{locale}}"
+    bind:select="onProgrammeSelect"
+    bind:close="onProgrammePickerClose"
+  />
 </view>
