@@ -130,8 +130,9 @@ function localizeField(field, locale) {
   return m[key] || m.en || field;
 }
 
-// 当前专业的课程按学年学期分组,每张卡带 status + 先修提示(仅提示,不阻塞标记)
-function buildCoursesView(prog, idToCourse, progress, keyword, text) {
+// 当前专业的课程按学年学期分组,每张卡带 status + 先修提示(仅提示,不阻塞标记)。
+// T11: opts.year 传学年时只出该年两组学期(标签不带年份,年份在页内 seg 上)
+function buildCoursesView(prog, idToCourse, progress, keyword, text, opts) {
   if (!prog || !idToCourse) return { semesters: [], empty: true };
   const cats = prog.categories || {};
   const all = [];
@@ -142,11 +143,15 @@ function buildCoursesView(prog, idToCourse, progress, keyword, text) {
     });
   });
   const kw = keyword ? keyword.toLowerCase() : "";
-  const filtered = kw
+  let filtered = kw
     ? all.filter((c) =>
         (c.code && String(c.code).toLowerCase().includes(kw)) ||
         (c.name && String(c.name).toLowerCase().includes(kw)))
     : all;
+  const yearFilter = opts && opts.year;
+  if (yearFilter) {
+    filtered = filtered.filter((c) => (c.year != null ? c.year : 0) === yearFilter);
+  }
   const groups = {};
   filtered.forEach((c) => {
     const yr = c.year != null ? c.year : 0;
@@ -163,8 +168,10 @@ function buildCoursesView(prog, idToCourse, progress, keyword, text) {
     return semesterRank(a.semester) - semesterRank(b.semester);
   });
   semesters.forEach((g) => {
-    g.label = fillTemplate(text.yearLabel, { n: g.year }) + " · " +
-      (semLabelMap[String(g.semester).toLowerCase()] || g.semester);
+    g.label = yearFilter
+      ? (semLabelMap[String(g.semester).toLowerCase()] || g.semester)
+      : fillTemplate(text.yearLabel, { n: g.year }) + " · " +
+        (semLabelMap[String(g.semester).toLowerCase()] || g.semester);
     g.courses = g.courses.map((c) => {
       const status = progress[c.id] || "not_started";
       const prereqIds = parsePrereqs(c.prerequisites);
@@ -185,6 +192,7 @@ function buildCoursesView(prog, idToCourse, progress, keyword, text) {
         prereqLabel,
       };
     });
+    g.crTotal = g.courses.reduce((n, c) => n + (c.credits || 0), 0);
   });
   return { semesters, empty: !filtered.length };
 }
@@ -203,7 +211,7 @@ Page({
   _courses: null,           // /courses?page_size=200 → items
   _idToCourse: null,        // {course_id: course 对象}
   _progress: null,          // /courses/progress/me → {course_id: status}
-  _activeTab: "overview",   // "overview" | "courses"
+  _activeYear: null,        // T11: 课表展示学年(1-4);首次算出 studyInfo 时按当前学年初始化
   _searchKeyword: "",
   _searchTimer: null,
   _courseCatalogue: null,        // /courses/catalogue/programmes (全校 ~107 专业 browse 目录)
@@ -760,10 +768,11 @@ Page({
     });
   },
 
-  onTabChange(e) {
-    const tab = e.currentTarget.dataset.tab;
-    if (tab && tab !== this._activeTab) {
-      this._activeTab = tab;
+  // T11: 年份 seg 点按 — 切课表展示学年(Y1-Y4)
+  onYearTap(e) {
+    const y = parseInt(e.currentTarget.dataset.year, 10);
+    if (y >= 1 && y <= 4 && y !== this._activeYear) {
+      this._activeYear = y;
       this._emit();
     }
   },
@@ -778,7 +787,7 @@ Page({
   },
 
   openCourseDetail(e) {
-    // 课程卡只在登录态渲染(showTabs = _user && status),点按即进详情页(页内内联标记)
+    // 课程卡只在登录态仪表盘渲染(_user && status),点按即进详情页(页内内联标记)
     const courseId = e.currentTarget.dataset.courseId;
     if (!courseId) {
       return;
@@ -896,8 +905,8 @@ Page({
       categoriesView: [],
       recommendations: [],
       heroCopy: "",
-      activeTab: this._activeTab,
-      showTabs: false,
+      activeYear: 0,
+      yearsView: [],
       searchKeyword: this._searchKeyword,
       coursesView: { semesters: [], empty: true },
       gePicker: { open: false },
@@ -1037,13 +1046,21 @@ Page({
           text: gapClause + fillTemplate(text.adviceBody, { codes, credits }),
         };
       }
-      view.showTabs = true;
+      // T11: 年份 seg(当前学年高亮)+ 该学年两学期课表,合并一屏滚动
+      const curY = studyInfo ? Math.min(Math.max(studyInfo.studyYear, 1), 4) : 1;
+      if (!this._activeYear) this._activeYear = curY;
+      view.activeYear = this._activeYear;
+      view.yearsView = [1, 2, 3, 4].map((n) => ({
+        n,
+        label: "Y" + n,
+        current: n === curY,
+        active: n === this._activeYear,
+      }));
       if (this._idToCourse && this._progress) {
-        view.coursesView = buildCoursesView(prog, this._idToCourse, this._progress, this._searchKeyword, text);
+        view.coursesView = buildCoursesView(prog, this._idToCourse, this._progress, this._searchKeyword, text, { year: this._activeYear });
       }
     } else if (prog.coming_soon) {
       view.heroCopy = text.comingSoonCopy;
-      view.activeTab = "overview";
     } else {
       // 未登录 / status 未到：用目录静态学分要求
       view.categoriesView = (prog.categories || []).map((c) => ({

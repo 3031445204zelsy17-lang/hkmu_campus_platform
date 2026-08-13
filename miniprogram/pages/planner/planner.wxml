@@ -112,12 +112,6 @@
     <view wx:elif="{{loggedIn && !comingSoon && viewMode==='planning'}}" class="planner-score">{{percent}}%</view>
   </view>
 
-  <!-- 总览/我的课程 切换 -->
-  <view wx:if="{{showTabs}}" class="seg-bar">
-    <view class="seg-item {{activeTab==='overview'?'seg-on':''}}" data-tab="overview" bindtap="onTabChange">{{text.tabOverview}}</view>
-    <view class="seg-item {{activeTab==='courses'?'seg-on':''}}" data-tab="courses" bindtap="onTabChange">{{text.tabCourses}}</view>
-  </view>
-
   <!-- 加载中 -->
   <view wx:if="{{loading}}" class="web-panel">
     <view class="panel-copy">{{text.loading}}</view>
@@ -193,19 +187,11 @@
     </view>
   </view>
 
-  <!-- 已登录：毕业仪表盘 -->
-  <block wx:elif="{{activeTab==='overview'}}">
-    <view class="web-panel">
-      <view class="section-title">{{text.progressTitle}}</view>
-      <view class="credits-summary">{{creditsSummary}}</view>
-      <view class="progress-track progress-track-lg">
-        <view class="progress-fill" style="width: {{percent}}%"></view>
-      </view>
-    </view>
-
+  <!-- T11: 已登录合并一屏 — 分类竖条 + 建议 + 年份 seg + 该学年两学期课表（去总览/课程 tab 分离） -->
+  <block wx:elif="{{loggedIn}}">
     <view class="web-panel">
       <view class="section-title">{{text.categoriesTitle}}</view>
-      <!-- T09: 6 类竖条（2 列网格，替代横条 progress-track）；通识格点按开 GE 浮层 -->
+      <!-- T09: 6 类竖条（2 列网格）；通识格点按开 GE 浮层 -->
       <view class="cat-grid">
         <view
           wx:for="{{categoriesView}}"
@@ -227,22 +213,29 @@
       </view>
     </view>
 
-    <!-- T10: 系统建议卡（"排进下学期"一句话，替代逐条 course-row 列表） -->
+    <!-- T10: 系统建议卡（"排进下学期"一句话） -->
     <view wx:if="{{advice}}" class="advice-card">
       <text class="advice-ic">◆</text>
       <text class="advice-txt"><text class="advice-strong">{{advice.heading}}</text>{{advice.text}}</text>
     </view>
-  </block>
 
-  <!-- 我的课程:按学年学期分组 + 搜索 + 标记 -->
-  <block wx:elif="{{activeTab==='courses'}}">
-    <view class="web-panel planner-search">
-      <input class="search-input" value="{{searchKeyword}}"
-             placeholder="{{text.searchPlaceholder}}" bindinput="onSearchInput" />
+    <!-- 年份 seg：Y1-Y4，当前学年带标记 -->
+    <view class="seg-bar year-seg">
+      <view
+        wx:for="{{yearsView}}"
+        wx:key="n"
+        class="seg-item {{item.active ? 'seg-on' : ''}}"
+        data-year="{{item.n}}"
+        bindtap="onYearTap"
+      >{{item.label}}<text wx:if="{{item.current}}" class="seg-cur">{{text.yearCurrentTag}}</text></view>
     </view>
 
+    <!-- 该学年两学期课表 -->
     <block wx:for="{{coursesView.semesters}}" wx:for-item="sem" wx:key="label">
-      <view class="sem-header">{{sem.label}}</view>
+      <view class="term-header">
+        <text class="term-name">{{sem.label}}</text>
+        <text class="term-cr">{{sem.crTotal}} cr</text>
+      </view>
       <view wx:for="{{sem.courses}}" wx:for-item="c" wx:key="courseId"
             class="course-row course-tap"
             data-course-id="{{c.courseId}}" data-code="{{c.code}}"

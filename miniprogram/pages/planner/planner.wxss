@@ -329,7 +329,7 @@
   flex-direction: column;
 }
 
-/* segmented 总览/我的课程 */
+/* segmented（T11 起用于年份 seg，T12 复用为 规划/课程/通识） */
 .seg-bar {
   display: flex;
   gap: 8rpx;
@@ -351,6 +351,31 @@
   background: var(--surface, #ffffff);
   color: var(--text-primary);
   box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.06);
+}
+
+/* T11: 年份 seg 的"当前学年"小标 */
+.seg-bar .seg-cur {
+  margin-left: 6rpx;
+  font-size: 18rpx;
+  font-weight: 700;
+  color: var(--green-deep);
+}
+
+/* T11: 学期头（学期名 + 学分合计右对齐） */
+.term-header {
+  display: flex;
+  align-items: center;
+  margin: 24rpx 4rpx 12rpx;
+  font-size: var(--fs-link);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.term-header .term-cr {
+  margin-left: auto;
+  font-size: var(--fs-link);
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* 搜索框 */
