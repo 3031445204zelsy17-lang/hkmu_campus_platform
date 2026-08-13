@@ -134,7 +134,9 @@ def categories_from_text(text):
     headings = list(re.finditer(r"Table\s+\d+\s*:\s*([^\n]+)", text))
     for i, h in enumerate(heads := headings):
         title = h.group(1).strip().lower()
-        cat_key = next((v for k, v in TABLE_CATEGORY.items() if k in title), None)
+        # exact match: "core courses" is a substring of "university core
+        # courses", so `in` would mis-file Table 3 (UniCore) as core.
+        cat_key = TABLE_CATEGORY.get(title)
         if not cat_key:
             continue
         body = text[h.end(): (heads[i + 1].start() if i + 1 < len(heads) else len(text))]
@@ -164,6 +166,26 @@ def ge_credits_from_prose(text):
     """GE is stated in prose ('6 credit-units of General Education'), no table."""
     m = re.search(r"(\d+)\s+credit-units?\s+of\s+General\s+Education", text, re.I)
     return int(m.group(1)) if m else None
+
+
+# Prose "X credit-units of <Category> courses" → min_credits. First (Year-1) match.
+PROSE_MIN = [
+    (re.compile(r"(\d+)\s+credit-units?\s+of\s+core\s+courses", re.I), "core"),
+    (re.compile(r"(\d+)\s+credit-units?\s+of\s+elective\s+courses", re.I), "elective"),
+    (re.compile(r"(\d+)\s+credit-units?\s+of\s+University\s+Core\s+courses", re.I), "university-core"),
+    (re.compile(r"(\d+)\s+credit-units?\s+of\s+University\s+English\s+courses", re.I), "english"),
+    (re.compile(r"(\d+)\s+credit-units?\s+of\s+General\s+Education", re.I), "general-ed"),
+]
+
+
+def prose_min_credits(text):
+    """min_credits per category from the prose requirements section."""
+    out = {}
+    for rx, key in PROSE_MIN:
+        m = rx.search(text)
+        if m:
+            out[key] = int(m.group(1))
+    return out
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
@@ -205,10 +227,13 @@ def main():
                 print(f"=== {code} ({school}) ===\n{txt}\n")
                 continue
             txt = extract_text(data)
-            cats = categories_from_text(txt)
-            ge = ge_credits_from_prose(txt)
-            if ge is not None and "general-ed" not in cats:
-                cats["general-ed"] = {"pool": "ge", "min_credits": ge}
+            cats = categories_from_text(txt)   # {cat: {courses, credits_seen}}
+            mins = prose_min_credits(txt)       # {cat: min_credits}
+            for key, mc in mins.items():
+                cats.setdefault(key, {})
+                cats[key]["min_credits"] = mc
+                if key == "general-ed":
+                    cats[key]["pool"] = "ge"
             out[code] = {"school": school, "categories": cats}
             n = sum(len(c.get("courses", [])) for c in cats.values())
             print(f"  {code} ({school}): {len(cats)} categories, {n} courses", file=sys.stderr)
