@@ -1669,7 +1669,7 @@ async function _loadData() {
     }
   }
   try {
-    const data = await api.get("/courses?page_size=50");
+    const data = await api.get("/courses?page_size=200"); // courses 表 114 门(含 GE 73)，page_size=50 时 GE(GEN*)排前把 DSAI 挤出 → "我的课程"拿不到课显示空
     _courses = data.items;
 
     if (isLoggedIn()) {

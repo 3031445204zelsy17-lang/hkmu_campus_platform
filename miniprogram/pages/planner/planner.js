@@ -174,7 +174,7 @@ Page({
   _selectedCode: null,     // 用户手动选的专业（优先于 saved）
   _loading: true,
   _loadError: null,
-  _courses: null,           // /courses?page_size=50 → items
+  _courses: null,           // /courses?page_size=200 → items
   _idToCourse: null,        // {course_id: course 对象}
   _progress: null,          // /courses/progress/me → {course_id: status}
   _activeTab: "overview",   // "overview" | "courses"
@@ -312,7 +312,10 @@ Page({
 
   _loadCourses() {
     if (this._courses) return Promise.resolve();
-    return request({ path: "/courses?page_size=50", auth: false })
+    // page_size 要覆盖全表：courses 表含 DSAI 41 + GE 73 = 114 门，
+    // page_size=50 时 GE（GEN*）排在 DSAI（COMP/MATH/...）前 → DSAI 课程
+    // 被挤出前 50 → "我的课程"拿不到课程显示空。给 200 余量。
+    return request({ path: "/courses?page_size=200", auth: false })
       .then((data) => {
         this._courses = (data && data.items) || [];
         const map = {};
