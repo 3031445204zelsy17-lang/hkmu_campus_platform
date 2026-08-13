@@ -101,6 +101,10 @@
       <view class="progress-track">
         <view class="progress-fill" style="width: 0%"></view>
       </view>
+      <view wx:if="{{item.hasGePool}}" class="ge-entry" bindtap="onOpenGePicker" hover-class="ge-entry-hover">
+        <text>{{text.geSelectEntry}}</text>
+        <text class="ge-entry-arrow">▸</text>
+      </view>
     </view>
   </view>
 
@@ -127,6 +131,10 @@
         </view>
         <view class="progress-track">
           <view class="progress-fill cat-{{item.color}}" style="width: {{item.pct}}%"></view>
+        </view>
+        <view wx:if="{{item.hasGePool}}" class="ge-entry" bindtap="onOpenGePicker" hover-class="ge-entry-hover">
+          <text>{{text.geSelectEntry}}</text>
+          <text class="ge-entry-arrow">▸</text>
         </view>
       </view>
     </view>
@@ -218,6 +226,56 @@
           </view>
         </view>
       </block>
+    </scroll-view>
+  </view>
+
+  <!-- GE 通识选择浮层（屏③）：点通识分类行的"选择"入口触发。复用 ps-overlay 骨架 -->
+  <view wx:if="{{gePicker.open}}" class="ps-overlay ge-overlay" style="top: {{programmeOverlayTop}}px;">
+    <view class="ps-overlay-bar">
+      <view class="ps-overlay-bar-spacer"></view>
+      <text class="ps-overlay-title">{{gePicker.title}}</text>
+      <view class="ps-overlay-close" bindtap="onCloseGePicker">×</view>
+    </view>
+
+    <view wx:if="{{gePicker.loadError}}" class="web-panel ge-panel-msg">
+      <view class="panel-copy">{{gePicker.loadError}}</view>
+    </view>
+
+    <block wx:elif="{{gePicker.loading}}">
+      <view class="web-panel ge-panel-msg">
+        <view class="panel-copy">{{text.loading}}</view>
+      </view>
+    </block>
+
+    <scroll-view wx:else scroll-y enhanced show-scrollbar="{{false}}" class="ge-overlay-list">
+      <view class="ge-note">{{gePicker.ruleNote}}</view>
+      <view class="ge-progress">{{gePicker.progress}}</view>
+
+      <view
+        wx:for="{{gePicker.fields}}"
+        wx:for-item="fld"
+        wx:key="name"
+        class="ge-field {{fld.blocked ? 'ge-field-blk' : ''}}"
+      >
+        <view class="ge-field-h">
+          <text class="ge-field-name">{{fld.name}}</text>
+          <text class="ge-field-ct">{{fld.headRight}}</text>
+        </view>
+        <view
+          wx:for="{{fld.courses}}"
+          wx:for-item="c"
+          wx:key="id"
+          class="ge-row {{c.taken ? 'ge-row-taken' : ''}} {{c.blocked ? 'ge-row-blocked' : ''}}"
+          data-id="{{c.id}}"
+          data-blocked="{{c.blocked}}"
+          bindtap="onToggleGeCourse"
+        >
+          <text class="ge-code">{{c.code}}</text>
+          <text class="ge-name">{{c.name}}</text>
+          <text wx:if="{{c.taken}}" class="ge-mark ge-mark-done">✓</text>
+          <text wx:elif="{{c.blocked}}" class="ge-mark ge-mark-blk">⊘</text>
+        </view>
+      </view>
     </scroll-view>
   </view>
 </view>

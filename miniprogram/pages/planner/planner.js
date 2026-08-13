@@ -69,6 +69,41 @@ function semesterRank(name) {
   return SEMESTER_ORDER[key] != null ? SEMESTER_ORDER[key] : 99;
 }
 
+// GE 'field of study'（后端 /courses/ge 返回英文 field）→ 三语展示。
+// 与 backend GE_FIELD_ORDER 对齐；未覆盖的 field fallback 到英文原值。
+const FIELD_I18N = {
+  "Area Studies": { en: "Area Studies", "zh-Hans": "区域研究", "zh-Hant": "區域研究" },
+  "Accounting and Corporate Governance": { en: "Accounting & Corporate Governance", "zh-Hans": "会计与企业管治", "zh-Hant": "會計與企業管治" },
+  "Business Innovation & Intelligence": { en: "Business Innovation & Intelligence", "zh-Hans": "商业创新与智能", "zh-Hant": "商業創新與智能" },
+  "Chinese Language Studies & Literature": { en: "Chinese Language & Literature", "zh-Hans": "中国语言文学", "zh-Hant": "中國語言文學" },
+  "Computing/Electronic & Computer Engineering": { en: "Computing / Electronic & Computer Eng.", "zh-Hans": "计算/电子与计算机工程", "zh-Hant": "計算/電子與計算機工程" },
+  "Creative Arts": { en: "Creative Arts", "zh-Hans": "创意艺术", "zh-Hant": "創意藝術" },
+  "Digital Business": { en: "Digital Business", "zh-Hans": "数字商业", "zh-Hant": "數碼商業" },
+  "Education": { en: "Education", "zh-Hans": "教育", "zh-Hant": "教育" },
+  "English Language Studies & Literature": { en: "English Language & Literature", "zh-Hans": "英语语言文学", "zh-Hant": "英語語言文學" },
+  "Environmental Studies": { en: "Environmental Studies", "zh-Hans": "环境研究", "zh-Hant": "環境研究" },
+  "Finance and Fintech": { en: "Finance & Fintech", "zh-Hans": "金融与金融科技", "zh-Hant": "金融與金融科技" },
+  "Health Sciences": { en: "Health Sciences", "zh-Hans": "健康科学", "zh-Hant": "健康科學" },
+  "Hospitality and Tourism Management": { en: "Hospitality & Tourism Management", "zh-Hans": "酒店与旅游管理", "zh-Hant": "酒店與旅遊管理" },
+  "International Business": { en: "International Business", "zh-Hans": "国际商业", "zh-Hant": "國際商業" },
+  "Life Sciences": { en: "Life Sciences", "zh-Hans": "生命科学", "zh-Hant": "生命科學" },
+  "Management": { en: "Management", "zh-Hans": "管理", "zh-Hant": "管理" },
+  "Marketing": { en: "Marketing", "zh-Hans": "市场营销", "zh-Hant": "市場營銷" },
+  "Mathematics & Statistics": { en: "Mathematics & Statistics", "zh-Hans": "数学与统计", "zh-Hant": "數學與統計" },
+  "Performance Studies": { en: "Performance Studies", "zh-Hans": "表演研究", "zh-Hant": "表演研究" },
+  "Social Sciences": { en: "Social Sciences", "zh-Hans": "社会科学", "zh-Hant": "社會科學" },
+  "Sports and eSports Management": { en: "Sports & eSports Management", "zh-Hans": "体育与电竞管理", "zh-Hant": "體育與電競管理" },
+  "Student Development": { en: "Student Development", "zh-Hans": "学生发展", "zh-Hant": "學生發展" },
+  "Testing and Certification": { en: "Testing & Certification", "zh-Hans": "检测与认证", "zh-Hant": "檢測與認證" },
+};
+
+function localizeField(field, locale) {
+  const m = FIELD_I18N[field];
+  if (!m) return field;
+  const key = LOCALE_NAME_KEY[locale] || "en";
+  return m[key] || m.en || field;
+}
+
 // 当前专业的课程按学年学期分组,每张卡带 status + 先修提示(仅提示,不阻塞标记)
 function buildCoursesView(prog, idToCourse, progress, keyword, text) {
   if (!prog || !idToCourse) return { semesters: [], empty: true };
@@ -154,12 +189,16 @@ Page({
   _programmeSearchTimer: null,   // 搜索防抖 timer
   _programmeSearchOpen: false,   // 全屏专业搜索浮层开关（点 hero 触发，默认收起）
   _programmePrompted: false,     // 首屏引导：本会话是否已判过自动弹浮层（防反复弹）
+  _geList: null,                 // /courses/ge 结果（GEListOut）— GE 选择浮层数据源
+  _geListCode: null,             // _geList 对应专业码（切专业后失效重拉）
+  _gePickerOpen: false,          // GE 选择浮层开关（overview 通识分类行触发）
+  _gePickerLoadError: null,      // GE 列表加载失败标记
 
   // ── 生命周期 ──────────────────────────────────────────────────────────
 
   onShow() {
     syncTabBar(this, 3);
-    this._setTabBarHidden(this._programmeSearchOpen);
+    this._setTabBarHidden(this._programmeSearchOpen || this._gePickerOpen);
     this._locale = getLocale();
     // course-detail 页标记课程后回返:作废会话级进度缓存,强制重拉(仪表盘/卡片状态)
     const app = getApp();
@@ -425,6 +464,135 @@ Page({
     wx.navigateTo({ url: "/pages/login/login" });
   },
 
+  // ── GE 通识选择浮层（屏③）── 复用 programmeSearch 的全屏浮层范式 ──────
+
+  onOpenGePicker() {
+    if (!this._user) { this.goLogin(); return; }
+    this._gePickerOpen = true;
+    this._setTabBarHidden(true);
+    this._gePickerLoadError = null;
+    this._emit();
+    const code = this._selectedCode || this._userProgrammeCode;
+    if (code) this._loadGe(code);
+  },
+
+  onCloseGePicker() {
+    this._gePickerOpen = false;
+    this._setTabBarHidden(false);
+    this._emit();
+  },
+
+  _loadGe(code) {
+    if (!code) return Promise.resolve(null);
+    if (this._geList && this._geListCode === code) return Promise.resolve(this._geList);
+    const path = `/courses/ge?programme_code=${encodeURIComponent(code)}`;
+    return request({ path, auth: false })
+      .then((data) => {
+        this._geList = data;
+        this._geListCode = code;
+        this._gePickerLoadError = null;
+        this._emit();
+        return data;
+      })
+      .catch((err) => {
+        this._gePickerLoadError = (err && err.message) || "fail";
+        this._emit();
+        return null;
+      });
+  },
+
+  // 点 GE 课 → 乐观切换 completed（复用 PUT /courses/progress，与 course-detail 同语义）
+  onToggleGeCourse(e) {
+    if (!this._user) { this.goLogin(); return; }
+    const ds = e.currentTarget.dataset;
+    if (ds.blocked) {
+      // 本专业领域的 GE 不可选（官方规则）— 提示并拦截
+      wx.showToast({ title: getTexts("planner", this._locale).geFieldBlocked, icon: "none" });
+      return;
+    }
+    const id = ds.id;
+    if (!id) return;
+    const prev = (this._progress || {})[id];
+    const next = prev === "completed" ? "not_started" : "completed";
+    this._progress = Object.assign({}, this._progress, { [id]: next });
+    this._emit(); // 即时反馈：taken 计数 + 行高亮
+    request({
+      method: "PUT",
+      path: "/courses/progress",
+      data: { course_id: id, status: next },
+      auth: true,
+    })
+      .then(() => {
+        wx.showToast({ title: this.data.text.geMarkSuccess, icon: "success" });
+        // 进度变了：回 overview 后重拉 graduation-status
+        const app = getApp();
+        if (app && app.globalData) app.globalData.coursesNeedRefresh = true;
+      })
+      .catch(() => {
+        this._progress = Object.assign({}, this._progress, { [id]: prev }); // 回滚
+        this._emit();
+        wx.showToast({ title: getTexts("planner", this._locale).loadFail, icon: "none" });
+      });
+  },
+
+  // GE 浮层 view：按 field 分组（GE_FIELD_ORDER 顺序）、taken/blocked、实时门数（field 去重）
+  _buildGePicker(prog, entry, locale, text) {
+    if (!this._gePickerOpen || !prog) return { open: false };
+    const geCat = (prog.categories || {})["general-ed"] || {};
+    const need = geCat.pick_n || 2;
+    const base = { open: true, title: text.gePickerTitle, ruleNote: text.geRuleNote, need };
+    if (this._gePickerLoadError) {
+      return Object.assign(base, { loadError: text.geLoadFail });
+    }
+    const geData = (this._geList && this._geListCode === entry.code) ? this._geList : null;
+    if (!geData) {
+      return Object.assign(base, { loading: true });
+    }
+    const order = geData.field_order || [];
+    const ownFields = new Set(geData.own_fields || []);
+    const progress = this._progress || {};
+    const byField = new Map();
+    for (const c of geData.courses || []) {
+      if (!byField.has(c.field)) byField.set(c.field, []);
+      byField.get(c.field).push(c);
+    }
+    // 实时算已选门数（field 去重，对齐后端 _compute_graduation 规则）
+    const usedFields = new Set();
+    let taken = 0;
+    for (const c of geData.courses || []) {
+      if (progress[c.id] === "completed" && !c.blocked && !usedFields.has(c.field)) {
+        usedFields.add(c.field);
+        taken++;
+      }
+    }
+    const fields = order
+      .filter((f) => byField.has(f))
+      .map((f) => {
+        const fBlocked = ownFields.has(f);
+        const fCourses = byField.get(f);
+        return {
+          name: localizeField(f, locale),
+          blocked: fBlocked,
+          headRight: fBlocked
+            ? text.geFieldBlocked
+            : fillTemplate(text.geFieldCount, { n: fCourses.length }),
+          courses: fCourses.map((c) => ({
+            id: c.id,
+            code: c.code,
+            name: locale === "en" ? c.name_en : c.name_zh,
+            credits: 3, // GE 课程统一 3 学分（3cru 体系，ge_courses.py）
+            taken: progress[c.id] === "completed",
+            blocked: !!c.blocked,
+          })),
+        };
+      });
+    return Object.assign(base, {
+      progress: fillTemplate(text.geProgress, { taken, need }),
+      taken,
+      fields,
+    });
+  },
+
   onTabChange(e) {
     const tab = e.currentTarget.dataset.tab;
     if (tab && tab !== this._activeTab) {
@@ -560,6 +728,7 @@ Page({
       showTabs: false,
       searchKeyword: this._searchKeyword,
       coursesView: { semesters: [], empty: true },
+      gePicker: { open: false },
     };
 
     if (!entry || this._loading) {
@@ -622,6 +791,7 @@ Page({
         required: c.min_credits,
         pct: categoryPercent(c.earned_credits, c.min_credits),
         color: c.color,
+        hasGePool: c.key === "general-ed",
       }));
       view.recommendations = (status.recommendations || []).map((r) => ({
         course_id: r.course_id,
@@ -646,9 +816,13 @@ Page({
         required: c.min_credits,
         pct: 0,
         color: c.color,
+        hasGePool: c.key === "general-ed",
       }));
       view.heroCopy = this._user ? "" : text.heroCopy;
     }
+
+    // ── GE 选择浮层 view（仅完整规划专业 + 已打开）──
+    view.gePicker = this._buildGePicker(prog, entry, locale, text);
 
     this.setData(view);
   },
