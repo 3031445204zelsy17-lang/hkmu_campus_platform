@@ -119,10 +119,24 @@ CREATE TABLE IF NOT EXISTS course_reviews (
     course_id TEXT REFERENCES courses(id),
     author_id INTEGER NOT NULL REFERENCES users(id),
     rating INTEGER CHECK(rating BETWEEN 1 AND 5),
+    rating_teaching INTEGER CHECK(rating_teaching BETWEEN 1 AND 5),
+    rating_workload INTEGER CHECK(rating_workload BETWEEN 1 AND 5),
+    rating_gain INTEGER CHECK(rating_gain BETWEEN 1 AND 5),
     content TEXT NOT NULL,
     helpful_count INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- one vote per user per course per tag the PK dedupes repeat votes
+CREATE TABLE IF NOT EXISTS course_review_tags (
+    course_id TEXT NOT NULL REFERENCES courses(id),
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    tag TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (course_id, user_id, tag)
+);
+
+CREATE INDEX IF NOT EXISTS idx_review_tags_course ON course_review_tags(course_id, tag);
 
 CREATE TABLE IF NOT EXISTS news (
     id SERIAL PRIMARY KEY,
@@ -228,6 +242,20 @@ END $$;
 -- Add entry_term column for planner onboarding to record intake term
 DO $$ BEGIN
     ALTER TABLE users ADD COLUMN entry_term TEXT;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
+-- Add three dimension review ratings teaching workload gain for existing DBs
+DO $$ BEGIN
+    ALTER TABLE course_reviews ADD COLUMN rating_teaching INTEGER;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+DO $$ BEGIN
+    ALTER TABLE course_reviews ADD COLUMN rating_workload INTEGER;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+DO $$ BEGIN
+    ALTER TABLE course_reviews ADD COLUMN rating_gain INTEGER;
 EXCEPTION WHEN duplicate_column THEN NULL;
 END $$;
 

@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator
-from typing import Optional
+from pydantic import BaseModel, Field, field_validator, model_validator
+from typing import List, Optional
 
 
 # --- Auth ---
@@ -214,20 +214,59 @@ class UserCourseOut(BaseModel):
     updated_at: Optional[str] = None
 
 
+# 避坑标签白名单 — course_review_tags.tag 只存这些 key，前端 i18n 映射三语展示。
+REVIEW_TAGS = (
+    "generous_grading",   # 给分好
+    "tough_grading",      # 给分严
+    "heavy_workload",     # 作业多
+    "light_workload",     # 作业少
+    "high_gain",          # 收获大
+    "open_book",          # 开卷考
+    "group_project",      # 小组项目多
+    "attendance_strict",  # 点名严
+)
+
+
 class CourseReviewCreate(BaseModel):
-    rating: int = Field(ge=1, le=5)
+    # 老 5 星兼容保留(T17);三维时代至少传一维,rating 可空
+    rating: Optional[int] = Field(default=None, ge=1, le=5)
+    rating_teaching: Optional[int] = Field(default=None, ge=1, le=5)
+    rating_workload: Optional[int] = Field(default=None, ge=1, le=5)
+    rating_gain: Optional[int] = Field(default=None, ge=1, le=5)
     content: str = Field(min_length=1, max_length=2000)
+    tags: List[str] = Field(default_factory=list)
+
+    @field_validator("tags")
+    @classmethod
+    def tags_whitelist(cls, v):
+        unknown = [t for t in v if t not in REVIEW_TAGS]
+        if unknown:
+            raise ValueError(f"unknown review tags: {unknown}")
+        return list(dict.fromkeys(v))  # 去重保序
+
+    @model_validator(mode="after")
+    def at_least_one_rating(self):
+        # 三维与老 5 星至少传一项,全空直接 422
+        if not any(
+            (self.rating, self.rating_teaching, self.rating_workload, self.rating_gain)
+        ):
+            raise ValueError("at least one rating is required")
+        return self
 
 
 class CourseReviewOut(BaseModel):
     id: int
     course_id: str
     author_id: int
-    rating: int
+    rating: Optional[int] = None
+    rating_teaching: Optional[int] = None
+    rating_workload: Optional[int] = None
+    rating_gain: Optional[int] = None
     content: str
     helpful_count: int = 0
     created_at: Optional[str] = None
     author_nickname: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
 
 
 # --- News ---

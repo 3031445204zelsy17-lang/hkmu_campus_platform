@@ -145,7 +145,7 @@
       "name": "后端 reviews 三维+tags 表",
       "description": "course_reviews 加 rating_teaching/workload/gain + course_review_tags 表",
       "dependencies": [],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T14",
