@@ -522,6 +522,10 @@ const DICTIONARY = {
       "bucket_other": "\u5176\u4ed6",
       // \u2500\u2500 GE \u901a\u8bc6\u9009\u62e9\u5668\uff08\u5c4f\u2462\uff09\u2500\u2500
       gePickerTitle: "\u9009\u62e9\u901a\u8bc6\u8bfe\u7a0b",
+      geTabFields: "\u6309\u9886\u57df",
+      geTabRanking: "\u8bc4\u5206\u699c",
+      geRankEmpty: "\u6682\u65e0\u8bc4\u5206 \u2014 \u53bb\u62a2\u9996\u8bc4",
+      geRankCount: "{n} \u4eba\u8bc4",
       geRuleNote: "\u6bcf\u95e8\u987b\u6765\u81ea\u4e0d\u540c\u9886\u57df\uff0c\u4e14\u4e0d\u80fd\u9009\u4f60\u6240\u5728\u4e13\u4e1a\u7684\u9886\u57df\u3002",
       geSelectEntry: "\u9009\u62e9",
       geProgress: "\u5df2\u9009 {taken} / {need} \u95e8 \u00b7 \u6bcf\u9886\u57df\u53ea\u8ba1\u4e00\u95e8",
@@ -1090,6 +1094,10 @@ DICTIONARY["zh-Hant"] = {
     "bucket_other": "\u5176\u4ed6",
     // GE \u9078\u64c7\u5668\uff1a\u7c21\u7e41\u6709\u5225\u7684\u8986\u84cb\uff1bgeSelectEntry / geMarkSuccess \u7c21\u7e41\u540c\u5f62\uff0c\u7e7c\u627f zh-Hans
     gePickerTitle: "\u9078\u64c7\u901a\u8b58\u8ab2\u7a0b",
+    geTabFields: "\u6309\u9818\u57df",
+    geTabRanking: "\u8a55\u5206\u699c",
+    geRankEmpty: "\u66ab\u7121\u8a55\u5206 \u2014 \u53bb\u6436\u9996\u8a55",
+    geRankCount: "{n} \u4eba\u8a55",
     geRuleNote: "\u6bcf\u9580\u9808\u4f86\u81ea\u4e0d\u540c\u9818\u57df\uff0c\u4e14\u4e0d\u80fd\u9078\u4f60\u6240\u5728\u5c08\u696d\u7684\u9818\u57df\u3002",
     geProgress: "\u5df2\u9078 {taken} / {need} \u9580 \u00b7 \u6bcf\u9818\u57df\u53ea\u8a08\u4e00\u9580",
     geFieldBlocked: "\u4f60\u7684\u9818\u57df \u00b7 \u7981\u9078",
@@ -1665,6 +1673,10 @@ DICTIONARY.en = {
     "bucket_other": "Other",
     // ── GE picker (screen ③) ──
     gePickerTitle: "Choose General Education",
+    geTabFields: "By field",
+    geTabRanking: "Ranking",
+    geRankEmpty: "No scores yet — review to rank",
+    geRankCount: "{n} reviews",
     geRuleNote: "Each must be from a different field, and not your own programme's field.",
     geSelectEntry: "Choose",
     geProgress: "{taken} / {need} chosen · one per field",

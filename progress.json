@@ -206,7 +206,7 @@
       "dependencies": [
         "T18"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T20",
@@ -216,7 +216,7 @@
       "dependencies": [
         "T19"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T21",

@@ -236,6 +236,9 @@ Page({
   _geListCode: null,             // _geList 对应专业码（切专业后失效重拉）
   _gePickerOpen: false,          // GE 选择浮层开关（overview 通识分类行触发）
   _gePickerLoadError: null,      // GE 列表加载失败标记
+  _geMode: "fields",             // T19: GE 浮层视图 "fields"(按领域) | "ranking"(评分榜)
+  _geRanking: null,              // /courses/ge/ranking 结果（会话级，随 code 失效）
+  _geRankingCode: null,
 
   // ── 生命周期 ──────────────────────────────────────────────────────────
 
@@ -649,7 +652,10 @@ Page({
     this._gePickerLoadError = null;
     this._emit();
     const code = this._selectedCode || this._userProgrammeCode;
-    if (code) this._loadGe(code);
+    if (code) {
+      this._loadGe(code);
+      this._loadGeRanking(code); // T19: 评分榜数据并行预拉
+    }
   },
 
   onCloseGePicker() {
@@ -675,6 +681,40 @@ Page({
         this._emit();
         return null;
       });
+  },
+
+  // T19: GE 评分榜数据（会话级缓存，失败静默 — ranking tab 显 loading/空态）
+  _loadGeRanking(code) {
+    if (!code) return Promise.resolve(null);
+    if (this._geRanking && this._geRankingCode === code) return Promise.resolve(this._geRanking);
+    const path = `/courses/ge/ranking?programme_code=${encodeURIComponent(code)}`;
+    return request({ path, auth: false })
+      .then((data) => {
+        this._geRanking = data;
+        this._geRankingCode = code;
+        this._emit();
+        return data;
+      })
+      .catch(() => null);
+  },
+
+  // T19: GE 浮层 按领域/评分榜 视图切换
+  onGeModeTap(e) {
+    const mode = e.currentTarget.dataset.mode;
+    if ((mode === "fields" || mode === "ranking") && mode !== this._geMode) {
+      this._geMode = mode;
+      this._emit();
+    }
+  },
+
+  // T19: 评分榜行点按 → 关浮层进课程详情（去三维评价/避坑投票）
+  onOpenGeCourse(e) {
+    const id = e.currentTarget.dataset.id;
+    if (!id) return;
+    this._gePickerOpen = false;
+    this._setTabBarHidden(false);
+    this._emit();
+    wx.navigateTo({ url: `/pages/course-detail/course-detail?id=${encodeURIComponent(id)}` });
   },
 
   // 点 GE 课 → 乐观切换 completed（复用 PUT /courses/progress，与 course-detail 同语义）
@@ -712,13 +752,50 @@ Page({
   },
 
   // GE 浮层 view：按 field 分组（GE_FIELD_ORDER 顺序）、taken/blocked、实时门数（field 去重）
+  // T19: mode="ranking" 时出评分榜（分数降序）；T20: 空榜显"抢首评"空态。
   _buildGePicker(prog, entry, locale, text) {
     if (!this._gePickerOpen || !prog) return { open: false };
     const geCat = (prog.categories || {})["general-ed"] || {};
     const need = geCat.pick_n || 2;
-    const base = { open: true, title: text.gePickerTitle, ruleNote: text.geRuleNote, need };
+    // 维度/避坑标签词条与 course-detail 同源,不重复造 key
+    const cdText = getTexts("courseDetail", locale);
+    const base = {
+      open: true,
+      title: text.gePickerTitle,
+      ruleNote: text.geRuleNote,
+      need,
+      mode: this._geMode,
+      tabFields: text.geTabFields,
+      tabRanking: text.geTabRanking,
+    };
     if (this._gePickerLoadError) {
       return Object.assign(base, { loadError: text.geLoadFail });
+    }
+    if (this._geMode === "ranking") {
+      const rk = (this._geRanking && this._geRankingCode === entry.code) ? this._geRanking : null;
+      if (!rk) {
+        return Object.assign(base, { rankingLoading: true });
+      }
+      const rankRows = (rk.items || []).map((i) => ({
+        id: i.id,
+        code: i.code,
+        name: locale === "en" ? i.name_en : i.name_zh,
+        fieldLabel: localizeField(i.field, locale),
+        score: Number(i.score).toFixed(1),
+        dimsLine: cdText.dimTeaching + " " + i.teaching_avg + " · " +
+          cdText.dimWorkload + " " + i.workload_avg + " · " +
+          cdText.dimGain + " " + i.gain_avg,
+        countLabel: fillTemplate(text.geRankCount, { n: i.review_count }),
+        tags: (i.top_tags || []).map((t) => ({
+          label: cdText["tag_" + t.tag] || t.tag,
+          count: t.count,
+        })),
+      }));
+      return Object.assign(base, {
+        rankingLoading: false,
+        rankingEmpty: rankRows.length ? "" : text.geRankEmpty,
+        rankRows,
+      });
     }
     const geData = (this._geList && this._geListCode === entry.code) ? this._geList : null;
     if (!geData) {
