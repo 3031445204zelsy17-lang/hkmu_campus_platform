@@ -535,6 +535,11 @@ const DICTIONARY = {
       geBlocked: "\u7981\u9009",
       geCredits: "{n} \u5b66\u5206",
       geLoadFail: "\u901a\u8bc6\u8bfe\u7a0b\u52a0\u8f7d\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002",
+      // T24: GE \u6d6e\u5c42 footer \u2014 \u6559\u7a0b\u5165\u53e3 + \u53bb\u9009\u8bfe\u590d\u5236\u94fe\u63a5
+      geGuideEntry: "\u9009 GEN \u6559\u7a0b",
+      geMyhkmuLink: "\u53bb MyHKMU \u9009\u8bfe",
+      geLinkCopied: "\u94fe\u63a5\u5df2\u590d\u5236",
+      geLinkCopyFail: "\u590d\u5236\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5",
       geMarkSuccess: "\u5df2\u66f4\u65b0",
     },
     // T23: GE \u9009\u8bfe\u6559\u7a0b\u9875\uff08ge-guide\uff09\u3002\u6b65\u9aa4\u6587\u6848\u6309\u540e\u7aef /ge/guide \u7684 step key
@@ -1133,6 +1138,11 @@ DICTIONARY["zh-Hant"] = {
     geBlocked: "\u7981\u9078",
     geCredits: "{n} \u5b78\u5206",
     geLoadFail: "\u901a\u8b58\u8ab2\u7a0b\u8f09\u5165\u5931\u6557\uff0c\u8acb\u7a0d\u5f8c\u91cd\u8a66\u3002",
+    // T24: GE \u6d6e\u5c64 footer
+    geGuideEntry: "\u9078 GEN \u6559\u7a0b",
+    geMyhkmuLink: "\u53bb MyHKMU \u9078\u8ab2",
+    geLinkCopied: "\u9023\u7d50\u5df2\u8907\u88fd",
+    geLinkCopyFail: "\u8907\u88fd\u5931\u6557\uff0c\u8acb\u91cd\u8a66",
   }),
   // T23: GE \u6559\u7a0b\u9801\uff08ge-guide\uff09\u2014 \u5168\u91cf\u7e41\u9ad4\u8986\u84cb\uff08\u542b\u6b65\u9a5f\u6587\u6848\uff0c\u4e0d\u7e7c\u627f zh-Hans\uff09
   geGuide: {
@@ -1739,6 +1749,11 @@ DICTIONARY.en = {
     geBlocked: "Excluded",
     geCredits: "{n} cr",
     geLoadFail: "Failed to load GE courses. Please try again later.",
+    // T24: GE picker footer
+    geGuideEntry: "GE tutorial",
+    geMyhkmuLink: "Enrol on MyHKMU",
+    geLinkCopied: "Link copied",
+    geLinkCopyFail: "Copy failed, please retry",
     geMarkSuccess: "Updated",
   },
   // T23: GE tutorial page (ge-guide) — full EN copy (no zh-Hans inheritance)

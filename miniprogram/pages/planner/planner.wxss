@@ -716,10 +716,50 @@
   min-height: 0;
   width: 100%;
   box-sizing: border-box;
-  padding: 0 28rpx 48rpx;
+  padding: 0 28rpx 16rpx; /* T24: 底部让位给常驻 footer，收窄原 48rpx */
 }
 .ge-panel-msg {
   margin: 48rpx 28rpx;
+}
+
+/* T24: GE 浮层 footer — 选 GEN 教程 + 去 MyHKMU 选课（复制链接） */
+.ge-foot {
+  flex-shrink: 0;
+  border-top: 1rpx solid var(--divider);
+  background: var(--surface);
+  padding: 12rpx 28rpx calc(16rpx + env(safe-area-inset-bottom));
+}
+
+.ge-foot-entry {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 18rpx 8rpx;
+}
+
+.ge-foot-hv {
+  opacity: var(--press-opacity);
+}
+
+.ge-foot-ic {
+  font-size: 30rpx;
+}
+
+.ge-foot-tx {
+  flex: 1;
+  font-size: var(--fs-feed-meta);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.ge-foot-arrow {
+  color: var(--text-secondary);
+  font-size: 32rpx;
+}
+
+.ge-foot-copy {
+  color: var(--green-deep);
+  font-size: 30rpx;
 }
 
 /* 规则提示（绿底）+ 进度 */

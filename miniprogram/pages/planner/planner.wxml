@@ -426,5 +426,19 @@
         </view>
       </block>
     </scroll-view>
+
+    <!-- T24: footer 常驻 — 选 GEN 教程 + 去 MyHKMU 选课（复制链接） -->
+    <view class="ge-foot">
+      <view class="ge-foot-entry" bindtap="onOpenGeGuide" hover-class="ge-foot-hv">
+        <text class="ge-foot-ic">📖</text>
+        <text class="ge-foot-tx">{{gePicker.guideEntry}}</text>
+        <text class="ge-foot-arrow">›</text>
+      </view>
+      <view wx:if="{{gePicker.selectUrl}}" class="ge-foot-entry" bindtap="onCopyMyhkmuLink" hover-class="ge-foot-hv">
+        <text class="ge-foot-ic">🔗</text>
+        <text class="ge-foot-tx">{{gePicker.selectLabel}}</text>
+        <text class="ge-foot-copy">⧉</text>
+      </view>
+    </view>
   </view>
 </view>

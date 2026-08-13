@@ -205,6 +205,7 @@ Page({
   _geMode: "fields",             // T19: GE 浮层视图 "fields"(按领域) | "ranking"(评分榜)
   _geRanking: null,              // /courses/ge/ranking 结果（会话级，随 code 失效）
   _geRankingCode: null,
+  _geGuide: null,                // T24: /courses/ge/guide 静态配置（会话级，select_url 等）
 
   // ── 生命周期 ──────────────────────────────────────────────────────────
 
@@ -622,6 +623,7 @@ Page({
       this._loadGe(code);
       this._loadGeRanking(code); // T19: 评分榜数据并行预拉
     }
+    this._loadGeGuide(); // T24: 教程配置（select_url 等）一并预拉
   },
 
   onCloseGePicker() {
@@ -664,6 +666,19 @@ Page({
       .catch(() => null);
   },
 
+  // T24: GE 教程配置（select_url 等，静态端点）— 会话级缓存，失败静默：
+  // footer 的「去 MyHKMU 选课」复制按钮在未拉到前隐藏，教程入口不受影响。
+  _loadGeGuide() {
+    if (this._geGuide) return Promise.resolve(this._geGuide);
+    return request({ path: "/courses/ge/guide", auth: false })
+      .then((data) => {
+        this._geGuide = data || null;
+        this._emit();
+        return data;
+      })
+      .catch(() => null);
+  },
+
   // T19: GE 浮层 按领域/评分榜 视图切换
   onGeModeTap(e) {
     const mode = e.currentTarget.dataset.mode;
@@ -671,6 +686,29 @@ Page({
       this._geMode = mode;
       this._emit();
     }
+  },
+
+  // T24: 教程入口 → ge-guide 页（传本专业 own_fields 供步骤③高亮；浮层保留，
+  // 返回键回到浮层继续选课）。未拉到 GE 列表时传空数组，页内走通用文案。
+  onOpenGeGuide() {
+    const code = this._selectedCode || this._userProgrammeCode;
+    const geData = (this._geList && this._geListCode === code) ? this._geList : null;
+    const fields = (geData && Array.isArray(geData.own_fields)) ? geData.own_fields : [];
+    wx.navigateTo({
+      url: `/pages/ge-guide/ge-guide?fields=${encodeURIComponent(JSON.stringify(fields))}`,
+    });
+  },
+
+  // T24: 去 MyHKMU 选课 — 复制链接（小程序开不了外链，复制是既定交互）
+  onCopyMyhkmuLink() {
+    const url = this._geGuide && this._geGuide.select_url;
+    if (!url) return;
+    const text = getTexts("planner", this._locale);
+    wx.setClipboardData({
+      data: url,
+      success: () => wx.showToast({ title: text.geLinkCopied, icon: "none" }),
+      fail: () => wx.showToast({ title: text.geLinkCopyFail, icon: "none" }),
+    });
   },
 
   // T19: 评分榜行点按 → 关浮层进课程详情（去三维评价/避坑投票）
@@ -733,6 +771,11 @@ Page({
       mode: this._geMode,
       tabFields: text.geTabFields,
       tabRanking: text.geTabRanking,
+      // T24: 浮层底部常驻 footer — 教程入口 + 去 MyHKMU 选课（复制链接，
+      // 静态配置未拉到前隐藏该按钮）
+      guideEntry: text.geGuideEntry,
+      selectLabel: text.geMyhkmuLink,
+      selectUrl: (this._geGuide && this._geGuide.select_url) || "",
     };
     if (this._gePickerLoadError) {
       return Object.assign(base, { loadError: text.geLoadFail });
