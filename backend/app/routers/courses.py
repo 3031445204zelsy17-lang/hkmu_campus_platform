@@ -209,7 +209,7 @@ _REVIEW_COLS = """cr.id, cr.course_id, cr.author_id, cr.rating, cr.content,
 @router.get("", response_model=PaginatedResponse)
 async def list_courses(
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=50),
+    page_size: int = Query(20, ge=1, le=500),  # le 50→500: GE 灌表后 courses 表 114 门，planner _loadCourses 需 page_size=200 一次拉全（le=50 会 422 返空 → "我的课程"空）。reviews 端点 le=50 不动（50/页合理）
     year: int | None = None,
     semester: str | None = None,
     category: str | None = None,
