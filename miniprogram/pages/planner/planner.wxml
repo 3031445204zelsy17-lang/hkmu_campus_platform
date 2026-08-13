@@ -14,12 +14,39 @@
     <block wx:if="{{onboarding.step===1}}">
       <view class="ob-q">{{text.obStep1Q}}</view>
       <view class="ob-sub">{{text.obStep1Sub}}</view>
-      <view class="ob-placeholder">[T05] 选专业 · programme-picker</view>
+      <programme-picker
+        mode="inline"
+        selected-code="{{onboarding.programmeCode}}"
+        locale="{{locale}}"
+        bind:select="onObPickProgramme"
+      />
     </block>
     <block wx:elif="{{onboarding.step===2}}">
       <view class="ob-q">{{text.obStep2Q}}</view>
       <view class="ob-sub">{{text.obStep2Sub}}</view>
-      <view class="ob-placeholder">[T05] 选入学学期</view>
+
+      <view class="ob-prev-pick">
+        <view class="ob-prev-pick-label">{{text.obPrevPick}}</view>
+        <view class="ob-prev-pick-val">{{onboarding.programmeName}}</view>
+      </view>
+
+      <view class="ob-field-label">{{text.obYearLabel}}</view>
+      <view class="ob-chips">
+        <view wx:for="{{onboarding.years}}" wx:key="*this"
+              class="ob-chip {{onboarding.year===item?'sel':''}}"
+              data-year="{{item}}" hover-class="ob-chip-hover"
+              bindtap="onObPickYear">{{item}}</view>
+      </view>
+
+      <view class="ob-field-label">{{text.obTermLabel}}</view>
+      <view class="ob-chips">
+        <view class="ob-chip {{onboarding.semester==='autumn'?'sel':''}}"
+              data-sem="autumn" hover-class="ob-chip-hover"
+              bindtap="onObPickSem">{{text.obAutumn}}</view>
+        <view class="ob-chip {{onboarding.semester==='spring'?'sel':''}}"
+              data-sem="spring" hover-class="ob-chip-hover"
+              bindtap="onObPickSem">{{text.obSpring}}</view>
+      </view>
     </block>
     <block wx:elif="{{onboarding.step===3}}">
       <view class="ob-q">{{text.obStep3Q}}</view>
@@ -30,7 +57,7 @@
   <view class="ob-next">
     <view class="ob-next-btns">
       <view wx:if="{{onboarding.step>1}}" class="ob-btn" hover-class="ob-btn-hover" bindtap="onObBack">{{text.obPrev}}</view>
-      <view class="ob-btn pri" hover-class="ob-btn-hover" bindtap="onObNext">{{onboarding.step<3 ? text.obNext : text.obFinish}}</view>
+      <view class="ob-btn pri {{onboarding.canNext?'':'ob-btn-disabled'}}" hover-class="ob-btn-hover" bindtap="onObNext">{{onboarding.step<3 ? text.obNext : text.obFinish}}</view>
     </view>
   </view>
 </view>

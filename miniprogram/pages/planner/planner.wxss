@@ -684,3 +684,49 @@
   box-shadow: var(--shadow-btn-primary);
 }
 .ob-btn-hover { opacity: 0.86; }
+.ob-btn-disabled { opacity: 0.45; }
+
+/* T05: 步骤② 上一步已选 + 年份/学期 chips */
+.ob-prev-pick {
+  margin-bottom: 28rpx;
+  padding: 20rpx 24rpx;
+  background: var(--surface-subtle);
+  border-radius: var(--radius-entry);
+}
+.ob-prev-pick-label {
+  font-size: var(--fs-link);
+  color: var(--text-secondary);
+  margin-bottom: 6rpx;
+}
+.ob-prev-pick-val {
+  font-size: var(--fs-body);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.ob-field-label {
+  font-size: var(--fs-subtitle);
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin: 8rpx 0 14rpx;
+}
+.ob-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+  margin-bottom: 28rpx;
+}
+.ob-chip {
+  padding: 16rpx 30rpx;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1rpx solid var(--border-soft);
+  color: var(--text-primary);
+  font-size: var(--fs-btn);
+  font-weight: 600;
+}
+.ob-chip.sel {
+  background: var(--accent-blue);
+  color: #fffaf0;
+  border-color: var(--accent-blue);
+}
+.ob-chip-hover { opacity: 0.86; }

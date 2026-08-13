@@ -198,3 +198,8 @@
   font-size: 34rpx;
   font-weight: 700;
 }
+
+/* inline 模式:列表区无 scroll-view,由外层引导 ob-scroll 滚动 */
+.ps-inline-list {
+  padding-top: 16rpx;
+}

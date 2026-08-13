@@ -192,6 +192,11 @@ Page({
   _onboardingActive: false,      // T04: 新生引导全屏开关（无 programme 时激活，替代弹浮层）
   _onboardingStep: 1,            // T04: 引导当前步 1/2/3
   _obStatusBar: 0,               // T04: 状态栏高度(px)，引导 nav 避让用
+  _onboardingProgrammeCode: "",  // T05: 步骤①选的专业 code
+  _onboardingProgrammeName: "",  // T05: 步骤①选的专业名
+  _onboardingYears: [],          // T05: 步骤②候选年份
+  _onboardingYear: 0,            // T05: 步骤②选中年份
+  _onboardingSemester: "autumn", // T05: 步骤②选中学期
   _geList: null,                 // /courses/ge 结果（GEListOut）— GE 选择浮层数据源
   _geListCode: null,             // _geList 对应专业码（切专业后失效重拉）
   _gePickerOpen: false,          // GE 选择浮层开关（overview 通识分类行触发）
@@ -292,9 +297,17 @@ Page({
     const pickerList = this._pickerList || [];
     if (pickerList.length && !this._selectedCode && !this._userProgrammeCode) {
       // T04: 进全屏 3 步引导(选专业/选学期/生成),替代原"突然弹选专业浮层"。
-      // 步骤内容 T05(①②)/T06(③)填;专业搜索浮层改由引导步骤①内触发。
+      // T05: 初始化步骤①②选择(年份=当前年,学期默认秋季)
       this._onboardingActive = true;
       this._onboardingStep = 1;
+      this._onboardingProgrammeCode = "";
+      this._onboardingProgrammeName = "";
+      if (!this._onboardingYears.length) {
+        const cy = new Date().getFullYear();
+        this._onboardingYears = [cy - 3, cy - 2, cy - 1, cy, cy + 1];
+      }
+      this._onboardingYear = new Date().getFullYear();
+      this._onboardingSemester = "autumn";
       this._setTabBarHidden(true);
       this._emit();
     }
@@ -377,8 +390,20 @@ Page({
 
   // ── 屏④:新生引导(T04 骨架)── 步骤前进/后退;完成关闭进主屏 ──
   onObNext() {
-    if (this._onboardingStep < 3) {
-      this._onboardingStep += 1;
+    const text = getTexts("planner", this._locale);
+    if (this._onboardingStep === 1) {
+      if (!this._onboardingProgrammeCode) {
+        wx.showToast({ title: text.obPickProgramme, icon: "none" });
+        return;
+      }
+      this._onboardingStep = 2;
+      this._emit();
+    } else if (this._onboardingStep === 2) {
+      if (!this._onboardingYear || !this._onboardingSemester) {
+        wx.showToast({ title: text.obPickTerm, icon: "none" });
+        return;
+      }
+      this._onboardingStep = 3;
       this._emit();
     } else {
       // 步骤③完成:关闭引导,进主屏(T06 在此加"按 Study Plan 生成课表"逻辑)
@@ -393,6 +418,30 @@ Page({
       this._onboardingStep -= 1;
       this._emit();
     }
+  },
+
+  // T05: 当前步"下一步"是否可走(步骤①需选专业,②需选学期)
+  _obCanNext() {
+    if (this._onboardingStep === 1) return !!this._onboardingProgrammeCode;
+    if (this._onboardingStep === 2) return !!this._onboardingYear && !!this._onboardingSemester;
+    return true;
+  },
+
+  onObPickProgramme(e) {
+    const { code, name } = e.detail;
+    this._onboardingProgrammeCode = code;
+    this._onboardingProgrammeName = name;
+    this._emit();
+  },
+
+  onObPickYear(e) {
+    this._onboardingYear = e.currentTarget.dataset.year;
+    this._emit();
+  },
+
+  onObPickSem(e) {
+    this._onboardingSemester = e.currentTarget.dataset.sem;
+    this._emit();
   },
 
   _setTabBarHidden(hidden) {
@@ -765,6 +814,12 @@ Page({
         active: !!this._onboardingActive,
         step: this._onboardingStep || 1,
         statusBar: this._obStatusBar || 0,
+        programmeCode: this._onboardingProgrammeCode || "",
+        programmeName: this._onboardingProgrammeName || "",
+        years: this._onboardingYears || [],
+        year: this._onboardingYear || 0,
+        semester: this._onboardingSemester || "",
+        canNext: this._obCanNext(),
       },
     };
 

@@ -36,6 +36,7 @@ Component({
     open: { type: Boolean, value: false },
     selectedCode: { type: String, value: "" },
     locale: { type: String, value: "en" },
+    mode: { type: String, value: "overlay" }, // overlay(全屏浮层) | inline(嵌入引导)
   },
 
   data: {
@@ -80,6 +81,10 @@ Component({
         top: appHeaderHeight(),
         text: getTexts("planner", this.properties.locale),
       });
+      // inline 模式(嵌入引导):无 open 触发,attached 即拉数据
+      if (this.properties.mode === "inline") {
+        this._ensureData().then(() => this._rebuild());
+      }
     },
     detached() {
       if (this._queryTimer) clearTimeout(this._queryTimer);
