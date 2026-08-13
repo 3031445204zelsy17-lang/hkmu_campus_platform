@@ -207,6 +207,19 @@ class GERankingOut(BaseModel):
     items: list[GERankItemOut] = Field(default_factory=list)
 
 
+class GEGuideStepOut(BaseModel):
+    key: str  # stable i18n key — 前端按 key 映射三语，缺失时回退 title/detail(zh)
+    title: str
+    detail: str
+
+
+class GEGuideOut(BaseModel):
+    select_url: str  # MyHKMU portal login (复制链接用)
+    pdf_url: str     # 官方 GE Courses Selection Guide PDF
+    pdf_updated: str
+    tutorial_steps: list[GEGuideStepOut]
+
+
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def _course_row_to_out(row) -> CourseOut:
@@ -752,6 +765,49 @@ async def ge_ranking(programme_code: str | None = None):
         ))
     items.sort(key=lambda i: (-i.score, i.code))
     return GERankingOut(programme_code=programme_code, total=len(items), items=items)
+
+
+# T22: GE 选课官方教程配置。纯静态(无 DB、无图片)——PDF 转图整条链已砍,
+# 教程目的=学会流程,4 步够。步骤 3 的"本专业领域"高亮由前端结合 /ge 的
+# own_fields 动态渲染(后端不知道用户专业,不掺和)。URL 均实测可达:
+# myhkmu 302 登录跳转、PDF 206(2026-08-13 验证)。
+_GE_GUIDE = GEGuideOut(
+    select_url="https://myhkmu.hkmu.edu.hk/",
+    pdf_url=(
+        "https://www.hkmu.edu.hk/REG/reg_ftae/GE/"
+        "General%20Education%20Courses%20Selection%20Guide_3cru.pdf"
+    ),
+    pdf_updated="2026-08-07",  # PDF 自述的 last updated,换版时同步改
+    tutorial_steps=[
+        GEGuideStepOut(
+            key="pick_two",
+            title="选 2 门通识 · 6 学分",
+            detail="每门 3 学分。在本应用「选课程」里点选，即可加入毕业规划。",
+        ),
+        GEGuideStepOut(
+            key="different_fields",
+            title="两门必须来自不同领域",
+            detail="field of study 须互异，同领域选 2 门只算 1 门。例：创意艺术 + 健康科学 ✓",
+        ),
+        GEGuideStepOut(
+            key="avoid_own_field",
+            title="避开你的专业领域",
+            detail="本专业所属领域的 GE 官方禁选，选课器里已自动置灰并标「禁选」。",
+        ),
+        GEGuideStepOut(
+            key="enrol",
+            title="去 MyHKMU 正式注册",
+            detail="登录 MyHKMU → 点你的专业 → Classes & Enrolment → Enrolment - UG → "
+                   "Class Search 搜课号(如 GEN1001ABF)→ 提交后到 My Class Schedule 确认。",
+        ),
+    ],
+)
+
+
+@router.get("/ge/guide", response_model=GEGuideOut)
+async def ge_guide():
+    """GE 选课教程配置(T22):select_url + pdf_url + 4 步文案。公开无鉴权。"""
+    return _GE_GUIDE
 
 
 @router.get("/{course_id}", response_model=CourseOut)
