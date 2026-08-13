@@ -18,11 +18,12 @@ Course IDs must match the ``id`` column in the ``courses`` table
 
 PROGRAMMES = {
     # ── DSAI (Data Science & AI) — fully populated ────────────────────────
-    # Graduation requirements mirror HKMU's public Programme Requirements
-    # PDF (https://www.hkmu.edu.hk/st/computing/programmes/). Note: the PDF's
-    # own category breakdown sums to 123 cr (84+12+6+6+6+9) while its stated
-    # total is 120 cr — an inconsistency in the official PDF itself. We
-    # reproduce the breakdown verbatim; total_credits stays 120.
+    # Graduation requirements mirror HKMU's official Programme Requirements
+    # PDF (3CRU_FTU_ST_BSCHDSAIJ.pdf). Verified 2026-08-13 against the PDF:
+    # 90 core (incl. 6cr Data Science Project) + 9 elective + 9 university-core
+    # + 6 english + 6 GE = 120 (self-consistent). We split the 6cr project out
+    # of core into its own `project` category (core 84 + project 6 = 90) to
+    # avoid double-counting. Elective is pick 3 of 6 (9cr), per PDF Table 2.
     "BSCHDSAIJ": {
         "code": "BSCHDSAIJ",
         "name": {
@@ -54,9 +55,9 @@ PROGRAMMES = {
                 ],
             },
             "elective": {
-                "min_credits": 12,
+                "min_credits": 9,
                 "color": "purple",
-                "pick_n": 4,  # pick 4 of 6
+                "pick_n": 3,  # pick 3 of 6 (9cr per PDF Table 2)
                 "courses": [
                     "ELEC3050SEF", "COMP4630SEF", "MATH4950SEF",
                     "ELEC4310SEF", "ELEC3250SEF", "ELEC4710SEF",

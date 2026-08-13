@@ -92,16 +92,16 @@ def test_dsai_core_has_28_courses_no_comp4610():
 # --- pick_n elective: satisfied pool stops recommendations --------------------
 
 def test_elective_pickn_satisfied_not_recommended():
-    """Completing 4 electives (pick_n=4, 12 cr) satisfies the pool; the elective
-    category must then contribute no recommendations."""
+    """Completing 3 electives (pick_n=3, 9 cr per PDF Table 2) satisfies the
+    pool; the elective category must then contribute no recommendations."""
     prog = PROGRAMMES["BSCHDSAIJ"]
     all_elec = prog["categories"]["elective"]["courses"]
-    done = all_elec[:4]
+    done = all_elec[:3]
     rows = {cid: _row(cid, credits=3) for cid in all_elec}
     progress = {cid: "completed" for cid in done}
     cats, total, recs, all_sat = _compute_graduation(prog, rows, progress)
     bykey = {c.key: c for c in cats}
-    assert bykey["elective"].completed_count == 4
+    assert bykey["elective"].completed_count == 3
     assert bykey["elective"].satisfied is True
     assert all(r.category_key != "elective" for r in recs), \
         "elective still recommended despite being satisfied"
