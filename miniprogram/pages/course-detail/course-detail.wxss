@@ -374,3 +374,58 @@
   opacity: 0.6;
   font-variant-numeric: tabular-nums;
 }
+
+/* ── T17: 老评论兼容(三维摘要) + 作者标签行 + 抢首评空态 + 少评提示 ── */
+.review-dims {
+  font-size: var(--fs-feed-meta);
+  color: var(--text-secondary);
+}
+
+.review-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 10rpx;
+}
+
+.review-tag {
+  padding: 4rpx 14rpx;
+  border-radius: var(--radius-pill);
+  background: var(--segmented-bg);
+  color: var(--text-secondary);
+  font-size: 20rpx;
+}
+
+.review-empty {
+  padding: 40rpx 0 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.review-empty-icon {
+  font-size: 56rpx;
+}
+
+.review-empty-title {
+  font-size: var(--fs-feed-meta);
+  color: var(--text-secondary);
+}
+
+.review-empty-cta {
+  margin-top: 6rpx;
+  padding: 14rpx 32rpx;
+  border-radius: var(--radius-pill);
+  background: var(--accent-blue);
+  color: #ffffff;
+  font-size: var(--fs-btn);
+  font-weight: 650;
+  box-shadow: var(--shadow-btn-primary);
+}
+
+.rating-few-hint {
+  margin-top: 8rpx;
+  font-size: 20rpx;
+  color: var(--text-secondary);
+}

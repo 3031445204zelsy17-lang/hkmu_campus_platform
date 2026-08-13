@@ -280,6 +280,8 @@ const DICTIONARY = {
       tag_open_book: "\u5f00\u5377\u8003",
       tag_group_project: "\u5c0f\u7ec4\u9879\u76ee\u591a",
       tag_attendance_strict: "\u70b9\u540d\u4e25",
+      reviewsFirstCta: "\u6765\u62a2\u9996\u8bc4\uff0c\u7ed9\u540c\u5b66\u6307\u6761\u8def",
+      reviewsFewHint: "\u8bc4\u4ef7\u8fd8\u4e0d\u591a\uff0c\u5206\u6570\u4ec5\u4f9b\u53c2\u8003",
       officialNote: "\u8bfe\u7a0b\u8be6\u60c5\u4ee5 MyHKMU \u5b98\u65b9\u8bfe\u7a0b\u5927\u7eb2\u4e3a\u51c6;\u5982\u6709\u51fa\u5165\u8bf7\u4ee5 MyHKMU \u4e3a\u51c6\u3002",
     }),
     compose: {
@@ -859,6 +861,8 @@ DICTIONARY["zh-Hant"] = {
     tag_open_book: "\u958b\u5377\u8003",
     tag_group_project: "\u5c0f\u7d44\u9805\u76ee\u591a",
     tag_attendance_strict: "\u9ede\u540d\u56b4",
+    reviewsFirstCta: "\u4f86\u6436\u9996\u8a55\uff0c\u7d66\u540c\u5b78\u6307\u689d\u8def",
+    reviewsFewHint: "\u8a55\u50f9\u9084\u4e0d\u591a\uff0c\u5206\u6578\u50c5\u4f9b\u53c3\u8003",
     officialNote: "\u8ab2\u7a0b\u8a73\u60c5\u4ee5 MyHKMU \u5b98\u65b9\u8ab2\u7a0b\u5927\u7db1\u70ba\u6e96;\u5982\u6709\u51fa\u5165\u8acb\u4ee5 MyHKMU \u70ba\u6e96\u3002",
   }),
   compose: {
@@ -1418,6 +1422,8 @@ DICTIONARY.en = {
     tag_open_book: "Open book",
     tag_group_project: "Group projects",
     tag_attendance_strict: "Strict attendance",
+    reviewsFirstCta: "Be the first to review",
+    reviewsFewHint: "Few reviews so far — scores are indicative only",
     officialNote: "Course details follow the official MyHKMU outline; when in doubt, refer to MyHKMU.",
   }),
   compose: {

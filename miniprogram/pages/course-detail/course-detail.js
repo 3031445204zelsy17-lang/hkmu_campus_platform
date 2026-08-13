@@ -127,6 +127,15 @@ function normalizeCourse(raw, plannerText, text) {
   };
 }
 
+// T17: 新式评论无老 5 星 → 星条让位三维摘要("给分 5 · 工作量 2 · 收获 4")
+function buildDimsSummary(raw, text) {
+  const parts = [];
+  if (raw.rating_teaching != null) parts.push(text.dimTeaching + " " + raw.rating_teaching);
+  if (raw.rating_workload != null) parts.push(text.dimWorkload + " " + raw.rating_workload);
+  if (raw.rating_gain != null) parts.push(text.dimGain + " " + raw.rating_gain);
+  return parts.join(" · ");
+}
+
 function normalizeReview(raw, user, text) {
   const authorName = raw.author_nickname || text.defaultAuthor;
   const helpful = Number(raw.helpful_count) || 0;
@@ -135,7 +144,9 @@ function normalizeReview(raw, user, text) {
     authorId: raw.author_id,
     authorName,
     authorInitial: getInitial(authorName),
-    starsText: buildStarsText(raw.rating),
+    starsText: raw.rating != null ? buildStarsText(raw.rating) : "",
+    dimsSummary: buildDimsSummary(raw, text),
+    tagLabels: (raw.tags || []).map((t) => text["tag_" + t] || t),
     content: String(raw.content || "").trim(),
     dateLabel: formatDate(raw.created_at) || text.justNow,
     helpfulLabel: helpful > 0 ? " · " + helpful + " " + (text.helpfulSuffix || "") : "",

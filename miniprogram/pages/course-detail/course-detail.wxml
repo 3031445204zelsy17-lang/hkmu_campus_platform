@@ -61,6 +61,8 @@
             <text class="dim-val">{{item.value}}</text>
           </view>
           <view class="rating-count">{{ratingStats.count}} {{text.reviewsSuffix}}</view>
+          <!-- T17: 少评价降级提示 -->
+          <view wx:if="{{ratingStats.count < 3}}" class="rating-few-hint">{{text.reviewsFewHint}}</view>
         </block>
         <block wx:elif="{{ratingStats.legacyAvg}}">
           <text class="rating-avg">{{ratingStats.legacyAvg}}</text>
@@ -71,13 +73,20 @@
 
       <view wx:if="{{reviewsLoading}}" class="review-status">{{text.reviewsLoading}}</view>
       <block wx:else>
-        <view wx:if="{{reviews.length === 0}}" class="review-status">{{text.reviewsEmpty}}</view>
+        <!-- T17: 冷启动空态 — 抢首评 CTA(composer 就在下方) -->
+        <view wx:if="{{reviews.length === 0}}" class="review-empty">
+          <view class="review-empty-icon">✍️</view>
+          <view class="review-empty-title">{{text.reviewsEmpty}}</view>
+          <view wx:if="{{loggedIn && !myReviewId}}" class="review-empty-cta">{{text.reviewsFirstCta}}</view>
+        </view>
         <view wx:for="{{reviews}}" wx:key="id" class="review-item">
           <view class="review-head">
             <view class="comment-avatar">{{item.authorInitial}}</view>
             <view class="review-head-main">
               <view class="comment-author">{{item.authorName}}</view>
-              <view class="review-stars">{{item.starsText}}</view>
+              <!-- T17: 老 5 星显星;新三维评论显维度摘要 -->
+              <view wx:if="{{item.starsText}}" class="review-stars">{{item.starsText}}</view>
+              <view wx:elif="{{item.dimsSummary}}" class="review-dims">{{item.dimsSummary}}</view>
             </view>
             <view
               wx:if="{{item.isMine}}"
@@ -87,6 +96,9 @@
             >{{text.deleteAction}}</view>
           </view>
           <view class="review-content">{{item.content}}</view>
+          <view wx:if="{{item.tagLabels.length}}" class="review-tag-row">
+            <text wx:for="{{item.tagLabels}}" wx:for-item="tl" wx:key="*this" class="review-tag">{{tl}}</text>
+          </view>
           <view class="comment-meta">{{item.dateLabel}}{{item.helpfulLabel}}</view>
         </view>
       </block>
