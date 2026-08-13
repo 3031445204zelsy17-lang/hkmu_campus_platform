@@ -30,8 +30,8 @@
   margin: 0 0 22rpx;
   padding: 32rpx;
   border-radius: var(--radius-card-lg);
-  /* T08: 绿渐变（原型 --hero-grad），替代纯色 #2E7D52 */
-  background: linear-gradient(135deg, #7fbf4d 0%, #6db344 100%);
+  /* T08: 绿渐变（tokens --hero-gradient），替代纯色 #2E7D52 */
+  background: var(--hero-gradient);
   box-shadow: 0 24rpx 64rpx rgba(109, 179, 68, 0.28);
 }
 
@@ -117,6 +117,110 @@
   font-size: 18rpx;
   line-height: 1.2;
   color: rgba(255, 255, 255, 0.85);
+}
+
+/* ── T09: 分类竖条卡（2 列网格 + 竖向进度条，替代横条 progress-track） ── */
+.planner-shell .cat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx 24rpx;
+}
+
+.planner-shell .cat-cell {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 12rpx 14rpx;
+  border-radius: var(--radius-entry);
+}
+
+/* 通识格：浅绿底示意可点（开 GE 选择浮层） */
+.planner-shell .cat-cell-ge {
+  background: var(--pill-green-bg);
+}
+
+.planner-shell .cat-cell-hover {
+  background: var(--segmented-bg);
+}
+
+.planner-shell .cat-bar {
+  position: relative;
+  width: 8rpx;
+  height: 48rpx;
+  border-radius: 4rpx;
+  background: var(--segmented-bg);
+  overflow: hidden;
+  flex: none;
+}
+
+.planner-shell .cat-bar-fill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  border-radius: 4rpx;
+}
+
+.planner-shell .cat-line {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8rpx;
+}
+
+.planner-shell .cat-label {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.planner-shell .cat-cr {
+  flex: none;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.planner-shell .cat-ge-arrow {
+  flex: none;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: var(--accent-blue);
+}
+
+/* ── T10: 系统建议卡（青蓝浅底，原型 .advice） ── */
+.planner-shell .advice-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  margin: 0 0 24rpx;
+  padding: 24rpx 26rpx;
+  background: rgba(15, 143, 190, 0.07);
+  border: 2rpx solid rgba(15, 143, 190, 0.16);
+  border-radius: var(--radius-entry);
+}
+
+.planner-shell .advice-ic {
+  flex: none;
+  font-size: 26rpx;
+  line-height: 1.6;
+  color: var(--accent-blue);
+}
+
+.planner-shell .advice-txt {
+  flex: 1;
+  font-size: 26rpx;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.planner-shell .advice-strong {
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 /* 专业选择器 */

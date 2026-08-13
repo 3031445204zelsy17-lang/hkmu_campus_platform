@@ -205,38 +205,32 @@
 
     <view class="web-panel">
       <view class="section-title">{{text.categoriesTitle}}</view>
-      <view
-        wx:for="{{categoriesView}}"
-        wx:key="key"
-        class="category-row"
-      >
-        <view class="category-head">
-          <text class="category-name">{{item.label}}</text>
-          <text class="category-credits">{{item.earned}}/{{item.required}} cr</text>
-        </view>
-        <view class="progress-track">
-          <view class="progress-fill cat-{{item.color}}" style="width: {{item.pct}}%"></view>
-        </view>
-        <view wx:if="{{item.hasGePool}}" class="ge-entry" bindtap="onOpenGePicker" hover-class="ge-entry-hover">
-          <text>{{text.geSelectEntry}}</text>
-          <text class="ge-entry-arrow">▸</text>
+      <!-- T09: 6 类竖条（2 列网格，替代横条 progress-track）；通识格点按开 GE 浮层 -->
+      <view class="cat-grid">
+        <view
+          wx:for="{{categoriesView}}"
+          wx:key="key"
+          class="cat-cell {{item.hasGePool ? 'cat-cell-ge' : ''}}"
+          data-ge="{{item.hasGePool}}"
+          bindtap="onCatCellTap"
+          hover-class="{{item.hasGePool ? 'cat-cell-hover' : 'none'}}"
+        >
+          <view class="cat-bar">
+            <view class="cat-bar-fill cat-{{item.color}}" style="height: {{item.pct}}%"></view>
+          </view>
+          <view class="cat-line">
+            <text class="cat-label">{{item.label}}</text>
+            <text class="cat-cr">{{item.earned}}/{{item.required}}{{item.done ? ' ✓' : ''}}</text>
+          </view>
+          <text wx:if="{{item.hasGePool}}" class="cat-ge-arrow">▸</text>
         </view>
       </view>
     </view>
 
-    <view wx:if="{{recommendations.length}}" class="web-panel">
-      <view class="section-title">{{text.recommendTitle}}</view>
-      <view
-        wx:for="{{recommendations}}"
-        wx:key="course_id"
-        class="course-row"
-      >
-        <view class="course-main">
-          <view class="course-code">{{item.code}}</view>
-          <view class="course-name">{{item.name}} · {{item.credits}}cr</view>
-        </view>
-        <view class="mini-pill green">{{item.categoryLabel}}</view>
-      </view>
+    <!-- T10: 系统建议卡（"排进下学期"一句话，替代逐条 course-row 列表） -->
+    <view wx:if="{{advice}}" class="advice-card">
+      <text class="advice-ic">◆</text>
+      <text class="advice-txt"><text class="advice-strong">{{advice.heading}}</text>{{advice.text}}</text>
     </view>
   </block>
 

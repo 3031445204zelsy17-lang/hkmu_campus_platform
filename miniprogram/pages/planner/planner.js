@@ -626,6 +626,13 @@ Page({
 
   // ── GE 通识选择浮层（屏③）── 复用 programmeSearch 的全屏浮层范式 ──────
 
+  // T09: 分类格点按 — 仅通识格（有 GE 池）进 GE 选择浮层，其余格无动作
+  onCatCellTap(e) {
+    if (e.currentTarget.dataset.ge) {
+      this.onOpenGePicker();
+    }
+  },
+
   onOpenGePicker() {
     if (!this._user) { this.goLogin(); return; }
     this._gePickerOpen = true;
@@ -985,6 +992,7 @@ Page({
         earned: c.earned_credits,
         required: c.min_credits,
         pct: categoryPercent(c.earned_credits, c.min_credits),
+        done: (c.earned_credits || 0) >= (c.min_credits || 0) && (c.min_credits || 0) > 0,
         color: c.color,
         hasGePool: c.key === "general-ed",
       }));
@@ -993,8 +1001,42 @@ Page({
         code: r.code,
         name: r.name,
         credits: r.credits,
+        categoryKey: r.category_key,
         categoryLabel: text.categories[r.category_key] || r.category_key,
       }));
+      // T10: 系统建议卡 —— "排进下学期"一句话（替代逐条 course-row 列表）。
+      // 学期边界与 entry 类型对齐：秋入学按秋切换班级年，春入学按春切换。
+      if (view.recommendations.length) {
+        const recs = status.recommendations || [];
+        const codes = recs.map((r) => r.code).filter(Boolean).join(" · ");
+        const credits = recs.reduce((n, r) => n + (r.credits || 0), 0);
+        const month = new Date().getMonth() + 1;
+        let heading = text.adviceHeadingPlain;
+        if (studyInfo && studyInfo.studyYear >= 1) {
+          const nextSem = month >= 8 ? "spring" : "autumn";
+          const nextY = studyInfo.studyYear + (studyInfo.entrySem === nextSem ? 1 : 0);
+          heading = fillTemplate(text.adviceHeadingTerm, {
+            y: nextY,
+            sem: nextSem === "spring" ? text.heroSemSpring : text.heroSemAutumn,
+          });
+        }
+        // 推荐全属同一分类时拼"XX还差 N cr"子句，多分类则省略
+        let gapClause = "";
+        const catKeys = Array.from(new Set(recs.map((r) => r.category_key)));
+        if (catKeys.length === 1) {
+          const cat = (status.categories || []).find((c) => c.key === catKeys[0]);
+          if (cat && cat.min_credits > 0) {
+            gapClause = fillTemplate(text.adviceGap, {
+              cat: text.categories[catKeys[0]] || catKeys[0],
+              gap: Math.max(cat.min_credits - (cat.earned_credits || 0), 0),
+            });
+          }
+        }
+        view.advice = {
+          heading,
+          text: gapClause + fillTemplate(text.adviceBody, { codes, credits }),
+        };
+      }
       view.showTabs = true;
       if (this._idToCourse && this._progress) {
         view.coursesView = buildCoursesView(prog, this._idToCourse, this._progress, this._searchKeyword, text);
