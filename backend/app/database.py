@@ -114,6 +114,16 @@ CREATE TABLE IF NOT EXISTS user_courses (
     PRIMARY KEY (user_id, course_id)
 );
 
+-- T26 排课台: 用户对单课学年的覆盖(planned 优先于 courses 表默认 year+semester)
+CREATE TABLE IF NOT EXISTS user_course_schedule (
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    course_id TEXT NOT NULL REFERENCES courses(id),
+    planned_year INTEGER CHECK(planned_year BETWEEN 1 AND 4),
+    planned_semester TEXT CHECK(planned_semester IN ('autumn','spring','summer')),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (user_id, course_id)
+);
+
 CREATE TABLE IF NOT EXISTS course_reviews (
     id SERIAL PRIMARY KEY,
     course_id TEXT REFERENCES courses(id),
