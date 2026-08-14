@@ -320,7 +320,7 @@
       "name": "scrape 跑 57 专业",
       "description": "scrape_programme_pdfs.py --all 抓 57 PDF(Playwright 过 CF)",
       "dependencies": [],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T32",
