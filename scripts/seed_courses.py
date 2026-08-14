@@ -113,8 +113,16 @@ async def seed():
         # course listed in PROGRAMME_RULES needs a courses-table row, or
         # _compute_graduation silently skips it (course_rows lookup fails).
         # Name/credits prefer course_catalogue (official tree, with display
-        # names); RULE_COURSE_CREDITS (PDF-parsed) is the credits fallback;
-        # year/semester are sentinels — public PDFs carry no term data.
+        # names); RULE_COURSE_CREDITS (PDF-parsed) is the credits fallback.
+        # Public PDFs carry no term data, so year defaults to the course-code
+        # LEVEL (HKMU convention: 1xxx→Y1 … 4xxx→Y4) and semester to autumn —
+        # the planner's year tabs filter on course.year, so year=0 sentinels
+        # would render every new programme as 「无课程」. Users can move any
+        # course via the schedule picker (planned placement overrides).
+        def _level_year(cid):
+            m = re.search(r"\d", cid)
+            return min(int(m.group()), 4) if m and 1 <= int(m.group()) <= 4 else 4
+
         existing_ids = {r["id"] for r in await conn.fetch("SELECT id FROM courses")}
         cat_rows = await conn.fetch(
             """SELECT DISTINCT REPLACE(course_code, ' ', '') AS cid,
@@ -145,7 +153,8 @@ async def seed():
                                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                                ON CONFLICT (id) DO NOTHING""",
                             cid, name, name, credits, cat_key,
-                            0, "any", "[]", f"{entry['name']['en']} · {cat_key}",
+                            _level_year(cid), "autumn", "[]",
+                            f"{entry['name']['en']} · {cat_key}",
                         )
                         rules_inserted += 1
                     except Exception as e:
