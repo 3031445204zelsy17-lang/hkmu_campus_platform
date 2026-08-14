@@ -244,3 +244,7 @@ supabase/.temp/
 
 # Internal handover doc (held plaintext secrets; sanitized, keep out of git)
 docs/ops/后端接手信息.md
+
+# T31 抓取产物:PDF 原件太大不入库(本地 scripts/out/hkmu_pr/pdfs/ 保留),
+# 解析文本+结构化 JSON 提交供 T32 免过 Cloudflare 重解析
+scripts/out/hkmu_pr/pdfs/

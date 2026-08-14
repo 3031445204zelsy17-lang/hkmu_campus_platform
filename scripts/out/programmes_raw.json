@@ -1,0 +1,3581 @@
+{
+  "BASCHRAEJ": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "COMP2083SEF",
+          "COMP2090SEF",
+          "COMP2640SEF",
+          "COMP2653SEF",
+          "COMP3203SEF",
+          "ELEC1010SEF",
+          "ELEC2013SEF",
+          "ELEC2410SEF",
+          "ENGG1001SEF",
+          "ENGG1011SEF",
+          "ENGG2021SEF",
+          "ENGG2022SEF",
+          "ENGG2023SEF",
+          "ENGG2024SEF",
+          "ENGG3001SEF",
+          "ENGG3025SEF",
+          "ENGG3026SEF",
+          "ENGG3027SEF",
+          "ENGG3083SEF",
+          "ENGG4028SEF",
+          "MATH1410SEF",
+          "ST4020SEF",
+          "STAT1510SEF"
+        ],
+        "credits_seen": 69,
+        "min_credits": 69
+      },
+      "elective": {
+        "courses": [
+          "COMP3500SEF",
+          "COMP3920SEF",
+          "COMP4210SEF",
+          "COMP4330SEF",
+          "COMP4930SEF",
+          "ELEC4480SEF",
+          "TC3030SEF"
+        ],
+        "credits_seen": 21,
+        "min_credits": 6
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF"
+        ],
+        "credits_seen": 6,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BASCHTICJ": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "BIOL2035SEF",
+          "CHEM2034SEF",
+          "ENGG2060SEF",
+          "SCI1001SEF",
+          "SCI1010SEF",
+          "STAT2610SEF",
+          "TC1000SEF",
+          "ST1020SEF",
+          "ENGG2000SEF",
+          "TC2020SEF",
+          "TC2040SEF",
+          "TC2080SEF",
+          "TC2090SEF",
+          "TC3015SEF",
+          "TC3040SEF",
+          "TC4019SEF",
+          "ST4020SEF",
+          "TC4094SEF"
+        ],
+        "credits_seen": 72,
+        "min_credits": 72
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF",
+          "BIOL3051SEF",
+          "BIOL3051SEF",
+          "SCI3065SEF",
+          "ENVR3028SEF",
+          "ENVR3028SEF",
+          "ENVR4028SEF",
+          "ENVR3074SEF",
+          "ENVR3074SEF",
+          "ENVR4074SEF",
+          "ENVR3042SEF",
+          "ENVR3042SEF",
+          "ENVR4042SEF",
+          "TC4011SEF",
+          "TC4011SEF"
+        ],
+        "credits_seen": 22298,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BENGHBSEJ": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "ENGG1001SEF",
+          "ENGG1011SEF",
+          "ENGG2000SEF",
+          "ENGG2002SEF",
+          "ENGG2003SEF",
+          "ENGG2004SEF",
+          "ENGG2005SEF",
+          "ENGG2006SEF",
+          "ENGG2060SEF",
+          "ENGG2091SEF",
+          "ENGG3001SEF",
+          "ENGG3021SEF",
+          "ENGG3022SEF",
+          "ENGG3092SEF",
+          "ENGG4000SEF",
+          "ENGG4002SEF",
+          "ENGG4003SEF",
+          "ENGG4004SEF",
+          "ENGG4021SEF",
+          "ENGG4090SEF",
+          "ENVR3008SEF",
+          "ENVR4028SEF",
+          "MATH1410SEF",
+          "MATH2150SEF",
+          "MATH2850SEF",
+          "STAT1510SEF",
+          "ST1020SEF",
+          "ST4020SEF"
+        ],
+        "credits_seen": 90,
+        "min_credits": 90
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF",
+          "SCI1011SEF"
+        ],
+        "credits_seen": 2030,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BENGHCEJ": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "ENGG1001SEF",
+          "ENGG1011SEF",
+          "ENGG2001SEF",
+          "ENGG2002SEF",
+          "ENGG2007SEF",
+          "ENGG2008SEF",
+          "ENGG2009SEF",
+          "ENGG2090SEF",
+          "ENGG3001SEF",
+          "ENGG3041SEF",
+          "ENGG3042SEF",
+          "ENGG3043SEF",
+          "ENGG3091SEF",
+          "ENGG4003SEF",
+          "ENGG4004SEF",
+          "ENGG3005SEF",
+          "ENGG4006SEF",
+          "ENGG3007SEF",
+          "ENGG4008SEF",
+          "ENGG4009SEF",
+          "ENGG4090SEF",
+          "ENVR3008SEF",
+          "ENVR4028SEF",
+          "ENVR4011SEF",
+          "MATH1410SEF",
+          "MATH2150SEF",
+          "MATH2850SEF",
+          "STAT1510SEF",
+          "ST1020SEF",
+          "TC3030SEF",
+          "TC4019SEF",
+          "ST4020SEF"
+        ],
+        "credits_seen": 99,
+        "min_credits": 99
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF",
+          "SCI1011SEF"
+        ],
+        "credits_seen": 2030,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BENGHECEJ": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "COMP1080SEF",
+          "COMP2090SEF",
+          "COMP2660SEF",
+          "COMP2670SEF",
+          "ELEC1010SEF",
+          "ELEC2010SEF",
+          "ELEC2050SEF",
+          "ELEC2100SEF",
+          "ELEC2410SEF",
+          "ELEC2620SEF",
+          "ELEC3000SEF",
+          "ELEC3040SEF",
+          "ELEC3050SEF",
+          "ELEC3150SEF",
+          "ELEC3250SEF",
+          "ELEC3470SEF",
+          "ELEC3630SEF",
+          "ELEC4000SEF",
+          "ELEC4110SEF",
+          "ENGG3280SEF",
+          "MATH1410SEF",
+          "MATH2150SEF",
+          "MATH2850SEF",
+          "SCI1000SEF",
+          "STAT1510SEF",
+          "STAT2610SEF"
+        ],
+        "credits_seen": 81,
+        "min_credits": 81
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF"
+        ],
+        "credits_seen": 6,
+        "min_credits": 6
+      },
+      "elective": {
+        "min_credits": 15
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BSCHATSJ": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "BIOL1003SEF",
+          "BIOL2035SEF",
+          "BIOL2036SEF",
+          "CHEM1002SEF",
+          "CHEM3050SEF",
+          "SCI1010SEF",
+          "SCI1100SEF",
+          "SCI1101SEF",
+          "SCI2006SEF",
+          "SCI2100SEF",
+          "SCI2101SEF",
+          "SCI2102SEF",
+          "SCI3030SEF",
+          "SCI3031SEF",
+          "SCI3065SEF",
+          "SCI3090SEF",
+          "SCI3100SEF",
+          "SCI3101SEF",
+          "SCI3102SEF",
+          "STAT2610SEF",
+          "TC2020SEF",
+          "TC3015SEF",
+          "TC3020SEF",
+          "TC4019SEF",
+          "ST4020SEF",
+          "TC4093SEF"
+        ],
+        "credits_seen": 84,
+        "min_credits": 84
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF",
+          "TC4011SEF",
+          "TC4011SEF"
+        ],
+        "credits_seen": 4056,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BSCHBEMJ": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "BEM1005SEF",
+          "BEM2004SEF",
+          "BEM2005SEF",
+          "BEM2007SEF",
+          "BEM3001SEF",
+          "BEM3004SEF",
+          "BEM3005SEF",
+          "BEM4001SEF",
+          "BEM4004SEF",
+          "BEM4091SEF",
+          "CM1001SEF",
+          "CM1002SEF",
+          "CM2002SEF",
+          "CM2003SEF",
+          "CM3001SEF",
+          "CM3003SEF",
+          "CM4002SEF",
+          "ENGG1011SEF",
+          "ENGG3001SEF",
+          "ENGG4003SEF",
+          "ENGG4004SEF",
+          "ENGG4094SEF",
+          "QS2001SEF",
+          "QS2002SEF",
+          "QS2004SEF",
+          "QS3001SEF",
+          "QS4001SEF",
+          "QS4003SEF",
+          "ST4020SEF"
+        ],
+        "credits_seen": 90,
+        "min_credits": 90
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF"
+        ],
+        "credits_seen": 6,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BSCHBSBJ": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "BIOL1003SEF",
+          "BIOL2002SEF",
+          "BIOL2005SEF",
+          "BIOL2012SEF",
+          "BIOL2035SEF",
+          "BIOL2036SEF",
+          "BIOL3005SEF",
+          "BIOL3008SEF",
+          "BIOL3056SEF",
+          "BIOL4006SEF",
+          "BIOL4008SEF",
+          "BIOL4013SEF",
+          "BIOL4030SEF",
+          "CHEM1002SEF",
+          "CHEM3050SEF",
+          "SCI1010SEF",
+          "SCI1100SEF",
+          "SCI1101SEF",
+          "SCI2005SEF",
+          "SCI2100SEF",
+          "SCI2101SEF",
+          "SCI2102SEF",
+          "SCI3030SEF",
+          "SCI3091SEF",
+          "SCI3100SEF",
+          "SCI3101SEF",
+          "SCI3102SEF"
+        ],
+        "credits_seen": 84,
+        "min_credits": 84
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF",
+          "SEF3005SEF",
+          "SEF4013SEF",
+          "BIOL3015SEF",
+          "BIOL4011SEF",
+          "MLS4001SEF",
+          "SCI4001SEF"
+        ],
+        "credits_seen": 24,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BSCHCCSJ": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "COMP1080SEF",
+          "COMP2090SEF",
+          "COMP2640SEF",
+          "COMP2660SEF",
+          "COMP2670SEF",
+          "COMP3810SEF",
+          "ELEC1010SEF",
+          "ELEC2010SEF",
+          "ELEC2050SEF",
+          "ELEC2100SEF",
+          "ELEC2410SEF",
+          "ELEC2620SEF",
+          "ELEC3050SEF",
+          "ELEC3150SEF",
+          "ELEC3250SEF",
+          "ELEC3630SEF",
+          "ELEC3650SEF",
+          "ELEC3720SEF",
+          "ELEC4110SEF",
+          "ELEC4480SEF",
+          "ELEC4710SEF",
+          "IT2900SEF",
+          "MATH1410SEF",
+          "SCI1000SEF",
+          "STAT1510SEF",
+          "STAT2610SEF"
+        ],
+        "credits_seen": 81,
+        "min_credits": 81
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF"
+        ],
+        "credits_seen": 6,
+        "min_credits": 6
+      },
+      "elective": {
+        "min_credits": 3
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BSCHCEF": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "COMP3130SEF",
+          "COMP3500SEF",
+          "ELEC3050SEF",
+          "ELEC3150SEF",
+          "ELEC3250SEF",
+          "ELEC3470SEF",
+          "ELEC3630SEF",
+          "ELEC4110SEF",
+          "ENGG3280SEF"
+        ],
+        "credits_seen": 30,
+        "min_credits": 30
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "elective": {
+        "min_credits": 18
+      }
+    }
+  },
+  "BSCHCMQSJ": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "CM1001SEF",
+          "CM1002SEF",
+          "CM2001SEF",
+          "CM2002SEF",
+          "CM2003SEF",
+          "CM3001SEF",
+          "CM3002SEF",
+          "CM3003SEF",
+          "CM4001SEF",
+          "CM4002SEF",
+          "ENGG2080SEF",
+          "ENGG3001SEF",
+          "ENGG4003SEF",
+          "ENGG4004SEF",
+          "ENGG4093SEF",
+          "QS2001SEF",
+          "QS2002SEF",
+          "QS2003SEF",
+          "QS2004SEF",
+          "QS3001SEF",
+          "QS3002SEF",
+          "QS3003SEF",
+          "QS4001SEF",
+          "QS4002SEF",
+          "QS4003SEF",
+          "ENGG1011SEF",
+          "ST1020SEF",
+          "ST4019SEF",
+          "ST4020SEF",
+          "ENGG3093SEF",
+          "ENGG2093SEF",
+          "MATH1410SEF"
+        ],
+        "credits_seen": 99,
+        "min_credits": 99
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2022BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF"
+        ],
+        "credits_seen": 6,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BSCHCOMPF": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "COMP3122SEF",
+          "COMP3132SEF",
+          "COMP3200SEF",
+          "COMP3500SEF",
+          "COMP3510SEF",
+          "COMP3810SEF",
+          "COMP3820SEF",
+          "COMP3920SEF",
+          "COMP4570SEF"
+        ],
+        "credits_seen": 30,
+        "min_credits": 30
+      },
+      "elective": {
+        "courses": [
+          "COMP4330SEF",
+          "COMP4620SEF",
+          "COMP4820SEF",
+          "COMP4900SEF",
+          "COMP4930SEF",
+          "COMP4950SEF",
+          "ELEC3050SEF",
+          "ELEC3250SEF",
+          "ELEC3470SEF",
+          "ELEC4210SEF",
+          "ELEC4310SEF",
+          "ELEC4370SEF",
+          "ELEC4480SEF",
+          "ELEC4710SEF",
+          "ENGG3280SEF"
+        ],
+        "credits_seen": 45,
+        "min_credits": 24
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      }
+    }
+  },
+  "BSCHCSJ": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "COMP1080SEF",
+          "COMP2090SEF",
+          "COMP2020SEF",
+          "COMP2030SEF",
+          "COMP2640SEF",
+          "COMP2650SEF",
+          "COMP2660SEF",
+          "COMP2670SEF",
+          "COMP3120SEF",
+          "COMP3130SEF",
+          "COMP3200SEF",
+          "COMP3500SEF",
+          "COMP3510SEF",
+          "COMP3800SEF",
+          "COMP3810SEF",
+          "COMP3920SEF",
+          "COMP4560SEF",
+          "IT1020SEF",
+          "IT1030SEF",
+          "IT2900SEF",
+          "MATH1410SEF",
+          "MATH2150SEF",
+          "STAT1510SEF",
+          "STAT2610SEF"
+        ],
+        "credits_seen": 75,
+        "min_credits": 75
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF"
+        ],
+        "credits_seen": 6,
+        "min_credits": 6
+      },
+      "elective": {
+        "min_credits": 24
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BSCHDSAIJ": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "COMP1080SEF",
+          "COMP2020SEF",
+          "COMP2030SEF",
+          "COMP2090SEF",
+          "COMP2640SEF",
+          "COMP3130SEF",
+          "COMP3200SEF",
+          "COMP3500SEF",
+          "COMP3510SEF",
+          "COMP3810SEF",
+          "COMP3920SEF",
+          "COMP4210SEF",
+          "COMP4330SEF",
+          "COMP4600SEF",
+          "COMP4610SEF",
+          "COMP4820SEF",
+          "COMP4930SEF",
+          "IT1020SEF",
+          "IT1030SEF",
+          "IT2900SET",
+          "MATH1410SEF",
+          "MATH2150SEF",
+          "STAT1510SEF",
+          "STAT2510SEF",
+          "STAT2520SEF",
+          "STAT2610SEF",
+          "STAT2630SEF",
+          "STAT3110SEF",
+          "STAT3660SEF"
+        ],
+        "credits_seen": 90,
+        "min_credits": 90
+      },
+      "elective": {
+        "courses": [
+          "COMP4630SEF",
+          "ELEC3050SEF",
+          "ELEC3250SEF",
+          "ELEC4310SEF",
+          "ELEC4710SEF",
+          "MATH4950SEF"
+        ],
+        "credits_seen": 18,
+        "min_credits": 9
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF"
+        ],
+        "credits_seen": 6,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BSCHESGMJ": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "BIOL1003SEF",
+          "BIOL2035SEF",
+          "BIOL2036SEF",
+          "BIOL3001SEF",
+          "BIOL3037SEF",
+          "CHEM1002SEF",
+          "CHEM2035SEF",
+          "CHEM3050SEF",
+          "ENVR1000SEF",
+          "ENVR2036SEF",
+          "ENVR3041SEF",
+          "ENVR4042SEF",
+          "ENVR4007SEF",
+          "ENVR4028SEF",
+          "ENVR4074SEF",
+          "SCI1010SEF",
+          "SCI1100SEF",
+          "SCI1101SEF",
+          "SCI2100SEF",
+          "SCI2101SEF",
+          "SCI2103SEF",
+          "SCI3030SEF",
+          "SCI3031SEF",
+          "SCI3091SEF",
+          "SCI3100SEF",
+          "SCI3101SEF",
+          "SCI3103SEF",
+          "CHEM2034SEF",
+          "CHEM4006SEF",
+          "SCI3090SEF"
+        ],
+        "credits_seen": 93,
+        "min_credits": 84
+      },
+      "elective": {
+        "courses": [
+          "BIOL3056SEF",
+          "BIOL4006SEF",
+          "BIOL4030SEF",
+          "BIOL4013SEF",
+          "ENVR3008SEF",
+          "ENVR4011SEF",
+          "ENVR4043SEF",
+          "SCI4000SEF",
+          "SCI4010SEF",
+          "SCI4011SEF",
+          "SCI4063SEF",
+          "SCI4064SEF",
+          "SCI4065SEF",
+          "SCI4066SEF",
+          "ST4020SEF",
+          "TC4026SEF"
+        ],
+        "credits_seen": 51,
+        "min_credits": 15
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BSCHFTSJ": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "BIOL1003SEF",
+          "BIOL2035SEF",
+          "BIOL2036SEF",
+          "CHEM1002SEF",
+          "CHEM2002SEF",
+          "CHEM2035SEF",
+          "CHEM3050SEF",
+          "SCI1010SEF",
+          "SCI1100SEF",
+          "SCI1101SEF",
+          "SCI2100SEF",
+          "SCI2101SEF",
+          "SCI2102SEF",
+          "SCI3030SEF",
+          "SCI3065SEF",
+          "SCI3091SEF",
+          "SCI3100SEF",
+          "SCI3101SEF",
+          "SCI3102SEF",
+          "SCI4063SEF",
+          "SCI4064SEF",
+          "SCI4065SEF",
+          "SCI4066SEF",
+          "SCI4067SEF",
+          "STAT2610SEF",
+          "TC3080SEF",
+          "ST4020SEF",
+          "BIOL1003SEF",
+          "BIOL2035SEF",
+          "BIOL2036SEF",
+          "BIOL3056SEF",
+          "CHEM1002SEF",
+          "CHEM2001SEF",
+          "CHEM3050SEF",
+          "SCI1010SEF",
+          "SCI1100SEF",
+          "SCI1101SEF",
+          "SCI2006SEF",
+          "SCI2100SEF",
+          "SCI2101SEF",
+          "SCI2102SEF",
+          "SCI3030SEF",
+          "SCI3065SEF",
+          "SCI3090SEF",
+          "SCI3100SEF",
+          "SCI3101SEF",
+          "SCI3102SEF",
+          "SCI4010SEF",
+          "SCI4063SEF",
+          "SCI4064SEF",
+          "STAT2610SEF",
+          "TC3015SEF",
+          "TC3020SEF",
+          "TC3080SEF",
+          "TC4019SEF",
+          "ST4020SEF",
+          "TC4026SEF",
+          "TC4062SEF"
+        ],
+        "credits_seen": 180,
+        "min_credits": 84
+      },
+      "elective": {
+        "courses": [
+          "BIOL3001SEF",
+          "BIOL3056SEF",
+          "BIOL4030SEF",
+          "BIOL4006SEF",
+          "BIOL4013SEF",
+          "ENVR4007SEF",
+          "ENVR4043SEF",
+          "SCI3031SEF",
+          "SCI4000SEF",
+          "SCI4010SEF",
+          "SCI4011SEF",
+          "TC3020SEF",
+          "TC4019SEF",
+          "TC4026SEF"
+        ],
+        "credits_seen": 45,
+        "min_credits": 15
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW",
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 18,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF",
+          "CHEM2002SEF",
+          "CHEM2002SEF",
+          "SCI3091SEF",
+          "SCI4067SEF",
+          "NURS1050NEF",
+          "NURS1050NCF",
+          "ENGL1101AEF",
+          "ENGL1202EEF"
+        ],
+        "credits_seen": 28,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BSCHSTAMJ": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "COMP1080SEF",
+          "SCI1001SEF",
+          "SCI1010SEF",
+          "TC2080SEF",
+          "COMP2020SEF",
+          "COMP2660SEF",
+          "IT2900SEF",
+          "ELEC1010SEF",
+          "ENGG1001SEF",
+          "ST1020SEF",
+          "MATH1410SEF",
+          "STAT1510SEF",
+          "MATH2150SEF",
+          "STAT2510SEF",
+          "STAT2520SEF",
+          "SCI1001SEF",
+          "SCI1010SEF",
+          "TC2080SEF",
+          "COMP1080SEF",
+          "IT1020SEF",
+          "IT1030SEF",
+          "COMP2020SEF",
+          "COMP2660SEF",
+          "IT2900SEF",
+          "ELEC1010SEF",
+          "ENGG1001SEF",
+          "ST1020SEF",
+          "MATH1410SEF",
+          "STAT1510SEF",
+          "MATH2150SEF",
+          "STAT2510SEF",
+          "STAT2520SEF"
+        ],
+        "credits_seen": 94,
+        "min_credits": 24
+      },
+      "elective": {
+        "courses": [
+          "BIOL1003SEF",
+          "BIOL2002SEF",
+          "BIOL2006SEF",
+          "BIOL2012SEF",
+          "BIOL2035SEF",
+          "BIOL2036SEF",
+          "BIOL3001SEF",
+          "BIOL3004SEF",
+          "BIOL3015SEF",
+          "BIOL3037SEF",
+          "BIOL3056SEF",
+          "BIOL4006SEF",
+          "BIOL4008SEF",
+          "BIOL4012SEF",
+          "CHEM1002SEF",
+          "CHEM2001SEF",
+          "CHEM2034SEF",
+          "CHEM3050SEF",
+          "CHEM4006SEF",
+          "ENVR2036SEF",
+          "ENVR4007SEF",
+          "ENVR4028SEF",
+          "ENVR3041SEF",
+          "ENVR4042SEF",
+          "ENVR4043SEF",
+          "ENVR4074SEF",
+          "MLS4011SEF",
+          "SCI1100SEF",
+          "SCI1101SEF",
+          "SCI2005SEF",
+          "SCI2006SEF",
+          "SCI2100SEF",
+          "SCI2101SEF",
+          "SCI2102SEF",
+          "SCI2103SEF",
+          "SCI3030SEF",
+          "SCI4064SEF",
+          "SCI3100SEF",
+          "SCI3101SEF",
+          "SCI3102SEF",
+          "SCI3103SEF",
+          "SCI3065SEF",
+          "TC3080SEF",
+          "ST4020SEF",
+          "TC4026SEF",
+          "TC4062SEF",
+          "SCI4063SEF",
+          "COMP1080SEF",
+          "COMP2020SEF",
+          "COMP2030SEF",
+          "COMP2090SEF",
+          "COMP2650SEF",
+          "COMP2660SEF",
+          "COMP2670SEF",
+          "COMP3120SEF",
+          "COMP3130SEF",
+          "COMP3200SEF",
+          "COMP3500SEF",
+          "COMP3510SEF",
+          "COMP3800SEF",
+          "COMP3810SEF",
+          "COMP3920SEF",
+          "COMP4210SEF",
+          "COMP4330SEF",
+          "COMP4620SEF",
+          "COMP4630SEF",
+          "COMP4820SEF",
+          "COMP4900SEF",
+          "COMP4930SEF",
+          "ELEC2050SEF",
+          "ELEC2100SEF",
+          "ELEC2620SEF",
+          "ELEC3040SEF",
+          "ELEC3050SEF",
+          "ELEC3150SEF",
+          "ELEC3250SEF",
+          "ELEC3470SEF",
+          "ELEC3630SEF",
+          "ELEC3650SEF",
+          "ELEC4060SEF",
+          "ELEC4310SEF",
+          "ELEC4370SEF",
+          "ELEC4380SEF",
+          "ELEC4480SEF",
+          "ELEC4710SEF",
+          "IT1020SEF",
+          "IT1030SEF",
+          "IT2900SEF",
+          "ELEC1010SEF",
+          "ELEC2010SEF",
+          "ELEC2410SEF",
+          "ELEC4200SEF",
+          "ELEC4210SEF",
+          "ENGG1001SEF",
+          "ENGG2000SEF",
+          "ENGG2001SEF",
+          "ENGG2002SEF",
+          "ENGG2003SEF",
+          "ENGG2004SEF",
+          "ENGG2005SEF",
+          "ENGG2006SEF",
+          "ENGG2007SEF",
+          "ENGG2008SEF",
+          "ENGG2009SEF",
+          "ENGG2021SEF",
+          "ENGG2060SEF",
+          "ENGG3001SEF",
+          "ENGG3005SEF",
+          "ENGG3007SEF",
+          "ENGG3021SEF",
+          "ENGG3041SEF",
+          "ENGG3042SEF",
+          "ENGG3043SEF",
+          "ENGG4000SEF",
+          "ENGG4002SEF",
+          "ENGG4003SEF",
+          "ENGG4004SEF",
+          "ENGG4006SEF",
+          "ENGG4008SEF",
+          "ENGG4021SEF",
+          "ENVR3008SEF",
+          "ENVR4011SEF",
+          "SCI1000SEF",
+          "SCI4011SEF",
+          "ST1020SEF",
+          "TC3030SEF",
+          "TC3042SEF",
+          "TC4009SEF",
+          "TC4019SEF",
+          "TC4015SEF",
+          "CAMD3003AEF",
+          "IDDA1000AEF",
+          "IDDA1003AEF",
+          "IDDA3003AEF",
+          "IDDA4005AEF",
+          "COMP2640SEF",
+          "COMP4600SEF",
+          "MATH1410SEF",
+          "MATH2150SEF",
+          "MATH2850SEF",
+          "SCI3031SEF",
+          "STAT1510SEF",
+          "STAT2510SEF",
+          "STAT2520SEF",
+          "STAT2610SEF",
+          "STAT2630SEF",
+          "STAT3110SEF",
+          "STAT3660SEF",
+          "TC2020SEF",
+          "TC3020SEF",
+          "BIOL1003SEF",
+          "BIOL2002SEF",
+          "BIOL2006SEF",
+          "BIOL2012SEF",
+          "BIOL2035SEF",
+          "BIOL2036SEF",
+          "BIOL3001SEF",
+          "BIOL3004SEF",
+          "BIOL3015SEF",
+          "BIOL3037SEF",
+          "BIOL3056SEF",
+          "BIOL4006SEF",
+          "BIOL4008SEF",
+          "BIOL4012SEF",
+          "CHEM1002SEF",
+          "CHEM2001SEF",
+          "CHEM2034SEF",
+          "CHEM3050SEF",
+          "CHEM4006SEF",
+          "ENVR2036SEF",
+          "ENVR4007SEF",
+          "ENVR4028SEF",
+          "ENVR3041SEF",
+          "ENVR4042SEF",
+          "ENVR4043SEF",
+          "ENVR4074SEF",
+          "MLS4011SEF",
+          "SCI1100SEF",
+          "SCI1101SEF",
+          "SCI2005SEF",
+          "SCI2006SEF",
+          "SCI2100SEF",
+          "SCI2101SEF",
+          "SCI2102SEF",
+          "SCI2103SEF",
+          "SCI3030SEF",
+          "SCI3100SEF",
+          "SCI3101SEF",
+          "SCI3102SEF",
+          "SCI3103SEF",
+          "SCI4064SEF",
+          "SCI3065SEF",
+          "TC3080SEF",
+          "ST4020SEF",
+          "TC4026SEF",
+          "TC4062SEF",
+          "SCI4063SEF",
+          "COMP1080SEF",
+          "COMP2020SEF",
+          "COMP2030SEF",
+          "COMP2090SEF",
+          "COMP2650SEF",
+          "COMP2660SEF",
+          "COMP2670SEF",
+          "COMP3120SEF",
+          "COMP3130SEF",
+          "COMP3200SEF",
+          "COMP3500SEF",
+          "COMP3510SEF",
+          "COMP3800SEF",
+          "COMP3810SEF",
+          "COMP3920SEF",
+          "COMP4210SEF",
+          "COMP4330SEF",
+          "COMP4620SEF",
+          "COMP4630SEF",
+          "COMP4820SEF",
+          "COMP4900SEF",
+          "COMP4930SEF",
+          "ELEC2050SEF",
+          "ELEC2100SEF",
+          "ELEC2620SEF",
+          "ELEC3040SEF",
+          "ELEC3050SEF",
+          "ELEC3150SEF",
+          "ELEC3250SEF",
+          "ELEC3470SEF",
+          "ELEC3630SEF",
+          "ELEC3650SEF",
+          "ELEC4060SEF",
+          "ELEC4310SEF",
+          "ELEC4370SEF",
+          "ELEC4380SEF",
+          "ELEC4480SEF",
+          "ELEC4710SEF",
+          "IT1020SEF",
+          "IT1030SEF",
+          "IT2900SEF",
+          "ELEC1010SEF",
+          "ELEC2010SEF",
+          "ELEC2410SEF",
+          "ELEC4200SEF",
+          "ELEC4210SEF",
+          "ENGG1001SEF",
+          "ENGG2000SEF",
+          "ENGG2001SEF",
+          "ENGG2002SEF",
+          "ENGG2003SEF",
+          "ENGG2004SEF",
+          "ENGG2005SEF",
+          "ENGG2006SEF",
+          "ENGG2007SEF",
+          "ENGG2008SEF",
+          "ENGG2009SEF",
+          "ENGG2021SEF",
+          "ENGG2060SEF",
+          "ENGG3001SEF",
+          "ENGG3005SEF",
+          "ENGG3007SEF",
+          "ENGG3021SEF",
+          "ENGG3041SEF",
+          "ENGG3042SEF",
+          "ENGG3043SEF",
+          "ENGG4000SEF",
+          "ENGG4002SEF",
+          "ENGG4003SEF",
+          "ENGG4004SEF",
+          "ENGG4006SEF",
+          "ENGG4008SEF",
+          "ENGG4021SEF",
+          "ENVR3008SEF",
+          "ENVR4011SEF",
+          "SCI1000SEF",
+          "SCI4011SEF",
+          "ST1020SEF",
+          "TC3030SEF",
+          "TC3042SEF",
+          "TC4009SEF",
+          "TC4019SEF",
+          "TC4015SEF",
+          "CAMD3003AEF",
+          "IDDA1000AEF",
+          "IDDA1003AEF",
+          "IDDA3003AEF",
+          "IDDA4005AEF",
+          "COMP2640SEF",
+          "COMP4600SEF",
+          "MATH1410SEF",
+          "MATH2150SEF",
+          "MATH2850SEF",
+          "SCI3031SEF",
+          "STAT1510SEF",
+          "STAT2510SEF",
+          "STAT2520SEF",
+          "STAT2610SEF",
+          "STAT2630SEF",
+          "STAT3110SEF",
+          "STAT3660SEF",
+          "TC2020SEF",
+          "TC3020SEF"
+        ],
+        "credits_seen": 900,
+        "min_credits": 51
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW",
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 18,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF",
+          "NURS1050NEF",
+          "ENGL1101AEF",
+          "ENGL1202EEF"
+        ],
+        "credits_seen": 15,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BSCHSTEMJ": {
+    "school": "ST",
+    "categories": {
+      "core": {
+        "courses": [
+          "SCI1001SEF",
+          "SCI1010SEF",
+          "TC2080SEF",
+          "COMP1080SEF",
+          "IT1020SEF",
+          "IT1030SEF",
+          "COMP2020SEF",
+          "COMP2660SEF",
+          "IT2900SEF",
+          "ELEC1010SEF",
+          "ENGG1001SEF",
+          "ST1020SEF",
+          "MATH1410SEF",
+          "STAT1510SEF",
+          "MATH2150SEF",
+          "STAT2510SEF",
+          "STAT2520SEF"
+        ],
+        "credits_seen": 50,
+        "min_credits": 24
+      },
+      "elective": {
+        "courses": [
+          "BIOL1003SEF",
+          "BIOL2002SEF",
+          "BIOL2006SEF",
+          "BIOL2012SEF",
+          "BIOL2035SEF",
+          "BIOL2036SEF",
+          "BIOL3001SEF",
+          "BIOL3002SEF",
+          "BIOL3004SEF",
+          "BIOL3015SEF",
+          "BIOL3037SEF",
+          "BIOL3051SEF",
+          "BIOL3056SEF",
+          "BIOL4006SEF",
+          "BIOL4008SEF",
+          "BIOL4012SEF",
+          "CHEM1002SEF",
+          "CHEM2001SEF",
+          "CHEM2034SEF",
+          "CHEM3050SEF",
+          "CHEM4006SEF",
+          "ENVR2036SEF",
+          "ENVR3041SEF",
+          "ENVR4042SEF",
+          "ENVR4007SEF",
+          "ENVR4028SEF",
+          "ENVR4043SEF",
+          "ENVR4074SEF",
+          "MLS4011SEF",
+          "SCI1100SEF",
+          "SCI1101SEF",
+          "SCI2005SEF",
+          "SCI2006SEF",
+          "SCI2100SEF",
+          "SCI2101SEF",
+          "SCI2102SEF",
+          "SCI2103SEF",
+          "SCI3030SEF",
+          "SCI3064SEF",
+          "SCI3100SEF",
+          "SCI3101SEF",
+          "SCI3102SEF",
+          "SCI3103SEF",
+          "SCI4004SEF",
+          "TC3011SEF",
+          "TC3065SEF",
+          "TC3080SEF",
+          "ST4020SEF",
+          "TC4026SEF",
+          "TC4062SEF",
+          "TC4063SEF",
+          "COMP1080SEF",
+          "COMP2020SEF",
+          "COMP2030SEF",
+          "COMP2090SEF",
+          "COMP2650SEF",
+          "COMP2660SEF",
+          "COMP2670SEF",
+          "COMP3120SEF",
+          "COMP3130SEF",
+          "COMP3200SEF",
+          "COMP3500SEF",
+          "COMP3510SEF",
+          "COMP3800SEF",
+          "COMP3810SEF",
+          "COMP3920SEF",
+          "COMP4210SEF",
+          "COMP4330SEF",
+          "COMP4620SEF",
+          "COMP4630SEF",
+          "COMP4820SEF",
+          "COMP4900SEF",
+          "COMP4930SEF",
+          "ELEC2050SEF",
+          "ELEC2100SEF",
+          "ELEC2620SEF",
+          "ELEC3040SEF",
+          "ELEC3050SEF",
+          "ELEC3150SEF",
+          "ELEC3250SEF",
+          "ELEC3470SEF",
+          "ELEC3630SEF",
+          "ELEC3650SEF",
+          "ELEC4060SEF",
+          "ELEC4310SEF",
+          "ELEC4370SEF",
+          "ELEC4380SEF",
+          "ELEC4480SEF",
+          "ELEC4710SEF",
+          "IT1020SEF",
+          "IT1030SEF",
+          "IT2090SEF",
+          "ELEC1010SEF",
+          "ELEC2010SEF",
+          "ELEC2410SEF",
+          "ELEC4200SEF",
+          "ELEC4210SEF",
+          "ENGG1001SEF",
+          "ENGG2001SEF",
+          "ENGG2002SEF",
+          "ENGG2003SEF",
+          "ENGG2004SEF",
+          "ENGG2005SEF",
+          "ENGG2006SEF",
+          "ENGG2007SEF",
+          "ENGG2008SEF",
+          "ENGG2009SEF",
+          "ENGG2021SEF",
+          "ENGG2060SEF",
+          "ENGG3001SEF",
+          "ENGG3021SEF",
+          "ENGG3041SEF",
+          "ENGG3042SEF",
+          "ENGG3043SEF",
+          "ENGG4000SEF",
+          "ENGG4002SEF",
+          "ENGG4003SEF",
+          "ENGG4004SEF",
+          "ENGG4005SEF",
+          "ENGG4006SEF",
+          "ENGG4007SEF",
+          "ENGG4008SEF",
+          "ENGG4021SEF",
+          "ENVR3008SEF",
+          "ENVR4011SEF",
+          "SCI1000SEF",
+          "SCI4011SEF",
+          "ST1020SEF",
+          "ENGG2000SEF",
+          "TC3030SEF",
+          "TC3031SEF",
+          "TC3032SEF",
+          "TC3041SEF",
+          "TC3042SEF",
+          "TC4009SEF",
+          "TC4015SEF",
+          "TC4019SEF",
+          "COMP2640SEF",
+          "COMP4600SEF",
+          "MATH1410SEF",
+          "MATH2150SEF",
+          "MATH2850SEF",
+          "SCI3031SEF",
+          "STAT1510SEF",
+          "STAT2510SEF",
+          "STAT2520SEF",
+          "STAT2610SEF",
+          "STAT2630SEF",
+          "STAT3110SEF",
+          "STAT3660SEF",
+          "TC2020SEF",
+          "TC3020SEF"
+        ],
+        "credits_seen": 456,
+        "min_credits": 63
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF"
+        ],
+        "credits_seen": 6,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BAHCAMDJ": {
+    "school": "AS",
+    "categories": {
+      "core": {
+        "courses": [
+          "AMVE1001AEF",
+          "CAMD1000AEF",
+          "CAMD1001AEF",
+          "CAMD1002ABF",
+          "CCA1005ABF",
+          "CAMD2000AEF",
+          "CAMD2001ABF",
+          "CAMD2002ABF",
+          "CAMD2003AEF",
+          "CCA2011ABF",
+          "AMVE3003ABF",
+          "CAMD3000AEF",
+          "CAMD3001ABF",
+          "CAMD3002ABF",
+          "CAMD3003AEF",
+          "CAMD3004AEF",
+          "CAMD3005ABF",
+          "CAMD3006AEF",
+          "CAMD4000ABF",
+          "CAMD4001ABF",
+          "CAMD4002ABF",
+          "CAMD4003ABF",
+          "CAMD4004ABF",
+          "CAMD4005AEF",
+          "CAMD4006AEF",
+          "CAMD4007AEF"
+        ],
+        "credits_seen": 81,
+        "min_credits": 81
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI2002BCW",
+          "UNI3002BEW",
+          "UNI3002BCW"
+        ],
+        "credits_seen": 15,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1102AEF",
+          "ENGL1002AEF",
+          "ENGL1003AEF"
+        ],
+        "credits_seen": 12,
+        "min_credits": 6
+      },
+      "elective": {
+        "min_credits": 18
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BAHCLLJ": {
+    "school": "AS",
+    "categories": {
+      "core": {
+        "courses": [
+          "CHIN1001ACF",
+          "CHIN1002ACF",
+          "CHIN1003ACF",
+          "CHIN1004ACF",
+          "CHIN1005ACF",
+          "CHIN1006ACF",
+          "CHIN2001ACF",
+          "CHIN2002ACF",
+          "CHIN2003ACF",
+          "CHIN2004ACF",
+          "CHIN2005ACF",
+          "CHIN2006ACF",
+          "CHIN3001ACF",
+          "CHIN3002ACF",
+          "CHIN3003ACF",
+          "CHIN3004ACF",
+          "CHIN3005ACF",
+          "CHIN3006ACF",
+          "CHIN3007ACF",
+          "CHIN3008ACF",
+          "CHIN3009ACF",
+          "CHIN3010ACF",
+          "CHIN3011ACF"
+        ],
+        "credits_seen": 69,
+        "min_credits": 69
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BCW",
+          "UNI3002BCW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1102AEF",
+          "ENGL1002AEF",
+          "ENGL1003AEF"
+        ],
+        "credits_seen": 12,
+        "min_credits": 6
+      },
+      "elective": {
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BAHCWFAJ": {
+    "school": "AS",
+    "categories": {
+      "core": {
+        "courses": [
+          "CCA1000ACF",
+          "CCA1004ACF",
+          "CCA1005ABF",
+          "CCA1006ACF",
+          "CCA1007ACF",
+          "CCA2000ACF",
+          "CCA2007ACF",
+          "CCA2009ACF",
+          "CCA2010ACF",
+          "CCA2011ABF",
+          "CCA3000ACF",
+          "CCA3002ACF",
+          "CCA3006ACF",
+          "CCA3011ACF",
+          "CCA3014ACF",
+          "CCA3057ABF",
+          "CCA4000ABF",
+          "CCA4001ACF",
+          "CCA4002ACF",
+          "CCA4003ACF",
+          "CCA4004ACF",
+          "CCA4006ACF",
+          "CCA4007ACF"
+        ],
+        "credits_seen": 72,
+        "min_credits": 72
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI2002BCW",
+          "UNI3002BEW",
+          "UNI3002BCW"
+        ],
+        "credits_seen": 15,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1102AEF",
+          "ENGL1002AEF",
+          "ENGL1003AEF"
+        ],
+        "credits_seen": 12,
+        "min_credits": 6
+      },
+      "elective": {
+        "min_credits": 18
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BAHELCJ": {
+    "school": "AS",
+    "categories": {
+      "core": {
+        "courses": [
+          "ENGL1111AEF",
+          "ENGL1121AEF",
+          "ENGL2035AEF",
+          "ENGL3036AEF",
+          "ENGL4002AEF",
+          "ENGL4003AEF",
+          "ENGL4004AEF",
+          "LANG4135AEF",
+          "LANG4139AEF",
+          "LANG4534AEF",
+          "ENGL1002AEF",
+          "ENGL1003AEF",
+          "ENGL1031AEF",
+          "ENGL1032AEF",
+          "ENGL2003AEF",
+          "ENGL2004AEF",
+          "ENGL2006AEF",
+          "ENGL3021AEF",
+          "ENGL3026AEF",
+          "ENGL3037AEF",
+          "ENGL4001AEF",
+          "ENGL4025AEF",
+          "ENGL4042AEF"
+        ],
+        "credits_seen": 69,
+        "min_credits": 69
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1102AEF"
+        ],
+        "credits_seen": 6,
+        "min_credits": 6
+      },
+      "elective": {
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BAHLTJ": {
+    "school": "AS",
+    "categories": {
+      "core": {
+        "courses": [
+          "ENGL1111AEF",
+          "ENGL1121AEF",
+          "ENGL3112AEF",
+          "ENGL3122AEF",
+          "LANG2133AEF",
+          "LANG3138AEF",
+          "LANG3143AEF",
+          "LANG4135AEF",
+          "LANG4139AEF",
+          "TRAN1261ACF",
+          "TRAN1271ACF",
+          "TRAN2253ACF",
+          "TRAN2262ACF",
+          "TRAN2272ACF",
+          "TRAN3254ACF",
+          "TRAN3265ACF",
+          "TRAN3267ACF",
+          "TRAN3268ACF",
+          "TRAN4269ABF",
+          "TRAN4279ABF"
+        ],
+        "credits_seen": 60,
+        "min_credits": 60
+      },
+      "elective": {
+        "courses": [
+          "CCA1006ACF",
+          "CCA2007ACF",
+          "CAMD1001AEF",
+          "CAMD1002ABF",
+          "CHIN1002ACF",
+          "CHIN1003ACF",
+          "CHIN1004ACF",
+          "CHIN1005ACF",
+          "CHIN3004ACF",
+          "ENGL1002AEF",
+          "ENGL1003AEF",
+          "ENGL1031AEF",
+          "ENGL2031AEF",
+          "ENGL4004AEF",
+          "CHIN1001ACF",
+          "CHIN2003ACF",
+          "CHIN1006ACF",
+          "CHIN2004ACF",
+          "PTH1901ACF",
+          "PTH1902ACF",
+          "EDU4465EEF",
+          "ENGL1032AEF",
+          "ENGL2003AEF",
+          "ENGL2004AEF",
+          "ENGL2006AEF",
+          "ENGL2035AEF",
+          "ENGL2005AEF",
+          "ENGL2032AEF",
+          "ENGL2033AEF",
+          "ENGL2038AEF",
+          "ENGL2039AEF",
+          "ENGL2042AEF",
+          "ENGL2001AEF",
+          "ENGL3036AEF",
+          "ENGL3037AEF",
+          "ENGL3021AEF",
+          "ENGL3026AEF",
+          "ENGL3022AEF",
+          "ENGL3024AEF",
+          "ENGL3040AEF",
+          "ENGL3041AEF",
+          "ENGL3330EEF",
+          "ENGL4025AEF",
+          "ENGL4001AEF",
+          "ENGL4002AEF",
+          "ENGL4042AEF",
+          "ENGL4003AEF",
+          "ENGL4420EEF",
+          "ENGL4430EEF",
+          "LANG3366EEF"
+        ],
+        "credits_seen": 153,
+        "min_credits": 21
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI2002BCW",
+          "UNI3002BEW",
+          "UNI3002BCW"
+        ],
+        "credits_seen": 15,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1102AEF",
+          "ENGL1002AEF",
+          "ENGL1003AEF"
+        ],
+        "credits_seen": 12,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BAHNMIEJ": {
+    "school": "AS",
+    "categories": {
+      "core": {
+        "courses": [
+          "IDDA1003AEF",
+          "MATH1410SEF",
+          "NMIE1001AEF",
+          "NMIE1002AEF",
+          "NMIE1101AEF",
+          "NMIE1201AEF",
+          "AMVE2002AEF",
+          "COMP2090SEF",
+          "COMP2640SEF",
+          "MATH2850SEF",
+          "NMIE2201AEF",
+          "NMIE2301AEF",
+          "NMIE2302AEF",
+          "NMIE3101AEF",
+          "NMIE3301AEF",
+          "NMIE3302AEF",
+          "NMIE3303AEF",
+          "NMIE3401AEF",
+          "NMIE4001AEF",
+          "NMIE4101AEF",
+          "NMIE4201AEF",
+          "NMIE4499AEF"
+        ],
+        "credits_seen": 69,
+        "min_credits": 69
+      },
+      "elective": {
+        "courses": [
+          "AMVE1000AEF",
+          "AMVE1001AEF",
+          "AMVE1004AEF",
+          "CAMD1000AEF",
+          "CCA1000ACF",
+          "CCA1007ACF",
+          "COMP1080SEF",
+          "IDDA1000AEF",
+          "AMVE2003AEF",
+          "CAMD2000AEF",
+          "CAMD2001ABF",
+          "CAMD2003AEF",
+          "CCA2009ACF",
+          "COMP2020SEF",
+          "COMP2030SEF",
+          "ELEC2010SEF",
+          "IDDA2003AEF",
+          "STAT2520SEF",
+          "STAT2630SEF",
+          "CAMD3000AEF",
+          "CAMD3003AEF",
+          "CAMD3004AEF",
+          "CAMD3005ABF",
+          "CCA3002ACF",
+          "CCA3058ACF",
+          "CCA3059ACF",
+          "COMP3130SEF",
+          "COMP3800SEF",
+          "COMP3810SEF",
+          "COMP3920SEF",
+          "ELEC3470SEF",
+          "IDDA3002AEF",
+          "AMVE4003AEF",
+          "CAMD4001ABF",
+          "CAMD4002ABF",
+          "CAMD4004ABF",
+          "CAMD4007AEF",
+          "CCA4002ACF",
+          "CCA4003ACF",
+          "CCA4004ACF",
+          "COMP4210SEF",
+          "COMP4330SEF",
+          "COMP4600SEF",
+          "COMP4630SEF",
+          "COMP4820SEF",
+          "COMP4930SEF",
+          "ELEC4310SEF"
+        ],
+        "credits_seen": 141
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1102AEF",
+          "ENGL1002AEF",
+          "ENGL1003AEF"
+        ],
+        "credits_seen": 12,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BFAHAVEJ": {
+    "school": "AS",
+    "categories": {
+      "core": {
+        "courses": [
+          "AMVE1000AEF",
+          "AMVE1001AEF",
+          "AMVE1002ABF",
+          "AMVE1003AEF",
+          "AMVE1004AEF",
+          "CCA1005ABF",
+          "AMVE2000AEF",
+          "AMVE2001AEF",
+          "AMVE2002AEF",
+          "AMVE2003AEF",
+          "AMVE2004AEF",
+          "AMVE2005ABF",
+          "AMVE3000ABF",
+          "AMVE3001ABF",
+          "AMVE3002AEF",
+          "AMVE3003ABF",
+          "AMVE3004AEF",
+          "AMVE4000ABF",
+          "AMVE4001ABF",
+          "AMVE4002ABF",
+          "AMVE4003AEF",
+          "AMVE4004AEF",
+          "AMVE4005AEF"
+        ],
+        "credits_seen": 81,
+        "min_credits": 81
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1102AEF",
+          "ENGL1002AEF",
+          "ENGL1003AEF"
+        ],
+        "credits_seen": 12,
+        "min_credits": 6
+      },
+      "elective": {
+        "min_credits": 3
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BFAHIDDAJ": {
+    "school": "AS",
+    "categories": {
+      "core": {
+        "courses": [
+          "AMVE1001AEF",
+          "IDDA1000AEF",
+          "IDDA1002AEF",
+          "IDDA1003AEF",
+          "IDDA1004ABF",
+          "IDDA2000AEF",
+          "IDDA2001AEF",
+          "IDDA2002AEF",
+          "IDDA2003AEF",
+          "IDDA3000AEF",
+          "IDDA3001AEF",
+          "IDDA3002AEF",
+          "IDDA3003AEF",
+          "IDDA3004AEF",
+          "IDDA3005AEF",
+          "IDDA3006AEF",
+          "IDDA3007AEF",
+          "IDDA4000ABF",
+          "IDDA4001AEF",
+          "IDDA4002AEF",
+          "IDDA4003AEF",
+          "IDDA4004AEF",
+          "IDDA4005AEF",
+          "IDDA4006AEF",
+          "IDDA4007AEF",
+          "IDDA4008ABF"
+        ],
+        "credits_seen": 81,
+        "min_credits": 81
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI2002BCW",
+          "UNI3002BEW",
+          "UNI3002BCW"
+        ],
+        "credits_seen": 15,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1102AEF",
+          "ENGL1002AEF",
+          "ENGL1003AEF"
+        ],
+        "credits_seen": 12,
+        "min_credits": 6
+      },
+      "elective": {
+        "min_credits": 18
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BSSCHPWSJ": {
+    "school": "AS",
+    "categories": {
+      "core": {
+        "courses": [
+          "ECON1001AEF",
+          "POLS1001AEF",
+          "PSYC1001AEF",
+          "SOCI1001AEF",
+          "PSYC2001AEF",
+          "STAT2001AEF",
+          "STAT2003AEF",
+          "PSYC3001AEF",
+          "PSYC3002AEF",
+          "PSYC3003AEF",
+          "PSYC3004AEF",
+          "PSYC3005AEF",
+          "PSYC3006AEF",
+          "PSYC3007AEF",
+          "PSYC3008AEF",
+          "PSYC3009AEF",
+          "PSYC3010AEF",
+          "COUN1001AEF",
+          "ECON1001AEF",
+          "POLS1001AEF",
+          "PSYC1001AEF",
+          "SOCI1001AEF",
+          "COUN2001AEF",
+          "COUN2002AEF",
+          "PSYC2001AEF",
+          "STAT2001AEF",
+          "STAT2003AEF",
+          "PSYC3001AEF",
+          "PSYC3002AEF",
+          "PSYC3003AEF",
+          "PSYC3005AEF",
+          "PSYC3006AEF",
+          "PSYC3007AEF",
+          "PSYC3009AEF",
+          "PSYC3010AEF",
+          "COUN4001AEF",
+          "COUN4002AEF",
+          "COUN4003AEF",
+          "PSYC4002AEF",
+          "PSYC4004AEF",
+          "COUN4008AEF",
+          "PSYC4010AEF"
+        ],
+        "credits_seen": 129,
+        "min_credits": 51
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW",
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 18,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1102AEF",
+          "ENGL1002AEF",
+          "ENGL1003AEF",
+          "NURS1050NEF",
+          "ENGL1101AEF",
+          "ENGL1102AEF",
+          "ENGL1002AEF",
+          "ENGL1003AEF"
+        ],
+        "credits_seen": 27,
+        "min_credits": 6
+      },
+      "elective": {
+        "min_credits": 24
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BAPHBMJ": {
+    "school": "BA",
+    "categories": {
+      "core": {
+        "courses": [
+          "BUS2000BEF",
+          "BUS3068BEF",
+          "BUS4088BEF",
+          "IB3091BEF",
+          "LAW3062BEF",
+          "MGT3045BEF",
+          "MGT4041BEF",
+          "MGT4098BEF",
+          "MKT2050BEF",
+          "BUS2001BEF",
+          "BUS2000BEF"
+        ],
+        "credits_seen": 54
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BBAHASMJ": {
+    "school": "BA",
+    "categories": {
+      "core": {
+        "courses": [
+          "BUS2000BEF",
+          "BUS2020BEF",
+          "BUS3068BEF",
+          "BUS4028BEF",
+          "BUS4088BEF",
+          "BUS2001BEF",
+          "BUS2000BEF"
+        ],
+        "credits_seen": 66,
+        "min_credits": 60
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BBAHCGSJ": {
+    "school": "BA",
+    "categories": {
+      "core": {
+        "courses": [
+          "BUS2000BEF",
+          "BUS2020BEF",
+          "BUS3068BEF",
+          "BUS4028BEF",
+          "BUS4088BEF",
+          "BUS2001BEF",
+          "BUS2000BEF"
+        ],
+        "credits_seen": 66,
+        "min_credits": 60
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BBAHFFTJ": {
+    "school": "BA",
+    "categories": {
+      "core": {
+        "courses": [
+          "BUS2000BEF",
+          "BUS2020BEF",
+          "BUS3068BEF",
+          "BUS4028BEF",
+          "BUS4088BEF",
+          "BUS2001BEF",
+          "BUS2000BEF"
+        ],
+        "credits_seen": 66,
+        "min_credits": 60
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BBAHGBJ": {
+    "school": "BA",
+    "categories": {
+      "core": {
+        "courses": [
+          "BUS2000BEF",
+          "BUS2020BEF",
+          "BUS3068BEF",
+          "BUS4028BEF",
+          "BUS4088BEF",
+          "BUS2001BEF",
+          "BUS2000BEF"
+        ],
+        "credits_seen": 66,
+        "min_credits": 60
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BBAHGMSMJ": {
+    "school": "BA",
+    "categories": {
+      "core": {
+        "courses": [
+          "BUS2000BEF",
+          "BUS2020BEF",
+          "BUS3068BEF",
+          "BUS4028BEF",
+          "BUS4088BEF",
+          "BUS2001BEF",
+          "BUS2000BEF"
+        ],
+        "credits_seen": 66,
+        "min_credits": 60
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BBAHHRMJ": {
+    "school": "BA",
+    "categories": {
+      "core": {
+        "courses": [
+          "BUS2000BEF",
+          "BUS2020BEF",
+          "BUS3068BEF",
+          "BUS4028BEF",
+          "BUS4088BEF",
+          "BUS2001BEF",
+          "BUS2000BEF"
+        ],
+        "credits_seen": 66,
+        "min_credits": 60
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BBAHIHAMJ": {
+    "school": "BA",
+    "categories": {
+      "core": {
+        "courses": [
+          "BUS2000BEF",
+          "BUS2020BEF",
+          "BUS3068BEF",
+          "BUS4028BEF",
+          "BUS4088BEF",
+          "BUS2001BEF",
+          "BUS2000BEF"
+        ],
+        "credits_seen": 66,
+        "min_credits": 60
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BBAHMGTJ": {
+    "school": "BA",
+    "categories": {
+      "core": {
+        "courses": [
+          "BUS2000BEF",
+          "BUS2020BEF",
+          "BUS3068BEF",
+          "BUS4028BEF",
+          "BUS4088BEF",
+          "BUS2001BEF",
+          "BUS2000BEF"
+        ],
+        "credits_seen": 66,
+        "min_credits": 60
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BBAHMKTJ": {
+    "school": "BA",
+    "categories": {
+      "core": {
+        "courses": [
+          "BUS2000BEF",
+          "BUS2020BEF",
+          "BUS3068BEF",
+          "BUS4028BEF",
+          "BUS4088BEF",
+          "BUS2001BEF",
+          "BUS2000BEF"
+        ],
+        "credits_seen": 66,
+        "min_credits": 60
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BBAHPAJ": {
+    "school": "BA",
+    "categories": {
+      "core": {
+        "courses": [
+          "BUS2000BEF",
+          "BUS2020BEF",
+          "BUS3068BEF",
+          "BUS4028BEF",
+          "BUS4088BEF",
+          "BUS2001BEF",
+          "BUS2000BEF"
+        ],
+        "credits_seen": 66,
+        "min_credits": 60
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BBAHRESJ": {
+    "school": "BA",
+    "categories": {
+      "core": {
+        "courses": [
+          "BUS2000BEF",
+          "BUS2020BEF",
+          "BUS3068BEF",
+          "BUS4028BEF",
+          "BUS4088BEF",
+          "BUS2001BEF",
+          "BUS2000BEF"
+        ],
+        "credits_seen": 66,
+        "min_credits": 60
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BBAHSEMJ": {
+    "school": "BA",
+    "categories": {
+      "core": {
+        "courses": [
+          "BUS2000BEF",
+          "BUS2020BEF",
+          "BUS3068BEF",
+          "BUS4028BEF",
+          "BUS4088BEF",
+          "BUS2001BEF",
+          "BUS2000BEF"
+        ],
+        "credits_seen": 66,
+        "min_credits": 60
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BBAHSRMJ": {
+    "school": "BA",
+    "categories": {
+      "core": {
+        "courses": [
+          "BUS2000BEF",
+          "BUS2020BEF",
+          "BUS3068BEF",
+          "BUS4028BEF",
+          "BUS4088BEF",
+          "BUS2001BEF",
+          "BUS2000BEF"
+        ],
+        "credits_seen": 66,
+        "min_credits": 60
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BBAHSTHMJ": {
+    "school": "BA",
+    "categories": {
+      "core": {
+        "courses": [
+          "BUS2000BEF",
+          "BUS2020BEF",
+          "BUS3068BEF",
+          "BUS4028BEF",
+          "BUS4088BEF",
+          "BUS2001BEF",
+          "BUS2000BEF"
+        ],
+        "credits_seen": 66,
+        "min_credits": 60
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BBAHWBJ": {
+    "school": "BA",
+    "categories": {
+      "core": {
+        "min_credits": 60
+      },
+      "university-core": {
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BEDELSEHJ": {
+    "school": "EL",
+    "categories": {
+      "core": {
+        "courses": [
+          "EDU1100EEF",
+          "EDU2215EEF",
+          "EDU2219EEF",
+          "EDU2220EEF",
+          "EDU2253EEF",
+          "EDU2254EEF",
+          "EDU3315EEF",
+          "EDU3350EEF",
+          "EDU3353EEF",
+          "EDU3388EEF",
+          "EDU3399EEF",
+          "EDU4400EEF",
+          "EDU4465EEF",
+          "EDU4472EEF",
+          "EDU4473EEF",
+          "ENGL1101EEF",
+          "ENGL1102EEF",
+          "ENGL2200EEF",
+          "ENGL2205EEF",
+          "ENGL2210EEF",
+          "ENGL2220EEF",
+          "ENGL2230EEF",
+          "ENGL3320EEF",
+          "ENGL3350EEF",
+          "ENGL3370EEF",
+          "ENGL3373EEF",
+          "ENGL4310EEF",
+          "ENGL4420EEF",
+          "ENGL4430EEF",
+          "EDU1150EEF",
+          "LANG2133AEF",
+          "LANG3138AEF",
+          "LANG3366EEF",
+          "EDU2253EEF"
+        ],
+        "credits_seen": 130,
+        "min_credits": 129
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW",
+          "IT1150EEF",
+          "IT1150EEF",
+          "EDU1150EEF"
+        ],
+        "credits_seen": 2041,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 9,
+        "pool": "ge"
+      }
+    }
+  },
+  "BEDHACLSJ": {
+    "school": "EL",
+    "categories": {
+      "core": {
+        "courses": [
+          "CHIN1130ECF",
+          "CHIN1131ECF",
+          "CHIN2133ECF",
+          "CHIN2230ECF",
+          "CHIN2243ECF",
+          "CHIN2253ECF",
+          "CHIN2373ECF",
+          "CHIN2374ECF",
+          "CHIN2384ECF",
+          "CHIN3255ECF",
+          "CHIN3377ECF",
+          "CHIN3380ECF",
+          "CHIN3382ECF",
+          "CHIN4232ECF",
+          "CHIN4372ECF",
+          "CHIN4383ECF",
+          "EDU1100ECF",
+          "EDU2218ECF",
+          "EDU2229ECF",
+          "EDU2255ECF",
+          "EDU2266ECF",
+          "EDU3219ECF",
+          "EDU3220ECF",
+          "EDU3256ECF",
+          "EDU3315ECF",
+          "EDU3350ECF",
+          "EDU3355ECF",
+          "EDU3376ECF",
+          "EDU3378ECF",
+          "EDU3388ECF",
+          "EDU4355ECF",
+          "EDU4412ECF",
+          "EDU4422ECF",
+          "EDU4460ECF",
+          "EDU4470ECF",
+          "EDU4501ECF",
+          "PTH1150ECF",
+          "PTH2250ECF",
+          "CHIN1130ECF",
+          "CHIN1131ECF",
+          "CHIN2101ECF",
+          "CHIN2133ECF",
+          "CHIN2230ECF",
+          "CHIN2243ECF",
+          "CHIN2253ECF",
+          "CHIN2373ECF",
+          "CHIN2374ECF",
+          "CHIN2384ECF",
+          "CHIN3255ECF",
+          "CHIN3377ECF",
+          "CHIN3380ECF",
+          "CHIN4383ECF",
+          "CHIN4232ECF",
+          "CHIN4372ECF",
+          "EDU1100ECF",
+          "EDU2218ECF",
+          "EDU2229ECF",
+          "EDU2255ECF",
+          "EDU3257ECF",
+          "EDU3219ECF",
+          "EDU3220ECF",
+          "EDU3256ECF",
+          "EDU3315ECF",
+          "EDU3350ECF",
+          "EDU3355ECF",
+          "EDU3376ECF",
+          "EDU3378ECF",
+          "EDU3388ECF",
+          "EDU4355ECF",
+          "EDU4412ECF",
+          "EDU4422ECF",
+          "EDU4460ECF",
+          "EDU4470ECF",
+          "EDU4501ECF",
+          "PTH1150ECF",
+          "PTH2250ECF"
+        ],
+        "credits_seen": 228,
+        "min_credits": 114
+      },
+      "elective": {
+        "courses": [
+          "CHIN2132ECF",
+          "CHIN2244ECF",
+          "CHIN4242ECF",
+          "CHIN4243ECF",
+          "CHIN4244ECF",
+          "CHIN4245ECF",
+          "EDU3257ECF",
+          "EDU3258ECF",
+          "PTH3255ECF",
+          "PTH3256ECF",
+          "CHIN2132ECF",
+          "CHIN2244ECF",
+          "CHIN4242ECF",
+          "CHIN4243ECF",
+          "CHIN4244ECF",
+          "CHIN4245ECF",
+          "EDU2266ECF",
+          "EDU3258ECF",
+          "PTH3255ECF",
+          "PTH3256ECF"
+        ],
+        "credits_seen": 60
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BCW",
+          "UNI3002BCW",
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BCW",
+          "UNI3002BCW"
+        ],
+        "credits_seen": 18,
+        "min_credits": 9
+      },
+      "english": {
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BEDHECEJ": {
+    "school": "EL",
+    "categories": {
+      "core": {
+        "courses": [
+          "CHIN2230ECF",
+          "EDU1160ECF",
+          "EDU1161ECF",
+          "EDU1162ECF",
+          "EDU1164ECF",
+          "EDU1165ECF",
+          "EDU2246ECF",
+          "EDU2247ECF",
+          "EDU2248ECF",
+          "EDU2250ECF",
+          "EDU2259ECF",
+          "EDU2260ECF",
+          "EDU2262ECF",
+          "EDU2263ECF",
+          "EDU2273ECF",
+          "EDU2278ECF",
+          "EDU3302ECF",
+          "EDU3370ECF",
+          "EDU3379ECF",
+          "EDU3381ECF",
+          "EDU3382ECF",
+          "EDU3383ECF",
+          "EDU3384ECF",
+          "EDU3386ECF",
+          "EDU4403ECF",
+          "EDU4404ECF",
+          "EDU4407ECF",
+          "EDU4410ECF",
+          "EDU4415ECF",
+          "EDU4469ECF",
+          "EDU4473ECF",
+          "EDU4474ECF",
+          "EDU4485ECF",
+          "EDU1150ECF"
+        ],
+        "credits_seen": 102,
+        "min_credits": 102
+      },
+      "elective": {
+        "courses": [
+          "EDU1158ECF",
+          "EDU1159ECF",
+          "EDU4405ECF",
+          "EDU4480ECF"
+        ],
+        "credits_seen": 12
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BCW",
+          "UNI3002BCW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF",
+          "IT1150ECF",
+          "IT1150ECF",
+          "EDU1150ECF"
+        ],
+        "credits_seen": 2039,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BEDHPCLSJ": {
+    "school": "EL",
+    "categories": {
+      "core": {
+        "courses": [
+          "CHIN1101ECF",
+          "CHIN1201ECF",
+          "CHIN1202ECF",
+          "CHIN2133ECF",
+          "CHIN2384ECF",
+          "CHIN2401ECF",
+          "CHIN2501ECF",
+          "CHIN2502ECF",
+          "CHIN3201ECF",
+          "CHIN3231ECF",
+          "CHIN3301ECF",
+          "CHIN4420ECF",
+          "CHIN4503ECF",
+          "EDU1100ECF",
+          "EDU2201ECF",
+          "EDU2229ECF",
+          "EDU2255ECF",
+          "EDU2401ECF",
+          "EDU3202ECF",
+          "EDU3219ECF",
+          "EDU3220ECF",
+          "EDU3301ECF",
+          "EDU3315ECF",
+          "EDU3350ECF",
+          "EDU3355ECF",
+          "EDU3388ECF",
+          "EDU4301ECF",
+          "EDU4302ECF",
+          "EDU4501ECF",
+          "EDU4502ECF",
+          "EDU4503ECF",
+          "PTH2100ECF",
+          "PTH3303ECF"
+        ],
+        "credits_seen": 114,
+        "min_credits": 114
+      },
+      "elective": {
+        "courses": [
+          "CHIN2101ECF",
+          "CHIN2102ECF",
+          "CHIN2103ECF",
+          "CHIN2104ECF"
+        ],
+        "credits_seen": 12,
+        "min_credits": 6
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BCW",
+          "UNI3002BCW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BLSEHJ": {
+    "school": "EL",
+    "categories": {
+      "core": {
+        "courses": [
+          "ENGL1101EEF",
+          "ENGL1102EEF",
+          "ENGL2200EEF",
+          "ENGL2210EEF",
+          "ENGL2220EEF",
+          "ENGL2225EEF",
+          "ENGL2230EEF",
+          "ENGL2235EEF",
+          "ENGL3320EEF",
+          "ENGL3330EEF",
+          "EDU1150EEF"
+        ],
+        "credits_seen": 42,
+        "min_credits": 42
+      },
+      "elective": {
+        "courses": [
+          "EDU4465EEF",
+          "ENGL3345EEF",
+          "ENGL4415EEF",
+          "ENGL4420EEF",
+          "LANG3366EEF",
+          "TRAN1261ACF",
+          "TRAN1271ACF",
+          "TRAN2253ACF",
+          "TRAN3254ACF",
+          "TRAN3265ACF",
+          "TRAN3267ACF",
+          "TRAN3268ACF",
+          "TRAN3602ABF"
+        ],
+        "credits_seen": 42,
+        "min_credits": 18
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW",
+          "IT1150EEF",
+          "IT1150EEF",
+          "EDU1150EEF"
+        ],
+        "credits_seen": 2041,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 12,
+        "pool": "ge"
+      }
+    }
+  },
+  "BLSHACLSJ": {
+    "school": "EL",
+    "categories": {
+      "core": {
+        "courses": [
+          "CHIN1130ECF",
+          "CHIN1131ECF",
+          "CHIN2132ECF",
+          "CHIN2133ECF",
+          "CHIN2230ECF",
+          "CHIN2243ECF",
+          "CHIN2253ECF",
+          "CHIN2373ECF",
+          "CHIN2374ECF",
+          "CHIN2384ECF",
+          "CHIN3231ECF",
+          "CHIN3255ECF",
+          "CHIN3338ECF",
+          "CHIN3366ECF",
+          "CHIN3369ECF",
+          "CHIN3377ECF",
+          "CHIN3380ECF",
+          "CHIN3382ECF",
+          "CHIN4232ECF",
+          "CHIN4242ECF",
+          "CHIN4243ECF",
+          "CHIN4244ECF",
+          "CHIN4245ECF",
+          "CHIN4372ECF",
+          "CHIN4383ECF",
+          "CHIN4430ECF",
+          "EDU3256ECF",
+          "PTH1150ECF",
+          "PTH2250ECF"
+        ],
+        "credits_seen": 90,
+        "min_credits": 90
+      },
+      "elective": {
+        "courses": [
+          "EDU3257ECF",
+          "EDU3258ECF",
+          "PTH3255ECF",
+          "PTH3256ECF"
+        ],
+        "credits_seen": 12
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF"
+        ],
+        "credits_seen": 6
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BCW",
+          "UNI3002BCW",
+          "IT1150ECF",
+          "IT1150ECF",
+          "EDU1150ECF"
+        ],
+        "credits_seen": 2042,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BLSHBSADJ": {
+    "school": "EL",
+    "categories": {
+      "core": {
+        "courses": [
+          "CHIN1131ECF",
+          "CHIN2232ECF",
+          "CHIN2253ECF",
+          "CHIN3382ECF",
+          "CHIN3388ECF",
+          "CHIN4245ECF",
+          "CHIN4344ECF",
+          "CHIN4383ECF",
+          "DRAM1000EBF",
+          "DRAM2000ECF",
+          "DRAM2525ECF",
+          "DRAM2626EBF",
+          "DRAM3399ECF",
+          "DRAM3636ECF",
+          "DRAM4244EBF",
+          "DRAM4343EBF",
+          "DRAM4499ECF",
+          "ENGL2200EEF",
+          "ENGL2210EEF",
+          "ENGL2220EEF",
+          "ENGL2230EEF",
+          "ENGL3320EEF",
+          "ENGL3330EEF",
+          "ENGL3370EEF",
+          "IT1150ECF",
+          "LANG2000EEF",
+          "LANG2133AEF",
+          "LANG3000ECF",
+          "LANG4000EBF",
+          "PTH2250ECF"
+        ],
+        "credits_seen": 102,
+        "min_credits": 102
+      },
+      "elective": {
+        "courses": [
+          "EDU3257ECF",
+          "DRAM3259ECF",
+          "ENGL2205EEF",
+          "PTH3255ECF",
+          "PTH3256ECF",
+          "ENGL4139EEF",
+          "LANG4139AEF"
+        ],
+        "credits_seen": 21
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BCW",
+          "UNI3002BCW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BNHGJ": {
+    "school": "NHS",
+    "categories": {
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF"
+        ],
+        "credits_seen": 6,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BNHMJ": {
+    "school": "NHS",
+    "categories": {
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF"
+        ],
+        "credits_seen": 6,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BSCHDRJ": {
+    "school": "NHS",
+    "categories": {
+      "core": {
+        "courses": [
+          "NURS1501NEF",
+          "NURS2501NEF",
+          "RAD1501NEF",
+          "RAD1502NEF",
+          "RAD1503NEF",
+          "RAD1504NEF",
+          "RAD2501NEF",
+          "RAD2502NEF",
+          "RAD2503NEF",
+          "RAD2504NEF",
+          "RAD2505NEF",
+          "RAD2506NEF",
+          "RAD2507NEF",
+          "RAD2508NEF",
+          "RAD2509NEF",
+          "RAD3501NEF",
+          "RAD3502NEF",
+          "RAD3503NEF",
+          "RAD3504NEF",
+          "RAD3505NEF",
+          "RAD3506NEF",
+          "RAD3507NEF",
+          "RAD3508NEF",
+          "RAD3509NEF",
+          "RAD4501NEF",
+          "RAD4502NEF"
+        ],
+        "credits_seen": 87,
+        "min_credits": 87
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF"
+        ],
+        "credits_seen": 6,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BSCHMLSJ": {
+    "school": "NHS",
+    "categories": {
+      "core": {
+        "courses": [
+          "BIOL1003NEF",
+          "BIOL2002NEF",
+          "BIOL2006NEF",
+          "BIOL2012NEF",
+          "BIOL2036NEF",
+          "BIOL2045NEF",
+          "BIOL3004NEF",
+          "BIOL3056NEF",
+          "BIOL4011NEF",
+          "BIOL4012NEF",
+          "CHEM1002NEF",
+          "MLS1001NEF",
+          "MLS1004NEF",
+          "MLS2011NEF",
+          "MLS3007NEF",
+          "MLS3008NEF",
+          "MLS3009NEF",
+          "MLS3010NEF",
+          "MLS3015NEF",
+          "MLS4001NEF",
+          "MLS4002NEF",
+          "MLS4007NEF",
+          "MLS4008NEF",
+          "MLS4009NEF",
+          "MLS4010NEF",
+          "MLS4012NEF",
+          "MLS4013NEF",
+          "MLS4015NEF",
+          "MLS4021NEF",
+          "MLS4022NEF",
+          "MLS4023NEF",
+          "MLS4024NEF",
+          "SCI1010NEF",
+          "SCI2005NEF",
+          "SCI2006NEF",
+          "SCI3030NEF",
+          "SCI4001NEF"
+        ],
+        "credits_seen": 114,
+        "min_credits": 114
+      },
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "courses": [
+          "ENGL1101AEF",
+          "ENGL1202EEF"
+        ],
+        "credits_seen": 6,
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  },
+  "BSCHPTJ": {
+    "school": "NHS",
+    "categories": {
+      "university-core": {
+        "courses": [
+          "UNI1002ABW",
+          "UNI1012ABW",
+          "UNI2002BEW",
+          "UNI3002BEW"
+        ],
+        "credits_seen": 9,
+        "min_credits": 9
+      },
+      "english": {
+        "min_credits": 6
+      },
+      "general-ed": {
+        "min_credits": 6,
+        "pool": "ge"
+      }
+    }
+  }
+}

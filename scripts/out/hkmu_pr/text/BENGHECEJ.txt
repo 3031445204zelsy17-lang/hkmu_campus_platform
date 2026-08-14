@@ -1,0 +1,96 @@
+3-credit-unit system
+3CRU_FTU_ST_BENGHECEJ_202607_V4
+Programme Requirements for
+Bachelor of Engineering with Honours in Electronic and Computer Engineering
+This 3-credit-unit system programme requirements document is applicable to the following student
+cohorts:
+Year of Entry Admission cohort
+Year 1 2023/24 and thereafter
+1. Programme Requirement – Year 1 Entry
+1.1 To be eligible for the award of the degree of Bachelor of Engineering with Honours in Electronic
+and Computer Engineering through Year 1 Entry, a student shall:
+1.1.1 obtain 126 credit-units as prescribed below, of which no more than 30 credit-units shall be
+at 1000-level, at least 24 credit-units shall be at 3000-level and at least 24 credit-units shall
+be at 4000-level:
+1.1.1.1 81 credit-units of core courses in Table 1;
+1.1.1.2 15 credit-units of elective courses (Group 2) in Table 3;
+1.1.1.3 9 credit-units of elective courses in Table 2 (Group 1) & Table 3 (Group 2);
+1.1.1.4 9 credit-units of University Core courses in Table 4;
+1.1.1.5 6 credit-units of University English courses from Table 5; and
+1.1.1.6 6 credit-units of General Education (GE) courses (see www.hkmu.edu.hk/FT_GE
+for the updated list of GE courses) in which at most 3 credits should be at
+foundation level;
+and
+1.1.2 complete the mandatory course on Mental Health First Aid (either the English version
+NURS1050NEF (Mental Health First Aid Training) or the Chinese version NURS 1050NCF (精
+神健康急救課程)) (only applicable to Year 1 entry students admitted in and after 2025/26
+cohort);
+and
+1.1.3 attain the CGPA for graduation as prescribed in the Regulations for the award of
+undergraduate degrees.
+Page 1 of 3
+3-credit-unit system
+3CRU_FTU_ST_BENGHECEJ_202607_V4
+Table 1: Core Courses
+Course Code Course Title Credit-units
+COMP 1080SEF Introduction to Computer Programming 3
+COMP 2090SEF Data Structures, Algorithms and Problem Solving 3
+COMP 2660SEF Computer Architecture 3
+COMP 2670SEF Operating Systems 3
+ELEC 1010SEF Digital Logic Design 3
+ELEC 2010SEF Fundamentals of Electric Circuits 3
+ELEC 2050SEF Signal and Systems 3
+ELEC 2100SEF Integrated Project 3
+ELEC 2410SEF Electronic Circuit Design 3
+ELEC 2620SEF Information System Administration 3
+ELEC 3000SEF Industrial Training 3
+ELEC 3040SEF Communication Systems 3
+ELEC 3050SEF Computer Networking 3
+ELEC 3150SEF Routing and Switching Technologies 3
+ELEC 3250SEF Computer and Network Security 3
+ELEC 3470SEF Multimedia Technologies 3
+ELEC 3630SEF Advanced Computer Design 3
+ELEC 4000SEF Industrial Placement 3
+ELEC 4110SEF Final Year Project 6
+ENGG 3280SEF Engineering Professional Practice 3
+MATH 1410SEF Algebra and Calculus 3
+MATH 2150SEF Linear Algebra 3
+MATH 2850SEF Multivariable Calculus 3
+SCI 1000SEF Basic Sciences for Engineers 3
+STAT 1510SEF Probability and Distributions 3
+STAT 2610SEF Data Analytics with Applications 3
+Table 2: Elective Courses (Group 1)
+Course Code Course Title Credit-units
+COMP 3130SEF Mobile Application Programming 3
+COMP 3500SEF Software Engineering 3
+COMP 3510SEF Software Project Management 3
+COMP 3920SEF Machine Learning 3
+Page 2 of 3
+3-credit-unit system
+3CRU_FTU_ST_BENGHECEJ_202607_V4
+Table 3: Elective Courses (Group 2)
+Course Code Course Title Credit-units
+COMP 4820SEF Data Mining and Analytics 3
+COMP 4930SEF Deep Learning 3
+ELEC 4060SEF Wireless Networks 3
+ELEC 4200SEF Biomedical Instrumentation and Sensors 3
+ELEC 4210SEF Biomedical Informatics 3
+ELEC 4310SEF Blockchain Technologies 3
+ELEC 4370SEF Digital Signal Processing 3
+ELEC 4380SEF Digital Communications 3
+ELEC 4480SEF IoT Security 3
+ELEC 4710SEF Digital Forensics 3
+Table 4: University Core Courses
+Credit-
+Course Code Course Title
+units
+UNI 1002ABW University Core Values 大學核心價值 2
+UNI 1012ABW Social Responsibilities 社會責任 1
+UNI 2002BEW Co-creating with AI: Communication and Teamwork for the Future 3
+UNI 3002BEW AI, Sustainability, and Entrepreneurial Leadership 3
+Table 5: University English courses
+Course Code Course Title Credit-units
+ENGL 1101AEF University English: Reading and Writing 3
+ENGL 1202EEF University English: Listening and Speaking 3
+July 2026
+Page 3 of 3

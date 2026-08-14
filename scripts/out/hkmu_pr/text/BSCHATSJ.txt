@@ -1,0 +1,130 @@
+3-credit-unit system
+3CRU_FTU_ST_BSCHATSJ_202607_V5
+Programme Requirements for
+Bachelor of Science with Honours in Analytical Testing Science
+1. Programme Requirement - Year 1 Entry
+1.1 To be eligible for the award of the degree of Bachelor of Science with Honours in Analytical
+Testing Science through Year 1 Entry, a student shall:
+1.1.1 obtain 120 credit-units as prescribed below, of which no more than 30 credit-units shall
+be at 1000-level, at least 24 credit-units shall be at 3000-level and at least 24 credit-
+units shall be at 4000-level:
+1.1.1.1 84 credit-units of core courses applicable to Year 1 Entry as listed in Table 1;
+1.1.1.2 12 credit-units of 4000-level elective courses from Table 2;
+1.1.1.3 3 credit-units of 3000-level or 4000-level elective courses from Table 2 or 3;
+1.1.1.4 9 credits-units of University Core courses in Table 4;
+1.1.1.5 6 credit-units of University English courses in Table 5;
+1.1.1.6 6 credit-units of General Education (GE) courses (see
+www.hkmu.edu.hk/FT_GE for the updated list of GE courses);
+and
+1.1.2 complete the mandatory course on Mental Health First Aid (either the English version
+NURS1050NEF (Mental Health First Aid Training) or the Chinese version NURS 1050NCF (精神
+健 康 急 救 課 程 )) (only applicable to Year 1 entry students admitted in and after 2025/26
+cohort);
+and
+1.1.3 attain the CGPA for graduation as prescribed in the Regulations for the award of
+undergraduate degrees.
+2. Programme Requirement – Year 2 Entry
+2.1 To be eligible for the award of the degree of Bachelor of Science with Honours in Analytical
+Testing Science through Year 2 Entry, a student shall:
+2.1.1 obtain 90 credit-units as prescribed below, of which at least 24 credit-units shall be at
+3000-level and at least 24 credit-units shall be at 4000-level:
+2.1.1.1 66 credit-units of core courses applicable to Year 2 Entry as listed in Table 1;
+2.1.1.2 12 credit-units of 4000-level elective courses from Table 2;
+2.1.1.3 3 credit-units of 3000-level or 4000-level elective courses from Table 2 or 3;
+2.1.1.4 9 credits-units of University Core courses in Table 4
+Page 1 of 4
+3-credit-unit system
+3CRU_FTU_ST_BSCHATSJ_202607_V5
+and
+2.1.2 attain the CGPA for graduation as prescribed in the Regulations for the award of
+undergraduate degrees.
+3. Programme Requirement – Year 3 Entry
+3.1 To be eligible for the award of the degree of Bachelor of Science with Honours in Analytical
+Testing Science through Year 3 Entry, a student shall:
+3.1.1 obtain 66 credit-units as prescribed below, of which at least 24 credit-units shall be at
+3000-level and at least 24 credit-units shall be at 4000-level:
+3.1.1.1 42 credit-units of core courses applicable to Year 3 Entry as listed in Table 1;
+3.1.1.2 12 credit-units of 4000-level elective courses from Table 2;
+3.1.1.3 3 credit-units of 3000-level or 4000-level elective courses from Table 2 or 3;
+3.1.1.4 9 credit-units of University Core courses in Table 4
+and
+3.1.2 attain the CGPA for graduation as prescribed in the Regulations for the award of
+undergraduate degrees.
+Table 1: Core Courses
+Credit- Year Entry
+Course Code Course Title
+units
+1 2 3
+BIOL 1003SEF Essential Biology 3 
+BIOL 2035SEF Biochemistry & Microbiology 3  
+BIOL 2036SEF Cellular & Molecular Biology 3  
+CHEM 1002SEF Essential Chemistry 3 
+CHEM 3050SEF Analytical Chemistry 3  
+SCI 1010SEF Laboratory Safety & Good Laboratory Practice 3 
+SCI 1100SEF General Chemistry Laboratory Training 3 
+SCI 1101SEF General Biology Laboratory Training 3 
+SCI 2006SEF Pharmacology & Toxicology 3  
+SCI 2100SEF Microbiology Laboratory Training I 3  
+SCI 2101SEF Chemical Analysis Laboratory Training I 3  
+SCI 2102SEF DNA & Biochemical Analysis Laboratory Training I 3  
+SCI 3030SEF Scientific Research Methods 3   
+SCI 3031SEF Biostatistics 3   
+SCI 3065SEF Food Analysis 3   
+Page 2 of 4
+3-credit-unit system
+3CRU_FTU_ST_BSCHATSJ_202607_V5
+Credit- Year Entry
+Course Code Course Title
+units
+1 2 3
+SCI 3090SEF Professional Training & Workplace Attachment 3   
+SCI 3100SEF Microbiology Laboratory Training II 3   
+SCI 3101SEF Chemical Analysis Laboratory Training II 3   
+SCI 3102SEF DNA & Biochemical Analysis Laboratory Training II 3   
+STAT 2610SEF Data Analytics with Applications 3 
+TC 2020SEF Metrology & Calibration 3  
+Management Systems for Testing, Inspection &
+TC 3015SEF 6   
+Certification Bodies
+TC 3020SEF Measurement Uncertainty & Test Method Development 3   
+TC 4019SEF Quality Management for Science & Technology 3   
+ST 4020SEF Professional Practice & Ethics 3   
+TC 4093SEF Testing & Analytical Science Project 6   
+Table 2: 4000-level Elective Courses Note 1
+Course Code Course Title Credit-units
+BIOL 4006SEF Tools and Techniques in Biotechnology 3
+ENVR 4042SEF Environmental Regulations on Resource Management 3
+ENVR 4074SEF Green Environmental Monitoring in Practice 3
+SCI 4064SEF Emerging Technologies in Food Analysis 3
+TC 4026SEF Audit, Inspection & Certification 3
+TC 4062SEF Food Safety Management System: Audit & Certification 3
+TC 4075SEF Greenhouse Gas Validation & Certification 3
+Table 3: 3000-level Elective Courses
+Course Code Course Title Credit-units
+BIOL 3056SEF Biochemical & DNA Technologies 3
+ENVR 3041SEF Environmental Management Systems and Sustainable Product 3
+Life Cycle
+TC 3030SEF Physical & Mechanical Behaviour of Materials 3
+TC 3080SEF Principles of Good Manufacturing Practice 3
+Page 3 of 4
+3-credit-unit system
+3CRU_FTU_ST_BSCHATSJ_202607_V5
+Table 4: University Core Courses
+Course Code Course Title Credit-units
+UNI 1002ABW University Core Values 2
+大學核心價值
+UNI 1012ABW Social Responsibilities 1
+社會責任
+UNI 2002BEW Co-creating with AI: Communication and Teamwork for the 3
+Future
+UNI 3002BEW AI, Sustainability, and Entrepreneurial Leadership 3
+Table 5: University English Courses
+Course Code Course Title Credit-units
+ENGL 1101AEF University English: Reading and Writing 3
+ENGL 1202EEF University English: Listening and Speaking 3
+Note:
+1. TC 4011SEF has been removed from Table 2 with effect from the 2025 Autumn Term. Students who
+have completed TC 4011SEF before the 2025 Autumn Term may have the course credit-units counted
+to satisfy the requirement.
+July 2026
+Page 4 of 4

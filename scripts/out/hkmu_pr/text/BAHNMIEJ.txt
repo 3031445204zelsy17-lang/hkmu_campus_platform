@@ -1,0 +1,201 @@
+3-credit-unit system
+3CRU_FTU_AS_BAHNMIEJ_202607_V4
+Programme Requirements for
+Bachelor of Arts with Honours in New Music and Interactive Entertainment
+1. Programme Requirement – Year 1 Entry
+1.1 To be eligible for the award of the Bachelor of Arts with Honours in New Music and Interactive
+Entertainment through Year 1 Entry, a student shall:
+1.1.1 obtain 120 credit-units as prescribed below, of which no more than 30 credit-units shall
+be at 1000-level, at least 24 credit-units shall be at 3000-level and at least 24 credit-units
+shall be at 4000-level:
+1.1.1.1 69 credit-units of core courses applicable to Year 1 entry as listed in Table 1;
+1.1.1.2 15 credit-units of major elective courses from Table 2;
+1.1.1.3 15 credits-units of elective courses applicable to Year 1 entry as listed in Table
+3, of which at least 3 credit-units are from 4000-level courses;
+1.1.1.4 9 credit-units of University Core courses from Table 4;
+1.1.1.5 6 credit-units of University English courses from Table 5;
+1.1.1.6 6 credit-units of General Education (GE) courses (see www.hkmu.edu.hk/FT_GE
+for the updated list of GE courses);
+and
+1.1.2 complete the mandatory course on Mental Health First Aid (either the English version
+NURS1050NEF (Mental Health First Aid Training) or the Chinese version NURS 1050NCF
+(精神健康急救課程)) (only applicable to Year 1 entry students admitted in and after
+2025/26 cohort).
+and
+1.1.3 attain the CGPA for graduation as prescribed in the Regulations for the award of
+undergraduate degrees.
+2. Programme Requirement – Year 2 Entry
+2.1 To be eligible for the award of the Bachelor of Arts with Honours in New Music and Interactive
+Entertainment through Year 2 Entry, a student shall:
+2.1.1 obtain 93 credit-units as prescribed below, of which at least 24 credit-units shall be at
+3000-level and at least 24 credit-units shall be at 4000-level:
+2.1.1.1 51 credit-units of core courses applicable to Year 2 entry as listed in Table 1;
+2.1.1.2 15 credit-units of major elective courses from Table 2;
+2.1.1.3 15 credits-units of elective courses applicable to Year 2 entry as listed in Table
+3, of which at least 3 credit-units are from 4000-level courses;
+2.1.1.4 9 credit-units of University Core courses from Table 4;
+Page 1 of 5
+3-credit-unit system
+3CRU_FTU_AS_BAHNMIEJ_202607_V4
+2.1.1.5 3 credit-units of General Education (GE) course (see www.hkmu.edu.hk/FT_GE
+for the updated list of GE courses);
+and
+2.1.2 attain the CGPA for graduation as prescribed in the Regulations for the award of
+undergraduate degrees.
+3. Programme Requirement – Year 3 Entry
+3.1 To be eligible for the award of the Bachelor of Arts with Honours in New Music and Interactive
+Entertainment through Year 3 Entry, a student shall:
+3.1.1 obtain 66 credit-units as prescribed below, of which at least 24 credit-units shall be at
+3000-level and at least 24 credit-units shall be at 4000-level:
+3.1.1.1 30 credit-units of core courses applicable to Year 3 entry as listed in Table 1;
+3.1.1.2 15 credit-units of major elective courses from Table 2;
+3.1.1.3 12 credits-units of elective courses applicable to Year 3 entry as listed in Table
+3, of which at least 3 credit-units are from 4000-level courses;
+3.1.1.4 9 credit-units of University Core courses from Table 4;
+and
+3.1.2 attain the CGPA for graduation as prescribed in the Regulations for the award of
+undergraduate degrees.
+Table 1: Core Courses
+Credit- Year Entry
+Course Code Course Title
+units 1 2 3
+IDDA 1003AEF Introduction to Digital Art 3 ✓
+MATH 1410SEF Algebra and Calculus 3 ✓
+NMIE 1001AEF Cultural History of Music 3 ✓
+NMIE 1002AEF Music and Sound Fundamental 3 ✓
+NMIE 1101AEF Introduction to Game Engine 3 ✓
+NMIE 1201AEF Fundamentals of Creative Programming 3 ✓
+AMVE 2002AEF Art Direction for Animation and Visual Effects 3 ✓ ✓
+Data Structures, Algorithms, and Problem
+COMP 2090SEF 3 ✓ ✓
+Solving
+COMP 2640SEF Discrete Mathematics 3 ✓ ✓
+MATH 2850SEF Multivariable Calculus 3 ✓ ✓
+Page 2 of 5
+3-credit-unit system
+3CRU_FTU_AS_BAHNMIEJ_202607_V4
+Credit- Year Entry
+Course Code Course Title
+units 1 2 3
+NMIE 2201AEF Computer Graphics 3 ✓ ✓
+Visual Communication and Real-time
+NMIE 2301AEF 3 ✓ ✓
+Storytelling
+NMIE 2302AEF Gamification and Behavioural Design 3 ✓ ✓
+NMIE 3101AEF Interactive Visual Effect Production 3 ✓ ✓ ✓
+NMIE 3301AEF Composition for Audio-visual Media 3 ✓ ✓ ✓
+NMIE 3302AEF Human-Computer Interaction Design 3 ✓ ✓ ✓
+Human-Computer Interaction Research
+NMIE 3303AEF 3 ✓ ✓ ✓
+Methodology
+Interactive Application Production in Game
+NMIE 3401AEF 3 ✓ ✓ ✓
+Engine
+NMIE 4001AEF Audio Design for Interactive Applications 3 ✓ ✓ ✓
+NMIE 4101AEF Interactive Digital Multimedia Workshop 3 ✓ ✓ ✓
+Data and Machine Learning for Creative
+NMIE 4201AEF 3 ✓ ✓ ✓
+Practice
+NMIE 4499AEF Capstone Project 6 ✓ ✓ ✓
+Table 2: Major Elective Courses
+Course Code Course Title Credit-units
+Category A: Music-related major elective courses
+NMIE 3001AEF Generative Music and Sonic Art 3
+NMIE 3002AEF Immersive and Spatial Sound Design 3
+NMIE 3402AEF Music Design Project Management 3
+NMIE 4002AEF Sound Design for Live Performance 3
+NMIE 4003AEF Experimental Music and Sound 3
+Category B: Visual-related major elective courses
+NMIE 3102AEF Software Art Composition 3
+NMIE 3103AEF Immersive Graphics Design 3
+NMIE 3403AEF Real-time Development Project Management 3
+NMIE 4102AEF Real-time Simulation 3
+NMIE 4202AEF Mixed Reality Technology 3
+Page 3 of 5
+3-credit-unit system
+3CRU_FTU_AS_BAHNMIEJ_202607_V4
+Table 3: Elective Courses
+Credit- Year Entry
+Course Code Course Title
+units 1 2 3
+AMVE 1000AEF History of Animation and Visual Effects 3 ✓
+AMVE 1001AEF Studio Art I: Drawing and Life Drawing 3 ✓
+AMVE 1004AEF Studio Art II: Painting 3 ✓
+CAMD 1000AEF Introduction to Advertising Media 3 ✓
+CCA 1000ACF 電影藝術概論 3 ✓
+CCA 1007ACF 戲劇的藝術：從文字到舞台 3 ✓
+COMP 1080SEF Introduction to Computer Programming 3 ✓
+IDDA 1000AEF Introduction to Imaging Design 3 ✓
+AMVE 2003AEF Character and Set Design 3 ✓ ✓
+CAMD 2000AEF Branding and Visual Identity 3 ✓ ✓
+Visual Design and Practices
+CAMD 2001ABF 3 ✓ ✓
+視覺設計與實踐
+CAMD 2003AEF Advertising Audience Behaviour 3 ✓ ✓
+CCA 2009ACF 電影後期製作藝術 3 ✓ ✓
+COMP 2020SEF Java Programming Fundamentals 3 ✓ ✓
+Intermediate Java Programming & User
+COMP 2030SEF 3 ✓ ✓
+Interface Design
+ELEC 2010SEF Basic Electronics 3 ✓ ✓
+IDDA 2003AEF Imaging Technology 3 ✓ ✓
+STAT 2520SEF Applied Statistical Methods 3 ✓ ✓
+STAT 2630SEF Big Data Analytics with Applications 3 ✓ ✓
+CAMD 3000AEF Advertising for Digital Media 3 ✓ ✓ ✓
+CAMD 3003AEF New Media Culture 3 ✓ ✓ ✓
+CAMD 3004AEF Web Design and Interactive Media 3 ✓ ✓ ✓
+Cultural Identities and Advertising
+CAMD 3005ABF 3 ✓ ✓ ✓
+文化身份與廣告
+CCA 3002ACF 閱讀電影：理論與實踐 3 ✓ ✓ ✓
+CCA 3058ACF 電影攝影與燈光藝術 3 ✓ ✓ ✓
+CCA 3059ACF 導演與監製工作坊 3 ✓ ✓ ✓
+COMP 3130SEF Mobile Application Programming 3 ✓ ✓ ✓
+COMP 3800SEF Web Applications: Design and Development 3 ✓ ✓ ✓
+COMP 3810SEF Server-side Technologies and Cloud Computing 3 ✓ ✓ ✓
+COMP 3920SEF Machine Learning 3 ✓ ✓ ✓
+ELEC 3470SEF Multimedia Technologies 3 ✓ ✓ ✓
+Page 4 of 5
+3-credit-unit system
+3CRU_FTU_AS_BAHNMIEJ_202607_V4
+Credit- Year Entry
+Course Code Course Title
+units 1 2 3
+IDDA 3002AEF Experimental Imaging and Video Art 3 ✓ ✓ ✓
+AMVE 4003AEF Motion Graphics Design 3 ✓ ✓ ✓
+Exhibition Design and Event Planning
+CAMD 4001ABF 3 ✓ ✓ ✓
+展覽設計及活動策劃
+Media Law, Policy and Ethics
+CAMD 4002ABF 3 ✓ ✓ ✓
+媒體法律、政策與道德
+Museum Studies
+CAMD 4004ABF 3 ✓ ✓ ✓
+博物館學
+CAMD 4007AEF Social Media Communications and Strategies 3 ✓ ✓ ✓
+CCA 4002ACF 廣播劇創作 3 ✓ ✓ ✓
+CCA 4003ACF 電影、音樂與歌詞 3 ✓ ✓ ✓
+CCA 4004ACF 綜藝節目：從電視到網上媒體 3 ✓ ✓ ✓
+COMP 4210SEF Advanced Database and Data Warehousing 3 ✓ ✓ ✓
+COMP 4330SEF Advanced Programming and AI Algorithms 3 ✓ ✓ ✓
+COMP 4600SEF Advanced Topics in Data Mining 3 ✓ ✓ ✓
+COMP 4630SEF Distributed Systems and Parallel Computing 3 ✓ ✓ ✓
+COMP 4820SEF Data Mining and Analytics 3 ✓ ✓ ✓
+COMP 4930SEF Deep Learning 3 ✓ ✓ ✓
+ELEC 4310SEF Blockchain Technologies 3 ✓ ✓ ✓
+Table 4: University Core Courses
+Course Code Course Title Credit-units
+UNI 1002ABW University Core Values 大學核心價值 2
+UNI 1012ABW Social Responsibilities 社會責任 1
+Co-creating with AI: Communication and Teamwork for the
+UNI 2002BEW 3
+Future
+UNI 3002BEW AI, Sustainability, and Entrepreneurial Leadership 3
+Table 5: University English courses
+Course Code Course Title Credit-units
+ENGL 1101AEF# University English: Reading and Writing 3
+ENGL 1102AEF# Presentation Skills 3
+# Students who have attained Level 5 or above in DSE (or equivalent) may opt to complete ENGL 1002AEF and/or
+ENGL 1003AEF to fulfill the programme requirements in lieu of ENGL 1101AEF and/or ENGL 1102AEF.
+July 2026
+Page 5 of 5

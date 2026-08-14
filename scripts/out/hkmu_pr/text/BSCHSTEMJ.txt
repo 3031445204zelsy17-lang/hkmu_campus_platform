@@ -1,0 +1,354 @@
+3-credit-unit system
+3CRU_FTU_ST_BSCHSTEMJ_202607_V5
+Programme Requirements for
+Bachelor of Science with Honours in Science (STEM)
+This 3-credit-unit system programme requirements document is applicable to the following
+student cohorts:
+Year of Entry Admission cohort
+Year 1 (BSCHSTEMJ1) 2023/24
+Year 2 (BSCHSTEMJ2) 2024/25
+Year 3 (BSCHSTEMJ3) 2025/26
+1. Programme Requirement – Year 1 Entry (BSCHSTEMJ1)
+1.1 To be eligible for the award of the degree of Bachelor of Science with Honours in Science (STEM),
+a student shall:
+1.1.1 obtain 120 credit-units* as prescribed below, of which no more than 30 credit-units shall
+be at 1000-level, at least 24 credit-units shall be at 3000-level and at least 24 credit-units
+shall be at 4000-level:
+1.1.1.1 24 credit-units of core courses applicable to Year 1 entry from Table 1;
+1.1.1.2 12 credit-units of Integrated STEM training in Table 2;
+1.1.1.3 63 credit-units of elective courses from Table 3, of which at least 15 credit-units
+shall be at 3000-level and 18 credit-units shall be at 4000-level;
+1.1.1.4 9 credit-units of University Core courses in Table 4;
+1.1.1.5 6 credit-units of University English courses in Table 5;
+1.1.1.6 6 credit-units of General Education (GE) courses (see www.hkmu.edu.hk/FT_GE
+for the updated list of GE courses);
+*Of the 120 credit-units required for BSCHSTEMJ1 a student shall complete at least 12
+credit-units from each area of Science, Technology, Engineering, and Mathematics.
+and
+1.1.2 attain the CGPA for graduation as prescribed in the Regulations for the award of
+undergraduate degrees.
+2. Programme Requirement – Year 2 Entry (BSCHSTEMJ2)
+2.1 To be eligible for the award of the degree of Bachelor of Science with Honours in Science (STEM)
+through Year 2 Entry, a student shall:
+2.1.1 obtain 90 credit-units# as prescribed below, of which at least 24 credit-units shall be at 3000-
+level and at least 24 credit-units shall be at 4000-level:
+Page 1 of 8
+3-credit-unit system
+3CRU_FTU_ST_BSCHSTEMJ_202607_V5
+2.1.1.1 12 credit-units of core courses applicable to Year 2 entry from Table 1;
+2.1.1.2 12 credit-units of Integrated STEM training in Table 2;
+2.1.1.3 57 credit-units of elective courses from Table 3 of which at least 15 credit-units
+shall be at 3000-level and 18 credit-units shall be at 4000-level;
+2.1.1.4 9 credit-units of University Core courses from Table 4
+# Of the 90 credit-units required for BSCHSTEMJ2, a student shall complete at least 9
+credit-units from each area of Science, Technology, Engineering, and Mathematics.
+and
+2.1.2 attain the CGPA for graduation as prescribed in the Regulations for the award of
+undergraduate degrees.
+3. Programme Requirement – Year 3 Entry (BSCHSTEMJ3)
+3.1 To be eligible for the award of the degree of Bachelor of Science with Honours in Science (STEM)
+through Year 3 Entry, a student shall:
+3.1.1 obtain 66 credit-units^ as prescribed below, of which at least 24 credit-units shall be at
+3000-level and at least 24 credit-units shall be at 4000-level:
+3.1.1.1 12 credit-units of Integrated STEM training in Table 2;
+3.1.1.2 45 credit-units of elective courses from Table 3 of which at least 15 credit-units
+shall be at 3000-level and 18 credit-units shall be at 4000-level;
+3.1.1.3 9 credit-units of University Core courses from Table 4
+^ Of the 66 credit-units required for BSCHSTEMJ3 students should complete at least 6
+credit-units from each area of Science, Technology, Engineering, and Mathematics.
+and
+3.1.2 attain the CGPA for graduation as prescribed in the Regulations for the award of
+undergraduate degrees.
+Page 2 of 8
+3-credit-unit system
+3CRU_FTU_ST_BSCHSTEMJ_202607_V5
+Table 1: Core courses
+Credit- Year of Entry
+Course Title Area
+Course Code units 1 2
+SCI 1001SEF University Science 3 Science 
+Laboratory Safety & Good Laboratory
+SCI 1010SEF 3 Science  
+Practice
+Principles of Production Design &
+TC 2080SEF 3 Engineering  
+Manufacturing Process Management
+Designated 1000-level courses in Technology area
+COMP 1080SEF Introduction to Computer Programming 3 Technology
+IT 1020SEF Computing Fundamentals 3 Technology 1 out of 3
+courses
+Introduction to Internet Application
+IT 1030SEF 3 Technology
+Development
+Designated 2000-level courses in Technology area
+COMP 2020SEF Java Programming Fundamentals 3 Technology
+COMP 2660SEF Computer Architecture 3 Technology 1 out of 3 1 out of 3
+courses courses
+Human Computer Interface and User
+IT 2900SEF 3 Technology
+Experience Design
+Designated 1000-level courses in Engineering area
+ELEC 1010SEF Digital Logic Design 3 Engineering
+ENGG 1001SEF Engineering Mechanics 3 Engineering 1 out of 3
+courses
+Computer Applications for Control and
+ST 1020SEF 3 Engineering
+Automation
+Designated 1000-level courses in Mathematics area
+MATH 1410SEF Algebra and Calculus 3 Mathematics 1 out of 2
+STAT 1510SEF Probability and Distributions 3 Mathematics courses
+Designated 2000-level courses in Mathematics area
+MATH 2150SEF Linear Algebra 3 Mathematics
+1 out of 3 1 out of 3
+STAT 2510SEF Statistical Data Analysis 3 Mathematics
+courses courses
+STAT 2520SEF Applied Statistical Methods 3 Mathematics
+Table 2: Integrated STEM Training
+Course Code Course Title Credit-units
+SCI 3000SEF Research Methodology and pedagogy on STEM 3
+SCI 3090SEF Professional Training & Workplace Attachment 3
+SCI 4090SEF STEM in Practice 6
+Page 3 of 8
+3-credit-unit system
+3CRU_FTU_ST_BSCHSTEMJ_202607_V5
+Table 3: Elective courses
+Course code Course title Credit-units
+SCIENCE
+BIOL 1003SEF Essential Biology 3
+BIOL 2002SEF Human Anatomy 3
+BIOL 2006SEF Cells in Health and Disease 3
+BIOL 2012SEF Human Physiology 3
+BIOL 2035SEF Biochemistry & Microbiology 3
+BIOL 2036SEF Cellular & Molecular Biology 3
+BIOL 3001SEF Conservation & Biodiversity 3
+BIOL 3002SEF Animal & Plant Physiology 3
+BIOL 3004SEF Pathophysiology 3
+BIOL 3015SEF Medical Immunology 3
+BIOL 3037SEF Practical Skills in Ecology 3
+BIOL 3051SEF Microbiology & Toxicology 3
+BIOL 3056SEF Biochemical & DNA Technologies 3
+BIOL 4006SEF Tools and Techniques in Biotechnology 3
+Pharmaceutical Biotechnology and Traditional Chinese
+BIOL 4008SEF 3
+Medicine
+BIOL 4012SEF Medical Genetics 3
+CHEM 1002SEF Essential Chemistry 3
+CHEM 2001SEF Nutrition & Food Chemistry 3
+CHEM 2034SEF Physical & Organic Chemistry 3
+CHEM 3050SEF Analytical Chemistry 3
+CHEM 4006SEF Advanced Environmental Analysis 3
+ENVR 2036SEF Environmental Pollution & Control 3
+Environmental Management Systems and Sustainable Product
+ENVR 3041SEF 3
+Life Cycle
+ENVR 4042SEF Environmental Regulations and Resources Management 3
+ENVR 4007SEF Global Climate Change and Greenhouse Gas Control 3
+ENVR 4028SEF Advances in Environmental Impact Assessment 3
+ENVR 4043SEF Environmental Social Governance and Green Finance 3
+ENVR 4074SEF Green Environmental Monitoring in Practice 3
+MLS 4011SEF Bioinformatics 3
+SCI 1100SEF General Chemistry Laboratory Training 3
+SCI 1101SEF General Biology Laboratory Training 3
+SCI 2005SEF Public Health and Infection Control 3
+SCI 2006SEF Pharmacology & Toxicology 3
+SCI 2100SEF Microbiology Laboratory Training I 3
+SCI 2101SEF Chemical Analysis Laboratory Training I 3
+SCI 2102SEF DNA & Biochemical Analysis Laboratory Training I 3
+SCI 2103SEF Environmental Analysis and Practical Training I 3
+SCI 3030SEF Scientific Research Methods 3
+SCI 3064SEF Emerging Technologies in Food Analysis 3
+SCI 3100SEF Microbiology Laboratory Training II 3
+SCI 3101SEF Chemical Analysis Laboratory Training II 3
+SCI 3102SEF DNA & Biochemical Analysis Laboratory Training II 3
+SCI 3103SEF Environmental Analysis and Practical Training II 3
+SCI 4004SEF Advanced Topics in Food & Health Sciences 3
+TC 3011SEF Conformity Assessment and Laboratory Accreditation 3
+Page 4 of 8
+3-credit-unit system
+3CRU_FTU_ST_BSCHSTEMJ_202607_V5
+Course code Course title Credit-units
+TC 3065SEF Food Analysis 3
+TC 3080SEF Principles of Good Manufacturing Practice 3
+ST 4020SEF Professional Practice and Ethics 3
+TC 4026SEF Audit, Inspection & Certification 3
+TC 4062SEF Food Safety Management System: Audit & Certification 3
+TC 4063SEF Selected Topics in Food Safety 3
+TECHNOLOGY
+COMP 1080SEF Introduction to Computer Programming 3
+COMP 2020SEF Java Programming Fundamentals 3
+COMP 2030SEF Intermediate Java Programming and User Interface Design 3
+COMP 2090SEF Data Structures, Algorithms, and Problem Solving 3
+COMP 2650SEF Design and Analysis of Algorithms 3
+COMP 2660SEF Computer Architecture 3
+COMP 2670SEF Operating Systems 3
+COMP 3120SEF Java Application Development 3
+COMP 3130SEF Mobile Application Programming 3
+COMP 3200SEF Database Management 3
+COMP 3500SEF Software Engineering 3
+COMP 3510SEF Software Project Management 3
+COMP 3800SEF Web Applications: Design and Development 3
+COMP 3810SEF Server-side Technologies and Cloud Computing 3
+COMP 3920SEF Machine Learning 3
+COMP 4210SEF Advanced Database and Data Warehousing 3
+COMP 4330SEF Advanced Programming and AI Algorithms 3
+COMP 4620SEF Concurrent and Network Programming 3
+COMP 4630SEF Distributed Systems and Parallel Computing 3
+COMP 4820SEF Data Mining and Analytics 3
+COMP 4900SEF Creative Programming for Games 3
+COMP 4930SEF Deep Learning 3
+ELEC 2050SEF Signals and Systems 3
+ELEC 2100SEF Integrated Project 3
+ELEC 2620SEF Information System Administration 3
+ELEC 3040SEF Communication Systems 3
+ELEC 3050SEF Computer Networking 3
+ELEC 3150SEF Routing and Switching technologies 3
+ELEC 3250SEF Computer and Network Security 3
+ELEC 3470SEF Multimedia Technologies 3
+ELEC 3630SEF Advanced Computer Design 3
+ELEC 3650SEF Ethical Hacking Techniques 3
+ELEC 4060SEF Wireless Networks 3
+ELEC 4310SEF Blockchain Technologies 3
+ELEC 4370SEF Digital Signal Processing 3
+ELEC 4380SEF Digital Communications 3
+ELEC 4480SEF IoT Security 3
+ELEC 4710SEF Digital Forensics 3
+Page 5 of 8
+3-credit-unit system
+3CRU_FTU_ST_BSCHSTEMJ_202607_V5
+Course code Course title Credit-units
+IT 1020SEF Computing Fundamentals 3
+IT 1030SEF Introduction to Internet Application Development 3
+IT 2090SEF Human Computer Interaction & User Experience Design 3
+ENGINEERING
+ELEC 1010SEF Digital Logic Design 3
+ELEC 2010SEF Fundamentals of Electric Circuits 3
+ELEC 2410SEF Electric Circuit Design 3
+ELEC 4200SEF Biomedical Instrumentation and Sensor 3
+ELEC 4210SEF Biomedical Informatics 3
+ENGG 1001SEF Engineering mechanics 3
+ENGG 2001SEF Foundation Engineering 3
+ENGG 2002SEF Fluid Mechanics 3
+ENGG 2003SEF Thermodynamics 3
+ENGG 2004SEF Piped and Fire Services 3
+ENGG 2005SEF Electrical Technology 3
+ENGG 2006SEF HVAC 3
+Water and Wastewater Treatment Techniques for Civil
+ENGG 2007SEF 3
+Engineering
+ENGG 2008SEF Structural Analysis 3
+ENGG 2009SEF Engineering Geology and Soil Mechanics 3
+ENGG 2021SEF Electrical Science 3
+ENGG 2060SEF Introduction to Material Science 3
+ENGG 3001SEF Project Management for Engineering 3
+ENGG 3021SEF Lighting Technology 3
+ENGG 3041SEF Non-Linear Analysis of Structures 3
+ENGG 3042SEF Construction Materials 3
+ENGG 3043SEF Steel Structures 3
+ENGG 4000SEF Advanced HVAC&R Installation 3
+ENGG 4002SEF Advanced Piped and Fire Services 3
+ENGG 4003SEF Construction Information Technology 3
+ENGG 4004SEF Commissioning of Facilities 3
+ENGG 4005SEF Reinforced Concrete Design 3
+ENGG 4006SEF Geotechnical Design 3
+ENGG 4007SEF Highway and Traffic Engineering 3
+ENGG 4008SEF Hydraulics and Hydrology 3
+ENGG 4021SEF Advanced Electrical Installation 3
+ENVR 3008SEF Design and Manufacturing for Green Buildings and Facilities 3
+ENVR 4011SEF Energy Resources and Sustainable Energy Strategies 3
+SCI 1000SEF Basic Sciences for Engineers 3
+SCI 4011SEF Environmental Health and Safety 3
+ST 1020SEF Computer Applications for Control and Automation 3
+ENGG 2000SEF Electrical Science and Energy Efficiency 3
+TC 3030SEF Physical & Mechanical Behavior of Materials 3
+TC 3031SEF Principles of Physical & Mechanical Testing 3
+Page 6 of 8
+3-credit-unit system
+3CRU_FTU_ST_BSCHSTEMJ_202607_V5
+Course code Course title Credit-units
+TC 3032SEF Materials Characterization & Testing 3
+TC 3041SEF Electrical Safety & Energy Efficiency 3
+Electromagnetic Compatibility Measurement & Measurement
+TC 3042SEF 3
+& Control
+TC 4009SEF Safety and Reliability for Science and Technology 3
+TC 4015SEF General Testing & Certification in Practice 3
+TC 4019SEF Quality Management for Science and Technology 3
+MATHEMATICS
+COMP 2640SEF Discrete Mathematics 3
+COMP 4600SEF Advanced Topics in Data Mining 3
+MATH 1410SEF Algebra and Calculus 3
+MATH 2150SEF Linear Algebra 3
+MATH 2850SEF Multivariable Calculus 3
+SCI 3031SEF Biostatistics 3
+STAT 1510SEF Probability and Distributions 3
+STAT 2510SEF Statistical Data Analysis 3
+STAT 2520SEF Applied Statistical Methods 3
+STAT 2610SEF Data Analytics with Applications 3
+STAT 2630SEF Big Data Analytics with Applications 3
+STAT 3110SEF Time Series Analysis & Forecasting 3
+STAT 3660SEF SAS Programming 3
+TC 2020SEF Metrology and Calibration 3
+TC 3020SEF Measurement Uncertainty & Test Method Development 3
+Table 4: University Core Courses
+Course Code Course Title Credit-units
+UNI 1002ABW University Core Values 大學核心價值 2
+UNI 1012ABW Social Responsibilities 社會責任 1
+Co-creating with AI: Communication and Teamwork for the
+UNI 2002BEW 3
+Future
+UNI 3002BEW AI, Sustainability, and Entrepreneurial Leadership 3
+Table 5: University English Courses
+Course Code Course Title Credit-units
+ENGL 1101AEF University English: Reading and Writing 3
+ENGL 1202EEF University English: Listening and Speaking 3
+Table 6: Advisory prerequisite requirement of elective courses list
+Course code Advisory prerequisite requirement
+ELEC 2001SEF SCI 1000SEF
+ELEC 2003SEF ELEC 1000SEF
+ELEC 2041SEF ELEC 2001SEF
+ELEC 3004SEF ELEC 2005SEF
+Page 7 of 8
+3-credit-unit system
+3CRU_FTU_ST_BSCHSTEMJ_202607_V5
+Course code Advisory prerequisite requirement
+ELEC 3063SEF ELEC 2003SEF and ELEC 2041SEF
+ELEC 3047SEF ELEC 3037SEF
+ELEC 3006SEF ELEC 3004SEF
+ELEC 3015SEF ELEC 3005SEF
+ELEC 3037SEF ELEC 2005SEF
+ELEC 3038SEF ELEC 3037SEF
+ELEC 4020SEF ELEC 2041SEF
+ELEC 4021SEF ELEC 2005SEF
+ELEC 4025SEF ELEC 1000SEF
+COMP 2002SEF IT 1003SEF
+COMP 2008SEF IT 1003SEF
+COMP 2009SEF IT 1003SEF
+COMP 3012SEF COMP 2002SEF
+COMP 3013SEF COMP 2008SEF
+COMP 3020SEF COMP 2009SEF
+COMP 3021SEF COMP 2009SEF
+COMP 3051SEF COMP 2008SEF
+COMP 3062SEF COMP 2009SEF
+COMP 3063SEF COMP 2008SEF
+COMP 3080SEF COMP 2008SEF
+COMP 3081SEF COMP 2008SEF
+COMP 3090SEF COMP 2008SEF
+COMP 4013SEF COMP 2008SEF
+COMP 4092SEF COMP 2008SEF
+COMP 3082SEF COMP 2009SEF
+BIOL 3001SEF BIOL 2035SEF
+BIOL 3002SEF BIOL 2036SEF
+BIOL 3056SEF BIOL 3001SEF
+BIOL 4001SEF BIOL 3002SEF
+BIOL 4002SEF BIOL 4001SEF
+BIOL 4006SEF BIOL 3001SEF
+TC 3019SEF STAT 1510SEF
+TC 3030SEF ENGG 1001SEF
+TC 3031SEF ENGG 1001SEF
+TC 3032SEF ENGG 1001SEF
+TC 3041SEF MATH 1410SEF
+TC 3042SEF MATH 1410SEF
+MATH 2150SEF MATH 1410SEF
+STAT 2051SEF STAT 1510SEF
+July 2026
+Page 8 of 8

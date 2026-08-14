@@ -196,6 +196,9 @@ def main():
     ap.add_argument("--school", help="school segment for --code: AS/BA/EL/NHS/ST")
     ap.add_argument("--all", action="store_true", help="scrape all 57 programmes")
     ap.add_argument("--text", action="store_true", help="dump raw extracted text (debug)")
+    ap.add_argument("--outdir", help="save each PDF + extracted text under this dir "
+                                     "(pdfs/<code>.pdf, text/<code>.txt) so T32 parser "
+                                     "iteration can reparse locally without re-passing Cloudflare")
     args = ap.parse_args()
 
     if args.all:
@@ -211,6 +214,9 @@ def main():
         sys.exit("playwright not installed: pip install playwright && playwright install chromium")
 
     out = {}
+    if args.outdir:
+        os.makedirs(os.path.join(args.outdir, "pdfs"), exist_ok=True)
+        os.makedirs(os.path.join(args.outdir, "text"), exist_ok=True)
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
@@ -226,7 +232,13 @@ def main():
                 txt = extract_text(data)
                 print(f"=== {code} ({school}) ===\n{txt}\n")
                 continue
+            if args.outdir:
+                with open(os.path.join(args.outdir, "pdfs", f"{code}.pdf"), "wb") as f:
+                    f.write(data)
             txt = extract_text(data)
+            if args.outdir:
+                with open(os.path.join(args.outdir, "text", f"{code}.txt"), "w") as f:
+                    f.write(txt)
             cats = categories_from_text(txt)   # {cat: {courses, credits_seen}}
             mins = prose_min_credits(txt)       # {cat: min_credits}
             for key, mc in mins.items():
