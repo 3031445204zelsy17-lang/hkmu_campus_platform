@@ -272,7 +272,7 @@
       "dependencies": [
         "T06"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T27",
