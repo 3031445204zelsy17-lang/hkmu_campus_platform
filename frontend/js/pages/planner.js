@@ -1673,8 +1673,15 @@ async function _loadData() {
     }
   }
   try {
-    const data = await api.get("/courses?page_size=200"); // courses 表 114 门(含 GE 73)，page_size=50 时 GE(GEN*)排前把 DSAI 挤出 → "我的课程"拿不到课显示空
-    _courses = data.items;
+    // courses 表已 1100+ 门(55 专业规则课 + GE):单页拉不全会让不在首页的
+    // 专业课程从课表消失(年份 tab 空)。后端 page_size 上限 500 → 循环分页拉全。
+    _courses = [];
+    for (let page = 1; page <= 10; page++) {
+      const data = await api.get(`/courses?page_size=500&page=${page}`);
+      const items = data.items || [];
+      _courses.push(...items);
+      if (items.length < 500) break;
+    }
 
     if (isLoggedIn()) {
       try {

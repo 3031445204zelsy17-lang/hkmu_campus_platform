@@ -389,20 +389,27 @@ Page({
 
   _loadCourses() {
     if (this._courses) return Promise.resolve();
-    // page_size 要覆盖全表：courses 表含 DSAI 41 + GE 73 = 114 门，
-    // page_size=50 时 GE（GEN*）排在 DSAI（COMP/MATH/...）前 → DSAI 课程
-    // 被挤出前 50 → "我的课程"拿不到课程显示空。给 200 余量。
-    return request({ path: "/courses?page_size=200", auth: false })
-      .then((data) => {
-        this._courses = (data && data.items) || [];
-        const map = {};
-        this._courses.forEach((c) => { if (c && c.id) map[c.id] = c; });
-        this._idToCourse = map;
-      })
-      .catch(() => {
-        this._courses = [];
-        this._idToCourse = {};
-      });
+    // courses 表已 1100+ 门(55 专业规则课 + GE):单页拉不全会让不在首页的
+    // 专业课程全部从课表消失(年份 tab 空)。后端 page_size 上限 500 → 循环
+    // 分页拉全(3 页左右;响应走 GZip)。上限 10 页防御未来膨胀。
+    const fetchPage = (page) =>
+      request({ path: `/courses?page_size=500&page=${page}`, auth: false });
+    const all = [];
+    const loop = (page) =>
+      fetchPage(page)
+        .then((data) => {
+          const items = (data && data.items) || [];
+          all.push(...items);
+          if (items.length >= 500 && page < 10) return loop(page + 1);
+          this._courses = all;
+          const map = {};
+          all.forEach((c) => { if (c && c.id) map[c.id] = c; });
+          this._idToCourse = map;
+        });
+    return loop(1).catch(() => {
+      this._courses = [];
+      this._idToCourse = {};
+    });
   },
 
   _loadProgress() {
