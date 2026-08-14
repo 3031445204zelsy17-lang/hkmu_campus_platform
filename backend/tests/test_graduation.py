@@ -10,7 +10,7 @@ DB or HTTP client needed. Locks in the fixes for:
 """
 from backend.app.data.programmes import PROGRAMMES
 from backend.app.routers.courses import _category_satisfied, _compute_graduation
-from backend.app.data.ge_courses import ge_courses_for
+from backend.app.data.ge_courses import GE_COURSES, ge_courses_for
 
 
 def _row(cid, credits=3, prereqs=None):
@@ -295,6 +295,17 @@ def test_school_folding_smoke():
 
     camd = PROGRAMMES["BAHCAMDJ"]["categories"]["elective"]
     assert len(camd["courses"]) > 0  # AS 'in specific area' table matched
+
+
+def test_ge_terms_data_integrity():
+    """Offering terms parsed from the GE Selection Guide (2026-08 window):
+    values must be a valid subset; ~71/73 courses offered, 5 multi-term."""
+    valid = {"autumn", "spring", "summer"}
+    for c in GE_COURSES:
+        assert set(c.get("terms", [])) <= valid, f"{c['code']}: bad terms {c['terms']}"
+    offered = [c for c in GE_COURSES if c["terms"]]
+    assert len(offered) >= 60, f"only {len(offered)} GE courses offered?"
+    assert sum(1 for c in GE_COURSES if len(c["terms"]) > 1) >= 3
 
 
 def test_testing_field_blocked_for_testing_programmes():

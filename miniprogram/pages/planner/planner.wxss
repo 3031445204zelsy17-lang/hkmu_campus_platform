@@ -911,6 +911,18 @@
 .ge-search {
   padding: 16rpx 24rpx 4rpx;
 }
+/* GE 开课学期徽标(2026秋→2027暑窗口;未排课不显示) */
+.ge-term {
+  flex: none;
+  margin-right: 8rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 999rpx;
+  background: rgba(15, 143, 190, 0.1);
+  color: var(--accent-blue);
+  font-size: 18rpx;
+  font-weight: 600;
+  white-space: nowrap;
+}
 .ge-search-input {
   background: #ffffff;
   border: 1rpx solid var(--border-hair);

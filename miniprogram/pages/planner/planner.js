@@ -967,11 +967,13 @@ Page({
         const fBlocked = ownFields.has(f);
         let fCourses = byField.get(f);
         if (kw) {
-          // 搜索:课码/英文名/中文名跨领域过滤(中文原样 contains)
-          fCourses = fCourses.filter((c) =>
-            String(c.code || "").toLowerCase().includes(kw) ||
-            String(c.name_en || "").toLowerCase().includes(kw) ||
-            String(c.name_zh || "").includes(kw));
+          // 搜索:课码/英文名/中文名/开课学期跨领域过滤(中文原样 contains)
+          fCourses = fCourses.filter((c) => {
+            if (String(c.code || "").toLowerCase().includes(kw) ||
+                String(c.name_en || "").toLowerCase().includes(kw) ||
+                String(c.name_zh || "").includes(kw)) return true;
+            return (c.terms || []).some((t) => this._geTermLabel(t, text).toLowerCase().includes(kw));
+          });
         }
         return {
           name: localizeField(f, locale),
@@ -986,6 +988,7 @@ Page({
             credits: 3, // GE 课程统一 3 学分（3cru 体系，ge_courses.py）
             taken: progress[c.id] === "completed",
             blocked: !!c.blocked,
+            termLabel: (c.terms || []).map((t) => this._geTermLabel(t, text)).join("·"),
           })),
         };
       })
@@ -1003,6 +1006,14 @@ Page({
   onGeSearchInput(e) {
     this._geKeyword = e.detail.value || "";
     this._emit();
+  },
+
+  // GE 开课学期标签(复用 planner 学期词条:秋季/春季/暑期;2026秋→2027暑窗口)
+  _geTermLabel(t, text) {
+    if (t === "autumn") return text.semAutumn;
+    if (t === "spring") return text.semSpring;
+    if (t === "summer") return text.semSummer;
+    return t;
   },
 
   // T11: 年份 seg 点按 — 切课表展示学年(Y1-Y4)

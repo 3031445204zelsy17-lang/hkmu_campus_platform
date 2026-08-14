@@ -189,6 +189,9 @@ class GECourseOut(BaseModel):
     field: str
     school: str
     blocked: bool = False  # in the student's own programme field → cannot take
+    # offering terms in the current guide window (2026 Autumn → 2027 Summer);
+    # [] = not offered in the window. Parsed from the GE Selection Guide PDF.
+    terms: list[str] = []
 
 
 class GEListOut(BaseModel):
