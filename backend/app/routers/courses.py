@@ -37,6 +37,22 @@ class BatchProgressUpdate(BaseModel):
         for item in items:
             seen[item.course_id] = item
         return list(seen.values())
+
+
+
+# T27 排课台: 单课学年覆盖(upsert)。planned_* 优先于 courses 表默认值。
+class ScheduleUpdate(BaseModel):
+    course_id: str
+    planned_year: int = Field(ge=1, le=4)
+    planned_semester: str = Field(pattern=r"^(autumn|spring|summer)$")
+
+
+class ScheduleEntryOut(BaseModel):
+    course_id: str
+    planned_year: int
+    planned_semester: str
+    updated_at: str | None = None
+
 from ..services.auth_service import get_current_user
 
 router = APIRouter(prefix="/courses", tags=["courses"])
@@ -862,6 +878,57 @@ async def upsert_progress(
         )
 
     return UserCourseOut(course_id=body.course_id, status=body.status, updated_at=now.isoformat())
+
+
+@router.get("/progress/schedule", response_model=list[ScheduleEntryOut])
+async def get_schedule(user: dict = Depends(get_current_user)):
+    """T27 排课台: 当前用户全部学年覆盖行。空列表 = 全按课程默认安排。"""
+    async with get_db() as db:
+        rows = await db.fetch(
+            """SELECT course_id, planned_year, planned_semester, updated_at
+               FROM user_course_schedule WHERE user_id = $1
+               ORDER BY course_id""",
+            user["id"],
+        )
+        return [
+            ScheduleEntryOut(
+                course_id=r["course_id"],
+                planned_year=r["planned_year"],
+                planned_semester=r["planned_semester"],
+                updated_at=r["updated_at"].isoformat() if isinstance(r["updated_at"], datetime) else r["updated_at"],
+            )
+            for r in rows
+        ]
+
+
+@router.put("/progress/schedule", response_model=ScheduleEntryOut)
+async def upsert_schedule(
+    body: ScheduleUpdate,
+    user: dict = Depends(get_current_user),
+):
+    """T27 排课台: upsert 单课学年覆盖(planned_* 优先于 courses 表默认)。"""
+    async with get_db() as db:
+        exists = await db.fetchrow("SELECT id FROM courses WHERE id = $1", body.course_id)
+        if not exists:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Course not found")
+
+        now = datetime.now(timezone.utc)
+        await db.execute(
+            """INSERT INTO user_course_schedule (user_id, course_id, planned_year, planned_semester, updated_at)
+               VALUES ($1, $2, $3, $4, $5)
+               ON CONFLICT(user_id, course_id) DO UPDATE SET
+                   planned_year = excluded.planned_year,
+                   planned_semester = excluded.planned_semester,
+                   updated_at = excluded.updated_at""",
+            user["id"], body.course_id, body.planned_year, body.planned_semester, now,
+        )
+
+    return ScheduleEntryOut(
+        course_id=body.course_id,
+        planned_year=body.planned_year,
+        planned_semester=body.planned_semester,
+        updated_at=now.isoformat(),
+    )
 
 
 @router.post("/progress/batch", response_model=list[UserCourseOut])
