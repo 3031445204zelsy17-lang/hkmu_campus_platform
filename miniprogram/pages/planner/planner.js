@@ -215,6 +215,7 @@ Page({
   _idToCourse: null,        // {course_id: course 对象}
   _progress: null,          // /courses/progress/me → {course_id: status}
   _schedule: null,          // T28: /courses/progress/schedule → {course_id: {year,semester}} 覆盖
+  _lastUserId: undefined,   // T29: 身份变化检测(登出/换号作废上面三个缓存)
   _activeYear: null,        // T11: 课表展示学年(1-4);首次算出 studyInfo 时按当前学年初始化
   _viewTab: "plan",         // T12: 二级视图 "plan"(合并规划屏) | "courses"(全课程列表);"通识"项开 GE 浮层
   _searchKeyword: "",
@@ -315,6 +316,17 @@ Page({
     return auth
       .bootstrapSession()
       .then((user) => {
+        // T29: 用户身份变化(登出/换号) → 作废会话级进度/排课/仪表盘缓存,
+        // 防上一账号的 user_courses / user_course_schedule 泄漏到下一账号。
+        const uid = (user && user.id) || null;
+        if (this._lastUserId !== uid) {
+          if (this._lastUserId !== undefined) {
+            this._progress = null;
+            this._schedule = null;
+            this._status = null;
+          }
+          this._lastUserId = uid;
+        }
         this._user = user;
         this._userProgrammeCode = (user && user.programme_code) || null;
         this._emit();
