@@ -167,6 +167,7 @@ def main():
     skill = skill_md_index()
 
     rules = {}
+    course_credits = {}  # code -> {category: {course_id: credits}} (seed fallback)
     problems = []
     for code in sorted(raw):
         if code in EXCLUDE or "_error" in raw[code]:
@@ -180,6 +181,10 @@ def main():
         if entry["total_credits"] != smin:
             problems.append(f"{code}: Σmin={smin} ≠ total={entry['total_credits']}")
         rules[code] = entry
+        course_credits[code] = {
+            key: dict(raw[code]["categories"][key].get("course_credits", {}))
+            for key in entry["categories"] if key != "general-ed"
+        }
 
     n_courses = sum(len(c["courses"]) for e in rules.values()
                     for c in e["categories"].values())
@@ -219,6 +224,10 @@ Regenerate: python scripts/scrape_programme_pdfs.py --from-text-dir \\
 PROGRAMME_RULES = '''
 
     body = py_literal(rules) + "\n"
+    body += ('\n# Per-course credit-units parsed from the PDF tables — NOT part of'
+             '\n# the graduation data; seed_courses.py uses it to seed courses-table'
+             '\n# rows for rule courses the catalogue has no name/credits for.\n'
+             'RULE_COURSE_CREDITS = ') + py_literal(course_credits) + "\n"
     with open(OUT_PY, "w", encoding="utf-8") as f:
         f.write(header + body)
     print(f"wrote {OUT_PY} ({os.path.getsize(OUT_PY)} bytes)")

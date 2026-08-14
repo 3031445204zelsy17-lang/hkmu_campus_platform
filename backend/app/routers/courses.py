@@ -373,6 +373,10 @@ def _parse_prereqs(raw) -> list[str]:
 def _category_satisfied(cat: dict, earned: int, completed_count: int) -> bool:
     """Whether a category's graduation requirement is met.
 
+    - credit pool (pool:"credits", programme_rules electives): satisfied
+      purely by earned >= min_credits — any course combination counts, which
+      is how "N credit-units from the elective table (or 150-course STEAM
+      menu)" is actually specified in the PDFs.
     - pick_n pool (electives): need >= pick_n courses AND >= min_credits
     - required pool (core/project/...): every listed course completed AND
       >= min_credits. With DSAI's current data the pool's own credit sum
@@ -384,6 +388,8 @@ def _category_satisfied(cat: dict, earned: int, completed_count: int) -> bool:
     required = cat.get("min_credits", 0)
     pick_n = cat.get("pick_n")
     total = len(cat.get("courses", []))
+    if cat.get("pool") == "credits":
+        return earned >= required
     if pick_n is not None:
         return completed_count >= pick_n and earned >= required
     if total == 0:

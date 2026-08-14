@@ -1,6 +1,7 @@
 """Seed courses table with DSAI programme data and create test account."""
 import asyncio
 import asyncpg
+import re
 import sys
 import os
 
@@ -8,6 +9,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
 from app.database import init_db  # noqa: E402 — sys.path set above
 from app.data.ge_courses import GE_COURSES  # noqa: E402 — real 2026/27 GE pool
+from app.data.programme_rules import (  # noqa: E402 — 54-programme rules (T33)
+    PROGRAMME_RULES,
+    RULE_COURSE_CREDITS,
+)
 from passlib.context import CryptContext
 from dotenv import load_dotenv
 
@@ -104,6 +109,48 @@ async def seed():
             except Exception as e:
                 print(f"  skip GE {gid}: {e}")
 
+        # Insert rule-referenced courses missing from the table (T34): every
+        # course listed in PROGRAMME_RULES needs a courses-table row, or
+        # _compute_graduation silently skips it (course_rows lookup fails).
+        # Name/credits prefer course_catalogue (official tree, with display
+        # names); RULE_COURSE_CREDITS (PDF-parsed) is the credits fallback;
+        # year/semester are sentinels — public PDFs carry no term data.
+        existing_ids = {r["id"] for r in await conn.fetch("SELECT id FROM courses")}
+        cat_rows = await conn.fetch(
+            """SELECT DISTINCT REPLACE(course_code, ' ', '') AS cid,
+                      display_name, credits
+               FROM course_catalogue"""
+        )
+        catalogue = {r["cid"]: (r["display_name"], r["credits"]) for r in cat_rows}
+        rules_inserted = 0
+        rules_missing_name = 0
+        for code, entry in PROGRAMME_RULES.items():
+            for cat_key, cat in entry["categories"].items():
+                if cat.get("pool") == "ge":
+                    continue  # GE pool resolves dynamically via ge_courses_for
+                for cid in cat["courses"]:
+                    if cid in existing_ids:
+                        continue
+                    name, credits = catalogue.get(cid, (None, None))
+                    if credits is None:
+                        credits = RULE_COURSE_CREDITS.get(code, {}).get(cat_key, {}).get(cid, 3)
+                    if not name:
+                        # No official display name anywhere — use the spaced
+                        # code so the UI at least shows a stable identifier.
+                        name = re.sub(r"^([A-Z]{2,5})(\d{4})", r"\1 \2", cid)
+                        rules_missing_name += 1
+                    try:
+                        await conn.execute(
+                            """INSERT INTO courses (id, code, name, credits, category, year, semester, prerequisites, description)
+                               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                               ON CONFLICT (id) DO NOTHING""",
+                            cid, name, name, credits, cat_key,
+                            0, "any", "[]", f"{entry['name']['en']} · {cat_key}",
+                        )
+                        rules_inserted += 1
+                    except Exception as e:
+                        print(f"  skip rule course {cid}: {e}")
+
         # Create test user
         test_pw = pwd_ctx.hash("test123456")
         try:
@@ -120,7 +167,8 @@ async def seed():
         count = await conn.fetchval("SELECT COUNT(*) FROM courses")
         ge_count = await conn.fetchval("SELECT COUNT(*) FROM courses WHERE category = 'general-ed'")
         user_count = await conn.fetchval("SELECT COUNT(*) FROM users")
-        print(f"Seeded {inserted} courses + {ge_inserted} GE ({count} in DB, {ge_count} GE), {user_count} users")
+        print(f"Seeded {inserted} courses + {ge_inserted} GE + {rules_inserted} rule courses "
+              f"({rules_missing_name} nameless) ({count} in DB, {ge_count} GE), {user_count} users")
 
     finally:
         await conn.close()

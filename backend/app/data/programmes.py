@@ -150,6 +150,17 @@ PROGRAMMES = {
     },
 }
 
+# ── Auto-generated graduation rules for the other 54 FT undergraduate
+# programmes (T33/T34). See programme_rules.py for provenance and the
+# modelling decisions (elective → credit pool; PDF sections folded into the
+# standard categories). Merged AFTER the hand-curated block above: DSAI is
+# deliberately absent from PROGRAMME_RULES so its hand-verified entry (with
+# the COMP4610SEF project split) stays authoritative, and the former
+# coming_soon placeholders (BSCHCSJ/BSCHCCSJ) are replaced wholesale.
+from .programme_rules import PROGRAMME_RULES  # noqa: E402
+
+PROGRAMMES.update(PROGRAMME_RULES)
+
 DEFAULT_PROGRAMME_CODE = "BSCHDSAIJ"
 
 
