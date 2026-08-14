@@ -693,6 +693,7 @@ Page({
     this._gePickerOpen = true;
     this._setTabBarHidden(true);
     this._gePickerLoadError = null;
+    this._geKeyword = "";  // 每次打开清空搜索(上次关键词不该带入新会话)
     this._emit();
     const code = this._selectedCode || this._userProgrammeCode;
     if (code) {
@@ -959,11 +960,19 @@ Page({
         taken++;
       }
     }
+    const kw = String(this._geKeyword || "").trim().toLowerCase();
     const fields = order
       .filter((f) => byField.has(f))
       .map((f) => {
         const fBlocked = ownFields.has(f);
-        const fCourses = byField.get(f);
+        let fCourses = byField.get(f);
+        if (kw) {
+          // 搜索:课码/英文名/中文名跨领域过滤(中文原样 contains)
+          fCourses = fCourses.filter((c) =>
+            String(c.code || "").toLowerCase().includes(kw) ||
+            String(c.name_en || "").toLowerCase().includes(kw) ||
+            String(c.name_zh || "").includes(kw));
+        }
         return {
           name: localizeField(f, locale),
           blocked: fBlocked,
@@ -979,12 +988,21 @@ Page({
             blocked: !!c.blocked,
           })),
         };
-      });
+      })
+      .filter((f) => !kw || f.courses.length); // 搜索时收起无命中领域
     return Object.assign(base, {
       progress: fillTemplate(text.geProgress, { taken, need }),
       taken,
       fields,
+      searchPlaceholder: text.geSearchPlaceholder,
+      searchEmpty: (kw && !fields.length) ? text.geSearchEmpty : "",
     });
+  },
+
+  // GE 领域视图搜索:实时按课码/中英文名跨领域过滤(73 门本地数据,无需节流)
+  onGeSearchInput(e) {
+    this._geKeyword = e.detail.value || "";
+    this._emit();
   },
 
   // T11: 年份 seg 点按 — 切课表展示学年(Y1-Y4)

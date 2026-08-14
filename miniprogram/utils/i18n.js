@@ -527,6 +527,8 @@ const DICTIONARY = {
       // \u2500\u2500 GE \u901a\u8bc6\u9009\u62e9\u5668\uff08\u5c4f\u2462\uff09\u2500\u2500
       gePickerTitle: "\u9009\u62e9\u901a\u8bc6\u8bfe\u7a0b",
       geTabFields: "\u6309\u9886\u57df",
+      geSearchPlaceholder: "\u641c\u8bfe\u7801\u6216\u8bfe\u540d",
+      geSearchEmpty: "\u6ca1\u627e\u5230\u5339\u914d\u7684\u8bfe",
       geTabRanking: "\u8bc4\u5206\u699c",
       geRankEmpty: "\u6682\u65e0\u8bc4\u5206 \u2014 \u53bb\u62a2\u9996\u8bc4",
       geRankCount: "{n} \u4eba\u8bc4",
@@ -1135,6 +1137,8 @@ DICTIONARY["zh-Hant"] = {
     // GE \u9078\u64c7\u5668\uff1a\u7c21\u7e41\u6709\u5225\u7684\u8986\u84cb\uff1bgeSelectEntry / geMarkSuccess \u7c21\u7e41\u540c\u5f62\uff0c\u7e7c\u627f zh-Hans
     gePickerTitle: "\u9078\u64c7\u901a\u8b58\u8ab2\u7a0b",
     geTabFields: "\u6309\u9818\u57df",
+    geSearchPlaceholder: "\u641c\u8ab2\u78bc\u6216\u8ab2\u540d",
+    geSearchEmpty: "\u6c92\u627e\u5230\u5339\u914d\u7684\u8ab2",
     geTabRanking: "\u8a55\u5206\u699c",
     geRankEmpty: "\u66ab\u7121\u8a55\u5206 \u2014 \u53bb\u6436\u9996\u8a55",
     geRankCount: "{n} \u4eba\u8a55",
@@ -1749,6 +1753,8 @@ DICTIONARY.en = {
     // ── GE picker (screen ③) ──
     gePickerTitle: "Choose General Education",
     geTabFields: "By field",
+    geSearchPlaceholder: "Search code or name",
+    geSearchEmpty: "No matching courses",
     geTabRanking: "Ranking",
     geRankEmpty: "No scores yet — review to rank",
     geRankCount: "{n} reviews",

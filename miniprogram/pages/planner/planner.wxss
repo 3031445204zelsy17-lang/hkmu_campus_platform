@@ -907,6 +907,18 @@
   /* 互动蓝 6% 淡底(不用 pill-green-bg,避免 hover 与「已选」状态混淆) */
   background: rgba(15, 143, 190, 0.06);
 }
+/* GE 领域视图搜索框:课码/中英文名跨领域过滤 */
+.ge-search {
+  padding: 16rpx 24rpx 4rpx;
+}
+.ge-search-input {
+  background: #ffffff;
+  border: 1rpx solid var(--border-hair);
+  border-radius: 16rpx;
+  padding: 14rpx 20rpx;
+  font-size: 26rpx;
+  color: var(--text-primary);
+}
 .ge-row-taken {
   background: var(--pill-green-bg);
 }

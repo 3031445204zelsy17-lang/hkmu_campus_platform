@@ -419,6 +419,19 @@
 
       <!-- 领域视图（原分组列表） -->
       <block wx:else>
+        <!-- 搜索框:课码/中英文名跨领域实时过滤(不绑 value,避免重渲染光标跳动) -->
+        <view class="ge-search">
+          <input
+            class="ge-search-input"
+            placeholder="{{gePicker.searchPlaceholder}}"
+            confirm-type="search"
+            bindinput="onGeSearchInput"
+          />
+        </view>
+        <view wx:if="{{gePicker.searchEmpty}}" class="ge-rank-empty">
+          <view class="ge-rank-empty-ic">🔍</view>
+          <view class="ge-rank-empty-tx">{{gePicker.searchEmpty}}</view>
+        </view>
         <view
           wx:for="{{gePicker.fields}}"
           wx:for-item="fld"
