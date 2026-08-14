@@ -435,13 +435,20 @@
             wx:key="id"
             class="ge-row {{c.taken ? 'ge-row-taken' : ''}} {{c.blocked ? 'ge-row-blocked' : ''}}"
             data-id="{{c.id}}"
-            data-blocked="{{c.blocked}}"
-            bindtap="onToggleGeCourse"
+            bindtap="onOpenGeCourse"
+            hover-class="ge-row-hv"
           >
             <text class="ge-code">{{c.code}}</text>
             <text class="ge-name">{{c.name}}</text>
-            <text wx:if="{{c.taken}}" class="ge-mark ge-mark-done">✓</text>
-            <text wx:elif="{{c.blocked}}" class="ge-mark ge-mark-blk">⊘</text>
+            <!-- A 方案:行主体=进详情(看评分/页内标记);行尾「选」钮=一键勾选(catchtap 防冒泡) -->
+            <view
+              wx:if="{{!c.blocked}}"
+              class="ge-pick {{c.taken ? 'ge-pick-on' : ''}}"
+              data-id="{{c.id}}"
+              data-blocked="{{c.blocked}}"
+              catchtap="onToggleGeCourse"
+            >{{c.taken ? '✓' : '+'}}</view>
+            <text wx:else class="ge-mark ge-mark-blk">⊘</text>
           </view>
         </view>
       </block>

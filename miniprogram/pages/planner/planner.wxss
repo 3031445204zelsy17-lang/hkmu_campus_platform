@@ -883,6 +883,30 @@
 .ge-mark-blk {
   color: var(--text-secondary);
 }
+/* A 方案:行尾「选」钮 —— 未选=空心 +,已选=绿底白 ✓(catchtap 防冒泡,行主体点按进详情) */
+.ge-pick {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  border: 2rpx solid var(--accent-blue);
+  color: var(--accent-blue);
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+.ge-pick-on {
+  border-color: var(--accent-green);
+  background: var(--accent-green);
+  color: #ffffff;
+}
+.ge-row-hv {
+  /* 互动蓝 6% 淡底(不用 pill-green-bg,避免 hover 与「已选」状态混淆) */
+  background: rgba(15, 143, 190, 0.06);
+}
 .ge-row-taken {
   background: var(--pill-green-bg);
 }
