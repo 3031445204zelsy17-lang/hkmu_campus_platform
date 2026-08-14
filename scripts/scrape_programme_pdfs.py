@@ -10,6 +10,8 @@ Usage:
   python scripts/scrape_programme_pdfs.py --code BSCHDSAIJ --school ST        # one programme
   python scripts/scrape_programme_pdfs.py --code BSCHDSAIJ --school ST --text # dump raw text (debug)
   python scripts/scrape_programme_pdfs.py --all                               # all 57 (Phase C)
+  python scripts/scrape_programme_pdfs.py --from-text-dir scripts/out/hkmu_pr/text  # local reparse (T32)
+  python scripts/scrape_programme_pdfs.py --audit scripts/out/programmes_raw.json   # sanity table
 
 PDF URL pattern: https://www.hkmu.edu.hk/REG/reg_grad/PR/3CRU_FTU_<school>_<code>.pdf
   schools: AS (Arts & Social Sciences), BA (Business & Administration),
@@ -22,10 +24,9 @@ PDF URL pattern: https://www.hkmu.edu.hk/REG/reg_grad/PR/3CRU_FTU_<school>_<code
   failures persist, switch network (mobile hotspot / HK or JP VPN node) — see
   memory [[vpn-azure-https-block]].
 
-⚠️ Parser: categories_from_text() is tuned to the DSAI (ST) layout
-  ("Table N: <Category>" heading + course rows "Code Title Credits"). Other
-  schools' PDFs may vary — re-check the parser output against each school's PDF
-  on first run (dump with --text) before trusting batch results.
+Parser: categories_from_text() handles the 5 schools' heading variants via an
+  ordered first-match pattern list (see HEADING_PATTERNS) — T32. Local re-parse
+  needs no Cloudflare pass:  --from-text-dir scripts/out/hkmu_pr/text
 """
 import sys
 import os
@@ -96,15 +97,59 @@ def fetch_pdf_bytes(page, code, school, retries=4):
 # Course code: "COMP 1080SEF", "IT 1020SEF", "UNI 1002ABW", "ENGL 1101AEF"
 CODE_RE = re.compile(r"([A-Z]{2,5})\s?(\d{4}[A-Z]{2,3})")
 
-# "Table N: <Category>" heading → our category key
-TABLE_CATEGORY = {
-    "core courses": "core",
-    "elective courses": "elective",
-    "university core courses": "university-core",
-    "university english courses": "english",
-    "english courses": "english",
-    "general education": "general-ed",
-}
+# "Table N: <Category>" heading → our category key. Ordered FIRST-match list
+# (T32): the 5 schools name their tables differently — AS "Elective courses in
+# specific area", BA concentration tables, EL "Periphery Course", NHS
+# "Theoretical Courses"/"Specialized Professional courses"/"Clinical
+# Practicum", ST-STEAM menu electives. Order matters:
+#   - university core/english MUST precede the generic core/elective patterns
+#   - NHS "Theoretical courses (elective)" MUST precede bare "theoretical
+#     courses" (= core)
+# Non-credit-bearing extras (Global Immersion Programme) map to None → skipped.
+HEADING_PATTERNS = [
+    (re.compile(r"university\s+core", re.I), "university-core"),
+    (re.compile(r"university\s+english", re.I), "english"),
+    (re.compile(r"general\s+education", re.I), "general-ed"),
+    (re.compile(r"theoretical\s+courses?\s*\(elective\)", re.I), "elective"),
+    (re.compile(r"elective", re.I), "elective"),
+    (re.compile(r"periphery", re.I), "elective"),
+    (re.compile(r"synergy", re.I), "elective"),
+    (re.compile(r"specialization", re.I), "elective"),  # choice menus (WBJ/ASMJ)
+    (re.compile(r"clinical\s+practicum", re.I), "core"),
+    (re.compile(r"practicum", re.I), "core"),
+    (re.compile(r"specialized\s+professional", re.I), "core"),
+    (re.compile(r"core\s+science", re.I), "core"),
+    (re.compile(r"theoretical\s+courses?", re.I), "core"),
+    (re.compile(r"concentration", re.I), "core"),
+    (re.compile(r"core\s+strategy", re.I), "core"),
+    (re.compile(r"mathematics", re.I), "core"),
+    (re.compile(r"integrated\s+ste(?:a)?m", re.I), "core"),
+    (re.compile(r"global\s+immersion", re.I), None),
+    (re.compile(r"core\s+courses?", re.I), "core"),
+]
+
+
+def _heading_category(title):
+    """First matching pattern wins; None → skip this table."""
+    for rx, key in HEADING_PATTERNS:
+        if rx.search(title):
+            return key
+    return None
+
+
+# Cohort/entry sets. Some PDFs carry TWO complete requirement sets — EL e.g.
+# pages 1-4 for the 2023/24 cohort and pages 5-8 for "in or after 2024/25";
+# ST-STEAM restarts section numbering instead. Every set opens with
+# "N. Programme Requirement – Year 1 Entry" (numbering may restart or
+# continue), so splitting on that heading and keeping the LAST part keeps only
+# the latest cohort. Docs with one set degrade to the whole text.
+Y1_SECTION = re.compile(
+    r"\n\s*\d+\.\s+Programme\s+Requirement\s*[–-]\s*Year\s+1\s+Entry", re.I)
+
+
+def latest_cohort_text(text):
+    parts = Y1_SECTION.split(text)
+    return parts[-1] if len(parts) > 1 else text
 
 
 def _norm_code(raw):
@@ -123,25 +168,28 @@ def extract_text(pdf_bytes):
 
 
 def categories_from_text(text):
-    """Parse 'Table N: <Category>' sections into {category: {courses, credits_seen}}.
+    """Parse 'Table N: <Category>' sections into
+    {category: {courses, course_credits, credits_seen}}.
 
-    NOTE: tuned to DSAI (ST) layout. Each non-header row beginning with a course
-    code yields one course; the credit value is the trailing integer on the row.
+    Multi-school (T32): heading→category via HEADING_PATTERNS; only the latest
+    cohort's requirement set is parsed (EL PDFs carry two). Each non-header row
+    beginning with a course code yields one course; credits = trailing integer.
+    Courses repeating within a category (Year-1/2/3 entry columns re-listing the
+    same course) are deduped — first occurrence wins.
     GE has no table (it's a prose requirement) → handled by the caller as pool:'ge'.
     """
     categories = {}
+    text = latest_cohort_text(text)
     # Iterate 'Table N: <Title>' headings and capture the body until the next heading.
     headings = list(re.finditer(r"Table\s+\d+\s*:\s*([^\n]+)", text))
-    for i, h in enumerate(heads := headings):
+    for i, h in enumerate(headings):
         title = h.group(1).strip().lower()
-        # exact match: "core courses" is a substring of "university core
-        # courses", so `in` would mis-file Table 3 (UniCore) as core.
-        cat_key = TABLE_CATEGORY.get(title)
+        cat_key = _heading_category(title)
         if not cat_key:
             continue
-        body = text[h.end(): (heads[i + 1].start() if i + 1 < len(heads) else len(text))]
-        courses = []
-        credit_total = 0
+        body = text[h.end(): (headings[i + 1].start() if i + 1 < len(headings) else len(text))]
+        cat = categories.setdefault(
+            cat_key, {"courses": [], "course_credits": {}, "credits_seen": 0})
         for line in body.splitlines():
             line = line.strip()
             if not line or line.lower().startswith(("course code", "course title", "credit")):
@@ -150,15 +198,14 @@ def categories_from_text(text):
             if not m:
                 continue
             code = _norm_code(line)
+            if not code or code in cat["course_credits"]:
+                continue
             # credits = last integer token on the row (skip ✔ / Year-Entry marks)
             nums = re.findall(r"\b(\d+)\b", line[m.end():])
             credits = int(nums[-1]) if nums else 3
-            courses.append(code)
-            credit_total += credits
-        if cat_key not in categories:
-            categories[cat_key] = {"courses": [], "credits_seen": 0}
-        categories[cat_key]["courses"].extend(courses)
-        categories[cat_key]["credits_seen"] += credit_total
+            cat["courses"].append(code)
+            cat["course_credits"][code] = credits
+            cat["credits_seen"] += credits
     return categories
 
 
@@ -168,27 +215,111 @@ def ge_credits_from_prose(text):
     return int(m.group(1)) if m else None
 
 
-# Prose "X credit-units of <Category> courses" → min_credits. First (Year-1) match.
+# Prose "X credit-units of <Category> courses" → min_credits, from the FIRST
+# (Year-1-entry) requirement list of the latest cohort only — later sections
+# are Year-2/3-entry advanced-standing variants and grade-condition restatements
+# ("1.1.2 attain grade C … for all 114 credit-units of core courses") we must
+# not double-count. Within that list, ALL matches per pattern SUM (BASCHTICJ
+# lists five elective lines; BED lists five "an elective course" lines), and
+# matched spans are masked so a later, more generic pattern can't re-claim the
+# same line ("University Core" must not be eaten by generic core). Filler
+# `[\w&\-/ ]` covers "3000-level", "an/a", "marketing/supply chain management",
+# "testing & certification" … but not \n, so matches stay on one line (some
+# lines wrap right after the category word — hence the optional "courses").
+# `credits-units` plural and a footnote `*` appear in some PDFs.
 PROSE_MIN = [
-    (re.compile(r"(\d+)\s+credit-units?\s+of\s+core\s+courses", re.I), "core"),
-    (re.compile(r"(\d+)\s+credit-units?\s+of\s+elective\s+courses", re.I), "elective"),
-    (re.compile(r"(\d+)\s+credit-units?\s+of\s+University\s+Core\s+courses", re.I), "university-core"),
-    (re.compile(r"(\d+)\s+credit-units?\s+of\s+University\s+English\s+courses", re.I), "english"),
-    (re.compile(r"(\d+)\s+credit-units?\s+of\s+General\s+Education", re.I), "general-ed"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+University\s+Core\s+courses?", re.I), "university-core"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+University\s+English(?:\s+language)?\s+courses?", re.I), "english"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+General\s+Education", re.I), "general-ed"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+Theoretical\s+courses?\s*\(elective\)", re.I), "elective"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+[\w&\-/ ]*?elective(?:\s+courses?)?", re.I), "elective"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+[\w&\-/ ]*?periphery\s+courses?", re.I), "elective"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+[\w&\-/ ]*?synergy\s+courses?", re.I), "elective"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+[\w&\-/ ]*?specialization\s+courses?", re.I), "elective"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+from\s+one\s+of\s+the\s+following", re.I), "elective"),  # option group
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+Theoretical\s+courses?\s*\(core\)", re.I), "core"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+Clinical\s+Practicum", re.I), "core"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+[\w&\-/ ]*?practicum\s+courses?", re.I), "core"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+Core\s+Science\s+courses?", re.I), "core"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+Specialized\s+Professional\s+courses?", re.I), "core"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+[\w&\-/ ]*?concentration\s+core(?:\s+courses?)?", re.I), "core"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+[\w&\-/ ]*?concentration\s+courses?", re.I), "core"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+core\s+strategy\s+course", re.I), "core"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+[\w&\-/ ]*?mathematics\s+courses?", re.I), "core"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+Integrated\s+STE(?:A)?M\s+training", re.I), "core"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+[\w&\-/ ]*?core\s+courses?", re.I), "core"),
 ]
 
 
+def y1_prose(text):
+    """The first requirement list of the latest cohort: from its 'obtain N
+    credit-units' up to the next clause heading (1.1.2 / 2.1.2 …), with
+    five-level numbered option-children (1.1.1.4.x — mutually-exclusive
+    alternatives, e.g. BBAHASMJ's three 33cr tracks) blanked out."""
+    m = re.search(r"obtain\s+(\d+)\s+credit-units", text, re.I)
+    if not m:
+        return text
+    rest = text[m.end():]
+    nxt = re.search(r"(?m)^\s*\d+(?:\.\d+){2}\.?\s", rest)
+    sec = rest[:nxt.start()] if nxt else rest
+    return re.sub(r"(?m)^\s*\d+(?:\.\d+){4,}[.\s][^\n]*", " ", sec)
+
+
 def prose_min_credits(text):
-    """min_credits per category from the prose requirements section."""
+    """min_credits per category from the Year-1-entry prose (sum + mask)."""
+    sec = y1_prose(latest_cohort_text(text))
     out = {}
     for rx, key in PROSE_MIN:
-        m = rx.search(text)
-        if m:
-            out[key] = int(m.group(1))
+        spans = [(m.span(), int(m.group(1))) for m in rx.finditer(sec)]
+        if spans:
+            out[key] = out.get(key, 0) + sum(v for _, v in spans)
+            chars = list(sec)
+            for (a, b), _ in spans:
+                for i in range(a, b):
+                    chars[i] = " "
+            sec = "".join(chars)
     return out
 
 
+def total_credits_from_prose(text):
+    """'obtain N credit-units' — the Year-1-entry programme total (first match)."""
+    text = latest_cohort_text(text)
+    m = re.search(r"obtain\s+(\d+)\s+credit-units", text, re.I)
+    return int(m.group(1)) if m else None
+
+
 # ── CLI ───────────────────────────────────────────────────────────────────────
+
+def parse_text_to_entry(txt, school):
+    """Full local parse of one programme's PDF text → raw-JSON entry."""
+    cats = categories_from_text(txt)   # {cat: {courses, course_credits, credits_seen}}
+    for key, mc in prose_min_credits(txt).items():
+        cats.setdefault(key, {"courses": [], "course_credits": {}, "credits_seen": 0})
+        cats[key]["min_credits"] = mc
+        if key == "general-ed":
+            cats[key]["pool"] = "ge"
+    return {"school": school, "total_credits": total_credits_from_prose(txt),
+            "categories": cats}
+
+
+def audit(raw):
+    """Per-programme sanity table — spot parse breakage (0-course categories,
+    absurd counts, Σmin_credits ≠ total) at a glance."""
+    print(f"{'code':12} {'sch':4} {'tot':>4} {'Σmin':>5}  categories(courses/min_credits)")
+    print("-" * 104)
+    for code, e in raw.items():
+        if "_error" in e:
+            print(f"{code:12} {e.get('school', '?'):4}  ERROR {e['_error']}")
+            continue
+        cats = e.get("categories", {})
+        total = e.get("total_credits")
+        smin = sum(c.get("min_credits", 0) for c in cats.values())
+        detail = "  ".join(
+            f"{k}:{len(c.get('courses', []))}/{c.get('min_credits', '?')}"
+            for k, c in cats.items())
+        flag = "" if total in (None, smin) else "  ⚠️ sum≠total"
+        print(f"{code:12} {e['school']:4} {str(total):>4} {smin:>5}  {detail}{flag}")
+
 
 def main():
     ap = argparse.ArgumentParser(description="Scrape HKMU programme-requirements PDFs.")
@@ -199,7 +330,34 @@ def main():
     ap.add_argument("--outdir", help="save each PDF + extracted text under this dir "
                                      "(pdfs/<code>.pdf, text/<code>.txt) so T32 parser "
                                      "iteration can reparse locally without re-passing Cloudflare")
+    ap.add_argument("--from-text-dir", dest="from_text_dir", metavar="DIR",
+                    help="re-parse local <DIR>/<code>.txt files for all programmes "
+                         "(no Cloudflare / playwright), e.g. scripts/out/hkmu_pr/text")
+    ap.add_argument("--audit", metavar="RAW_JSON",
+                    help="print the sanity-audit table for an existing raw JSON")
     args = ap.parse_args()
+
+    if args.audit:
+        with open(args.audit) as f:
+            audit(json.load(f))
+        return
+
+    if args.from_text_dir:
+        out = {}
+        for code, school in PROGRAMMES:
+            p = os.path.join(args.from_text_dir, f"{code}.txt")
+            if not os.path.exists(p):
+                out[code] = {"school": school, "_error": "no local text file"}
+                print(f"  {code} ({school}): no local text", file=sys.stderr)
+                continue
+            with open(p) as f:
+                txt = f.read()
+            out[code] = parse_text_to_entry(txt, school)
+            n = sum(len(c.get("courses", [])) for c in out[code]["categories"].values())
+            print(f"  {code} ({school}): {len(out[code]['categories'])} categories, {n} courses",
+                  file=sys.stderr)
+        print(json.dumps(out, ensure_ascii=False, indent=2))
+        return
 
     if args.all:
         targets = PROGRAMMES
@@ -239,16 +397,10 @@ def main():
             if args.outdir:
                 with open(os.path.join(args.outdir, "text", f"{code}.txt"), "w") as f:
                     f.write(txt)
-            cats = categories_from_text(txt)   # {cat: {courses, credits_seen}}
-            mins = prose_min_credits(txt)       # {cat: min_credits}
-            for key, mc in mins.items():
-                cats.setdefault(key, {})
-                cats[key]["min_credits"] = mc
-                if key == "general-ed":
-                    cats[key]["pool"] = "ge"
-            out[code] = {"school": school, "categories": cats}
-            n = sum(len(c.get("courses", [])) for c in cats.values())
-            print(f"  {code} ({school}): {len(cats)} categories, {n} courses", file=sys.stderr)
+            out[code] = parse_text_to_entry(txt, school)
+            n = sum(len(c.get("courses", [])) for c in out[code]["categories"].values())
+            print(f"  {code} ({school}): {len(out[code]['categories'])} categories, {n} courses",
+                  file=sys.stderr)
         browser.close()
 
     if not args.text:
