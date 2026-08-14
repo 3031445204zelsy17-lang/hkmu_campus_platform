@@ -23,7 +23,9 @@
       <view class="ps-empty-icon">🔍</view>
       <view class="ps-empty-text">{{text.programmeSearchEmpty}}</view>
     </view>
-    <block wx:else wx:for="{{groups}}" wx:for-item="grp" wx:key="school">
+    <!-- wx:else 不能与 wx:for 同标签(本版编译器报 "wx:if not found")— 拆两层 -->
+    <block wx:else>
+      <block wx:for="{{groups}}" wx:for-item="grp" wx:key="school">
       <view class="ps-group-card">
         <view wx:if="{{grp.school}}" class="ps-group-head">
           <text class="ps-group-name">{{grp.school}}</text>
@@ -42,6 +44,7 @@
           <text wx:if="{{p.selected}}" class="ps-row-check">✓</text>
         </view>
       </view>
+      </block>
     </block>
   </scroll-view>
 </view>
@@ -63,7 +66,9 @@
       <view class="ps-empty-icon">🔍</view>
       <view class="ps-empty-text">{{text.programmeSearchEmpty}}</view>
     </view>
-    <block wx:else wx:for="{{groups}}" wx:for-item="grp" wx:key="school">
+    <!-- wx:else 不能与 wx:for 同标签(本版编译器报 "wx:if not found")— 拆两层 -->
+    <block wx:else>
+      <block wx:for="{{groups}}" wx:for-item="grp" wx:key="school">
       <view class="ps-group-card">
         <view wx:if="{{grp.school}}" class="ps-group-head">
           <text class="ps-group-name">{{grp.school}}</text>
@@ -82,6 +87,7 @@
           <text wx:if="{{p.selected}}" class="ps-row-check">✓</text>
         </view>
       </view>
+      </block>
     </block>
   </view>
 </view>
