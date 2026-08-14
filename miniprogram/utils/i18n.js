@@ -493,6 +493,10 @@ const DICTIONARY = {
       statusCompleted: "\u5df2\u5b8c\u6210",
       prereqMet: "\u5148\u4fee\u5df2\u6ee1\u8db3",
       prereqPrefix: "\u5148\u4fee\uff1a",
+      // T28 \u6392\u8bfe\u53f0
+      schedMove: "\u6539\u5b66\u671f",
+      schedUpdateFail: "\u6392\u8bfe\u66f4\u65b0\u5931\u8d25\uff0c\u5df2\u8fd8\u539f",
+      prereqOrderPrefix: "\u5148\u4fee\u8bfe\u6392\u5728\u4e4b\u540e\uff1a",
       semAutumn: "\u79cb\u5b63",
       semSpring: "\u6625\u5b63",
       semSummer: "\u6691\u671f",
@@ -1101,6 +1105,10 @@ DICTIONARY["zh-Hant"] = {
     markRemove: "\u79fb\u9664\u6a19\u8a18",
     statusInProgress: "\u9032\u884c\u4e2d",
     prereqMet: "\u5148\u4fee\u5df2\u6eff\u8db3",
+    // T28 \u6392\u8ab2\u53f0
+    schedMove: "\u6539\u5b78\u671f",
+    schedUpdateFail: "\u6392\u8ab2\u66f4\u65b0\u5931\u6557\uff0c\u5df2\u9084\u539f",
+    prereqOrderPrefix: "\u5148\u4fee\u8ab2\u6392\u5728\u4e4b\u5f8c\uff1a",
     catalogueTagFull: "\u5b8c\u6574\u898f\u5283",
     programmeSearchPlaceholder: "\u641c\u5c0b\u5c08\u696d\u3001\u4ee3\u78bc\u6216\u5b78\u9662",
     programmeSearchEmpty: "\u627e\u4e0d\u5230\u5339\u914d\u7684\u5c08\u696d\uff0c\u63db\u500b\u95dc\u9375\u5b57\u8a66\u8a66",
@@ -1707,6 +1715,10 @@ DICTIONARY.en = {
     statusCompleted: "Completed",
     prereqMet: "Prerequisites met",
     prereqPrefix: "Prereq: ",
+    // T28 scheduler
+    schedMove: "Move term",
+    schedUpdateFail: "Schedule update failed, reverted",
+    prereqOrderPrefix: "Prereq scheduled after: ",
     semAutumn: "Autumn",
     semSpring: "Spring",
     semSummer: "Summer",

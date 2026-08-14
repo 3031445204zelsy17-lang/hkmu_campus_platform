@@ -252,6 +252,16 @@
             <view class="course-code">{{c.code}}</view>
             <view class="course-name">{{c.name}} · {{c.credits}}cr</view>
             <view wx:if="{{c.prereqLabel}}" class="prereq-row {{c.prereqsMet?'met':'unmet'}}">{{c.prereqLabel}}</view>
+            <!-- T28 排课台:改学期下拉 + 先修顺序提示(不阻塞)。catch 吞冒泡防开详情 -->
+            <view class="move-line">
+              <picker mode="selector" range="{{coursesView.moveLabels}}" value="{{c.moveIndex}}"
+                      data-course-id="{{c.courseId}}" bindchange="onMoveCourse" catchtap="stopBubble">
+                <view class="move-pill {{c.planned?'move-pill-custom':''}}">
+                  <text>{{c.planned ? c.placementLabel : text.schedMove}}</text><text class="move-caret">▾</text>
+                </view>
+              </picker>
+              <text wx:if="{{c.orderWarn}}" class="order-warn">{{c.orderWarn}}</text>
+            </view>
           </view>
           <view wx:if="{{c.statusKey==='completed'}}" class="mini-pill green">{{c.statusLabel}}</view>
           <view wx:elif="{{c.statusKey==='in_progress'}}" class="mini-pill amber">{{c.statusLabel}}</view>
@@ -280,6 +290,16 @@
             <view class="course-code">{{c.code}}</view>
             <view class="course-name">{{c.name}} · {{c.credits}}cr</view>
             <view wx:if="{{c.prereqLabel}}" class="prereq-row {{c.prereqsMet?'met':'unmet'}}">{{c.prereqLabel}}</view>
+            <!-- T28 排课台:改学期下拉 + 先修顺序提示(不阻塞)。catch 吞冒泡防开详情 -->
+            <view class="move-line">
+              <picker mode="selector" range="{{coursesView.moveLabels}}" value="{{c.moveIndex}}"
+                      data-course-id="{{c.courseId}}" bindchange="onMoveCourse" catchtap="stopBubble">
+                <view class="move-pill {{c.planned?'move-pill-custom':''}}">
+                  <text>{{c.planned ? c.placementLabel : text.schedMove}}</text><text class="move-caret">▾</text>
+                </view>
+              </picker>
+              <text wx:if="{{c.orderWarn}}" class="order-warn">{{c.orderWarn}}</text>
+            </view>
           </view>
           <view wx:if="{{c.statusKey==='completed'}}" class="mini-pill green">{{c.statusLabel}}</view>
           <view wx:elif="{{c.statusKey==='in_progress'}}" class="mini-pill amber">{{c.statusLabel}}</view>

@@ -421,6 +421,42 @@
   color: var(--text-secondary);
 }
 
+/* T28 排课台:改学期下拉 pill + 先修顺序琥珀提示 */
+.move-line {
+  margin-top: 8rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.move-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 4rpx 16rpx;
+  border-radius: var(--radius-pill);
+  background: var(--surface-subtle);
+  border: 1rpx solid var(--border-soft);
+  font-size: var(--fs-link);
+  color: var(--text-secondary);
+}
+
+.move-pill-custom {
+  background: var(--pill-green-bg);
+  border-color: var(--border-soft);
+  color: var(--green-deep);
+}
+
+.move-caret {
+  font-size: 20rpx;
+}
+
+.order-warn {
+  font-size: var(--fs-link);
+  color: var(--cat-amber, #B45309);
+}
+
 /* 状态 pill:进行中 amber(已完成 green 已在 app.wxss) */
 .mini-pill.amber {
   background: var(--cat-amber);
