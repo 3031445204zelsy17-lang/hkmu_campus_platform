@@ -326,41 +326,41 @@
       "id": "T32",
       "phase": "C-全专业",
       "name": "按 5 学院调解析",
-      "description": "AS/BA/EL/NHS/ST 格式变体各调(子 agent 并行)",
+      "description": "5学院表头按序首配+通用cohort切分+Year列去重+prose消费式掩码求和;55/55 Σmin==total 零失败;--from-text-dir 本地重解析+--audit",
       "dependencies": [
         "T31"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T33",
       "phase": "C-全专业",
       "name": "生成 programme_rules.py",
-      "description": "57 专业 categories+min_credits+pick_n+template",
+      "description": "build_programme_rules.py 确定性生成 54 专业(elective 学分池/折叠类/core∩elective去重/GE pick_n);排除 DSAI 手排权威;+RULE_COURSE_CREDITS",
       "dependencies": [
         "T32"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T34",
       "phase": "C-全专业",
       "name": "programmes.py 接 rules + seed",
-      "description": "get_programme 读 rules + seed 灌 catalogue 课程",
+      "description": "PROGRAMMES.update(rules)=55条+coming_soon清;_category_satisfied 加 pool:'credits' 学分池分支;seed 补灌缺课(catalogue名/PDF学分兜底)",
       "dependencies": [
         "T33"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T35",
       "phase": "C-全专业",
       "name": "验证 + Testing 拼写修正",
-      "description": "57 专业 graduation 自动测试 + PROGRAMME_GE_FIELDS Testing 拼写统一",
+      "description": "Testing 拼写统一(&→and×8+删discard,8专业block生效);测试 11→17(55专业端到端毕业+学分池+折叠冒烟);子agent交叉验证;70 passed",
       "dependencies": [
         "T34"
       ],
-      "passes": false
+      "passes": true
     }
   ]
 }

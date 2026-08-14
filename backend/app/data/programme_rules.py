@@ -43,13 +43,14 @@ PROGRAMME_RULES = {
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1102AEF", "ENGL1002AEF", "ENGL1003AEF"]
+                "courses": ["ENGL1101AEF", "ENGL1102AEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -81,13 +82,14 @@ PROGRAMME_RULES = {
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1102AEF", "ENGL1002AEF", "ENGL1003AEF"]
+                "courses": ["ENGL1101AEF", "ENGL1102AEF", "ENGL1003AEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -119,13 +121,14 @@ PROGRAMME_RULES = {
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1102AEF", "ENGL1002AEF", "ENGL1003AEF"]
+                "courses": ["ENGL1101AEF", "ENGL1102AEF", "ENGL1003AEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -163,7 +166,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -195,13 +199,14 @@ PROGRAMME_RULES = {
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1102AEF", "ENGL1002AEF", "ENGL1003AEF"]
+                "courses": ["ENGL1101AEF", "ENGL1102AEF", "ENGL1003AEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -233,13 +238,14 @@ PROGRAMME_RULES = {
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1102AEF", "ENGL1002AEF", "ENGL1003AEF"]
+                "courses": ["ENGL1101AEF", "ENGL1102AEF", "ENGL1003AEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -260,7 +266,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 90,
                 "color": 'blue',
-                "courses": ["BUS2000BEF", "BUS3068BEF", "BUS4088BEF", "IB3091BEF", "LAW3062BEF", "MGT3045BEF", "MGT4041BEF", "MGT4098BEF", "MKT2050BEF", "BUS2001BEF", "COUN2001AEF", "ECON1001AEF", "POLS1001AEF", "PSYC1001AEF", "PSYC2001AEF", "PSYC3001AEF", "PSYC3002AEF", "PSYC3003AEF", "PSYC3005AEF", "PSYC3006AEF", "PSYC3009AEF", "PSYC3010AEF", "PSYC4006AEF", "PSYC4004AEF", "SOCI1001AEF"]
+                "courses": ["BUS2000BEF", "BUS3068BEF", "BUS4088BEF", "IB3091BEF", "LAW3062BEF", "MGT3045BEF", "MGT4041BEF", "MGT4098BEF", "MKT2050BEF", "COUN2001AEF", "ECON1001AEF", "POLS1001AEF", "PSYC1001AEF", "PSYC2001AEF", "PSYC3001AEF", "PSYC3002AEF", "PSYC3003AEF", "PSYC3005AEF", "PSYC3006AEF", "PSYC3009AEF", "PSYC3010AEF", "PSYC4006AEF", "PSYC4004AEF", "SOCI1001AEF"]
             },
             "elective": {
                 "min_credits": 45,
@@ -272,7 +278,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -310,7 +317,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -342,13 +350,14 @@ PROGRAMME_RULES = {
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1202EEF", "BIOL3051SEF", "SCI3065SEF", "ENVR3028SEF", "ENVR4028SEF", "ENVR3074SEF", "ENVR4074SEF", "ENVR3042SEF", "ENVR4042SEF", "TC4011SEF"]
+                "courses": ["ENGL1101AEF", "ENGL1202EEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -369,7 +378,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 72,
                 "color": 'blue',
-                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "BUS2001BEF", "MGT4098BEF", "ASM3018BEF", "ASM4038BEF", "ASM4068BEF"]
+                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "MGT4098BEF", "ASM3018BEF", "ASM4038BEF", "ASM4068BEF"]
             },
             "elective": {
                 "min_credits": 33,
@@ -381,7 +390,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -402,7 +412,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 99,
                 "color": 'blue',
-                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "BUS2001BEF", "MGT4099BEF", "ACT3011BEF", "ACT3020BEF", "ACT4014BEF", "ACT4015BEF", "BUS3090BEF", "BUS3092BEF", "CGV3011BEF", "CGV4012BEF", "CGV4013BEF", "FIN3086BEF", "LAW3033BEF", "LAW4034BEF"]
+                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "MGT4099BEF", "ACT3011BEF", "ACT3020BEF", "ACT4014BEF", "ACT4015BEF", "BUS3090BEF", "BUS3092BEF", "CGV3011BEF", "CGV4012BEF", "CGV4013BEF", "FIN3086BEF", "LAW3033BEF", "LAW4034BEF"]
             },
             "elective": {
                 "min_credits": 6,
@@ -414,7 +424,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -435,7 +446,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 99,
                 "color": 'blue',
-                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "BUS2001BEF", "MGT4098BEF", "ACT3011BEF", "DB4027BEF", "FIN3075BEF", "FIN3079BEF", "FIN3085BEF", "FIN3086BEF", "FIN4088BEF", "FIN4089BEF", "FINT2030BEF", "FINT3038BEF", "FINT4052BEF", "MGT4056BEF"]
+                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "MGT4098BEF", "ACT3011BEF", "DB4027BEF", "FIN3075BEF", "FIN3079BEF", "FIN3085BEF", "FIN3086BEF", "FIN4088BEF", "FIN4089BEF", "FINT2030BEF", "FINT3038BEF", "FINT4052BEF", "MGT4056BEF"]
             },
             "elective": {
                 "min_credits": 6,
@@ -447,7 +458,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -468,7 +480,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 78,
                 "color": 'blue',
-                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "BUS2001BEF", "MGT4098BEF", "IB3091BEF", "IB3092BEF", "IB4061BEF", "IB4096BEF", "IB4097BEF"]
+                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "MGT4098BEF", "IB3091BEF", "IB3092BEF", "IB4061BEF", "IB4096BEF", "IB4097BEF"]
             },
             "elective": {
                 "min_credits": 27,
@@ -480,7 +492,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -501,7 +514,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 81,
                 "color": 'blue',
-                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "BUS2001BEF", "MGT4098BEF", "DB3047BEF", "SCM3071BEF", "SCM3072BEF", "SCM3073BEF", "SCM4071BEF", "SCM4072BEF"]
+                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "MGT4098BEF", "DB3047BEF", "SCM3071BEF", "SCM3072BEF", "SCM3073BEF", "SCM4071BEF", "SCM4072BEF"]
             },
             "elective": {
                 "min_credits": 24,
@@ -513,7 +526,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -534,7 +548,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 81,
                 "color": 'blue',
-                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "BUS2001BEF", "MGT4098BEF", "MGT3041BEF", "MGT3042BEF", "MGT3045BEF", "MGT4041BEF", "MGT4042BEF", "MGT4043BEF"]
+                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "MGT4098BEF", "MGT3041BEF", "MGT3042BEF", "MGT3045BEF", "MGT4041BEF", "MGT4042BEF", "MGT4043BEF"]
             },
             "elective": {
                 "min_credits": 24,
@@ -546,7 +560,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -567,7 +582,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 78,
                 "color": 'blue',
-                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "BUS2001BEF", "MGT4098BEF", "HPM3009BEF", "HPM4005BEF", "HPM4008BEF", "HPM4001BEF", "TRM3013BEF"]
+                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "MGT4098BEF", "HPM3009BEF", "HPM4005BEF", "HPM4008BEF", "HPM4001BEF", "TRM3013BEF"]
             },
             "elective": {
                 "min_credits": 27,
@@ -579,7 +594,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -600,7 +616,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 81,
                 "color": 'blue',
-                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "BUS2001BEF", "MGT4098BEF", "IB3091BEF", "MGT3044BEF", "MGT3045BEF", "MGT4044BEF", "MGT4056BEF", "SCM4071BEF"]
+                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "MGT4098BEF", "IB3091BEF", "MGT3044BEF", "MGT3045BEF", "MGT4044BEF", "MGT4056BEF", "SCM4071BEF"]
             },
             "elective": {
                 "min_credits": 24,
@@ -612,7 +628,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -633,7 +650,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 84,
                 "color": 'blue',
-                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "BUS2001BEF", "MGT4098BEF", "DB3047BEF", "MKT3062BEF", "MKT3063BEF", "MKT3066BEF", "MKT4062BEF", "MKT4063BEF", "MKT4077BEF"]
+                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "MGT4098BEF", "DB3047BEF", "MKT3062BEF", "MKT3063BEF", "MKT3066BEF", "MKT4062BEF", "MKT4063BEF", "MKT4077BEF"]
             },
             "elective": {
                 "min_credits": 21,
@@ -645,7 +662,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -666,7 +684,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 96,
                 "color": 'blue',
-                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "BUS2001BEF", "MGT4099BEF", "ACT3004BEF", "ACT3013BEF", "ACT3031BEF", "ACT3032BEF", "ACT4005BEF", "ACT4007BEF", "ACT4014BEF", "ACT4016BEF", "FIN3086BEF", "LAW3033BEF", "LAW3062BEF"]
+                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "MGT4099BEF", "ACT3004BEF", "ACT3013BEF", "ACT3031BEF", "ACT3032BEF", "ACT4005BEF", "ACT4007BEF", "ACT4014BEF", "ACT4016BEF", "FIN3086BEF", "LAW3033BEF", "LAW3062BEF"]
             },
             "elective": {
                 "min_credits": 9,
@@ -678,7 +696,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -699,7 +718,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 90,
                 "color": 'blue',
-                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "BUS2001BEF", "MGT4098BEF", "RFM3035BEF", "RFM3036BEF", "RFM3037BEF", "RFM3039BEF", "RFM4055BEF", "RFM4056BEF", "RFM4057BEF", "RFM4058BEF", "RFM4059BEF"]
+                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "MGT4098BEF", "RFM3035BEF", "RFM3036BEF", "RFM3037BEF", "RFM3039BEF", "RFM4055BEF", "RFM4056BEF", "RFM4057BEF", "RFM4058BEF", "RFM4059BEF"]
             },
             "elective": {
                 "min_credits": 15,
@@ -711,7 +730,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -732,7 +752,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 90,
                 "color": 'blue',
-                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "BUS2001BEF", "MGT4098BEF", "SPM3056BEF", "SPM3057BEF", "SPM3058BEF", "SPM3059BEF", "SPM4036BEF", "SPM4037BEF", "SPM4098BEF"]
+                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "MGT4098BEF", "SPM3056BEF", "SPM3057BEF", "SPM3058BEF", "SPM3059BEF", "SPM4036BEF", "SPM4037BEF", "SPM4098BEF"]
             },
             "elective": {
                 "min_credits": 15,
@@ -744,7 +764,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -765,7 +786,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 90,
                 "color": 'blue',
-                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "BUS2001BEF", "MGT4098BEF", "SPM3013BEF", "SPM3015BEF", "SPM3017BEF", "SPM3021BEF", "SPM4036BEF", "SPM4037BEF", "SPM4098BEF"]
+                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "MGT4098BEF", "SPM3013BEF", "SPM3015BEF", "SPM3017BEF", "SPM3021BEF", "SPM4036BEF", "SPM4037BEF", "SPM4098BEF"]
             },
             "elective": {
                 "min_credits": 15,
@@ -777,7 +798,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -798,7 +820,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 78,
                 "color": 'blue',
-                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "BUS2001BEF", "MGT4098BEF", "HPM4001BEF", "TRM3006BEF", "TRM3012BEF", "TRM4011BEF", "TRM4014BEF"]
+                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "MGT4098BEF", "HPM4001BEF", "TRM3006BEF", "TRM3012BEF", "TRM4011BEF", "TRM4014BEF"]
             },
             "elective": {
                 "min_credits": 27,
@@ -810,7 +832,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -831,7 +854,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 75,
                 "color": 'blue',
-                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "BUS2001BEF", "MGT4098BEF", "IB3091BEF", "IB3092BEF", "MGT4044BEF", "SCM4071BEF"]
+                "courses": ["BUS2000BEF", "BUS2020BEF", "BUS3068BEF", "BUS4028BEF", "BUS4088BEF", "MGT4098BEF", "IB3091BEF", "IB3092BEF", "MGT4044BEF", "SCM4071BEF"]
             },
             "elective": {
                 "min_credits": 30,
@@ -843,7 +866,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -876,12 +900,13 @@ PROGRAMME_RULES = {
                 "min_credits": 9,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 3
             },
             "university-core": {
                 "min_credits": 9,
                 "color": 'indigo',
-                "courses": ["UNI1002ABW", "UNI1012ABW", "UNI2002BEW", "UNI3002BEW", "IT1150EEF", "EDU1150EEF"]
+                "courses": ["UNI1002ABW", "UNI1012ABW", "UNI2002BEW", "UNI3002BEW"]
             }
         },
         "template": {}
@@ -908,13 +933,14 @@ PROGRAMME_RULES = {
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1202EEF", "IT1150ECF", "EDU1150ECF"]
+                "courses": ["ENGL1101AEF", "ENGL1202EEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -946,13 +972,14 @@ PROGRAMME_RULES = {
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1202EEF", "IT1150ECF", "EDU1150ECF"]
+                "courses": ["ENGL1101AEF", "ENGL1202EEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -984,13 +1011,14 @@ PROGRAMME_RULES = {
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1202EEF", "IT1150ECF", "EDU1150ECF"]
+                "courses": ["ENGL1101AEF", "ENGL1202EEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1022,13 +1050,14 @@ PROGRAMME_RULES = {
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1202EEF", "SCI1011SEF"]
+                "courses": ["ENGL1101AEF", "ENGL1202EEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1054,13 +1083,14 @@ PROGRAMME_RULES = {
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1202EEF", "SCI1011SEF"]
+                "courses": ["ENGL1101AEF", "ENGL1202EEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1098,7 +1128,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1130,13 +1161,14 @@ PROGRAMME_RULES = {
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1102AEF", "ENGL1002AEF", "ENGL1003AEF"]
+                "courses": ["ENGL1101AEF", "ENGL1102AEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1168,13 +1200,14 @@ PROGRAMME_RULES = {
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1102AEF", "ENGL1002AEF", "ENGL1003AEF"]
+                "courses": ["ENGL1101AEF", "ENGL1102AEF", "ENGL1003AEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1207,12 +1240,13 @@ PROGRAMME_RULES = {
                 "min_credits": 12,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 4
             },
             "university-core": {
                 "min_credits": 9,
                 "color": 'indigo',
-                "courses": ["UNI1002ABW", "UNI1012ABW", "UNI2002BEW", "UNI3002BEW", "IT1150EEF", "EDU1150EEF"]
+                "courses": ["UNI1002ABW", "UNI1012ABW", "UNI2002BEW", "UNI3002BEW"]
             }
         },
         "template": {}
@@ -1245,12 +1279,13 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
                 "color": 'indigo',
-                "courses": ["UNI1002ABW", "UNI1012ABW", "UNI2002BCW", "UNI3002BCW", "IT1150ECF", "EDU1150ECF"]
+                "courses": ["UNI1002ABW", "UNI1012ABW", "UNI2002BCW", "UNI3002BCW"]
             }
         },
         "template": {}
@@ -1278,7 +1313,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1316,7 +1352,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1354,7 +1391,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1386,13 +1424,14 @@ PROGRAMME_RULES = {
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1202EEF", "TC4011SEF"]
+                "courses": ["ENGL1101AEF", "ENGL1202EEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1424,7 +1463,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1456,13 +1496,14 @@ PROGRAMME_RULES = {
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1202EEF", "SEF3005SEF", "SEF4013SEF", "BIOL3015SEF", "BIOL4011SEF", "MLS4001SEF", "SCI4001SEF"]
+                "courses": ["ENGL1101AEF", "ENGL1202EEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1502,7 +1543,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1561,7 +1603,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1628,7 +1671,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1660,7 +1704,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1681,7 +1726,7 @@ PROGRAMME_RULES = {
             "core": {
                 "min_credits": 84,
                 "color": 'blue',
-                "courses": ["BIOL1003SEF", "BIOL2035SEF", "BIOL2036SEF", "BIOL3001SEF", "BIOL3037SEF", "CHEM1002SEF", "CHEM2035SEF", "CHEM3050SEF", "ENVR1000SEF", "ENVR2036SEF", "ENVR3041SEF", "ENVR4042SEF", "ENVR4007SEF", "ENVR4028SEF", "ENVR4074SEF", "SCI1010SEF", "SCI1100SEF", "SCI1101SEF", "SCI2100SEF", "SCI2101SEF", "SCI2103SEF", "SCI3030SEF", "SCI3031SEF", "SCI3091SEF", "SCI3100SEF", "SCI3101SEF", "SCI3103SEF", "CHEM2034SEF", "CHEM4006SEF", "SCI3090SEF"]
+                "courses": ["BIOL1003SEF", "BIOL2035SEF", "BIOL2036SEF", "BIOL3001SEF", "BIOL3037SEF", "CHEM1002SEF", "CHEM2035SEF", "CHEM3050SEF", "ENVR1000SEF", "ENVR2036SEF", "ENVR3041SEF", "ENVR4042SEF", "ENVR4007SEF", "ENVR4028SEF", "ENVR4074SEF", "SCI1010SEF", "SCI1100SEF", "SCI1101SEF", "SCI2100SEF", "SCI2101SEF", "SCI2103SEF", "SCI3030SEF", "SCI3031SEF", "SCI3091SEF", "SCI3100SEF", "SCI3101SEF", "SCI3103SEF"]
             },
             "elective": {
                 "min_credits": 15,
@@ -1698,7 +1743,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1717,9 +1763,15 @@ PROGRAMME_RULES = {
         "total_credits": 120,
         "categories": {
             "core": {
-                "min_credits": 99,
+                "min_credits": 84,
                 "color": 'blue',
-                "courses": ["BIOL1003SEF", "BIOL2035SEF", "BIOL2036SEF", "BIOL3056SEF", "CHEM1002SEF", "CHEM2001SEF", "CHEM3050SEF", "SCI1010SEF", "SCI1100SEF", "SCI1101SEF", "SCI2006SEF", "SCI2100SEF", "SCI2101SEF", "SCI2102SEF", "SCI3030SEF", "SCI3065SEF", "SCI3090SEF", "SCI3100SEF", "SCI3101SEF", "SCI3102SEF", "SCI4010SEF", "SCI4063SEF", "SCI4064SEF", "STAT2610SEF", "TC3015SEF", "TC3020SEF", "TC3080SEF", "TC4019SEF", "ST4020SEF", "TC4026SEF", "TC4062SEF"]
+                "courses": ["BIOL1003SEF", "BIOL2035SEF", "BIOL2036SEF", "CHEM1002SEF", "CHEM2002SEF", "CHEM2035SEF", "CHEM3050SEF", "SCI1010SEF", "SCI1100SEF", "SCI1101SEF", "SCI2100SEF", "SCI2101SEF", "SCI2102SEF", "SCI3030SEF", "SCI3065SEF", "SCI3091SEF", "SCI3100SEF", "SCI3101SEF", "SCI3102SEF", "SCI4063SEF", "SCI4064SEF", "SCI4065SEF", "SCI4066SEF", "SCI4067SEF", "STAT2610SEF", "TC3080SEF", "ST4020SEF", "BIOL3056SEF", "CHEM2001SEF", "SCI2006SEF", "SCI3090SEF", "SCI4010SEF", "TC3015SEF", "TC3020SEF", "TC4019SEF", "TC4026SEF", "TC4062SEF"]
+            },
+            "elective": {
+                "min_credits": 15,
+                "color": 'purple',
+                "courses": ["BIOL3001SEF", "BIOL4030SEF", "BIOL4006SEF", "BIOL4013SEF", "ENVR4007SEF", "ENVR4043SEF", "SCI3031SEF", "SCI4000SEF", "SCI4011SEF"],
+                "pool": 'credits'
             },
             "english": {
                 "min_credits": 6,
@@ -1730,7 +1782,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1762,7 +1815,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1794,7 +1848,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1813,26 +1868,27 @@ PROGRAMME_RULES = {
         "total_credits": 120,
         "categories": {
             "core": {
-                "min_credits": 39,
+                "min_credits": 48,
                 "color": 'blue',
-                "courses": ["SCI1001SEF", "SCI1010SEF", "TC2080SEF", "COMP1080SEF", "IT1020SEF", "IT1030SEF", "COMP2020SEF", "COMP2660SEF", "IT2900SEF", "ELEC1010SEF", "ENGG1001SEF", "ST1020SEF", "MATH1410SEF", "STAT1510SEF", "MATH2150SEF", "STAT2510SEF", "STAT2520SEF", "SCI3000SEF", "SCI3091SEF", "SCI4090SEF"]
+                "courses": ["COMP1080SEF", "SCI1001SEF", "SCI1010SEF", "TC2080SEF", "COMP2020SEF", "COMP2660SEF", "IT2900SEF", "ELEC1010SEF", "ENGG1001SEF", "ST1020SEF", "MATH1410SEF", "STAT1510SEF", "MATH2150SEF", "STAT2510SEF", "STAT2520SEF", "ENGG2095SEF", "SCI1111SEF", "SCI3000SEF", "SCI3091SEF", "SCI4001SEF", "SCI4090SEF", "IT1020SEF", "IT1030SEF"]
             },
             "elective": {
-                "min_credits": 60,
+                "min_credits": 51,
                 "color": 'purple',
-                "courses": ["BIOL1003SEF", "BIOL2002SEF", "BIOL2006SEF", "BIOL2012SEF", "BIOL2035SEF", "BIOL2036SEF", "BIOL3001SEF", "BIOL3004SEF", "BIOL3015SEF", "BIOL3037SEF", "BIOL3056SEF", "BIOL4006SEF", "BIOL4008SEF", "BIOL4012SEF", "CHEM1002SEF", "CHEM2001SEF", "CHEM2034SEF", "CHEM3050SEF", "CHEM4006SEF", "ENVR2036SEF", "ENVR4007SEF", "ENVR4028SEF", "ENVR3041SEF", "ENVR4042SEF", "ENVR4043SEF", "ENVR4074SEF", "MLS4011SEF", "SCI1100SEF", "SCI1101SEF", "SCI2005SEF", "SCI2006SEF", "SCI2100SEF", "SCI2101SEF", "SCI2102SEF", "SCI2103SEF", "SCI3030SEF", "SCI3100SEF", "SCI3101SEF", "SCI3102SEF", "SCI3103SEF", "SCI4064SEF", "SCI3065SEF", "TC3080SEF", "ST4020SEF", "TC4026SEF", "TC4062SEF", "SCI4063SEF", "COMP2030SEF", "COMP2090SEF", "COMP2650SEF", "COMP2670SEF", "COMP3120SEF", "COMP3130SEF", "COMP3200SEF", "COMP3500SEF", "COMP3510SEF", "COMP3800SEF", "COMP3810SEF", "COMP3920SEF", "COMP4210SEF", "COMP4330SEF", "COMP4620SEF", "COMP4630SEF", "COMP4820SEF", "COMP4900SEF", "COMP4930SEF", "ELEC2050SEF", "ELEC2100SEF", "ELEC2620SEF", "ELEC3040SEF", "ELEC3050SEF", "ELEC3150SEF", "ELEC3250SEF", "ELEC3470SEF", "ELEC3630SEF", "ELEC3650SEF", "ELEC4060SEF", "ELEC4310SEF", "ELEC4370SEF", "ELEC4380SEF", "ELEC4480SEF", "ELEC4710SEF", "ELEC2010SEF", "ELEC2410SEF", "ELEC4200SEF", "ELEC4210SEF", "ENGG2000SEF", "ENGG2001SEF", "ENGG2002SEF", "ENGG2003SEF", "ENGG2004SEF", "ENGG2005SEF", "ENGG2006SEF", "ENGG2007SEF", "ENGG2008SEF", "ENGG2009SEF", "ENGG2021SEF", "ENGG2060SEF", "ENGG3001SEF", "ENGG3005SEF", "ENGG3007SEF", "ENGG3021SEF", "ENGG3041SEF", "ENGG3042SEF", "ENGG3043SEF", "ENGG4000SEF", "ENGG4002SEF", "ENGG4003SEF", "ENGG4004SEF", "ENGG4006SEF", "ENGG4008SEF", "ENGG4021SEF", "ENVR3008SEF", "ENVR4011SEF", "SCI1000SEF", "SCI4011SEF", "TC3030SEF", "TC3042SEF", "TC4009SEF", "TC4019SEF", "TC4015SEF", "CAMD3003AEF", "IDDA1000AEF", "IDDA1003AEF", "IDDA3003AEF", "IDDA4005AEF", "COMP2640SEF", "COMP4600SEF", "MATH2850SEF", "SCI3031SEF", "STAT2610SEF", "STAT2630SEF", "STAT3110SEF", "STAT3660SEF", "TC2020SEF", "TC3020SEF"],
+                "courses": ["BIOL1003SEF", "BIOL2002SEF", "BIOL2006SEF", "BIOL2012SEF", "BIOL2035SEF", "BIOL2036SEF", "BIOL3001SEF", "BIOL3004SEF", "BIOL3015SEF", "BIOL3037SEF", "BIOL3056SEF", "BIOL4006SEF", "BIOL4008SEF", "BIOL4012SEF", "CHEM1002SEF", "CHEM2001SEF", "CHEM2034SEF", "CHEM3050SEF", "CHEM4006SEF", "ENVR2036SEF", "ENVR4007SEF", "ENVR4028SEF", "ENVR3041SEF", "ENVR4042SEF", "ENVR4043SEF", "ENVR4074SEF", "MLS4011SEF", "SCI1100SEF", "SCI1101SEF", "SCI2005SEF", "SCI2006SEF", "SCI2100SEF", "SCI2101SEF", "SCI2102SEF", "SCI2103SEF", "SCI3030SEF", "SCI4064SEF", "SCI3100SEF", "SCI3101SEF", "SCI3102SEF", "SCI3103SEF", "SCI3065SEF", "TC3080SEF", "ST4020SEF", "TC4026SEF", "TC4062SEF", "SCI4063SEF", "COMP2030SEF", "COMP2090SEF", "COMP2650SEF", "COMP2670SEF", "COMP3120SEF", "COMP3130SEF", "COMP3200SEF", "COMP3500SEF", "COMP3510SEF", "COMP3800SEF", "COMP3810SEF", "COMP3920SEF", "COMP4210SEF", "COMP4330SEF", "COMP4620SEF", "COMP4630SEF", "COMP4820SEF", "COMP4900SEF", "COMP4930SEF", "ELEC2050SEF", "ELEC2100SEF", "ELEC2620SEF", "ELEC3040SEF", "ELEC3050SEF", "ELEC3150SEF", "ELEC3250SEF", "ELEC3470SEF", "ELEC3630SEF", "ELEC3650SEF", "ELEC4060SEF", "ELEC4310SEF", "ELEC4370SEF", "ELEC4380SEF", "ELEC4480SEF", "ELEC4710SEF", "ELEC2010SEF", "ELEC2410SEF", "ELEC4200SEF", "ELEC4210SEF", "ENGG2000SEF", "ENGG2001SEF", "ENGG2002SEF", "ENGG2003SEF", "ENGG2004SEF", "ENGG2005SEF", "ENGG2006SEF", "ENGG2007SEF", "ENGG2008SEF", "ENGG2009SEF", "ENGG2021SEF", "ENGG2060SEF", "ENGG3001SEF", "ENGG3005SEF", "ENGG3007SEF", "ENGG3021SEF", "ENGG3041SEF", "ENGG3042SEF", "ENGG3043SEF", "ENGG4000SEF", "ENGG4002SEF", "ENGG4003SEF", "ENGG4004SEF", "ENGG4006SEF", "ENGG4008SEF", "ENGG4021SEF", "ENVR3008SEF", "ENVR4011SEF", "SCI1000SEF", "SCI4011SEF", "TC3030SEF", "TC3042SEF", "TC4009SEF", "TC4019SEF", "TC4015SEF", "CAMD3003AEF", "IDDA1000AEF", "IDDA1003AEF", "IDDA3003AEF", "IDDA4005AEF", "COMP2640SEF", "COMP4600SEF", "MATH2850SEF", "SCI3031SEF", "STAT2610SEF", "STAT2630SEF", "STAT3110SEF", "STAT3660SEF", "TC2020SEF", "TC3020SEF"],
                 "pool": 'credits'
             },
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1202EEF"]
+                "courses": ["ENGL1101AEF", "ENGL1202EEF", "NURS1050NEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1870,7 +1926,8 @@ PROGRAMME_RULES = {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -1889,26 +1946,27 @@ PROGRAMME_RULES = {
         "total_credits": 120,
         "categories": {
             "core": {
-                "min_credits": 78,
+                "min_credits": 51,
                 "color": 'blue',
-                "courses": ["COUN1001AEF", "ECON1001AEF", "POLS1001AEF", "PSYC1001AEF", "SOCI1001AEF", "COUN2001AEF", "COUN2002AEF", "PSYC2001AEF", "STAT2001AEF", "STAT2003AEF", "PSYC3001AEF", "PSYC3002AEF", "PSYC3003AEF", "PSYC3005AEF", "PSYC3006AEF", "PSYC3007AEF", "PSYC3009AEF", "PSYC3010AEF", "COUN4001AEF", "COUN4002AEF", "COUN4003AEF", "PSYC4002AEF", "PSYC4004AEF", "COUN4008AEF", "PSYC4010AEF"]
+                "courses": ["ECON1001AEF", "POLS1001AEF", "PSYC1001AEF", "SOCI1001AEF", "PSYC2001AEF", "STAT2001AEF", "STAT2003AEF", "PSYC3001AEF", "PSYC3002AEF", "PSYC3003AEF", "PSYC3004AEF", "PSYC3005AEF", "PSYC3006AEF", "PSYC3007AEF", "PSYC3008AEF", "PSYC3009AEF", "PSYC3010AEF", "COUN1001AEF", "COUN2001AEF", "COUN2002AEF", "COUN4001AEF", "COUN4002AEF", "COUN4003AEF", "PSYC4002AEF", "PSYC4004AEF", "COUN4008AEF", "PSYC4010AEF"]
             },
             "elective": {
-                "min_credits": 21,
+                "min_credits": 48,
                 "color": 'purple',
-                "courses": ["PSYC4001AEF", "PSYC4003AEF", "PSYC4005AEF", "PSYC4006AEF", "PSYC4007AEF", "PSYC4009AEF", "SOCI2001AEF", "SOCI2005AEF", "SOSC2001AEF", "GCST3003AEF", "POLS3005AEF", "PSYC3004AEF", "SOCI3003AEF", "SOCI3006AEF", "SOCI3009AEF"],
+                "courses": ["PSYC4001AEF", "PSYC4003AEF", "PSYC4005AEF", "PSYC4006AEF", "PSYC4007AEF", "PSYC4009AEF", "ECON2001AEF", "POLS2002AEF", "PUAD2001AEF", "SOCI2003AEF", "SOCI2005AEF", "SOSC2001AEF", "SOSC2002AEF", "SOSC2003AEF", "ECON3004AEF", "ECON3005AEF", "ECON3006AEF", "ECON3008AEF", "POLS3005AEF", "SOCI3004AEF", "SOCI3005AEF", "GCST4001AEF", "SOCI4007AEF", "SOSC4001AEF", "SOCI2001AEF", "GCST3003AEF", "SOCI3003AEF", "SOCI3006AEF", "SOCI3009AEF"],
                 "pool": 'credits'
             },
             "english": {
                 "min_credits": 6,
                 "color": 'emerald',
-                "courses": ["ENGL1101AEF", "ENGL1102AEF", "ENGL1002AEF", "ENGL1003AEF"]
+                "courses": ["ENGL1101AEF", "ENGL1102AEF", "ENGL1003AEF", "NURS1050NEF"]
             },
             "general-ed": {
                 "min_credits": 6,
                 "color": 'pink',
                 "courses": [],
-                "pool": 'ge'
+                "pool": 'ge',
+                "pick_n": 2
             },
             "university-core": {
                 "min_credits": 9,
@@ -2012,9 +2070,7 @@ RULE_COURSE_CREDITS = {
         },
         "english": {
             "ENGL1101AEF": 3,
-            "ENGL1102AEF": 3,
-            "ENGL1002AEF": 3,
-            "ENGL1003AEF": 3
+            "ENGL1102AEF": 3
         },
         "university-core": {
             "UNI1002ABW": 2,
@@ -2112,7 +2168,6 @@ RULE_COURSE_CREDITS = {
         "english": {
             "ENGL1101AEF": 3,
             "ENGL1102AEF": 3,
-            "ENGL1002AEF": 3,
             "ENGL1003AEF": 3
         },
         "university-core": {
@@ -2208,7 +2263,6 @@ RULE_COURSE_CREDITS = {
         "english": {
             "ENGL1101AEF": 3,
             "ENGL1102AEF": 3,
-            "ENGL1002AEF": 3,
             "ENGL1003AEF": 3
         },
         "university-core": {
@@ -2379,7 +2433,6 @@ RULE_COURSE_CREDITS = {
         "english": {
             "ENGL1101AEF": 3,
             "ENGL1102AEF": 3,
-            "ENGL1002AEF": 3,
             "ENGL1003AEF": 3
         },
         "university-core": {
@@ -2478,7 +2531,6 @@ RULE_COURSE_CREDITS = {
         "english": {
             "ENGL1101AEF": 3,
             "ENGL1102AEF": 3,
-            "ENGL1002AEF": 3,
             "ENGL1003AEF": 3
         },
         "university-core": {
@@ -2499,7 +2551,6 @@ RULE_COURSE_CREDITS = {
             "MGT4041BEF": 3,
             "MGT4098BEF": 3,
             "MKT2050BEF": 3,
-            "BUS2001BEF": 3,
             "COUN2001AEF": 3,
             "ECON1001AEF": 3,
             "POLS1001AEF": 3,
@@ -2643,16 +2694,7 @@ RULE_COURSE_CREDITS = {
         },
         "english": {
             "ENGL1101AEF": 3,
-            "ENGL1202EEF": 3,
-            "BIOL3051SEF": 2025,
-            "SCI3065SEF": 2025,
-            "ENVR3028SEF": 2025,
-            "ENVR4028SEF": 5,
-            "ENVR3074SEF": 2025,
-            "ENVR4074SEF": 5,
-            "ENVR3042SEF": 2026,
-            "ENVR4042SEF": 5,
-            "TC4011SEF": 2025
+            "ENGL1202EEF": 3
         },
         "university-core": {
             "UNI1002ABW": 2,
@@ -2668,7 +2710,6 @@ RULE_COURSE_CREDITS = {
             "BUS3068BEF": 3,
             "BUS4028BEF": 6,
             "BUS4088BEF": 3,
-            "BUS2001BEF": 3,
             "MGT4098BEF": 3,
             "ASM3018BEF": 3,
             "ASM4038BEF": 3,
@@ -2714,7 +2755,6 @@ RULE_COURSE_CREDITS = {
             "BUS3068BEF": 3,
             "BUS4028BEF": 6,
             "BUS4088BEF": 3,
-            "BUS2001BEF": 3,
             "MGT4099BEF": 3,
             "ACT3011BEF": 3,
             "ACT3020BEF": 3,
@@ -2771,7 +2811,6 @@ RULE_COURSE_CREDITS = {
             "BUS3068BEF": 3,
             "BUS4028BEF": 6,
             "BUS4088BEF": 3,
-            "BUS2001BEF": 3,
             "MGT4098BEF": 3,
             "ACT3011BEF": 3,
             "DB4027BEF": 3,
@@ -2818,7 +2857,6 @@ RULE_COURSE_CREDITS = {
             "BUS3068BEF": 3,
             "BUS4028BEF": 6,
             "BUS4088BEF": 3,
-            "BUS2001BEF": 3,
             "MGT4098BEF": 3,
             "IB3091BEF": 3,
             "IB3092BEF": 3,
@@ -2866,7 +2904,6 @@ RULE_COURSE_CREDITS = {
             "BUS3068BEF": 3,
             "BUS4028BEF": 6,
             "BUS4088BEF": 3,
-            "BUS2001BEF": 3,
             "MGT4098BEF": 3,
             "DB3047BEF": 3,
             "SCM3071BEF": 3,
@@ -2912,7 +2949,6 @@ RULE_COURSE_CREDITS = {
             "BUS3068BEF": 3,
             "BUS4028BEF": 6,
             "BUS4088BEF": 3,
-            "BUS2001BEF": 3,
             "MGT4098BEF": 3,
             "MGT3041BEF": 3,
             "MGT3042BEF": 3,
@@ -2961,7 +2997,6 @@ RULE_COURSE_CREDITS = {
             "BUS3068BEF": 3,
             "BUS4028BEF": 6,
             "BUS4088BEF": 3,
-            "BUS2001BEF": 3,
             "MGT4098BEF": 3,
             "HPM3009BEF": 3,
             "HPM4005BEF": 3,
@@ -3012,7 +3047,6 @@ RULE_COURSE_CREDITS = {
             "BUS3068BEF": 3,
             "BUS4028BEF": 6,
             "BUS4088BEF": 3,
-            "BUS2001BEF": 3,
             "MGT4098BEF": 3,
             "IB3091BEF": 3,
             "MGT3044BEF": 3,
@@ -3063,7 +3097,6 @@ RULE_COURSE_CREDITS = {
             "BUS3068BEF": 3,
             "BUS4028BEF": 6,
             "BUS4088BEF": 3,
-            "BUS2001BEF": 3,
             "MGT4098BEF": 3,
             "DB3047BEF": 3,
             "MKT3062BEF": 3,
@@ -3113,7 +3146,6 @@ RULE_COURSE_CREDITS = {
             "BUS3068BEF": 3,
             "BUS4028BEF": 6,
             "BUS4088BEF": 3,
-            "BUS2001BEF": 3,
             "MGT4099BEF": 3,
             "ACT3004BEF": 3,
             "ACT3013BEF": 3,
@@ -3163,7 +3195,6 @@ RULE_COURSE_CREDITS = {
             "BUS3068BEF": 3,
             "BUS4028BEF": 6,
             "BUS4088BEF": 3,
-            "BUS2001BEF": 3,
             "MGT4098BEF": 3,
             "RFM3035BEF": 3,
             "RFM3036BEF": 3,
@@ -3194,7 +3225,6 @@ RULE_COURSE_CREDITS = {
             "BUS3068BEF": 3,
             "BUS4028BEF": 6,
             "BUS4088BEF": 3,
-            "BUS2001BEF": 3,
             "MGT4098BEF": 3,
             "SPM3056BEF": 3,
             "SPM3057BEF": 3,
@@ -3242,7 +3272,6 @@ RULE_COURSE_CREDITS = {
             "BUS3068BEF": 3,
             "BUS4028BEF": 6,
             "BUS4088BEF": 3,
-            "BUS2001BEF": 3,
             "MGT4098BEF": 3,
             "SPM3013BEF": 3,
             "SPM3015BEF": 3,
@@ -3292,7 +3321,6 @@ RULE_COURSE_CREDITS = {
             "BUS3068BEF": 3,
             "BUS4028BEF": 6,
             "BUS4088BEF": 3,
-            "BUS2001BEF": 3,
             "MGT4098BEF": 3,
             "HPM4001BEF": 3,
             "TRM3006BEF": 3,
@@ -3348,7 +3376,6 @@ RULE_COURSE_CREDITS = {
             "BUS3068BEF": 3,
             "BUS4028BEF": 6,
             "BUS4088BEF": 3,
-            "BUS2001BEF": 3,
             "MGT4098BEF": 3,
             "IB3091BEF": 3,
             "IB3092BEF": 3,
@@ -3410,9 +3437,7 @@ RULE_COURSE_CREDITS = {
             "UNI1002ABW": 2,
             "UNI1012ABW": 1,
             "UNI2002BEW": 3,
-            "UNI3002BEW": 3,
-            "IT1150EEF": 3,
-            "EDU1150EEF": 3
+            "UNI3002BEW": 3
         }
     },
     "BEDHACLSJ": {
@@ -3471,9 +3496,7 @@ RULE_COURSE_CREDITS = {
         },
         "english": {
             "ENGL1101AEF": 3,
-            "ENGL1202EEF": 3,
-            "IT1150ECF": 3,
-            "EDU1150ECF": 3
+            "ENGL1202EEF": 3
         },
         "university-core": {
             "UNI1002ABW": 2,
@@ -3527,9 +3550,7 @@ RULE_COURSE_CREDITS = {
         },
         "english": {
             "ENGL1101AEF": 3,
-            "ENGL1202EEF": 3,
-            "IT1150ECF": 3,
-            "EDU1150ECF": 3
+            "ENGL1202EEF": 3
         },
         "university-core": {
             "UNI1002ABW": 2,
@@ -3587,9 +3608,7 @@ RULE_COURSE_CREDITS = {
         },
         "english": {
             "ENGL1101AEF": 3,
-            "ENGL1202EEF": 3,
-            "IT1150ECF": 3,
-            "EDU1150ECF": 3
+            "ENGL1202EEF": 3
         },
         "university-core": {
             "UNI1002ABW": 2,
@@ -3641,8 +3660,7 @@ RULE_COURSE_CREDITS = {
         },
         "english": {
             "ENGL1101AEF": 3,
-            "ENGL1202EEF": 3,
-            "SCI1011SEF": 2024
+            "ENGL1202EEF": 3
         },
         "university-core": {
             "UNI1002ABW": 2,
@@ -3688,8 +3706,7 @@ RULE_COURSE_CREDITS = {
         },
         "english": {
             "ENGL1101AEF": 3,
-            "ENGL1202EEF": 3,
-            "SCI1011SEF": 2024
+            "ENGL1202EEF": 3
         },
         "university-core": {
             "UNI1002ABW": 2,
@@ -3842,9 +3859,7 @@ RULE_COURSE_CREDITS = {
         },
         "english": {
             "ENGL1101AEF": 3,
-            "ENGL1102AEF": 3,
-            "ENGL1002AEF": 3,
-            "ENGL1003AEF": 3
+            "ENGL1102AEF": 3
         },
         "university-core": {
             "UNI1002ABW": 2,
@@ -3953,7 +3968,6 @@ RULE_COURSE_CREDITS = {
         "english": {
             "ENGL1101AEF": 3,
             "ENGL1102AEF": 3,
-            "ENGL1002AEF": 3,
             "ENGL1003AEF": 3
         },
         "university-core": {
@@ -4010,9 +4024,7 @@ RULE_COURSE_CREDITS = {
             "UNI1002ABW": 2,
             "UNI1012ABW": 1,
             "UNI2002BEW": 3,
-            "UNI3002BEW": 3,
-            "IT1150EEF": 3,
-            "EDU1150EEF": 3
+            "UNI3002BEW": 3
         }
     },
     "BLSHACLSJ": {
@@ -4062,9 +4074,7 @@ RULE_COURSE_CREDITS = {
             "UNI1002ABW": 2,
             "UNI1012ABW": 1,
             "UNI2002BCW": 3,
-            "UNI3002BCW": 3,
-            "IT1150ECF": 3,
-            "EDU1150ECF": 3
+            "UNI3002BCW": 3
         }
     },
     "BLSHBSADJ": {
@@ -4275,8 +4285,7 @@ RULE_COURSE_CREDITS = {
         },
         "english": {
             "ENGL1101AEF": 3,
-            "ENGL1202EEF": 3,
-            "TC4011SEF": 2025
+            "ENGL1202EEF": 3
         },
         "university-core": {
             "UNI1002ABW": 2,
@@ -4378,13 +4387,7 @@ RULE_COURSE_CREDITS = {
         },
         "english": {
             "ENGL1101AEF": 3,
-            "ENGL1202EEF": 3,
-            "SEF3005SEF": 3,
-            "SEF4013SEF": 3,
-            "BIOL3015SEF": 3,
-            "BIOL4011SEF": 3,
-            "MLS4001SEF": 3,
-            "SCI4001SEF": 3
+            "ENGL1202EEF": 3
         },
         "university-core": {
             "UNI1002ABW": 2,
@@ -4689,10 +4692,7 @@ RULE_COURSE_CREDITS = {
             "SCI3091SEF": 6,
             "SCI3100SEF": 3,
             "SCI3101SEF": 3,
-            "SCI3103SEF": 3,
-            "CHEM2034SEF": 3,
-            "CHEM4006SEF": 3,
-            "SCI3090SEF": 3
+            "SCI3103SEF": 3
         },
         "elective": {
             "BIOL3056SEF": 3,
@@ -4728,34 +4728,56 @@ RULE_COURSE_CREDITS = {
             "BIOL1003SEF": 3,
             "BIOL2035SEF": 3,
             "BIOL2036SEF": 3,
-            "BIOL3056SEF": 3,
             "CHEM1002SEF": 3,
-            "CHEM2001SEF": 3,
+            "CHEM2002SEF": 3,
+            "CHEM2035SEF": 3,
             "CHEM3050SEF": 3,
             "SCI1010SEF": 3,
             "SCI1100SEF": 3,
             "SCI1101SEF": 3,
-            "SCI2006SEF": 3,
             "SCI2100SEF": 3,
             "SCI2101SEF": 3,
             "SCI2102SEF": 3,
             "SCI3030SEF": 3,
             "SCI3065SEF": 3,
-            "SCI3090SEF": 3,
+            "SCI3091SEF": 6,
             "SCI3100SEF": 3,
             "SCI3101SEF": 3,
             "SCI3102SEF": 3,
-            "SCI4010SEF": 6,
             "SCI4063SEF": 3,
             "SCI4064SEF": 3,
+            "SCI4065SEF": 3,
+            "SCI4066SEF": 3,
+            "SCI4067SEF": 3,
             "STAT2610SEF": 3,
+            "TC3080SEF": 3,
+            "ST4020SEF": 3,
+            "BIOL3056SEF": 3,
+            "CHEM2001SEF": 3,
+            "SCI2006SEF": 3,
+            "SCI3090SEF": 3,
+            "SCI4010SEF": 6,
             "TC3015SEF": 3,
             "TC3020SEF": 3,
-            "TC3080SEF": 3,
             "TC4019SEF": 3,
-            "ST4020SEF": 3,
             "TC4026SEF": 3,
             "TC4062SEF": 3
+        },
+        "elective": {
+            "BIOL3001SEF": 3,
+            "BIOL3056SEF": 3,
+            "BIOL4030SEF": 3,
+            "BIOL4006SEF": 3,
+            "BIOL4013SEF": 3,
+            "ENVR4007SEF": 3,
+            "ENVR4043SEF": 3,
+            "SCI3031SEF": 3,
+            "SCI4000SEF": 3,
+            "SCI4010SEF": 6,
+            "SCI4011SEF": 3,
+            "TC3020SEF": 3,
+            "TC4019SEF": 3,
+            "TC4026SEF": 3
         },
         "english": {
             "ENGL1101AEF": 3,
@@ -4857,12 +4879,10 @@ RULE_COURSE_CREDITS = {
     },
     "BSCHSTAMJ": {
         "core": {
+            "COMP1080SEF": 3,
             "SCI1001SEF": 3,
             "SCI1010SEF": 3,
             "TC2080SEF": 3,
-            "COMP1080SEF": 3,
-            "IT1020SEF": 3,
-            "IT1030SEF": 3,
             "COMP2020SEF": 3,
             "COMP2660SEF": 3,
             "IT2900SEF": 3,
@@ -4874,9 +4894,14 @@ RULE_COURSE_CREDITS = {
             "MATH2150SEF": 3,
             "STAT2510SEF": 3,
             "STAT2520SEF": 3,
+            "ENGG2095SEF": 3,
+            "SCI1111SEF": 3,
             "SCI3000SEF": 3,
             "SCI3091SEF": 6,
-            "SCI4090SEF": 6
+            "SCI4001SEF": 3,
+            "SCI4090SEF": 6,
+            "IT1020SEF": 3,
+            "IT1030SEF": 3
         },
         "elective": {
             "BIOL1003SEF": 3,
@@ -4915,11 +4940,11 @@ RULE_COURSE_CREDITS = {
             "SCI2102SEF": 3,
             "SCI2103SEF": 3,
             "SCI3030SEF": 3,
+            "SCI4064SEF": 3,
             "SCI3100SEF": 3,
             "SCI3101SEF": 3,
             "SCI3102SEF": 3,
             "SCI3103SEF": 3,
-            "SCI4064SEF": 3,
             "SCI3065SEF": 3,
             "TC3080SEF": 3,
             "ST4020SEF": 3,
@@ -5032,7 +5057,8 @@ RULE_COURSE_CREDITS = {
         },
         "english": {
             "ENGL1101AEF": 3,
-            "ENGL1202EEF": 3
+            "ENGL1202EEF": 3,
+            "NURS1050NEF": 3
         },
         "university-core": {
             "UNI1002ABW": 2,
@@ -5264,24 +5290,26 @@ RULE_COURSE_CREDITS = {
     },
     "BSSCHPWSJ": {
         "core": {
-            "COUN1001AEF": 3,
             "ECON1001AEF": 3,
             "POLS1001AEF": 3,
             "PSYC1001AEF": 3,
             "SOCI1001AEF": 3,
-            "COUN2001AEF": 3,
-            "COUN2002AEF": 3,
             "PSYC2001AEF": 3,
             "STAT2001AEF": 3,
             "STAT2003AEF": 3,
             "PSYC3001AEF": 3,
             "PSYC3002AEF": 3,
             "PSYC3003AEF": 3,
+            "PSYC3004AEF": 3,
             "PSYC3005AEF": 3,
             "PSYC3006AEF": 3,
             "PSYC3007AEF": 3,
+            "PSYC3008AEF": 3,
             "PSYC3009AEF": 3,
             "PSYC3010AEF": 3,
+            "COUN1001AEF": 3,
+            "COUN2001AEF": 3,
+            "COUN2002AEF": 3,
             "COUN4001AEF": 3,
             "COUN4002AEF": 3,
             "COUN4003AEF": 3,
@@ -5292,16 +5320,40 @@ RULE_COURSE_CREDITS = {
         },
         "elective": {
             "PSYC4001AEF": 3,
+            "PSYC4002AEF": 3,
             "PSYC4003AEF": 3,
+            "PSYC4004AEF": 3,
             "PSYC4005AEF": 3,
             "PSYC4006AEF": 3,
             "PSYC4007AEF": 3,
             "PSYC4009AEF": 6,
-            "SOCI2001AEF": 3,
+            "PSYC4010AEF": 3,
+            "COUN1001AEF": 3,
+            "COUN2001AEF": 3,
+            "COUN2002AEF": 3,
+            "ECON2001AEF": 3,
+            "POLS2002AEF": 3,
+            "PUAD2001AEF": 3,
+            "SOCI2003AEF": 3,
             "SOCI2005AEF": 3,
             "SOSC2001AEF": 3,
-            "GCST3003AEF": 3,
+            "SOSC2002AEF": 3,
+            "SOSC2003AEF": 3,
+            "ECON3004AEF": 3,
+            "ECON3005AEF": 3,
+            "ECON3006AEF": 3,
+            "ECON3008AEF": 3,
             "POLS3005AEF": 3,
+            "SOCI3004AEF": 3,
+            "SOCI3005AEF": 3,
+            "COUN4001AEF": 3,
+            "COUN4002AEF": 3,
+            "COUN4003AEF": 3,
+            "GCST4001AEF": 3,
+            "SOCI4007AEF": 3,
+            "SOSC4001AEF": 3,
+            "SOCI2001AEF": 3,
+            "GCST3003AEF": 3,
             "PSYC3004AEF": 3,
             "SOCI3003AEF": 3,
             "SOCI3006AEF": 3,
@@ -5310,8 +5362,8 @@ RULE_COURSE_CREDITS = {
         "english": {
             "ENGL1101AEF": 3,
             "ENGL1102AEF": 3,
-            "ENGL1002AEF": 3,
-            "ENGL1003AEF": 3
+            "ENGL1003AEF": 3,
+            "NURS1050NEF": 3
         },
         "university-core": {
             "UNI1002ABW": 2,

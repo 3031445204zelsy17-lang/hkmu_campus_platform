@@ -140,23 +140,23 @@ PROGRAMME_GE_FIELDS = {
     "BSCHDSAIJ": ["Mathematics & Statistics"],
     "BSCHCSJ": ["Computing/Electronic & Computer Engineering"],
     "BSCHCCSJ": ["Computing/Electronic & Computer Engineering"],
-    "BSCHSTEMJ": ["Computing/Electronic & Computer Engineering", "Environmental Studies", "Mathematics & Statistics", "Testing & Certification"],
-    "BSCHSTAMJ": ["Computing/Electronic & Computer Engineering", "Environmental Studies", "Mathematics & Statistics", "Testing & Certification"],
+    "BSCHSTEMJ": ["Computing/Electronic & Computer Engineering", "Environmental Studies", "Mathematics & Statistics", "Testing and Certification"],
+    "BSCHSTAMJ": ["Computing/Electronic & Computer Engineering", "Environmental Studies", "Mathematics & Statistics", "Testing and Certification"],
     "BSCHESGMJ": ["Environmental Studies"],
-    "BSCHFTSJ": ["Testing & Certification"],
-    "BSCHATSJ": ["Testing & Certification"],
+    "BSCHFTSJ": ["Testing and Certification"],
+    "BSCHATSJ": ["Testing and Certification"],
     "BSCHBEMJ": ["Construction Management"],
     "BSCHBSBJ": ["Health Sciences"],
     "BSCHCMQSJ": ["Construction", "Quantity Surveying"],
-    "BASCHTICJ": ["Testing & Certification"],
+    "BASCHTICJ": ["Testing and Certification"],
     "BASCHRAEJ": ["Computing/Electronic & Computer Engineering"],
     "BENGHECEJ": ["Computing/Electronic & Computer Engineering"],
-    "BENGHBSEJ": ["Testing & Certification"],
-    "BENGHCEJ": ["Testing & Certification"],
+    "BENGHBSEJ": ["Testing and Certification"],
+    "BENGHCEJ": ["Testing and Certification"],
     "BNHGJ": ["Health Sciences"],
     "BNHMJ": ["Health Sciences"],
     "BSCHDRJ": ["Health Sciences"],
-    "BSCHMLSJ": ["Testing & Certification"],
+    "BSCHMLSJ": ["Testing and Certification"],
     "BSCHPTJ": ["Health Sciences"],
     "BAHCAMDJ": ["Creative Arts"],
     "BAHCLLJ": ["Chinese Language Studies & Literature"],
@@ -196,7 +196,6 @@ def ge_courses_for(programme_code: str | None) -> list[dict]:
     """All GE courses, tagged with whether the programme is BLOCKED from it
     (course is in the programme's own field). Order follows GE_FIELD_ORDER."""
     own = set(PROGRAMME_GE_FIELDS.get(programme_code or "", []))
-    own.discard("Testing & Certification")  # PDF lists "Test ing & Certification" w/ a space; tolerate
     ranked = {f: i for i, f in enumerate(GE_FIELD_ORDER)}
     out = []
     for c in GE_COURSES:

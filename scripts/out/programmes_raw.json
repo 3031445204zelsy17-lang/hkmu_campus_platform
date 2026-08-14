@@ -235,31 +235,13 @@
       "english": {
         "courses": [
           "ENGL1101AEF",
-          "ENGL1202EEF",
-          "BIOL3051SEF",
-          "SCI3065SEF",
-          "ENVR3028SEF",
-          "ENVR4028SEF",
-          "ENVR3074SEF",
-          "ENVR4074SEF",
-          "ENVR3042SEF",
-          "ENVR4042SEF",
-          "TC4011SEF"
+          "ENGL1202EEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
-          "ENGL1202EEF": 3,
-          "BIOL3051SEF": 2025,
-          "SCI3065SEF": 2025,
-          "ENVR3028SEF": 2025,
-          "ENVR4028SEF": 5,
-          "ENVR3074SEF": 2025,
-          "ENVR4074SEF": 5,
-          "ENVR3042SEF": 2026,
-          "ENVR4042SEF": 5,
-          "TC4011SEF": 2025
+          "ENGL1202EEF": 3
         },
-        "credits_seen": 12172,
+        "credits_seen": 6,
         "min_credits": 6
       },
       "general-ed": {
@@ -382,15 +364,13 @@
       "english": {
         "courses": [
           "ENGL1101AEF",
-          "ENGL1202EEF",
-          "SCI1011SEF"
+          "ENGL1202EEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
-          "ENGL1202EEF": 3,
-          "SCI1011SEF": 2024
+          "ENGL1202EEF": 3
         },
-        "credits_seen": 2030,
+        "credits_seen": 6,
         "min_credits": 6
       },
       "general-ed": {
@@ -497,15 +477,13 @@
       "english": {
         "courses": [
           "ENGL1101AEF",
-          "ENGL1202EEF",
-          "SCI1011SEF"
+          "ENGL1202EEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
-          "ENGL1202EEF": 3,
-          "SCI1011SEF": 2024
+          "ENGL1202EEF": 3
         },
-        "credits_seen": 2030,
+        "credits_seen": 6,
         "min_credits": 6
       },
       "general-ed": {
@@ -767,15 +745,13 @@
       "english": {
         "courses": [
           "ENGL1101AEF",
-          "ENGL1202EEF",
-          "TC4011SEF"
+          "ENGL1202EEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
-          "ENGL1202EEF": 3,
-          "TC4011SEF": 2025
+          "ENGL1202EEF": 3
         },
-        "credits_seen": 2031,
+        "credits_seen": 6,
         "min_credits": 6
       },
       "general-ed": {
@@ -1019,25 +995,13 @@
       "english": {
         "courses": [
           "ENGL1101AEF",
-          "ENGL1202EEF",
-          "SEF3005SEF",
-          "SEF4013SEF",
-          "BIOL3015SEF",
-          "BIOL4011SEF",
-          "MLS4001SEF",
-          "SCI4001SEF"
+          "ENGL1202EEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
-          "ENGL1202EEF": 3,
-          "SEF3005SEF": 3,
-          "SEF4013SEF": 3,
-          "BIOL3015SEF": 3,
-          "BIOL4011SEF": 3,
-          "MLS4001SEF": 3,
-          "SCI4001SEF": 3
+          "ENGL1202EEF": 3
         },
-        "credits_seen": 24,
+        "credits_seen": 6,
         "min_credits": 6
       },
       "general-ed": {
@@ -1755,10 +1719,7 @@
           "SCI3091SEF",
           "SCI3100SEF",
           "SCI3101SEF",
-          "SCI3103SEF",
-          "CHEM2034SEF",
-          "CHEM4006SEF",
-          "SCI3090SEF"
+          "SCI3103SEF"
         ],
         "course_credits": {
           "BIOL1003SEF": 3,
@@ -1787,12 +1748,9 @@
           "SCI3091SEF": 6,
           "SCI3100SEF": 3,
           "SCI3101SEF": 3,
-          "SCI3103SEF": 3,
-          "CHEM2034SEF": 3,
-          "CHEM4006SEF": 3,
-          "SCI3090SEF": 3
+          "SCI3103SEF": 3
         },
-        "credits_seen": 93,
+        "credits_seen": 84,
         "min_credits": 84
       },
       "elective": {
@@ -1881,32 +1839,38 @@
           "BIOL1003SEF",
           "BIOL2035SEF",
           "BIOL2036SEF",
-          "BIOL3056SEF",
           "CHEM1002SEF",
-          "CHEM2001SEF",
+          "CHEM2002SEF",
+          "CHEM2035SEF",
           "CHEM3050SEF",
           "SCI1010SEF",
           "SCI1100SEF",
           "SCI1101SEF",
-          "SCI2006SEF",
           "SCI2100SEF",
           "SCI2101SEF",
           "SCI2102SEF",
           "SCI3030SEF",
           "SCI3065SEF",
-          "SCI3090SEF",
+          "SCI3091SEF",
           "SCI3100SEF",
           "SCI3101SEF",
           "SCI3102SEF",
-          "SCI4010SEF",
           "SCI4063SEF",
           "SCI4064SEF",
+          "SCI4065SEF",
+          "SCI4066SEF",
+          "SCI4067SEF",
           "STAT2610SEF",
+          "TC3080SEF",
+          "ST4020SEF",
+          "BIOL3056SEF",
+          "CHEM2001SEF",
+          "SCI2006SEF",
+          "SCI3090SEF",
+          "SCI4010SEF",
           "TC3015SEF",
           "TC3020SEF",
-          "TC3080SEF",
           "TC4019SEF",
-          "ST4020SEF",
           "TC4026SEF",
           "TC4062SEF"
         ],
@@ -1914,37 +1878,79 @@
           "BIOL1003SEF": 3,
           "BIOL2035SEF": 3,
           "BIOL2036SEF": 3,
-          "BIOL3056SEF": 3,
           "CHEM1002SEF": 3,
-          "CHEM2001SEF": 3,
+          "CHEM2002SEF": 3,
+          "CHEM2035SEF": 3,
           "CHEM3050SEF": 3,
           "SCI1010SEF": 3,
           "SCI1100SEF": 3,
           "SCI1101SEF": 3,
-          "SCI2006SEF": 3,
           "SCI2100SEF": 3,
           "SCI2101SEF": 3,
           "SCI2102SEF": 3,
           "SCI3030SEF": 3,
           "SCI3065SEF": 3,
-          "SCI3090SEF": 3,
+          "SCI3091SEF": 6,
           "SCI3100SEF": 3,
           "SCI3101SEF": 3,
           "SCI3102SEF": 3,
-          "SCI4010SEF": 6,
           "SCI4063SEF": 3,
           "SCI4064SEF": 3,
+          "SCI4065SEF": 3,
+          "SCI4066SEF": 3,
+          "SCI4067SEF": 3,
           "STAT2610SEF": 3,
+          "TC3080SEF": 3,
+          "ST4020SEF": 3,
+          "BIOL3056SEF": 3,
+          "CHEM2001SEF": 3,
+          "SCI2006SEF": 3,
+          "SCI3090SEF": 3,
+          "SCI4010SEF": 6,
           "TC3015SEF": 3,
           "TC3020SEF": 3,
-          "TC3080SEF": 3,
           "TC4019SEF": 3,
-          "ST4020SEF": 3,
           "TC4026SEF": 3,
           "TC4062SEF": 3
         },
-        "credits_seen": 96,
-        "min_credits": 99
+        "credits_seen": 117,
+        "min_credits": 84
+      },
+      "elective": {
+        "courses": [
+          "BIOL3001SEF",
+          "BIOL3056SEF",
+          "BIOL4030SEF",
+          "BIOL4006SEF",
+          "BIOL4013SEF",
+          "ENVR4007SEF",
+          "ENVR4043SEF",
+          "SCI3031SEF",
+          "SCI4000SEF",
+          "SCI4010SEF",
+          "SCI4011SEF",
+          "TC3020SEF",
+          "TC4019SEF",
+          "TC4026SEF"
+        ],
+        "course_credits": {
+          "BIOL3001SEF": 3,
+          "BIOL3056SEF": 3,
+          "BIOL4030SEF": 3,
+          "BIOL4006SEF": 3,
+          "BIOL4013SEF": 3,
+          "ENVR4007SEF": 3,
+          "ENVR4043SEF": 3,
+          "SCI3031SEF": 3,
+          "SCI4000SEF": 3,
+          "SCI4010SEF": 6,
+          "SCI4011SEF": 3,
+          "TC3020SEF": 3,
+          "TC4019SEF": 3,
+          "TC4026SEF": 3
+        },
+        "credits_seen": 45,
+        "min_credits": 15
       },
       "university-core": {
         "courses": [
@@ -1989,12 +1995,10 @@
     "categories": {
       "core": {
         "courses": [
+          "COMP1080SEF",
           "SCI1001SEF",
           "SCI1010SEF",
           "TC2080SEF",
-          "COMP1080SEF",
-          "IT1020SEF",
-          "IT1030SEF",
           "COMP2020SEF",
           "COMP2660SEF",
           "IT2900SEF",
@@ -2006,17 +2010,20 @@
           "MATH2150SEF",
           "STAT2510SEF",
           "STAT2520SEF",
+          "ENGG2095SEF",
+          "SCI1111SEF",
           "SCI3000SEF",
           "SCI3091SEF",
-          "SCI4090SEF"
+          "SCI4001SEF",
+          "SCI4090SEF",
+          "IT1020SEF",
+          "IT1030SEF"
         ],
         "course_credits": {
+          "COMP1080SEF": 3,
           "SCI1001SEF": 3,
           "SCI1010SEF": 3,
           "TC2080SEF": 3,
-          "COMP1080SEF": 3,
-          "IT1020SEF": 3,
-          "IT1030SEF": 3,
           "COMP2020SEF": 3,
           "COMP2660SEF": 3,
           "IT2900SEF": 3,
@@ -2028,12 +2035,17 @@
           "MATH2150SEF": 3,
           "STAT2510SEF": 3,
           "STAT2520SEF": 3,
+          "ENGG2095SEF": 3,
+          "SCI1111SEF": 3,
           "SCI3000SEF": 3,
           "SCI3091SEF": 6,
-          "SCI4090SEF": 6
+          "SCI4001SEF": 3,
+          "SCI4090SEF": 6,
+          "IT1020SEF": 3,
+          "IT1030SEF": 3
         },
-        "credits_seen": 65,
-        "min_credits": 39
+        "credits_seen": 74,
+        "min_credits": 48
       },
       "elective": {
         "courses": [
@@ -2073,11 +2085,11 @@
           "SCI2102SEF",
           "SCI2103SEF",
           "SCI3030SEF",
+          "SCI4064SEF",
           "SCI3100SEF",
           "SCI3101SEF",
           "SCI3102SEF",
           "SCI3103SEF",
-          "SCI4064SEF",
           "SCI3065SEF",
           "TC3080SEF",
           "ST4020SEF",
@@ -2225,11 +2237,11 @@
           "SCI2102SEF": 3,
           "SCI2103SEF": 3,
           "SCI3030SEF": 3,
+          "SCI4064SEF": 3,
           "SCI3100SEF": 3,
           "SCI3101SEF": 3,
           "SCI3102SEF": 3,
           "SCI3103SEF": 3,
-          "SCI4064SEF": 3,
           "SCI3065SEF": 3,
           "TC3080SEF": 3,
           "ST4020SEF": 3,
@@ -2341,7 +2353,7 @@
           "TC3020SEF": 3
         },
         "credits_seen": 450,
-        "min_credits": 60
+        "min_credits": 51
       },
       "university-core": {
         "courses": [
@@ -2362,13 +2374,15 @@
       "english": {
         "courses": [
           "ENGL1101AEF",
-          "ENGL1202EEF"
+          "ENGL1202EEF",
+          "NURS1050NEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
-          "ENGL1202EEF": 3
+          "ENGL1202EEF": 3,
+          "NURS1050NEF": 3
         },
-        "credits_seen": 6,
+        "credits_seen": 9,
         "min_credits": 6
       },
       "general-ed": {
@@ -3052,17 +3066,13 @@
       "english": {
         "courses": [
           "ENGL1101AEF",
-          "ENGL1102AEF",
-          "ENGL1002AEF",
-          "ENGL1003AEF"
+          "ENGL1102AEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
-          "ENGL1102AEF": 3,
-          "ENGL1002AEF": 3,
-          "ENGL1003AEF": 3
+          "ENGL1102AEF": 3
         },
-        "credits_seen": 12,
+        "credits_seen": 6,
         "min_credits": 6
       },
       "general-ed": {
@@ -3272,16 +3282,14 @@
         "courses": [
           "ENGL1101AEF",
           "ENGL1102AEF",
-          "ENGL1002AEF",
           "ENGL1003AEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
           "ENGL1102AEF": 3,
-          "ENGL1002AEF": 3,
           "ENGL1003AEF": 3
         },
-        "credits_seen": 12,
+        "credits_seen": 9,
         "min_credits": 6
       },
       "general-ed": {
@@ -3493,16 +3501,14 @@
         "courses": [
           "ENGL1101AEF",
           "ENGL1102AEF",
-          "ENGL1002AEF",
           "ENGL1003AEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
           "ENGL1102AEF": 3,
-          "ENGL1002AEF": 3,
           "ENGL1003AEF": 3
         },
-        "credits_seen": 12,
+        "credits_seen": 9,
         "min_credits": 6
       },
       "general-ed": {
@@ -3885,16 +3891,14 @@
         "courses": [
           "ENGL1101AEF",
           "ENGL1102AEF",
-          "ENGL1002AEF",
           "ENGL1003AEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
           "ENGL1102AEF": 3,
-          "ENGL1002AEF": 3,
           "ENGL1003AEF": 3
         },
-        "credits_seen": 12,
+        "credits_seen": 9,
         "min_credits": 6
       },
       "general-ed": {
@@ -4104,16 +4108,14 @@
         "courses": [
           "ENGL1101AEF",
           "ENGL1102AEF",
-          "ENGL1002AEF",
           "ENGL1003AEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
           "ENGL1102AEF": 3,
-          "ENGL1002AEF": 3,
           "ENGL1003AEF": 3
         },
-        "credits_seen": 12,
+        "credits_seen": 9,
         "min_credits": 6
       },
       "general-ed": {
@@ -4326,17 +4328,13 @@
       "english": {
         "courses": [
           "ENGL1101AEF",
-          "ENGL1102AEF",
-          "ENGL1002AEF",
-          "ENGL1003AEF"
+          "ENGL1102AEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
-          "ENGL1102AEF": 3,
-          "ENGL1002AEF": 3,
-          "ENGL1003AEF": 3
+          "ENGL1102AEF": 3
         },
-        "credits_seen": 12,
+        "credits_seen": 6,
         "min_credits": 6
       },
       "general-ed": {
@@ -4576,16 +4574,14 @@
         "courses": [
           "ENGL1101AEF",
           "ENGL1102AEF",
-          "ENGL1002AEF",
           "ENGL1003AEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
           "ENGL1102AEF": 3,
-          "ENGL1002AEF": 3,
           "ENGL1003AEF": 3
         },
-        "credits_seen": 12,
+        "credits_seen": 9,
         "min_credits": 6
       },
       "general-ed": {
@@ -4603,24 +4599,26 @@
     "categories": {
       "core": {
         "courses": [
-          "COUN1001AEF",
           "ECON1001AEF",
           "POLS1001AEF",
           "PSYC1001AEF",
           "SOCI1001AEF",
-          "COUN2001AEF",
-          "COUN2002AEF",
           "PSYC2001AEF",
           "STAT2001AEF",
           "STAT2003AEF",
           "PSYC3001AEF",
           "PSYC3002AEF",
           "PSYC3003AEF",
+          "PSYC3004AEF",
           "PSYC3005AEF",
           "PSYC3006AEF",
           "PSYC3007AEF",
+          "PSYC3008AEF",
           "PSYC3009AEF",
           "PSYC3010AEF",
+          "COUN1001AEF",
+          "COUN2001AEF",
+          "COUN2002AEF",
           "COUN4001AEF",
           "COUN4002AEF",
           "COUN4003AEF",
@@ -4630,24 +4628,26 @@
           "PSYC4010AEF"
         ],
         "course_credits": {
-          "COUN1001AEF": 3,
           "ECON1001AEF": 3,
           "POLS1001AEF": 3,
           "PSYC1001AEF": 3,
           "SOCI1001AEF": 3,
-          "COUN2001AEF": 3,
-          "COUN2002AEF": 3,
           "PSYC2001AEF": 3,
           "STAT2001AEF": 3,
           "STAT2003AEF": 3,
           "PSYC3001AEF": 3,
           "PSYC3002AEF": 3,
           "PSYC3003AEF": 3,
+          "PSYC3004AEF": 3,
           "PSYC3005AEF": 3,
           "PSYC3006AEF": 3,
           "PSYC3007AEF": 3,
+          "PSYC3008AEF": 3,
           "PSYC3009AEF": 3,
           "PSYC3010AEF": 3,
+          "COUN1001AEF": 3,
+          "COUN2001AEF": 3,
+          "COUN2002AEF": 3,
           "COUN4001AEF": 3,
           "COUN4002AEF": 3,
           "COUN4003AEF": 3,
@@ -4656,22 +4656,46 @@
           "COUN4008AEF": 6,
           "PSYC4010AEF": 3
         },
-        "credits_seen": 78,
-        "min_credits": 78
+        "credits_seen": 84,
+        "min_credits": 51
       },
       "elective": {
         "courses": [
           "PSYC4001AEF",
+          "PSYC4002AEF",
           "PSYC4003AEF",
+          "PSYC4004AEF",
           "PSYC4005AEF",
           "PSYC4006AEF",
           "PSYC4007AEF",
           "PSYC4009AEF",
-          "SOCI2001AEF",
+          "PSYC4010AEF",
+          "COUN1001AEF",
+          "COUN2001AEF",
+          "COUN2002AEF",
+          "ECON2001AEF",
+          "POLS2002AEF",
+          "PUAD2001AEF",
+          "SOCI2003AEF",
           "SOCI2005AEF",
           "SOSC2001AEF",
-          "GCST3003AEF",
+          "SOSC2002AEF",
+          "SOSC2003AEF",
+          "ECON3004AEF",
+          "ECON3005AEF",
+          "ECON3006AEF",
+          "ECON3008AEF",
           "POLS3005AEF",
+          "SOCI3004AEF",
+          "SOCI3005AEF",
+          "COUN4001AEF",
+          "COUN4002AEF",
+          "COUN4003AEF",
+          "GCST4001AEF",
+          "SOCI4007AEF",
+          "SOSC4001AEF",
+          "SOCI2001AEF",
+          "GCST3003AEF",
           "PSYC3004AEF",
           "SOCI3003AEF",
           "SOCI3006AEF",
@@ -4679,23 +4703,47 @@
         ],
         "course_credits": {
           "PSYC4001AEF": 3,
+          "PSYC4002AEF": 3,
           "PSYC4003AEF": 3,
+          "PSYC4004AEF": 3,
           "PSYC4005AEF": 3,
           "PSYC4006AEF": 3,
           "PSYC4007AEF": 3,
           "PSYC4009AEF": 6,
-          "SOCI2001AEF": 3,
+          "PSYC4010AEF": 3,
+          "COUN1001AEF": 3,
+          "COUN2001AEF": 3,
+          "COUN2002AEF": 3,
+          "ECON2001AEF": 3,
+          "POLS2002AEF": 3,
+          "PUAD2001AEF": 3,
+          "SOCI2003AEF": 3,
           "SOCI2005AEF": 3,
           "SOSC2001AEF": 3,
-          "GCST3003AEF": 3,
+          "SOSC2002AEF": 3,
+          "SOSC2003AEF": 3,
+          "ECON3004AEF": 3,
+          "ECON3005AEF": 3,
+          "ECON3006AEF": 3,
+          "ECON3008AEF": 3,
           "POLS3005AEF": 3,
+          "SOCI3004AEF": 3,
+          "SOCI3005AEF": 3,
+          "COUN4001AEF": 3,
+          "COUN4002AEF": 3,
+          "COUN4003AEF": 3,
+          "GCST4001AEF": 3,
+          "SOCI4007AEF": 3,
+          "SOSC4001AEF": 3,
+          "SOCI2001AEF": 3,
+          "GCST3003AEF": 3,
           "PSYC3004AEF": 3,
           "SOCI3003AEF": 3,
           "SOCI3006AEF": 3,
           "SOCI3009AEF": 3
         },
-        "credits_seen": 48,
-        "min_credits": 21
+        "credits_seen": 120,
+        "min_credits": 48
       },
       "university-core": {
         "courses": [
@@ -4717,14 +4765,14 @@
         "courses": [
           "ENGL1101AEF",
           "ENGL1102AEF",
-          "ENGL1002AEF",
-          "ENGL1003AEF"
+          "ENGL1003AEF",
+          "NURS1050NEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
           "ENGL1102AEF": 3,
-          "ENGL1002AEF": 3,
-          "ENGL1003AEF": 3
+          "ENGL1003AEF": 3,
+          "NURS1050NEF": 3
         },
         "credits_seen": 12,
         "min_credits": 6
@@ -4753,7 +4801,6 @@
           "MGT4041BEF",
           "MGT4098BEF",
           "MKT2050BEF",
-          "BUS2001BEF",
           "COUN2001AEF",
           "ECON1001AEF",
           "POLS1001AEF",
@@ -4780,7 +4827,6 @@
           "MGT4041BEF": 3,
           "MGT4098BEF": 3,
           "MKT2050BEF": 3,
-          "BUS2001BEF": 3,
           "COUN2001AEF": 3,
           "ECON1001AEF": 3,
           "POLS1001AEF": 3,
@@ -4797,7 +4843,7 @@
           "PSYC4004AEF": 3,
           "SOCI1001AEF": 3
         },
-        "credits_seen": 96,
+        "credits_seen": 93,
         "min_credits": 90
       },
       "elective": {
@@ -4894,7 +4940,6 @@
           "BUS3068BEF",
           "BUS4028BEF",
           "BUS4088BEF",
-          "BUS2001BEF",
           "MGT4098BEF",
           "ASM3018BEF",
           "ASM4038BEF",
@@ -4906,13 +4951,12 @@
           "BUS3068BEF": 3,
           "BUS4028BEF": 6,
           "BUS4088BEF": 3,
-          "BUS2001BEF": 3,
           "MGT4098BEF": 3,
           "ASM3018BEF": 3,
           "ASM4038BEF": 3,
           "ASM4068BEF": 3
         },
-        "credits_seen": 75,
+        "credits_seen": 72,
         "min_credits": 72
       },
       "elective": {
@@ -5007,7 +5051,6 @@
           "BUS3068BEF",
           "BUS4028BEF",
           "BUS4088BEF",
-          "BUS2001BEF",
           "MGT4099BEF",
           "ACT3011BEF",
           "ACT3020BEF",
@@ -5028,7 +5071,6 @@
           "BUS3068BEF": 3,
           "BUS4028BEF": 6,
           "BUS4088BEF": 3,
-          "BUS2001BEF": 3,
           "MGT4099BEF": 3,
           "ACT3011BEF": 3,
           "ACT3020BEF": 3,
@@ -5043,7 +5085,7 @@
           "LAW3033BEF": 3,
           "LAW4034BEF": 3
         },
-        "credits_seen": 102,
+        "credits_seen": 99,
         "min_credits": 99
       },
       "elective": {
@@ -5142,7 +5184,6 @@
           "BUS3068BEF",
           "BUS4028BEF",
           "BUS4088BEF",
-          "BUS2001BEF",
           "MGT4098BEF",
           "ACT3011BEF",
           "DB4027BEF",
@@ -5163,7 +5204,6 @@
           "BUS3068BEF": 3,
           "BUS4028BEF": 6,
           "BUS4088BEF": 3,
-          "BUS2001BEF": 3,
           "MGT4098BEF": 3,
           "ACT3011BEF": 3,
           "DB4027BEF": 3,
@@ -5178,7 +5218,7 @@
           "FINT4052BEF": 3,
           "MGT4056BEF": 3
         },
-        "credits_seen": 102,
+        "credits_seen": 99,
         "min_credits": 99
       },
       "elective": {
@@ -5257,7 +5297,6 @@
           "BUS3068BEF",
           "BUS4028BEF",
           "BUS4088BEF",
-          "BUS2001BEF",
           "MGT4098BEF",
           "IB3091BEF",
           "IB3092BEF",
@@ -5271,7 +5310,6 @@
           "BUS3068BEF": 3,
           "BUS4028BEF": 6,
           "BUS4088BEF": 3,
-          "BUS2001BEF": 3,
           "MGT4098BEF": 3,
           "IB3091BEF": 3,
           "IB3092BEF": 3,
@@ -5279,7 +5317,7 @@
           "IB4096BEF": 3,
           "IB4097BEF": 3
         },
-        "credits_seen": 81,
+        "credits_seen": 78,
         "min_credits": 78
       },
       "elective": {
@@ -5374,7 +5412,6 @@
           "BUS3068BEF",
           "BUS4028BEF",
           "BUS4088BEF",
-          "BUS2001BEF",
           "MGT4098BEF",
           "DB3047BEF",
           "SCM3071BEF",
@@ -5389,7 +5426,6 @@
           "BUS3068BEF": 3,
           "BUS4028BEF": 6,
           "BUS4088BEF": 3,
-          "BUS2001BEF": 3,
           "MGT4098BEF": 3,
           "DB3047BEF": 3,
           "SCM3071BEF": 3,
@@ -5398,7 +5434,7 @@
           "SCM4071BEF": 3,
           "SCM4072BEF": 3
         },
-        "credits_seen": 84,
+        "credits_seen": 81,
         "min_credits": 81
       },
       "elective": {
@@ -5487,7 +5523,6 @@
           "BUS3068BEF",
           "BUS4028BEF",
           "BUS4088BEF",
-          "BUS2001BEF",
           "MGT4098BEF",
           "MGT3041BEF",
           "MGT3042BEF",
@@ -5502,7 +5537,6 @@
           "BUS3068BEF": 3,
           "BUS4028BEF": 6,
           "BUS4088BEF": 3,
-          "BUS2001BEF": 3,
           "MGT4098BEF": 3,
           "MGT3041BEF": 3,
           "MGT3042BEF": 3,
@@ -5511,7 +5545,7 @@
           "MGT4042BEF": 3,
           "MGT4043BEF": 3
         },
-        "credits_seen": 84,
+        "credits_seen": 81,
         "min_credits": 81
       },
       "elective": {
@@ -5606,7 +5640,6 @@
           "BUS3068BEF",
           "BUS4028BEF",
           "BUS4088BEF",
-          "BUS2001BEF",
           "MGT4098BEF",
           "HPM3009BEF",
           "HPM4005BEF",
@@ -5620,7 +5653,6 @@
           "BUS3068BEF": 3,
           "BUS4028BEF": 6,
           "BUS4088BEF": 3,
-          "BUS2001BEF": 3,
           "MGT4098BEF": 3,
           "HPM3009BEF": 3,
           "HPM4005BEF": 3,
@@ -5628,7 +5660,7 @@
           "HPM4001BEF": 3,
           "TRM3013BEF": 3
         },
-        "credits_seen": 81,
+        "credits_seen": 78,
         "min_credits": 78
       },
       "elective": {
@@ -5729,7 +5761,6 @@
           "BUS3068BEF",
           "BUS4028BEF",
           "BUS4088BEF",
-          "BUS2001BEF",
           "MGT4098BEF",
           "IB3091BEF",
           "MGT3044BEF",
@@ -5744,7 +5775,6 @@
           "BUS3068BEF": 3,
           "BUS4028BEF": 6,
           "BUS4088BEF": 3,
-          "BUS2001BEF": 3,
           "MGT4098BEF": 3,
           "IB3091BEF": 3,
           "MGT3044BEF": 3,
@@ -5753,7 +5783,7 @@
           "MGT4056BEF": 3,
           "SCM4071BEF": 3
         },
-        "credits_seen": 84,
+        "credits_seen": 81,
         "min_credits": 81
       },
       "elective": {
@@ -5852,7 +5882,6 @@
           "BUS3068BEF",
           "BUS4028BEF",
           "BUS4088BEF",
-          "BUS2001BEF",
           "MGT4098BEF",
           "DB3047BEF",
           "MKT3062BEF",
@@ -5868,7 +5897,6 @@
           "BUS3068BEF": 3,
           "BUS4028BEF": 6,
           "BUS4088BEF": 3,
-          "BUS2001BEF": 3,
           "MGT4098BEF": 3,
           "DB3047BEF": 3,
           "MKT3062BEF": 3,
@@ -5878,7 +5906,7 @@
           "MKT4063BEF": 3,
           "MKT4077BEF": 3
         },
-        "credits_seen": 87,
+        "credits_seen": 84,
         "min_credits": 84
       },
       "elective": {
@@ -5973,7 +6001,6 @@
           "BUS3068BEF",
           "BUS4028BEF",
           "BUS4088BEF",
-          "BUS2001BEF",
           "MGT4099BEF",
           "ACT3004BEF",
           "ACT3013BEF",
@@ -5993,7 +6020,6 @@
           "BUS3068BEF": 3,
           "BUS4028BEF": 6,
           "BUS4088BEF": 3,
-          "BUS2001BEF": 3,
           "MGT4099BEF": 3,
           "ACT3004BEF": 3,
           "ACT3013BEF": 3,
@@ -6007,7 +6033,7 @@
           "LAW3033BEF": 3,
           "LAW3062BEF": 3
         },
-        "credits_seen": 99,
+        "credits_seen": 96,
         "min_credits": 96
       },
       "elective": {
@@ -6094,7 +6120,6 @@
           "BUS3068BEF",
           "BUS4028BEF",
           "BUS4088BEF",
-          "BUS2001BEF",
           "MGT4098BEF",
           "RFM3035BEF",
           "RFM3036BEF",
@@ -6112,7 +6137,6 @@
           "BUS3068BEF": 3,
           "BUS4028BEF": 6,
           "BUS4088BEF": 3,
-          "BUS2001BEF": 3,
           "MGT4098BEF": 3,
           "RFM3035BEF": 3,
           "RFM3036BEF": 3,
@@ -6124,7 +6148,7 @@
           "RFM4058BEF": 3,
           "RFM4059BEF": 3
         },
-        "credits_seen": 93,
+        "credits_seen": 90,
         "min_credits": 90
       },
       "elective": {
@@ -6177,7 +6201,6 @@
           "BUS3068BEF",
           "BUS4028BEF",
           "BUS4088BEF",
-          "BUS2001BEF",
           "MGT4098BEF",
           "SPM3056BEF",
           "SPM3057BEF",
@@ -6193,7 +6216,6 @@
           "BUS3068BEF": 3,
           "BUS4028BEF": 6,
           "BUS4088BEF": 3,
-          "BUS2001BEF": 3,
           "MGT4098BEF": 3,
           "SPM3056BEF": 3,
           "SPM3057BEF": 3,
@@ -6203,7 +6225,7 @@
           "SPM4037BEF": 3,
           "SPM4098BEF": 9
         },
-        "credits_seen": 93,
+        "credits_seen": 90,
         "min_credits": 90
       },
       "elective": {
@@ -6294,7 +6316,6 @@
           "BUS3068BEF",
           "BUS4028BEF",
           "BUS4088BEF",
-          "BUS2001BEF",
           "MGT4098BEF",
           "SPM3013BEF",
           "SPM3015BEF",
@@ -6310,7 +6331,6 @@
           "BUS3068BEF": 3,
           "BUS4028BEF": 6,
           "BUS4088BEF": 3,
-          "BUS2001BEF": 3,
           "MGT4098BEF": 3,
           "SPM3013BEF": 3,
           "SPM3015BEF": 3,
@@ -6320,7 +6340,7 @@
           "SPM4037BEF": 3,
           "SPM4098BEF": 9
         },
-        "credits_seen": 93,
+        "credits_seen": 90,
         "min_credits": 90
       },
       "elective": {
@@ -6415,7 +6435,6 @@
           "BUS3068BEF",
           "BUS4028BEF",
           "BUS4088BEF",
-          "BUS2001BEF",
           "MGT4098BEF",
           "HPM4001BEF",
           "TRM3006BEF",
@@ -6429,7 +6448,6 @@
           "BUS3068BEF": 3,
           "BUS4028BEF": 6,
           "BUS4088BEF": 3,
-          "BUS2001BEF": 3,
           "MGT4098BEF": 3,
           "HPM4001BEF": 3,
           "TRM3006BEF": 3,
@@ -6437,7 +6455,7 @@
           "TRM4011BEF": 3,
           "TRM4014BEF": 3
         },
-        "credits_seen": 81,
+        "credits_seen": 78,
         "min_credits": 78
       },
       "elective": {
@@ -6548,7 +6566,6 @@
           "BUS3068BEF",
           "BUS4028BEF",
           "BUS4088BEF",
-          "BUS2001BEF",
           "MGT4098BEF",
           "IB3091BEF",
           "IB3092BEF",
@@ -6561,14 +6578,13 @@
           "BUS3068BEF": 3,
           "BUS4028BEF": 6,
           "BUS4088BEF": 3,
-          "BUS2001BEF": 3,
           "MGT4098BEF": 3,
           "IB3091BEF": 3,
           "IB3092BEF": 3,
           "MGT4044BEF": 3,
           "SCM4071BEF": 3
         },
-        "credits_seen": 78,
+        "credits_seen": 75,
         "min_credits": 75
       },
       "elective": {
@@ -6703,19 +6719,15 @@
           "UNI1002ABW",
           "UNI1012ABW",
           "UNI2002BEW",
-          "UNI3002BEW",
-          "IT1150EEF",
-          "EDU1150EEF"
+          "UNI3002BEW"
         ],
         "course_credits": {
           "UNI1002ABW": 2,
           "UNI1012ABW": 1,
           "UNI2002BEW": 3,
-          "UNI3002BEW": 3,
-          "IT1150EEF": 3,
-          "EDU1150EEF": 3
+          "UNI3002BEW": 3
         },
-        "credits_seen": 15,
+        "credits_seen": 9,
         "min_credits": 9
       },
       "general-ed": {
@@ -6864,17 +6876,13 @@
       "english": {
         "courses": [
           "ENGL1101AEF",
-          "ENGL1202EEF",
-          "IT1150ECF",
-          "EDU1150ECF"
+          "ENGL1202EEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
-          "ENGL1202EEF": 3,
-          "IT1150ECF": 3,
-          "EDU1150ECF": 3
+          "ENGL1202EEF": 3
         },
-        "credits_seen": 12,
+        "credits_seen": 6,
         "min_credits": 6
       },
       "general-ed": {
@@ -7001,17 +7009,13 @@
       "english": {
         "courses": [
           "ENGL1101AEF",
-          "ENGL1202EEF",
-          "IT1150ECF",
-          "EDU1150ECF"
+          "ENGL1202EEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
-          "ENGL1202EEF": 3,
-          "IT1150ECF": 3,
-          "EDU1150ECF": 3
+          "ENGL1202EEF": 3
         },
-        "credits_seen": 12,
+        "credits_seen": 6,
         "min_credits": 6
       },
       "general-ed": {
@@ -7146,17 +7150,13 @@
       "english": {
         "courses": [
           "ENGL1101AEF",
-          "ENGL1202EEF",
-          "IT1150ECF",
-          "EDU1150ECF"
+          "ENGL1202EEF"
         ],
         "course_credits": {
           "ENGL1101AEF": 3,
-          "ENGL1202EEF": 3,
-          "IT1150ECF": 3,
-          "EDU1150ECF": 3
+          "ENGL1202EEF": 3
         },
-        "credits_seen": 12,
+        "credits_seen": 6,
         "min_credits": 6
       },
       "general-ed": {
@@ -7265,19 +7265,15 @@
           "UNI1002ABW",
           "UNI1012ABW",
           "UNI2002BEW",
-          "UNI3002BEW",
-          "IT1150EEF",
-          "EDU1150EEF"
+          "UNI3002BEW"
         ],
         "course_credits": {
           "UNI1002ABW": 2,
           "UNI1012ABW": 1,
           "UNI2002BEW": 3,
-          "UNI3002BEW": 3,
-          "IT1150EEF": 3,
-          "EDU1150EEF": 3
+          "UNI3002BEW": 3
         },
-        "credits_seen": 15,
+        "credits_seen": 9,
         "min_credits": 9
       },
       "general-ed": {
@@ -7394,19 +7390,15 @@
           "UNI1002ABW",
           "UNI1012ABW",
           "UNI2002BCW",
-          "UNI3002BCW",
-          "IT1150ECF",
-          "EDU1150ECF"
+          "UNI3002BCW"
         ],
         "course_credits": {
           "UNI1002ABW": 2,
           "UNI1012ABW": 1,
           "UNI2002BCW": 3,
-          "UNI3002BCW": 3,
-          "IT1150ECF": 3,
-          "EDU1150ECF": 3
+          "UNI3002BCW": 3
         },
-        "credits_seen": 15,
+        "credits_seen": 9,
         "min_credits": 9
       },
       "general-ed": {

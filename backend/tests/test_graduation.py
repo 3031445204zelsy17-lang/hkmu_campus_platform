@@ -191,3 +191,124 @@ def test_ge_pool_recommendations_avoid_used_and_blocked_fields():
         assert match, f"recommended {r.course_id} is not in the GE pool"
         assert match["field"] != used_field, "recommended a same-field GE"
         assert match["field"] not in blocked_fields, "recommended a blocked GE"
+
+
+# --- T35: credit pools, 54-programme rules, Testing field unification ----------
+
+def test_satisfied_credits_pool():
+    """pool:"credits" satisfies on earned credits alone — any combination.
+    This is how PDF electives are specified ('N credit-units from Table X'),
+    including the 150-course STEAM menus where counting courses is wrong."""
+    cat = {"min_credits": 51, "courses": [f"c{i}" for i in range(150)],
+           "pool": "credits"}
+    assert _category_satisfied(cat, earned=51, completed_count=17)  # 17 × 3cr
+    assert _category_satisfied(cat, earned=51, completed_count=9)   # 6cr mix
+    assert not _category_satisfied(cat, earned=48, completed_count=16)
+    assert not _category_satisfied(cat, earned=0, completed_count=0)
+
+
+def test_all_programmes_category_sums_match_total():
+    """Data invariant across all 55 programmes (1 hand-curated + 54 generated):
+    each category's min_credits sums exactly to the PDF's obtain-total."""
+    for code, prog in PROGRAMMES.items():
+        smin = sum(c["min_credits"] for c in prog["categories"].values())
+        assert smin == prog["total_credits"], \
+            f"{code}: Σmin={smin} != total={prog['total_credits']}"
+
+
+def test_generated_ge_pool_has_pickn():
+    """GE categories carry pick_n (=min/3): without it the empty-course GE
+    pool can never satisfy (empty-pool branch requires min_credits == 0)."""
+    for code, prog in PROGRAMMES.items():
+        ge = prog["categories"].get("general-ed")
+        if ge and ge.get("pool") == "ge":
+            assert ge.get("pick_n", 0) >= 1, f"{code}: general-ed missing pick_n"
+
+
+def _rule_rows(prog_code):
+    """course rows for every rule course, credits as parsed from the PDF
+    (RULE_COURSE_CREDITS); DSAI's hand-curated project is 6cr."""
+    from backend.app.data.programme_rules import RULE_COURSE_CREDITS
+    parsed = RULE_COURSE_CREDITS.get(prog_code, {})
+    rows = {}
+    for key, cat in PROGRAMMES[prog_code]["categories"].items():
+        if cat.get("pool") == "ge":
+            continue
+        for cid in cat["courses"]:
+            credits = parsed.get(key, {}).get(cid)
+            if credits is None:
+                credits = 6 if cid == "COMP4610SEF" else 3
+            rows[cid] = _row(cid, credits=credits)
+    return rows
+
+
+def test_every_programme_can_graduate():
+    """End-to-end over ALL 55 programmes: complete every required course,
+    enough elective credits (credit pool), and pick_n distinct-field unblocked
+    GEs -> every category satisfied and all_satisfied must be True."""
+    for code, prog in PROGRAMMES.items():
+        rows = _rule_rows(code)
+        progress = {}
+        for key, cat in prog["categories"].items():
+            if cat.get("pool") == "ge":
+                continue
+            if cat.get("pool") == "credits":
+                earned = 0
+                for cid in cat["courses"]:
+                    if earned >= cat["min_credits"]:
+                        break
+                    progress[cid] = "completed"
+                    earned += rows[cid]["credits"]
+            else:
+                progress.update({cid: "completed" for cid in cat["courses"]})
+        ge_cat = prog["categories"].get("general-ed")
+        if ge_cat and ge_cat.get("pool") == "ge":
+            need, fields = ge_cat.get("pick_n", 2), set()
+            for c in ge_courses_for(code):
+                if len(fields) >= need:
+                    break
+                if c["blocked"] or c["field"] in fields:
+                    continue
+                fields.add(c["field"])
+                rows[c["id"]] = _row(c["id"], credits=3)
+                progress[c["id"]] = "completed"
+        cats, total, recs, all_sat = _compute_graduation(prog, rows, progress)
+        unsat = [c.key for c in cats if not c.satisfied]
+        assert not unsat, f"{code}: categories not satisfied: {unsat}"
+        assert all_sat is True, f"{code}: all_satisfied=False despite full plan"
+
+
+def test_school_folding_smoke():
+    """T32 folding decisions locked in via representative programmes:
+    NHS core = Theoretical + Clinical Practicum; BA core = core + strategy +
+    concentration; ST-STEAM elective is a credit-pool menu; AS keeps its
+    'elective courses in specific area' table."""
+    nhgj = PROGRAMMES["BNHGJ"]["categories"]
+    assert nhgj["core"]["min_credits"] == 130  # 104 theoretical + 26 clinical
+    assert any(c.startswith("NURS") for c in nhgj["core"]["courses"])
+
+    cg = PROGRAMMES["BBAHCGSJ"]["categories"]["core"]
+    assert cg["min_credits"] == 99  # 60 core + 3 strategy + 36 concentration
+
+    stam = PROGRAMMES["BSCHSTAMJ"]["categories"]["elective"]
+    assert stam["pool"] == "credits" and len(stam["courses"]) > 100  # S/T/E/A/M menu
+
+    camd = PROGRAMMES["BAHCAMDJ"]["categories"]["elective"]
+    assert len(camd["courses"]) > 0  # AS 'in specific area' table matched
+
+
+def test_testing_field_blocked_for_testing_programmes():
+    """The 'Testing & Certification' vs 'Testing and Certification' spelling
+    split used to silently disable own-field blocking for 8 programmes.
+    (Programmes whose own field is not a GE field at all — Construction,
+    Aviation, Applied Drama… — legitimately block nothing; that's fine.)"""
+    from backend.app.data.ge_courses import PROGRAMME_GE_FIELDS, GE_FIELD_ORDER
+    assert "Testing and Certification" in GE_FIELD_ORDER
+    for fields in PROGRAMME_GE_FIELDS.values():  # no '&' spelling may remain
+        assert "Testing & Certification" not in fields
+    for code in ("BSCHFTSJ", "BSCHATSJ", "BASCHTICJ", "BENGHBSEJ",
+                 "BENGHCEJ", "BSCHMLSJ", "BSCHSTEMJ", "BSCHSTAMJ"):
+        blocked = {c["code"] for c in ge_courses_for(code) if c["blocked"]}
+        assert "GEN 2001SEF" in blocked, f"{code}: Testing GE not blocked"
+    dcai_blocked = {c["code"] for c in ge_courses_for("BSCHDSAIJ") if c["blocked"]}
+    assert "GEN 2001SEF" not in dcai_blocked  # not DSAI's field

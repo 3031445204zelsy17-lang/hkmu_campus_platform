@@ -96,6 +96,14 @@ def fetch_pdf_bytes(page, code, school, retries=4):
 
 # Course code: "COMP 1080SEF", "IT 1020SEF", "UNI 1002ABW", "ENGL 1101AEF"
 CODE_RE = re.compile(r"([A-Z]{2,5})\s?(\d{4}[A-Z]{2,3})")
+# Course ROWS start with the code. Footnote/Notes prose embeds codes mid-line
+# ("* Students who have completed CHEM 2034SEF is deemed…", "1. BIOL 3051SEF
+# has been removed from Table 2…") and must not yield courses — so row
+# detection is anchored at line start.
+CODE_ROW_RE = re.compile(r"\s*([A-Z]{2,5})\s?(\d{4}[A-Z]{2,3})")
+# Post-table footnote block ("Note:" / "Notes:"), swept into the last table's
+# body otherwise (BASCHTICJ english gained 9 removed-course codes from it).
+NOTES_RE = re.compile(r"(?m)^\s*Notes?\s*:")
 
 # "Table N: <Category>" heading → our category key. Ordered FIRST-match list
 # (T32): the 5 schools name their tables differently — AS "Elective courses in
@@ -139,17 +147,34 @@ def _heading_category(title):
 
 # Cohort/entry sets. Some PDFs carry TWO complete requirement sets — EL e.g.
 # pages 1-4 for the 2023/24 cohort and pages 5-8 for "in or after 2024/25";
-# ST-STEAM restarts section numbering instead. Every set opens with
-# "N. Programme Requirement – Year 1 Entry" (numbering may restart or
-# continue), so splitting on that heading and keeping the LAST part keeps only
-# the latest cohort. Docs with one set degrade to the whole text.
+# ST-STEAM/FTS print the NEWEST cohort first and the older one second. Every
+# set opens with "N. Programme Requirement – Year 1 Entry" (numbering may
+# restart or continue) and is preceded by a "Year 1 20XX/YY" admission marker.
+# Position in the file is NOT reliable (both orders occur), so each Y1 section
+# is scored by its nearest preceding admission year and the HIGHEST year wins;
+# ties (same-cohort dual-stream docs like BSSCHPWSJ) go to the EARLIEST
+# section, i.e. the primary/default stream. Docs with one set, or with no
+# admission markers at all, degrade to the whole text / last section.
 Y1_SECTION = re.compile(
     r"\n\s*\d+\.\s+Programme\s+Requirement\s*[–-]\s*Year\s+1\s+Entry", re.I)
+YEAR1_COHORT = re.compile(r"Year\s+1\s+(20\d{2})/\d{2}")
 
 
 def latest_cohort_text(text):
-    parts = Y1_SECTION.split(text)
-    return parts[-1] if len(parts) > 1 else text
+    heads = list(Y1_SECTION.finditer(text))
+    if len(heads) <= 1:
+        return text
+    scored = []
+    for h in heads:
+        years = [int(m.group(1)) for m in YEAR1_COHORT.finditer(text[:h.start()])]
+        scored.append((years[-1] if years else None, h.start()))
+    dated = [(y, s) for y, s in scored if y is not None]
+    if dated:
+        best = max(y for y, _ in dated)
+        start = min(s for y, s in dated if y == best)  # tie → primary stream
+    else:
+        start = heads[-1].start()  # no admission markers → position fallback
+    return text[start:]
 
 
 def _norm_code(raw):
@@ -188,13 +213,16 @@ def categories_from_text(text):
         if not cat_key:
             continue
         body = text[h.end(): (headings[i + 1].start() if i + 1 < len(headings) else len(text))]
+        notes = NOTES_RE.search(body)
+        if notes:
+            body = body[:notes.start()]
         cat = categories.setdefault(
             cat_key, {"courses": [], "course_credits": {}, "credits_seen": 0})
         for line in body.splitlines():
             line = line.strip()
             if not line or line.lower().startswith(("course code", "course title", "credit")):
                 continue
-            m = CODE_RE.search(line)
+            m = CODE_ROW_RE.match(line)
             if not m:
                 continue
             code = _norm_code(line)
@@ -290,6 +318,33 @@ def total_credits_from_prose(text):
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
+# Mandatory Mental Health First Aid course: a 3cr requirement stated ONLY in
+# prose ("1.1.2 complete the mandatory course on Mental Health First Aid
+# (either … NURS1050NEF … or … NURS 1050NCF…)") and counted inside the prose
+# category total, but never a table row — so the parsed table sum can land 3cr
+# short (BSCHFTSJ core: table 96 vs prose 99). Add the English-version code to
+# the short category so required pools stay satisfiable.
+MHFA_RE = re.compile(
+    r"mandatory\s+course\s+on\s+Mental\s+Health\s+First\s+Aid.*?"
+    r"([A-Z]{2,5})\s?(\d{4}[A-Z]{2,3})", re.I | re.S)
+
+
+def apply_mhfa_mandate(text, cats):
+    m = MHFA_RE.search(text)
+    if not m:
+        return
+    code = m.group(1) + m.group(2)
+    for cat in cats.values():
+        mc = cat.get("min_credits")
+        cs = cat.get("credits_seen", 0)
+        if (mc and cs < mc and mc - cs == 3
+                and code not in cat.get("course_credits", {})):
+            cat["courses"].append(code)
+            cat["course_credits"][code] = 3
+            cat["credits_seen"] = cs + 3
+            return
+
+
 def parse_text_to_entry(txt, school):
     """Full local parse of one programme's PDF text → raw-JSON entry."""
     cats = categories_from_text(txt)   # {cat: {courses, course_credits, credits_seen}}
@@ -298,6 +353,7 @@ def parse_text_to_entry(txt, school):
         cats[key]["min_credits"] = mc
         if key == "general-ed":
             cats[key]["pool"] = "ge"
+    apply_mhfa_mandate(txt, cats)
     return {"school": school, "total_credits": total_credits_from_prose(txt),
             "categories": cats}
 
