@@ -32,6 +32,7 @@ function _adaptProgramme(p) {
       minCredits: c.min_credits,
       color: c.color,
       pickN: c.pick_n,
+      pool: c.pool, // "credits" (programme_rules electives) / "ge" / undefined
       courses: c.courses || [],
     };
   }
@@ -155,6 +156,9 @@ function _categorySatisfied(cat, earned, completedCount) {
   const required = cat.minCredits;
   const pickN = cat.pickN;
   const total = cat.courses.length;
+  // Credit pool (programme_rules electives, incl. 150-course STEAM menus):
+  // satisfied purely by earned credits, any course combination.
+  if (cat.pool === "credits") return earned >= required;
   if (pickN != null) return completedCount >= pickN && earned >= required;
   if (total === 0) return required === 0;
   return completedCount === total && earned >= required;
