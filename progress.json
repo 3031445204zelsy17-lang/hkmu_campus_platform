@@ -307,12 +307,12 @@
     {
       "id": "T30",
       "phase": "B-排课台",
-      "name": "ICS 导出(选做)",
+      "name": "ICS 导出(选做)(已砍:用户决策不做)",
       "description": "导出课表 ICS,P1 优先级低可跳",
       "dependencies": [
         "T29"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T31",
