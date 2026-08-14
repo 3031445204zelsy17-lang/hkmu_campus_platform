@@ -117,9 +117,15 @@ def build_entry(code, raw, skill, existing):
         if not cat:
             continue
         if key == "general-ed":
-            cats_out[key] = {"min_credits": cat.get("min_credits", 0),
+            # pick_n mirrors DSAI's hand entry: GE courses are all 3cr, and
+            # the pool satisfies on "pick_n distinct-field courses AND min
+            # credits" — without pick_n an empty-course GE pool can never
+            # satisfy (empty-pool branch: required == 0).
+            ge_min = cat.get("min_credits", 0)
+            cats_out[key] = {"min_credits": ge_min,
                              "color": CATEGORY_COLORS[key],
-                             "courses": [], "pool": "ge"}
+                             "courses": [], "pool": "ge",
+                             "pick_n": max(1, ge_min // 3)}
             continue
         courses = list(cat.get("courses", []))
         if key == "elective":
@@ -129,13 +135,39 @@ def build_entry(code, raw, skill, existing):
                              "color": CATEGORY_COLORS[key],
                              "courses": courses, "pool": "credits"}
             continue
-        cats_out[key] = {"min_credits": cat.get("min_credits", 0),
+        # Required pool (core / english / university-core): the PDF table is
+        # shared across cohorts/streams at the document tail, so its rows can
+        # over-list (e.g. BSCHSTAMJ core table 74cr vs the 2026/27-cohort min
+        # 48). Trust the prose min_credits (cohort-correct, agent-verified) and
+        # TRIM the list to the first courses summing to it — table order is
+        # cohort-grouped, so the prefix is the primary cohort's requirement.
+        cc = cat.get("course_credits", {})
+        min_cr = cat.get("min_credits", 0)
+        kept = []
+        running = 0
+        for cid in courses:
+            if min_cr and running >= min_cr:
+                break
+            kept.append(cid)
+            running += cc.get(cid, 3)
+        cats_out[key] = {"min_credits": min_cr,
                          "color": CATEGORY_COLORS[key],
-                         "courses": courses}
+                         "courses": kept}
 
-    return {"code": code, "name": name, "school": school,
-            "total_credits": raw.get("total_credits"),
-            "categories": cats_out, "template": {}}
+    # course_credits: required pools trimmed to the kept courses; elective keeps
+    # its full menu (seed needs every menu course's credits, and graduation's
+    # credit-pool math reads them). GE is dynamic — omitted.
+    trimmed_cc = {}
+    for key, cat in cats_out.items():
+        if key == "general-ed":
+            continue
+        raw_cc = raw["categories"].get(key, {}).get("course_credits", {})
+        trimmed_cc[key] = {cid: raw_cc.get(cid, 3) for cid in cat["courses"]}
+
+    return ({"code": code, "name": name, "school": school,
+             "total_credits": raw.get("total_credits"),
+             "categories": cats_out, "template": {}},
+            trimmed_cc)
 
 
 def py_literal(obj, indent=0):
@@ -172,7 +204,7 @@ def main():
     for code in sorted(raw):
         if code in EXCLUDE or "_error" in raw[code]:
             continue
-        entry = build_entry(code, raw[code], skill, PROGRAMMES)
+        entry, cc = build_entry(code, raw[code], skill, PROGRAMMES)
         # sanity: non-ge categories must list courses; sums must match total.
         smin = sum(c["min_credits"] for c in entry["categories"].values())
         for key, cat in entry["categories"].items():
@@ -181,10 +213,7 @@ def main():
         if entry["total_credits"] != smin:
             problems.append(f"{code}: Σmin={smin} ≠ total={entry['total_credits']}")
         rules[code] = entry
-        course_credits[code] = {
-            key: dict(raw[code]["categories"][key].get("course_credits", {}))
-            for key in entry["categories"] if key != "general-ed"
-        }
+        course_credits[code] = cc
 
     n_courses = sum(len(c["courses"]) for e in rules.values()
                     for c in e["categories"].values())
