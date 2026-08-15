@@ -359,6 +359,12 @@ CREATE TABLE IF NOT EXISTS course_catalogue (
 
 CREATE INDEX IF NOT EXISTS idx_course_catalogue_prog ON course_catalogue(programme_code);
 CREATE INDEX IF NOT EXISTS idx_cc_prog_bucket ON course_catalogue(programme_code, bucket_order);
+
+-- Add name_zh_cn to course_catalogue for simplified course names
+DO $$ BEGIN
+    ALTER TABLE course_catalogue ADD COLUMN name_zh_cn TEXT;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_cc_unique ON course_catalogue(programme_code, course_code, official_group);
 CREATE INDEX IF NOT EXISTS idx_pc_school ON programmes_catalogue(school_order, prog_order);
 
