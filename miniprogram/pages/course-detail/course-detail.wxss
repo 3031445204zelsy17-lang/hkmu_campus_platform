@@ -429,3 +429,68 @@
   font-size: 20rpx;
   color: var(--text-secondary);
 }
+
+/* GE 官方目录信息卡(label 左列固定宽,值右对齐排布;介绍为官方原文多段) */
+.ge-info-card .section-title {
+  margin-bottom: 16rpx;
+}
+.ge-info-row {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 12rpx;
+  font-size: var(--fs-link);
+}
+.ge-info-label {
+  flex: none;
+  width: 200rpx;
+  color: var(--text-secondary);
+}
+.ge-info-val {
+  flex: 1;
+  color: var(--text-primary);
+  font-weight: 500;
+  word-break: break-word;
+}
+.ge-info-terms {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+/* 学期徽标:同 planner .ge-term 配色(互动蓝浅底) */
+.ge-info-term {
+  padding: 2rpx 12rpx;
+  border-radius: 999rpx;
+  background: rgba(15, 143, 190, 0.1);
+  color: var(--accent-blue);
+  font-size: 20rpx;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ge-info-desc {
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--divider);
+  color: var(--text-primary);
+  font-size: var(--fs-feed-body);
+  line-height: 1.7;
+  word-break: break-word;
+  white-space: pre-line;
+}
+/* 不可兼修组合:警示色小字 */
+.ge-info-excl {
+  margin-top: 16rpx;
+  padding: 12rpx 20rpx;
+  border-radius: var(--radius-entry);
+  background: rgba(217, 119, 6, 0.08);
+  font-size: var(--fs-link);
+}
+.ge-info-excl-label {
+  color: #b45309;
+  margin-right: 8rpx;
+  font-weight: 600;
+}
+.ge-info-excl-val {
+  color: #92400e;
+  word-break: break-word;
+}

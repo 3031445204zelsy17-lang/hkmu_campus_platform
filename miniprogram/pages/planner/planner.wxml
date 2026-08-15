@@ -428,6 +428,16 @@
             bindinput="onGeSearchInput"
           />
         </view>
+        <!-- 学期筛选胶囊:全部/秋季/春季/暑期,与搜索叠加(AND);复用年份 seg 样式族 -->
+        <view class="seg-bar ge-term-seg">
+          <view
+            wx:for="{{gePicker.termSegs}}"
+            wx:key="key"
+            class="seg-item {{item.active ? 'seg-on' : ''}}"
+            data-term="{{item.key}}"
+            bindtap="onGeTermTap"
+          >{{item.label}}</view>
+        </view>
         <view wx:if="{{gePicker.searchEmpty}}" class="ge-rank-empty">
           <view class="ge-rank-empty-ic">🔍</view>
           <view class="ge-rank-empty-tx">{{gePicker.searchEmpty}}</view>

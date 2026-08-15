@@ -191,6 +191,21 @@ class CommentOut(BaseModel):
 
 # --- Courses ---
 
+class GECourseInfoOut(BaseModel):
+    """官方 GE 目录信息(GE_catalog_3cru.pdf 富化),挂在 CourseOut.ge 上。
+
+    school 是池内缩写(A&SS 等),前端 i18n 映射双语全称;school_name 是目录
+    逐课打印的学院名原文——官方文件内课码字母与学院栏偶有出入,展示以目录为准。"""
+    field: str
+    level: int = 0            # 官方「程度」:1000 | 2000
+    moi: str = ""             # english | chinese | bilingual
+    terms: list[str] = []
+    excluded: list[str] = []
+    description: str = ""
+    school: str = ""
+    school_name: str = ""
+
+
 class CourseOut(BaseModel):
     id: str
     code: str
@@ -201,6 +216,7 @@ class CourseOut(BaseModel):
     semester: str
     prerequisites: str = "[]"
     description: Optional[str] = None
+    ge: Optional[GECourseInfoOut] = None
 
 
 class UserCourseUpdate(BaseModel):

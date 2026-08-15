@@ -96,6 +96,41 @@ function buildTagCloud(raw, text) {
   }));
 }
 
+// GE 官方目录信息 → 视图模型(backend _ge_info_for 富化的 raw.ge)。
+// moi/学院名走 i18n 映射;学院反查由后端按目录打印完成,兜底 school_name 原文。
+// 介绍段落是官方原文(单语:中授课→中文/英授课→英文,Bilingual→两段),不翻译。
+function buildGeInfo(g, plannerText, text) {
+  if (!g) return null;
+  const moiMap = {
+    english: text.geMoiEnglish,
+    chinese: text.geMoiChinese,
+    bilingual: text.geMoiBilingual,
+  };
+  const schoolKey = {
+    "A&SS": "geSchoolASS",
+    "B&A": "geSchoolBA",
+    "E&L": "geSchoolEL",
+    "N&HS": "geSchoolNHS",
+    "S&T": "geSchoolST",
+  }[g.school];
+  const semMap = {
+    autumn: plannerText.semAutumn,
+    spring: plannerText.semSpring,
+    summer: plannerText.semSummer,
+  };
+  const rows = [
+    { label: text.geLevelLabel, value: g.level ? String(g.level) : "" },
+    { label: text.geMoiLabel, value: moiMap[g.moi] || g.moi || "" },
+    { label: text.geSchoolLabel, value: (schoolKey && text[schoolKey]) || g.school_name || "" },
+  ].filter((r) => r.value);
+  return {
+    rows,
+    terms: (g.terms || []).map((t) => semMap[t] || t),
+    excludedText: (g.excluded || []).join(" · "),
+    description: g.description || "",
+  };
+}
+
 // 课程行 → 视图模型。categories/semester/year 标签复用 planner scope(同源学术词汇,不重复造 key)
 function normalizeCourse(raw, plannerText, text) {
   const semKey = String(raw.semester || "").toLowerCase();
@@ -104,6 +139,7 @@ function normalizeCourse(raw, plannerText, text) {
     spring: plannerText.semSpring,
     summer: plannerText.semSummer,
   };
+  const ge = raw.ge || null;
   const yearLabel = (plannerText.yearLabel || "").replace(
     "{n}",
     raw.year != null ? raw.year : "",
@@ -113,15 +149,22 @@ function normalizeCourse(raw, plannerText, text) {
     raw.category ||
     "";
   const prereqIds = parsePrereqs(raw.prerequisites);
+  // meta 行:非 GE 保持「学分 · 第n年 · 学期」;GE 的 year=0/semester=any 是
+  // seed sentinel(无意义),只显示学分,其余信息在官方資訊卡里
+  const metaParts = [
+    (raw.credits != null ? raw.credits : "") + " " + (text.creditsSuffix || ""),
+  ];
+  if (!ge) {
+    metaParts.push(yearLabel, semLabelMap[semKey] || raw.semester || "");
+  }
   return {
     code: raw.code || "",
     name: raw.name || "",
-    creditsLabel:
-      (raw.credits != null ? raw.credits : "") + " " + (text.creditsSuffix || ""),
+    metaLine: metaParts.filter(Boolean).join(" · "),
     categoryLabel,
-    yearLabel,
-    semesterLabel: semLabelMap[semKey] || raw.semester || "",
-    description: raw.description || "",
+    // GE:DB description 是 seed 的「中文名·领域」,让位官方介绍段(geInfo.description)
+    description: ge ? "" : raw.description || "",
+    geInfo: buildGeInfo(ge, plannerText, text),
     prereqText: prereqIds.join(", "),
     hasPrereqs: prereqIds.length > 0,
   };

@@ -9,11 +9,13 @@ from ..models import (
     CourseReviewCreate, CourseReviewOut, PaginatedResponse,
     REVIEW_TAGS,
     CourseTagAggregate, CourseReviewTagsOut, CourseReviewStatsOut,
+    GECourseInfoOut,
 )
 from ..data.programmes import PROGRAMMES, DEFAULT_PROGRAMME_CODE, get_programme
 from ..data.ge_courses import (
-    GE_FIELD_ORDER, PROGRAMME_GE_FIELDS, ge_courses_for,
+    GE_FIELD_ORDER, PROGRAMME_GE_FIELDS, ge_courses_for, ge_course_by_id,
 )
+from ..data.ge_catalog_enrichment import GE_SCHOOL_NAMES
 from ..services.cache import TTLCache
 from pydantic import BaseModel, Field, field_validator
 
@@ -192,6 +194,12 @@ class GECourseOut(BaseModel):
     # offering terms in the current guide window (2026 Autumn → 2027 Summer);
     # [] = not offered in the window. Parsed from the GE Selection Guide PDF.
     terms: list[str] = []
+    # 官方目录富化(小字段;description/school_name 只走详情 GET /{id} 的 ge 子
+    # 对象,列表不带长文本)。level=官方「程度」1000|2000,moi=english|chinese|bilingual。
+    credits: int = 3
+    level: int = 0
+    moi: str = ""
+    excluded: list[str] = []
 
 
 class GEListOut(BaseModel):
@@ -252,6 +260,33 @@ def _course_row_to_out(row) -> CourseOut:
         semester=row["semester"],
         prerequisites=row["prerequisites"] or "[]",
         description=row["description"],
+    )
+
+
+def _ge_info_for(course_id: str) -> GECourseInfoOut | None:
+    """官方 GE 目录信息(纯常量 join,不碰 DB);非 GE 课返回 None。
+
+    学院缩写按目录打印名反查——官方文件内课码第5字母与「所屬學院」栏偶有出入
+    (GEN 1510NCF/2501NEF 印 S&T),展示以目录为准。"""
+    src = ge_course_by_id(course_id)
+    if not src:
+        return None
+    printed = src.get("school_name", "")
+    school = src.get("school", "")
+    for abbr, names in GE_SCHOOL_NAMES.items():
+        if printed in {names["pdf_verbatim"][0], names["pdf_verbatim"][1],
+                       names["en"], names["zh"]}:
+            school = abbr
+            break
+    return GECourseInfoOut(
+        field=src["field"],
+        level=src.get("level", 0),
+        moi=src.get("moi", ""),
+        terms=src.get("terms", []),
+        excluded=src.get("excluded", []),
+        description=src.get("description", ""),
+        school=school,
+        school_name=printed,
     )
 
 
@@ -843,7 +878,10 @@ async def get_course(course_id: str):
         )
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Course not found")
-        return _course_row_to_out(row)
+        out = _course_row_to_out(row)
+    # GE 课挂官方目录信息(纯常量 join,不查库);非 GE 保持 ge=None
+    out.ge = _ge_info_for(course_id)
+    return out
 
 
 # ── User progress ────────────────────────────────────────────────────────────

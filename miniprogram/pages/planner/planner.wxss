@@ -911,6 +911,14 @@
 .ge-search {
   padding: 16rpx 24rpx 4rpx;
 }
+/* GE 学期筛选胶囊:搜索框下,与 .ge-search 左右 24rpx 对齐;压缩变体 */
+.ge-term-seg {
+  margin: 8rpx 24rpx 4rpx;
+}
+.ge-term-seg .seg-item {
+  padding: 10rpx 0;
+  font-size: 24rpx;
+}
 /* GE 开课学期徽标(2026秋→2027暑窗口;未排课不显示) */
 .ge-term {
   flex: none;

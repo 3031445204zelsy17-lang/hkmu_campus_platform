@@ -694,6 +694,7 @@ Page({
     this._setTabBarHidden(true);
     this._gePickerLoadError = null;
     this._geKeyword = "";  // 每次打开清空搜索(上次关键词不该带入新会话)
+    this._geTermFilter = "";  // 学期筛选一并重置(默认「全部」= 不过滤)
     this._emit();
     const code = this._selectedCode || this._userProgrammeCode;
     if (code) {
@@ -961,11 +962,16 @@ Page({
       }
     }
     const kw = String(this._geKeyword || "").trim().toLowerCase();
+    const tf = this._geTermFilter || "";  // 学期筛选:autumn|spring|summer,空=全部
     const fields = order
       .filter((f) => byField.has(f))
       .map((f) => {
         const fBlocked = ownFields.has(f);
         let fCourses = byField.get(f);
+        if (tf) {
+          // 学期胶囊先行(便宜的数组 includes),与下面的搜索天然 AND
+          fCourses = fCourses.filter((c) => (c.terms || []).includes(tf));
+        }
         if (kw) {
           // 搜索:课码/英文名/中文名/开课学期跨领域过滤(中文原样 contains)
           fCourses = fCourses.filter((c) => {
@@ -992,14 +998,28 @@ Page({
           })),
         };
       })
-      .filter((f) => !kw || f.courses.length); // 搜索时收起无命中领域
+      .filter((f) => (!kw && !tf) || f.courses.length); // 搜索/学期筛选时收起无命中领域
     return Object.assign(base, {
       progress: fillTemplate(text.geProgress, { taken, need }),
       taken,
       fields,
       searchPlaceholder: text.geSearchPlaceholder,
-      searchEmpty: (kw && !fields.length) ? text.geSearchEmpty : "",
+      searchEmpty: ((kw || tf) && !fields.length) ? text.geSearchEmpty : "",
+      termSegs: ["", "autumn", "spring", "summer"].map((k) => ({
+        key: k,
+        active: tf === k,
+        label: k ? this._geTermLabel(k, text) : text.geTermAll,
+      })),
     });
+  },
+
+  // GE 学期筛选胶囊点按:切换 全部/秋季/春季/暑期(与搜索叠加 AND)
+  onGeTermTap(e) {
+    const t = e.currentTarget.dataset.term || "";
+    if (t !== (this._geTermFilter || "")) {
+      this._geTermFilter = t;
+      this._emit();
+    }
   },
 
   // GE 领域视图搜索:实时按课码/中英文名跨领域过滤(73 门本地数据,无需节流)

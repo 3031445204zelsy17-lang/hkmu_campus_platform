@@ -16,13 +16,38 @@
         <view wx:if="{{course.categoryLabel}}" class="mini-pill green">{{course.categoryLabel}}</view>
       </view>
       <view class="course-hero-name">{{course.name}}</view>
-      <view class="course-hero-meta">{{course.creditsLabel}} · {{course.yearLabel}} · {{course.semesterLabel}}</view>
+      <view class="course-hero-meta">{{course.metaLine}}</view>
       <view wx:if="{{course.description}}" class="course-desc">{{course.description}}</view>
       <view wx:if="{{course.hasPrereqs}}" class="course-prereqs">
         <text class="course-prereq-label">{{text.prereqLabel}}</text>
         <text class="course-prereq-text">{{course.prereqText}}</text>
       </view>
       <view class="course-official-note">{{text.officialNote}}</view>
+    </view>
+
+    <!-- GE 官方目录信息(官方 GE_catalog_3cru.pdf 富化;介绍为官方原文单语) -->
+    <view wx:if="{{course.geInfo}}" class="web-panel ge-info-card">
+      <view class="section-title">{{text.geInfoTitle}}</view>
+      <view class="ge-info-row" wx:for="{{course.geInfo.rows}}" wx:key="label">
+        <text class="ge-info-label">{{item.label}}</text>
+        <text class="ge-info-val">{{item.value}}</text>
+      </view>
+      <view class="ge-info-row" wx:if="{{course.geInfo.terms.length}}">
+        <text class="ge-info-label">{{text.geTermsLabel}}</text>
+        <view class="ge-info-terms">
+          <text
+            wx:for="{{course.geInfo.terms}}"
+            wx:for-item="tm"
+            wx:key="*this"
+            class="ge-info-term"
+          >{{tm}}</text>
+        </view>
+      </view>
+      <view wx:if="{{course.geInfo.description}}" class="ge-info-desc">{{course.geInfo.description}}</view>
+      <view wx:if="{{course.geInfo.excludedText}}" class="ge-info-excl">
+        <text class="ge-info-excl-label">{{text.geExcludedLabel}}</text>
+        <text class="ge-info-excl-val">{{course.geInfo.excludedText}}</text>
+      </view>
     </view>
 
     <!-- 内联标记(登录态) -->
