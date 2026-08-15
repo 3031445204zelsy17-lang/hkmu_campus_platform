@@ -225,6 +225,16 @@ Page({
     this.setData({ courseId: (options && options.id) || "" });
   },
 
+  // 转发本课程(未定义此 handler 的页面,「···」菜单里的「转发」会置灰)。
+  // 标题带课码+课名,path 带 id 让接收方点开直达这门课。
+  onShareAppMessage() {
+    const c = this.data.course || {};
+    return {
+      title: `${c.code || "Course"} · ${c.name || "HKMU Campus"}`,
+      path: `/pages/course-detail/course-detail?id=${this.data.courseId || ""}`,
+    };
+  },
+
   onShow() {
     this.applyLocale(getLocale());
 
