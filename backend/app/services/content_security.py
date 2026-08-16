@@ -27,7 +27,10 @@ from ..config import ENABLE_CONTENT_MODERATION
 logger = logging.getLogger("hkmu.security")
 
 _WECHAT_BASE = "https://api.weixin.qq.com"
-_TOKEN_URL = _WECHAT_BASE + "/cgi-bin/get_stable_access_token"
+# ⚠️ 正确路径是 /cgi-bin/stable_token。FR1 起误写为 /cgi-bin/get_stable_access_token
+# (该路径不存在,微信回 HTTP 404)→ fail-closed 503 挡了所有微信用户 UGC,
+# 8-04 因此关审核,并被误诊为「IP 白名单架构堵死」——2026-08-16 生产日志铁证纠正。
+_TOKEN_URL = _WECHAT_BASE + "/cgi-bin/stable_token"
 _MSG_SEC_CHECK_URL = _WECHAT_BASE + "/wxa/msg_sec_check"
 _IMG_SEC_CHECK_URL = _WECHAT_BASE + "/wxa/img_sec_check"
 
