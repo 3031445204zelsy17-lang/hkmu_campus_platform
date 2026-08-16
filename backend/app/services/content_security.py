@@ -106,7 +106,9 @@ async def check_text(openid: str, content: str, scene: int) -> dict:
     """
     token = await _get_access_token()
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
+        # 10s:Azure SEA → api.weixin.qq.com 跨境链路偶发高延迟,5s 会把慢响应
+        # 误判为服务异常(fail-closed 503 挡正常发帖);等满 10s 再判死。
+        async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.post(
                 _MSG_SEC_CHECK_URL,
                 params={"access_token": token},
