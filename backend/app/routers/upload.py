@@ -14,6 +14,7 @@ by folder in the storage bucket.
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, status
 
 from ..services.auth_service import get_current_user
+from ..services.content_security import audit_user_image
 from ..services.storage_service import validate_image, upload_image_variants, read_bounded
 
 router = APIRouter(prefix="/upload", tags=["upload"])
@@ -45,6 +46,10 @@ async def upload_image(
     err = validate_image(content_type, len(raw))
     if err:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, err)
+
+    # 图片审核闸门(版本修改指引 3.2「任意发布场景生效」):帖子图/失物图/
+    # 头像等所有模块的用户图片,上传到 Storage 前先过 img_sec_check。
+    await audit_user_image(user, raw)
 
     # Multi-size image pipeline (Phase 2): EXIF-orient, strip metadata, resize
     # to per-module display sizes, recompress JPEG q80. Returns the canonical

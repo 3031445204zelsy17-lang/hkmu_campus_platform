@@ -14,6 +14,7 @@ from ..models import (
     UserPublicOut,
 )
 from ..services.auth_service import get_current_user, is_hkmu_email
+from ..services.content_security import audit_user_text, audit_user_image, SCENE_PROFILE
 from ..services.email_service import send_verification_email
 from ..services.rate_limiter import check_rate_limit
 from ..services.storage_service import validate_image, upload_image_variants, delete_from_supabase, read_bounded, verify_public_url
@@ -282,6 +283,13 @@ async def update_me(
     if not updates:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "No fields to update")
 
+    # UGC text gate (WeChat 版本修改指引 3.2 — 任意发布场景生效):昵称/简介
+    # 是公开展示的用户文本,与其他 UGC 同标准审核。
+    if body.nickname is not None or body.bio is not None:
+        await audit_user_text(
+            user, f"{body.nickname or ''} {body.bio or ''}".strip(), SCENE_PROFILE
+        )
+
     updates["updated_at"] = datetime.now(timezone.utc)
     set_clause = ", ".join(f"{k} = ${i+1}" for i, k in enumerate(updates.keys()))
     where_n = len(updates) + 1
@@ -318,6 +326,10 @@ async def upload_avatar(
     err = validate_image(content_type, len(raw))
     if err:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, err)
+
+    # 图片审核闸门(微信 5月 3.2 版本修改指引点名【头像】)——存进 Storage
+    # 之前先过 img_sec_check,违规 400、服务异常 503,不落库不留 URL。
+    await audit_user_image(user, raw)
 
     # Capture the previous avatar before the new upload lands — deleted AFTER
     # the new one is live so a failed upload never leaves the user pointing at

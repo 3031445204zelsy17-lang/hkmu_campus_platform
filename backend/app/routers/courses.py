@@ -17,6 +17,7 @@ from ..data.ge_courses import (
 )
 from ..data.ge_catalog_enrichment import GE_SCHOOL_NAMES
 from ..services.cache import TTLCache
+from ..services.content_security import audit_user_text, SCENE_COMMENT
 from pydantic import BaseModel, Field, field_validator
 
 # Cap on a single batch progress update (Codex [25]) — without it a client could
@@ -1087,6 +1088,10 @@ async def create_review(
         exists = await db.fetchrow("SELECT id FROM courses WHERE id = $1", course_id)
         if not exists:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Course not found")
+
+        # UGC text gate(版本修改指引 3.2「任意发布场景生效」):课评正文
+        # 是公开展示的用户文本,与帖子/评论同标准审核。
+        await audit_user_text(user, body.content, SCENE_COMMENT)
 
         # One review per user per course
         dup = await db.fetchrow(

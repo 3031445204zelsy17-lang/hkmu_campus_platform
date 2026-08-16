@@ -29,6 +29,7 @@ logger = logging.getLogger("hkmu.security")
 _WECHAT_BASE = "https://api.weixin.qq.com"
 _TOKEN_URL = _WECHAT_BASE + "/cgi-bin/get_stable_access_token"
 _MSG_SEC_CHECK_URL = _WECHAT_BASE + "/wxa/msg_sec_check"
+_IMG_SEC_CHECK_URL = _WECHAT_BASE + "/wxa/img_sec_check"
 
 # scene enum (WeChat msg_sec_check v2)
 SCENE_PROFILE = 1
@@ -41,6 +42,9 @@ _SUGGEST_VIOLATION = ("risky", "review")
 
 # errcode: openid not accessed the mini program in the last 2h
 _ERRCODE_OPENID_EXPIRED = 61010
+
+# errcode: img_sec_check verdict "content risky" (v1 has no suggest field)
+_ERRCODE_IMG_RISKY = 87014
 
 _PROVIDER_WECHAT = "wechat_miniprogram"
 
@@ -116,6 +120,28 @@ async def check_text(openid: str, content: str, scene: int) -> dict:
             resp.raise_for_status()
     except httpx.HTTPError as exc:
         raise WechatContentSecurityError("Unable to reach WeChat msg_sec_check") from exc
+    return resp.json()
+
+
+async def check_image(image_bytes: bytes) -> dict:
+    """Call img_sec_check (v1, synchronous). Returns the raw WeChat JSON.
+
+    ``image_bytes`` must already satisfy the API contract (PNG/JPEG/BMP,
+    ≤1 MB, ≤750×1334) — build with storage_service.check_thumbnail.
+
+    Raises WechatContentSecurityError on transport failure.
+    """
+    token = await _get_access_token()
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(
+                _IMG_SEC_CHECK_URL,
+                params={"access_token": token},
+                files={"media": ("check.jpg", image_bytes, "image/jpeg")},
+            )
+            resp.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise WechatContentSecurityError("Unable to reach WeChat img_sec_check") from exc
     return resp.json()
 
 
@@ -205,5 +231,80 @@ async def audit_user_text(user: dict, text: str, scene: int) -> None:
     logger.error(
         "content_security unknown suggest (fail-closed 503): user=%s suggest=%r",
         user.get("id"), suggest,
+    )
+    raise HTTPException(status_code=503, detail="内容审核暂时不可用，请稍后重试")
+
+
+async def audit_user_image(user: dict, raw: bytes) -> None:
+    """Moderate a user-uploaded IMAGE (avatars, post/lostfound photos).
+
+    Same policy skeleton as ``audit_user_text``, adapted to img_sec_check v1
+    (no ``suggest`` field — the verdict IS errcode):
+
+      errcode == 0                        → allow (the ONLY allow path)
+      errcode == 87014 (risky)            → HTTP 400 内容包含违规信息
+      service anomaly *                   → HTTP 503 内容审核暂时不可用
+      undecodable image (thumb is None)   → HTTP 400 换格式 (a gate that
+                                            can't inspect the bytes can't
+                                            clear them for WeChat users)
+
+    * transport / token / timeout failure, illegal JSON, any other non-zero
+      errcode — fail-closed, identical rationale to the text gate.
+    Non-WeChat users (no openid) skip + log; kill switch bypasses, same as text.
+    """
+    if not ENABLE_CONTENT_MODERATION:
+        logger.warning(
+            "content moderation DISABLED via env — image from user=%s passes unfiltered",
+            user.get("id"),
+        )
+        return
+
+    provider = user.get("oauth_provider")
+    openid = user.get("oauth_id")
+    if provider != _PROVIDER_WECHAT or not openid:
+        logger.info(
+            "content_security image skip (no openid): user=%s provider=%s",
+            user.get("id"), provider,
+        )
+        return
+
+    from .storage_service import check_thumbnail
+
+    thumb = check_thumbnail(raw)
+    if thumb is None:
+        logger.warning(
+            "content_security image undecodable (fail-closed 400): user=%s", user.get("id"),
+        )
+        raise HTTPException(status_code=400, detail="图片格式不支持，请更换后重试")
+
+    # --- service / transport / parse failure → 503 (fail-closed) ---
+    try:
+        result = await check_image(thumb)
+    except (WechatContentSecurityError, ValueError, httpx.HTTPError) as exc:
+        logger.exception(
+            "content_security image check failed (fail-closed 503): user=%s err=%s",
+            user.get("id"), exc,
+        )
+        raise HTTPException(status_code=503, detail="内容审核暂时不可用，请稍后重试")
+
+    if not isinstance(result, dict):
+        logger.error(
+            "content_security image non-dict response (fail-closed 503): user=%s resp=%r",
+            user.get("id"), result,
+        )
+        raise HTTPException(status_code=503, detail="内容审核暂时不可用，请稍后重试")
+
+    errcode = result.get("errcode")
+    if errcode == 0:
+        return
+    if errcode == _ERRCODE_IMG_RISKY:
+        logger.info(
+            "content_security image rejected: user=%s", user.get("id"),
+        )
+        raise HTTPException(status_code=400, detail="内容包含违规信息，请修改后重试")
+    # any other errcode (incl. 61010-equivalent / token issues) → fail-closed
+    logger.error(
+        "content_security image errcode=%s errmsg=%s (fail-closed 503): user=%s",
+        errcode, result.get("errmsg"), user.get("id"),
     )
     raise HTTPException(status_code=503, detail="内容审核暂时不可用，请稍后重试")

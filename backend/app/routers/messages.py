@@ -7,6 +7,7 @@ from pydantic import ValidationError
 from ..database import get_db
 from ..models import MessageCreate, MessageOut, ConversationOut
 from ..services.auth_service import get_current_user, decode_access_token, access_token_expired
+from ..services.content_security import audit_user_text, SCENE_SOCIAL
 from ..services.rate_limiter import check_rate_limit
 from ..services.websocket_manager import manager
 
@@ -123,6 +124,9 @@ async def send_message(
     user: dict = Depends(get_current_user),
 ):
     check_rate_limit(f"msg:{user['id']}", max_requests=30, window_seconds=60)
+
+    # UGC text gate(版本修改指引 3.2「任意发布场景生效」):私信同为用户文本。
+    await audit_user_text(user, body.content, SCENE_SOCIAL)
 
     now = datetime.now(timezone.utc)
     now_iso = now.isoformat()
@@ -303,6 +307,25 @@ async def ws_endpoint(ws: WebSocket):
                         receiver_id, content = await _validate_ws_chat(
                             user_id, data.get("receiver_id"), data.get("content", "").strip(), db
                         )
+                        # UGC text gate — same policy as REST send_message(微信
+                        # 版本修改指引 3.2「任意发布场景生效」)。HTTPException →
+                        # ValueError 复用下方 error 帧,违规/审核不可用都只回
+                        # 提示文案,不落库。
+                        urow = await db.fetchrow(
+                            "SELECT oauth_provider, oauth_id FROM users WHERE id = $1",
+                            user_id,
+                        )
+                        try:
+                            await audit_user_text(
+                                {
+                                    "id": user_id,
+                                    "oauth_provider": urow["oauth_provider"] if urow else None,
+                                    "oauth_id": urow["oauth_id"] if urow else None,
+                                },
+                                content, SCENE_SOCIAL,
+                            )
+                        except HTTPException as exc:
+                            raise ValueError(str(exc.detail)) from None
                         now = datetime.now(timezone.utc)
                         now_iso = now.isoformat()
                         row = await db.fetchrow(

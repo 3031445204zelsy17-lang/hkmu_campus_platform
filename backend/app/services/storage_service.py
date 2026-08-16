@@ -109,6 +109,32 @@ async def read_bounded(file) -> bytes:
     return data
 
 
+# WeChat img_sec_check accepts PNG/JPEG/BMP ≤1 MB and ≤750×1334 — uploads here
+# can be webp/gif and up to 10 MB, so moderation runs on a transcoded thumbnail
+# of the ORIGINAL pixels (a 750px JPEG q85 is comfortably under 1 MB).
+_IMG_CHECK_BOX = (750, 1334)
+
+
+def check_thumbnail(raw: bytes) -> bytes | None:
+    """Build a WeChat img_sec_check-ready JPEG from any Pillow-decodable upload.
+
+    EXIF-oriented, downscaled to fit 750×1334, RGB JPEG. GIF → first frame
+    (Pillow's default seek(0)). Returns None when Pillow cannot decode the
+    bytes — the caller decides; with ``validate_image`` passed this is rare.
+    """
+    try:
+        img = Image.open(BytesIO(raw))
+        img = ImageOps.exif_transpose(img)
+        img = img.convert("RGB")
+        img.thumbnail(_IMG_CHECK_BOX)
+        buf = BytesIO()
+        img.save(buf, format="JPEG", quality=85, optimize=True)
+        return buf.getvalue()
+    except Exception:  # mirror process_image: never let a Pillow quirk break flow
+        log.warning("check_thumbnail failed to decode upload", exc_info=True)
+        return None
+
+
 def _storage_path(
     module: str, user_id: int, content_type: str, filename: str | None = None
 ) -> str:

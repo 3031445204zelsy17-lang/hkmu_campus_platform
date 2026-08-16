@@ -8,6 +8,7 @@ from ..config import (
 from ..database import get_db
 from ..models import FeedbackCreate, FeedbackOut
 from ..services.auth_service import get_current_user
+from ..services.content_security import audit_user_text, SCENE_COMMENT
 from ..services.rate_limiter import check_rate_limit
 
 router = APIRouter(prefix="/feedback", tags=["feedback"])
@@ -38,6 +39,10 @@ async def submit_feedback(
         raise HTTPException(status_code=422, detail="content required")
 
     contact = payload.contact.strip() if payload.contact else None
+
+    # UGC text gate(版本修改指引 3.2「任意发布场景生效」):反馈正文+联系方式
+    # 是用户提交文本,与帖子/评论同标准审核。
+    await audit_user_text(user, f"{content} {contact or ''}".strip(), SCENE_COMMENT)
 
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(days=FEEDBACK_RETENTION_DAYS)
