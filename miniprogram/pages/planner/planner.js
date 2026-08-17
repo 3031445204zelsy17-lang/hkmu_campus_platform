@@ -1092,14 +1092,17 @@ Page({
       for (const sch of browse.schools) {
         for (const p of sch.programmes) {
           const known = planning && planning.programmes.find((x) => x.code === p.programme_code);
+          // 完整规划判定：DB flag(仅 DSAI)或 /programmes 已收录的规则专业(55 门,
+          // v1.11 起带毕业规则+GE 池但 DB has_full_planning 列未回填)→ 以载荷为准
+          const knownFull = !!(known && !known.coming_soon);
           const name = known ? localizeName(known.name, locale) : p.programme_name;
           pickerList.push({
             code: p.programme_code,
-            has_full_planning: !!p.has_full_planning,
+            has_full_planning: !!p.has_full_planning || knownFull,
             school: p.school || (known && known.school) || "",
             name,
-            // 仅完整规划专业挂徽章；其余 106 个目录专业不再每行重复"课程目录"标签
-            badge: p.has_full_planning ? text.catalogueTagFull : "",
+            // 仅完整规划专业挂徽章；其余目录专业不再每行重复"课程目录"标签
+            badge: (p.has_full_planning || knownFull) ? text.catalogueTagFull : "",
           });
         }
       }

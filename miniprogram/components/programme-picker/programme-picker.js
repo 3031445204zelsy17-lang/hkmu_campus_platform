@@ -124,13 +124,16 @@ Component({
         for (const sch of browse.schools) {
           for (const p of sch.programmes) {
             const known = planning && planning.programmes.find((x) => x.code === p.programme_code);
+            // 与 planner._emit 同步:DB flag(仅 DSAI)或 /programmes 载荷已收录的
+            // 规则专业(55 门,DB 列未回填)都算完整规划,否则 GE 选课对规则专业不可达
+            const knownFull = !!(known && !known.coming_soon);
             const name = known ? localizeName(known.name, locale) : p.programme_name;
             list.push({
               code: p.programme_code,
-              has_full_planning: !!p.has_full_planning,
+              has_full_planning: !!p.has_full_planning || knownFull,
               school: p.school || (known && known.school) || "",
               name,
-              badge: p.has_full_planning ? text.catalogueTagFull : "",
+              badge: (p.has_full_planning || knownFull) ? text.catalogueTagFull : "",
             });
           }
         }
