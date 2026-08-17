@@ -14,6 +14,15 @@ function localizeName(name, locale) {
   return name[key] || name.en || "";
 }
 
+// 目录条目的三语名:中文优先官方目录名(name_zh_cn/tw),缺失回退英文。
+// 规则专业(/programmes 载荷)只有英文名,中文展示全靠这里的目录字段。
+function catalogueName(p, locale) {
+  if (!p) return "";
+  if (locale === "zh-Hans") return p.name_zh_cn || p.name_zh_tw || p.programme_name || "";
+  if (locale === "zh-Hant") return p.name_zh_tw || p.name_zh_cn || p.programme_name || "";
+  return p.programme_name || "";
+}
+
 // 浮层 top = 状态栏 + 胶囊导航高度（复刻 planner.getAppHeaderHeight），
 // 让浮层从 header 下方铺开，header 仍可见可用（含语言切换）。
 function appHeaderHeight() {
@@ -127,7 +136,9 @@ Component({
             // 与 planner._emit 同步:DB flag(仅 DSAI)或 /programmes 载荷已收录的
             // 规则专业(55 门,DB 列未回填)都算完整规划,否则 GE 选课对规则专业不可达
             const knownFull = !!(known && !known.coming_soon);
-            const name = known ? localizeName(known.name, locale) : p.programme_name;
+            const name = (locale === "zh-Hans" || locale === "zh-Hant")
+              ? (catalogueName(p, locale) || localizeName(known && known.name, locale))
+              : (known ? localizeName(known.name, locale) : p.programme_name);
             list.push({
               code: p.programme_code,
               has_full_planning: !!p.has_full_planning || knownFull,

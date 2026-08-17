@@ -19,6 +19,15 @@ function localizeName(name, locale) {
   return name[key] || name.en || "";
 }
 
+// 目录条目的三语名:中文优先官方目录名(name_zh_cn/tw),缺失回退英文。
+// 规则专业(/programmes 载荷)只有英文名,中文展示全靠这里的目录字段。
+function catalogueName(p, locale) {
+  if (!p) return "";
+  if (locale === "zh-Hans") return p.name_zh_cn || p.name_zh_tw || p.programme_name || "";
+  if (locale === "zh-Hant") return p.name_zh_tw || p.name_zh_cn || p.programme_name || "";
+  return p.programme_name || "";
+}
+
 function categoryPercent(earned, required) {
   if (!required || required <= 0) {
     return 0;
@@ -1097,6 +1106,15 @@ Page({
     const planning = this._catalogue;
     const browse = this._courseCatalogue;
 
+    // code→目录条目映射(三语专业名来源,规则专业载荷只有英文)
+    if (browse && browse.schools && !this._catByCode) {
+      const m = {};
+      for (const sch of browse.schools) {
+        for (const p of sch.programmes) m[p.programme_code] = p;
+      }
+      this._catByCode = m;
+    }
+
     // 扁平 picker 列表：优先 browse 目录（全校 ~107），否则回退 planning 3 专业
     let pickerList = [];
     if (browse && browse.schools) {
@@ -1106,7 +1124,9 @@ Page({
           // 完整规划判定：DB flag(仅 DSAI)或 /programmes 已收录的规则专业(55 门,
           // v1.11 起带毕业规则+GE 池但 DB has_full_planning 列未回填)→ 以载荷为准
           const knownFull = !!(known && !known.coming_soon);
-          const name = known ? localizeName(known.name, locale) : p.programme_name;
+          const name = (locale === "zh-Hans" || locale === "zh-Hant")
+            ? (catalogueName(p, locale) || localizeName(known && known.name, locale))
+            : (known ? localizeName(known.name, locale) : p.programme_name);
           pickerList.push({
             code: p.programme_code,
             has_full_planning: !!p.has_full_planning || knownFull,
@@ -1234,11 +1254,11 @@ Page({
       const cached = this._catalogueCoursesCache[entry.code];
       if (cached && cached._failed) {
         // 负缓存命中：显加载失败，不再重拉（避免死循环）
-        view.catalogueProgrammeName = view.programmeName;
+        view.catalogueProgrammeName = catalogueName(this._catByCode && this._catByCode[entry.code], locale) || view.programmeName;
         view.catalogueSchool = view.programmeSchool;
         view.catalogueLoadError = text.catalogueLoadFail;
       } else if (cached) {
-        view.catalogueProgrammeName = cached.programme_name || view.programmeName;
+        view.catalogueProgrammeName = catalogueName(this._catByCode && this._catByCode[entry.code], locale) || cached.programme_name || view.programmeName;
         view.catalogueSchool = cached.school || view.programmeSchool;
         view.catalogueBuckets = this._buildCatalogueBuckets(cached, text);
         view.catalogueTotal = (cached.buckets || []).reduce(
@@ -1257,7 +1277,8 @@ Page({
     // ── 完整规划专业（DSAI）→ 既有仪表盘/课程流 ──
     const programmes = planning ? planning.programmes : [];
     const prog = programmes.find((p) => p.code === entry.code) || programmes[0];
-    view.programmeName = prog ? localizeName(prog.name, locale) : view.programmeName;
+    view.programmeName = (prog && catalogueName(this._catByCode && this._catByCode[prog.code], locale))
+      || (prog ? localizeName(prog.name, locale) : view.programmeName);
     view.programmeSchool = prog ? prog.school || "" : view.programmeSchool;
     view.comingSoon = prog ? !!prog.coming_soon : false;
 

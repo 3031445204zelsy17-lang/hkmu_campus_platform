@@ -75,6 +75,7 @@ Page({
       feedbackAction: getTexts("feedback", locale).title,
       text,
     });
+    this._applyProgrammeName(); // 专业名随语言切换重取(中文/英文)
   },
 
   onPullDownRefresh() {
@@ -296,7 +297,8 @@ Page({
 
   // ── T03: 我的专业展示 + 切换（programme-picker 组件）──
 
-  // 拉全校专业建 code→name 映射,展示"我的专业"名（仅登录态调）
+  // 拉全校专业建 code→name 映射,展示"我的专业"名（仅登录态调）。
+  // 存原始三语字段,应用时按 locale 取:中文优先官方目录名,缺失回退英文
   _loadProgrammeName() {
     if (this._progNameMap) {
       this._applyProgrammeName();
@@ -307,7 +309,11 @@ Page({
         const map = {};
         ((data && data.schools) || []).forEach((sch) => {
           (sch.programmes || []).forEach((p) => {
-            map[p.programme_code] = p.programme_name;
+            map[p.programme_code] = {
+              en: p.programme_name,
+              zh_cn: p.name_zh_cn || "",
+              zh_tw: p.name_zh_tw || "",
+            };
           });
         });
         this._progNameMap = map;
@@ -318,9 +324,17 @@ Page({
       });
   },
 
+  _programmeNameForLocale(entry, locale) {
+    if (!entry) return "";
+    if (locale === "zh-Hans") return entry.zh_cn || entry.zh_tw || entry.en;
+    if (locale === "zh-Hant") return entry.zh_tw || entry.zh_cn || entry.en;
+    return entry.en;
+  },
+
   _applyProgrammeName() {
     const code = this.data.user && this.data.user.programme_code;
-    const name = (code && this._progNameMap && this._progNameMap[code]) || "";
+    const entry = code && this._progNameMap && this._progNameMap[code];
+    const name = this._programmeNameForLocale(entry, this.data.locale) || "";
     this.setData({ programmeName: name });
   },
 
