@@ -235,6 +235,15 @@ Page({
     };
   },
 
+  // 点亮收藏(把单门课程页收进「我的小程序收藏」)
+  onAddToFavorites() {
+    const c = this.data.course || {};
+    return {
+      title: `${c.code || "Course"} · ${c.name || "HKMU Campus"}`,
+      path: `/pages/course-detail/course-detail?id=${this.data.courseId || ""}`,
+    };
+  },
+
   onShow() {
     this.applyLocale(getLocale());
 

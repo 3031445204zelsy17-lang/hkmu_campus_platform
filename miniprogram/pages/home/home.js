@@ -33,6 +33,13 @@ Page({
     userInitial: "H",
   },
 
+  // 微信胶囊「···」菜单:点亮转发(未定义则菜单里该钮置灰)。
+  // 卡片标题带品牌后缀,收卡人不装 app 也能看懂这是什么
+  onShareAppMessage() {
+    const t = (this.data.text && this.data.text.title) || "";
+    return { title: t ? `${t} · HKMU Campus` : "HKMU Campus", path: "/pages/home/home" };
+  },
+
   onShow() {
     this.applyLocale(getLocale());
     syncTabBar(this, 0);

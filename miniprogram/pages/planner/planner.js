@@ -257,6 +257,19 @@ Page({
 
   // ── 生命周期 ──────────────────────────────────────────────────────────
 
+  // 微信胶囊「···」菜单:点亮转发(未定义则菜单里该钮置灰)。
+  // 卡片标题带品牌后缀,收卡人不装 app 也能看懂这是什么
+  onShareAppMessage() {
+    const t = (this.data.text && this.data.text.title) || "";
+    return { title: t ? `${t} · HKMU Campus` : "HKMU Campus", path: "/pages/planner/planner" };
+  },
+
+  // 点亮收藏(学生可把规划页收进「我的小程序收藏」快捷回访)
+  onAddToFavorites() {
+    const t = (this.data.text && this.data.text.title) || "";
+    return { title: t ? `${t} · HKMU Campus` : "HKMU Campus", path: "/pages/planner/planner" };
+  },
+
   onShow() {
     syncTabBar(this, 3);
     this._setTabBarHidden(this._programmeSearchOpen || this._gePickerOpen || this._onboardingActive);
