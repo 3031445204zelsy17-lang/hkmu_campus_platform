@@ -154,6 +154,15 @@ def build_entry(code, raw, skill, existing):
                          "color": CATEGORY_COLORS[key],
                          "courses": kept}
 
+    # 范围措辞的 elective("3 to 6" + "12 to 15" cr)各自计上限,但配对范围是
+    # 合计恒定的两条路径(做/不做毕业课题)→ Σmin 超 PDF 总分。按余数 gap 校正
+    # elective 学分池(BSSCHPAJ 21→18)。仅当 parser 标记了 _ranged_elective。
+    if raw.get("_ranged_elective"):
+        smin = sum(c["min_credits"] for c in cats_out.values())
+        total = raw.get("total_credits") or 0
+        if "elective" in cats_out and total and smin > total:
+            cats_out["elective"]["min_credits"] -= smin - total
+
     # course_credits: required pools trimmed to the kept courses; elective keeps
     # its full menu (seed needs every menu course's credits, and graduation's
     # credit-pool math reads them). GE is dynamic — omitted.

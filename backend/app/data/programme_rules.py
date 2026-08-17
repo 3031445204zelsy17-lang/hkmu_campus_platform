@@ -1937,6 +1937,201 @@ PROGRAMME_RULES = {
         },
         "template": {}
     },
+    "BSSCHAGSJ": {
+        "code": 'BSSCHAGSJ',
+        "name": {
+            "en": 'Bachelor of Social Sciences with Honours in Ageing Society and Services Studies'
+        },
+        "school": 'School of Arts and Social Sciences',
+        "total_credits": 120,
+        "categories": {
+            "core": {
+                "min_credits": 72,
+                "color": 'blue',
+                "courses": ["ECON1001AEF", "POLS1001AEF", "PSYC1001AEF", "SOCI1001AEF", "SOCI2004AEF", "SOSC2001AEF", "STAT2001AEF", "STAT2002AEF", "STAT2003AEF", "ECON3009AEF", "PSYC3010AEF", "PUAD3001AEF", "SOCI3001AEF", "SOCI3007AEF", "SOCI3008AEF", "SOSC3001AEF", "SOSC3002AEF", "SOSC3003AEF", "PSYC4010AEF", "SOCI4003AEF", "SOCI4004AEF", "SOCI4006AEF", "SOSC4001AEF", "SOSC4002AEF"]
+            },
+            "elective": {
+                "min_credits": 24,
+                "color": 'purple',
+                "courses": ["COUN2002AEF", "ECON2002AEF", "ECON2001AEF", "POLS2003AEF", "PSYC2001AEF", "PUAD2001AEF", "SOCI2003AEF", "SOCI2005AEF", "SOSC2002AEF", "COUN2001AEF", "SOCI2001AEF", "SOSC2003AEF", "ECON3004AEF", "ECON3006AEF", "ECON3007AEF", "ECON3008AEF", "POLS3002AEF", "POLS3004AEF", "PSYC3004AEF", "PSYC3005AEF", "SOCI3002AEF", "SOCI3003AEF", "SOCI3004AEF", "SOCI3005AEF", "SOCI3006AEF", "SOCI3009AEF", "SOSC3004AEF", "GCST4006AEF", "POLS4006AEF", "PSYC4001AEF", "PSYC4003AEF", "PSYC4005AEF", "PSYC4007AEF", "SOCI4001AEF", "SOCI4007AEF", "SOCI4008AEF", "SOCI4009AEF"],
+                "pool": 'credits'
+            },
+            "english": {
+                "min_credits": 6,
+                "color": 'emerald',
+                "courses": ["ENGL1101AEF", "ENGL1102AEF"]
+            },
+            "general-ed": {
+                "min_credits": 9,
+                "color": 'pink',
+                "courses": [],
+                "pool": 'ge',
+                "pick_n": 3
+            },
+            "university-core": {
+                "min_credits": 9,
+                "color": 'indigo',
+                "courses": ["UNI1002ABW", "UNI1012ABW", "UNI2002BEW", "UNI3002BEW"]
+            }
+        },
+        "template": {}
+    },
+    "BSSCHECJ": {
+        "code": 'BSSCHECJ',
+        "name": {
+            "en": 'Bachelor of Social Sciences with Honours in Applied Economics'
+        },
+        "school": 'School of Arts and Social Sciences',
+        "total_credits": 120,
+        "categories": {
+            "core": {
+                "min_credits": 75,
+                "color": 'blue',
+                "courses": ["ECON1001AEF", "POLS1001AEF", "PSYC1001AEF", "SOCI1001AEF", "ECON2001AEF", "ECON2002AEF", "SOSC2002AEF", "SOSC2003AEF", "STAT2001AEF", "STAT2002AEF", "STAT2003AEF", "ECON3001AEF", "ECON3002AEF", "ECON3003AEF", "ECON3004AEF", "ECON3005AEF", "ECON3006AEF", "ECON3007AEF", "ECON3009AEF", "ECON4001AEF", "ECON4003AEF", "ECON4004AEF", "ECON4005AEF", "ECON4006AEF", "ECON4007AEF"]
+            },
+            "elective": {
+                "min_credits": 24,
+                "color": 'purple',
+                "courses": ["ECON2003AEF", "GCST2001AEF", "POLS2001AEF", "POLS2003AEF", "PSYC2001AEF", "PUAD2001AEF", "SOCI2002AEF", "SOCI2004AEF", "ECON3008AEF", "ECON4002AEF", "GCST3001AEF", "GCST3002AEF", "GCST3003AEF", "GCST3004AEF", "POLS3001AEF", "POLS3002AEF", "POLS3003AEF", "POLS3004AEF", "POLS3005AEF", "PSYC3001AEF", "PSYC3003AEF", "PSYC3004AEF", "PSYC3005AEF", "PSYC3006AEF", "PSYC3007AEF", "PSYC3010AEF", "PUAD3001AEF", "SOCI3003AEF", "SOCI3004AEF", "SOCI3005AEF", "SOCI3006AEF", "SOCI3007AEF", "SOCI3009AEF", "GCST4001AEF", "GCST4002AEF", "GCST4003AEF", "GCST4004AEF", "GCST4005AEF", "GCST4006AEF", "POLS4001AEF", "POLS4002AEF", "POLS4006AEF", "POLS4008AEF", "POLS4009AEF", "POLS4010AEF", "PSYC4001AEF", "PSYC4003AEF", "PSYC4005AEF", "PSYC4007AEF", "PSYC4010AEF", "PUAD4001AEF", "SOCI4007AEF", "SOCI4008AEF", "SOSC4001AEF"],
+                "pool": 'credits'
+            },
+            "english": {
+                "min_credits": 6,
+                "color": 'emerald',
+                "courses": ["ENGL1101AEF", "ENGL1102AEF"]
+            },
+            "general-ed": {
+                "min_credits": 6,
+                "color": 'pink',
+                "courses": [],
+                "pool": 'ge',
+                "pick_n": 2
+            },
+            "university-core": {
+                "min_credits": 9,
+                "color": 'indigo',
+                "courses": ["UNI1002ABW", "UNI1012ABW", "UNI2002BEW", "UNI3002BEW"]
+            }
+        },
+        "template": {}
+    },
+    "BSSCHGCSJ": {
+        "code": 'BSSCHGCSJ',
+        "name": {
+            "en": 'Bachelor of Social Sciences with Honours in Global and China Studies'
+        },
+        "school": 'School of Arts and Social Sciences',
+        "total_credits": 120,
+        "categories": {
+            "core": {
+                "min_credits": 57,
+                "color": 'blue',
+                "courses": ["ECON1001AEF", "POLS1001AEF", "PSYC1001AEF", "SOCI1001AEF", "ECON2003AEF", "GCST2001AEF", "POLS2001AEF", "POLS2002AEF", "POLS2003AEF", "STAT2001AEF", "STAT2002AEF", "STAT2003AEF", "GCST3002AEF", "GCST3004AEF", "GCST4001AEF", "GCST4002AEF", "GCST4003AEF", "GCST4006AEF", "SOCI4002AEF"]
+            },
+            "elective": {
+                "min_credits": 42,
+                "color": 'purple',
+                "courses": ["GCST3005AEF", "ECON3006AEF", "ECON3007AEF", "GCST3001AEF", "GCST3003AEF", "POLS3001AEF", "POLS3003AEF", "SOCI3008AEF", "GCST4004AEF", "GCST4005AEF", "POLS4006AEF", "POLS4010AEF", "ECON2002AEF", "PSYC2001AEF", "PUAD2001AEF", "SOCI2004AEF", "SOSC2002AEF", "ECON3002AEF", "ECON3004AEF", "ECON3005AEF", "POLS3002AEF", "POLS3005AEF", "PSYC3005AEF", "SOCI3004AEF", "SOCI3005AEF", "SOSC3004AEF", "ECON4004AEF", "ECON4005AEF", "POLS4001AEF", "POLS4002AEF", "POLS4009AEF", "PUAD4001AEF", "SOCI4008AEF", "SOSC4001AEF"],
+                "pool": 'credits'
+            },
+            "english": {
+                "min_credits": 6,
+                "color": 'emerald',
+                "courses": ["ENGL1101AEF", "ENGL1102AEF"]
+            },
+            "general-ed": {
+                "min_credits": 6,
+                "color": 'pink',
+                "courses": [],
+                "pool": 'ge',
+                "pick_n": 2
+            },
+            "university-core": {
+                "min_credits": 9,
+                "color": 'indigo',
+                "courses": ["UNI1002ABW", "UNI1012ABW", "UNI2002BEW", "UNI3002BEW"]
+            }
+        },
+        "template": {}
+    },
+    "BSSCHJ": {
+        "code": 'BSSCHJ',
+        "name": {
+            "en": 'Bachelor of Social Sciences with Honours in Applied Social Studies'
+        },
+        "school": 'School of Arts and Social Sciences',
+        "total_credits": 120,
+        "categories": {
+            "core": {
+                "min_credits": 69,
+                "color": 'blue',
+                "courses": ["ECON1001AEF", "POLS1001AEF", "PSYC1001AEF", "SOCI1001AEF", "SOCI2001AEF", "SOCI2002AEF", "SOCI2003AEF", "SOCI2004AEF", "STAT2001AEF", "STAT2002AEF", "STAT2003AEF", "ECON3007AEF", "PSYC3010AEF", "PUAD3001AEF", "SOCI3003AEF", "SOCI3004AEF", "SOCI3006AEF", "SOCI3008AEF", "SOSC3003AEF", "SOCI4002AEF", "SOCI4003AEF", "SOCI4004AEF", "SOCI4006AEF"]
+            },
+            "elective": {
+                "min_credits": 27,
+                "color": 'purple',
+                "courses": ["COUN2002AEF", "ECON2001AEF", "ECON2002AEF", "POLS2003AEF", "PSYC2001AEF", "PUAD2001AEF", "SOCI2005AEF", "SOSC2002AEF", "ECON3008AEF", "SOCI3001AEF", "SOCI3007AEF", "SOCI3009AEF", "SOCI4007AEF", "COUN2001AEF", "POLS2002AEF", "SOSC2001AEF", "ECON3004AEF", "ECON3009AEF", "POLS3002AEF", "POLS3004AEF", "PSYC3004AEF", "SOCI3002AEF", "SOCI3005AEF", "SOSC3002AEF", "SOSC3004AEF", "GCST4006AEF", "POLS4006AEF", "PSYC4001AEF", "PSYC4003AEF", "PSYC4005AEF", "SOCI4001AEF", "SOCI4009AEF", "SOSC4001AEF", "PSYC3005AEF", "SOSC2003AEF"],
+                "pool": 'credits'
+            },
+            "english": {
+                "min_credits": 6,
+                "color": 'emerald',
+                "courses": ["ENGL1101AEF", "ENGL1102AEF"]
+            },
+            "general-ed": {
+                "min_credits": 9,
+                "color": 'pink',
+                "courses": [],
+                "pool": 'ge',
+                "pick_n": 3
+            },
+            "university-core": {
+                "min_credits": 9,
+                "color": 'indigo',
+                "courses": ["UNI1002ABW", "UNI1012ABW", "UNI2002BEW", "UNI3002BEW"]
+            }
+        },
+        "template": {}
+    },
+    "BSSCHPAJ": {
+        "code": 'BSSCHPAJ',
+        "name": {
+            "en": 'Bachelor of Social Sciences with Honours in Politics and Public Administration'
+        },
+        "school": 'School of Arts and Social Sciences',
+        "total_credits": 120,
+        "categories": {
+            "core": {
+                "min_credits": 81,
+                "color": 'blue',
+                "courses": ["ECON1001AEF", "POLS1001AEF", "PSYC1001AEF", "SOCI1001AEF", "POLS2001AEF", "POLS2002AEF", "POLS2003AEF", "PUAD2001AEF", "STAT2001AEF", "STAT2002AEF", "STAT2003AEF", "ECON3005AEF", "ECON3007AEF", "POLS3001AEF", "POLS3002AEF", "POLS3003AEF", "POLS3004AEF", "POLS3005AEF", "PUAD3001AEF", "SOCI3007AEF", "POLS4001AEF", "POLS4002AEF", "POLS4003AEF", "POLS4007AEF", "POLS4008AEF", "POLS4010AEF", "PUAD4001AEF"]
+            },
+            "elective": {
+                "min_credits": 18,
+                "color": 'purple',
+                "courses": ["POLS4004AEF", "POLS4005AEF", "POLS4006AEF", "POLS4009AEF", "ECON2001AEF", "ECON2002AEF", "GCST2001AEF", "PSYC2001AEF", "SOCI2001AEF", "SOCI2002AEF", "SOCI2003AEF", "SOCI2004AEF", "SOSC2002AEF", "SOSC2003AEF", "ECON3001AEF", "ECON3002AEF", "ECON3003AEF", "ECON3006AEF", "GCST3001AEF", "GCST3002AEF", "GCST3003AEF", "GCST3004AEF", "PSYC3003AEF", "PSYC3004AEF", "PSYC3005AEF", "PSYC3006AEF", "PSYC3010AEF", "SOCI3004AEF", "ECON4001AEF", "GCST4001AEF", "GCST4002AEF", "GCST4003AEF", "GCST4004AEF", "GCST4006AEF", "SOCI4006AEF", "SOCI4007AEF"],
+                "pool": 'credits'
+            },
+            "english": {
+                "min_credits": 6,
+                "color": 'emerald',
+                "courses": ["ENGL1101AEF", "ENGL1102AEF"]
+            },
+            "general-ed": {
+                "min_credits": 6,
+                "color": 'pink',
+                "courses": [],
+                "pool": 'ge',
+                "pick_n": 2
+            },
+            "university-core": {
+                "min_credits": 9,
+                "color": 'indigo',
+                "courses": ["UNI1002ABW", "UNI1012ABW", "UNI2002BEW", "UNI3002BEW"]
+            }
+        },
+        "template": {}
+    },
     "BSSCHPWSJ": {
         "code": 'BSSCHPWSJ',
         "name": {
@@ -1972,6 +2167,38 @@ PROGRAMME_RULES = {
                 "min_credits": 9,
                 "color": 'indigo',
                 "courses": ["UNI1002ABW", "UNI1012ABW", "UNI2002BEW", "UNI3002BEW"]
+            }
+        },
+        "template": {}
+    },
+    "HDNGF": {
+        "code": 'HDNGF',
+        "name": {
+            "en": 'Higher Diploma in Nursing Studies (General Health Care)'
+        },
+        "school": 'School of Nursing and Health Sciences',
+        "total_credits": 90,
+        "categories": {
+            "core": {
+                "min_credits": 90,
+                "color": 'blue',
+                "courses": ["NURS1301NCF", "NURS1302NCF", "NURS1303NCF", "NURS1304NCF", "NURS1305NCF", "NURS1306NCF", "NURS2301NCF", "NURS2302NCF", "NURS2303NCF", "NURS2304NCF", "NURS2305NCF", "NURS2306NCF", "NURS2309NCF", "NURS2314NCF", "NURS2315NCF", "NURS1310NCF", "NURS1311NCF", "NURS2310NCF", "NURS2311NCF", "NURS3310NCF"]
+            }
+        },
+        "template": {}
+    },
+    "HDNMF": {
+        "code": 'HDNMF',
+        "name": {
+            "en": 'Higher Diploma in Nursing Studies (Mental Health Care)'
+        },
+        "school": 'School of Nursing and Health Sciences',
+        "total_credits": 90,
+        "categories": {
+            "core": {
+                "min_credits": 90,
+                "color": 'blue',
+                "courses": ["NURS1301NCF", "NURS1302NCF", "NURS1303NCF", "NURS1304NCF", "NURS1307NCF", "NURS1308NCF", "NURS2301NCF", "NURS2302NCF", "NURS2303NCF", "NURS2304NCF", "NURS2307NCF", "NURS2308NCF", "NURS2309NCF", "NURS2314NCF", "NURS2315NCF", "NURS1312NCF", "NURS1313NCF", "NURS2312NCF", "NURS2313NCF", "NURS3312NCF"]
             }
         },
         "template": {}
@@ -5216,6 +5443,400 @@ RULE_COURSE_CREDITS = {
             "UNI3002BEW": 3
         }
     },
+    "BSSCHAGSJ": {
+        "core": {
+            "ECON1001AEF": 3,
+            "POLS1001AEF": 3,
+            "PSYC1001AEF": 3,
+            "SOCI1001AEF": 3,
+            "SOCI2004AEF": 3,
+            "SOSC2001AEF": 3,
+            "STAT2001AEF": 3,
+            "STAT2002AEF": 3,
+            "STAT2003AEF": 3,
+            "ECON3009AEF": 3,
+            "PSYC3010AEF": 3,
+            "PUAD3001AEF": 3,
+            "SOCI3001AEF": 3,
+            "SOCI3007AEF": 3,
+            "SOCI3008AEF": 3,
+            "SOSC3001AEF": 3,
+            "SOSC3002AEF": 3,
+            "SOSC3003AEF": 3,
+            "PSYC4010AEF": 3,
+            "SOCI4003AEF": 3,
+            "SOCI4004AEF": 3,
+            "SOCI4006AEF": 3,
+            "SOSC4001AEF": 3,
+            "SOSC4002AEF": 3
+        },
+        "elective": {
+            "COUN2002AEF": 3,
+            "ECON2002AEF": 3,
+            "ECON2001AEF": 3,
+            "POLS2003AEF": 3,
+            "PSYC2001AEF": 3,
+            "PUAD2001AEF": 3,
+            "SOCI2003AEF": 3,
+            "SOCI2005AEF": 3,
+            "SOSC2002AEF": 3,
+            "COUN2001AEF": 3,
+            "SOCI2001AEF": 3,
+            "SOSC2003AEF": 3,
+            "ECON3004AEF": 3,
+            "ECON3006AEF": 3,
+            "ECON3007AEF": 3,
+            "ECON3008AEF": 3,
+            "POLS3002AEF": 3,
+            "POLS3004AEF": 3,
+            "PSYC3004AEF": 3,
+            "PSYC3005AEF": 3,
+            "SOCI3002AEF": 3,
+            "SOCI3003AEF": 3,
+            "SOCI3004AEF": 3,
+            "SOCI3005AEF": 3,
+            "SOCI3006AEF": 3,
+            "SOCI3009AEF": 3,
+            "SOSC3004AEF": 3,
+            "GCST4006AEF": 3,
+            "POLS4006AEF": 3,
+            "PSYC4001AEF": 3,
+            "PSYC4003AEF": 3,
+            "PSYC4005AEF": 3,
+            "PSYC4007AEF": 3,
+            "SOCI4001AEF": 3,
+            "SOCI4007AEF": 3,
+            "SOCI4008AEF": 3,
+            "SOCI4009AEF": 3
+        },
+        "english": {
+            "ENGL1101AEF": 3,
+            "ENGL1102AEF": 3
+        },
+        "university-core": {
+            "UNI1002ABW": 2,
+            "UNI1012ABW": 1,
+            "UNI2002BEW": 3,
+            "UNI3002BEW": 3
+        }
+    },
+    "BSSCHECJ": {
+        "core": {
+            "ECON1001AEF": 3,
+            "POLS1001AEF": 3,
+            "PSYC1001AEF": 3,
+            "SOCI1001AEF": 3,
+            "ECON2001AEF": 3,
+            "ECON2002AEF": 3,
+            "SOSC2002AEF": 3,
+            "SOSC2003AEF": 3,
+            "STAT2001AEF": 3,
+            "STAT2002AEF": 3,
+            "STAT2003AEF": 3,
+            "ECON3001AEF": 3,
+            "ECON3002AEF": 3,
+            "ECON3003AEF": 3,
+            "ECON3004AEF": 3,
+            "ECON3005AEF": 3,
+            "ECON3006AEF": 3,
+            "ECON3007AEF": 3,
+            "ECON3009AEF": 3,
+            "ECON4001AEF": 3,
+            "ECON4003AEF": 3,
+            "ECON4004AEF": 3,
+            "ECON4005AEF": 3,
+            "ECON4006AEF": 3,
+            "ECON4007AEF": 3
+        },
+        "elective": {
+            "ECON2003AEF": 3,
+            "GCST2001AEF": 3,
+            "POLS2001AEF": 3,
+            "POLS2003AEF": 3,
+            "PSYC2001AEF": 3,
+            "PUAD2001AEF": 3,
+            "SOCI2002AEF": 3,
+            "SOCI2004AEF": 3,
+            "ECON3008AEF": 3,
+            "ECON4002AEF": 3,
+            "GCST3001AEF": 3,
+            "GCST3002AEF": 3,
+            "GCST3003AEF": 3,
+            "GCST3004AEF": 3,
+            "POLS3001AEF": 3,
+            "POLS3002AEF": 3,
+            "POLS3003AEF": 3,
+            "POLS3004AEF": 3,
+            "POLS3005AEF": 3,
+            "PSYC3001AEF": 3,
+            "PSYC3003AEF": 3,
+            "PSYC3004AEF": 3,
+            "PSYC3005AEF": 3,
+            "PSYC3006AEF": 3,
+            "PSYC3007AEF": 3,
+            "PSYC3010AEF": 3,
+            "PUAD3001AEF": 3,
+            "SOCI3003AEF": 3,
+            "SOCI3004AEF": 3,
+            "SOCI3005AEF": 3,
+            "SOCI3006AEF": 3,
+            "SOCI3007AEF": 3,
+            "SOCI3009AEF": 3,
+            "GCST4001AEF": 3,
+            "GCST4002AEF": 3,
+            "GCST4003AEF": 3,
+            "GCST4004AEF": 3,
+            "GCST4005AEF": 3,
+            "GCST4006AEF": 3,
+            "POLS4001AEF": 3,
+            "POLS4002AEF": 3,
+            "POLS4006AEF": 3,
+            "POLS4008AEF": 3,
+            "POLS4009AEF": 3,
+            "POLS4010AEF": 3,
+            "PSYC4001AEF": 3,
+            "PSYC4003AEF": 3,
+            "PSYC4005AEF": 3,
+            "PSYC4007AEF": 3,
+            "PSYC4010AEF": 3,
+            "PUAD4001AEF": 3,
+            "SOCI4007AEF": 3,
+            "SOCI4008AEF": 3,
+            "SOSC4001AEF": 3
+        },
+        "english": {
+            "ENGL1101AEF": 3,
+            "ENGL1102AEF": 3
+        },
+        "university-core": {
+            "UNI1002ABW": 2,
+            "UNI1012ABW": 1,
+            "UNI2002BEW": 3,
+            "UNI3002BEW": 3
+        }
+    },
+    "BSSCHGCSJ": {
+        "core": {
+            "ECON1001AEF": 3,
+            "POLS1001AEF": 3,
+            "PSYC1001AEF": 3,
+            "SOCI1001AEF": 3,
+            "ECON2003AEF": 3,
+            "GCST2001AEF": 3,
+            "POLS2001AEF": 3,
+            "POLS2002AEF": 3,
+            "POLS2003AEF": 3,
+            "STAT2001AEF": 3,
+            "STAT2002AEF": 3,
+            "STAT2003AEF": 3,
+            "GCST3002AEF": 3,
+            "GCST3004AEF": 3,
+            "GCST4001AEF": 3,
+            "GCST4002AEF": 3,
+            "GCST4003AEF": 3,
+            "GCST4006AEF": 3,
+            "SOCI4002AEF": 3
+        },
+        "elective": {
+            "GCST3005AEF": 6,
+            "ECON3006AEF": 3,
+            "ECON3007AEF": 3,
+            "GCST3001AEF": 3,
+            "GCST3003AEF": 3,
+            "POLS3001AEF": 3,
+            "POLS3003AEF": 3,
+            "SOCI3008AEF": 3,
+            "GCST4004AEF": 3,
+            "GCST4005AEF": 3,
+            "POLS4006AEF": 3,
+            "POLS4010AEF": 3,
+            "ECON2002AEF": 3,
+            "PSYC2001AEF": 3,
+            "PUAD2001AEF": 3,
+            "SOCI2004AEF": 3,
+            "SOSC2002AEF": 3,
+            "ECON3002AEF": 3,
+            "ECON3004AEF": 3,
+            "ECON3005AEF": 3,
+            "POLS3002AEF": 3,
+            "POLS3005AEF": 3,
+            "PSYC3005AEF": 3,
+            "SOCI3004AEF": 3,
+            "SOCI3005AEF": 3,
+            "SOSC3004AEF": 3,
+            "ECON4004AEF": 3,
+            "ECON4005AEF": 3,
+            "POLS4001AEF": 3,
+            "POLS4002AEF": 3,
+            "POLS4009AEF": 3,
+            "PUAD4001AEF": 3,
+            "SOCI4008AEF": 3,
+            "SOSC4001AEF": 3
+        },
+        "english": {
+            "ENGL1101AEF": 3,
+            "ENGL1102AEF": 3
+        },
+        "university-core": {
+            "UNI1002ABW": 2,
+            "UNI1012ABW": 1,
+            "UNI2002BEW": 3,
+            "UNI3002BEW": 3
+        }
+    },
+    "BSSCHJ": {
+        "core": {
+            "ECON1001AEF": 3,
+            "POLS1001AEF": 3,
+            "PSYC1001AEF": 3,
+            "SOCI1001AEF": 3,
+            "SOCI2001AEF": 3,
+            "SOCI2002AEF": 3,
+            "SOCI2003AEF": 3,
+            "SOCI2004AEF": 3,
+            "STAT2001AEF": 3,
+            "STAT2002AEF": 3,
+            "STAT2003AEF": 3,
+            "ECON3007AEF": 3,
+            "PSYC3010AEF": 3,
+            "PUAD3001AEF": 3,
+            "SOCI3003AEF": 3,
+            "SOCI3004AEF": 3,
+            "SOCI3006AEF": 3,
+            "SOCI3008AEF": 3,
+            "SOSC3003AEF": 3,
+            "SOCI4002AEF": 3,
+            "SOCI4003AEF": 3,
+            "SOCI4004AEF": 3,
+            "SOCI4006AEF": 3
+        },
+        "elective": {
+            "COUN2002AEF": 3,
+            "ECON2001AEF": 3,
+            "ECON2002AEF": 3,
+            "POLS2003AEF": 3,
+            "PSYC2001AEF": 3,
+            "PUAD2001AEF": 3,
+            "SOCI2005AEF": 3,
+            "SOSC2002AEF": 3,
+            "ECON3008AEF": 3,
+            "SOCI3001AEF": 3,
+            "SOCI3007AEF": 3,
+            "SOCI3009AEF": 3,
+            "SOCI4007AEF": 3,
+            "COUN2001AEF": 3,
+            "POLS2002AEF": 3,
+            "SOSC2001AEF": 3,
+            "ECON3004AEF": 3,
+            "ECON3009AEF": 3,
+            "POLS3002AEF": 3,
+            "POLS3004AEF": 3,
+            "PSYC3004AEF": 3,
+            "SOCI3002AEF": 3,
+            "SOCI3005AEF": 3,
+            "SOSC3002AEF": 3,
+            "SOSC3004AEF": 3,
+            "GCST4006AEF": 3,
+            "POLS4006AEF": 3,
+            "PSYC4001AEF": 3,
+            "PSYC4003AEF": 3,
+            "PSYC4005AEF": 3,
+            "SOCI4001AEF": 3,
+            "SOCI4009AEF": 3,
+            "SOSC4001AEF": 3,
+            "PSYC3005AEF": 3,
+            "SOSC2003AEF": 3
+        },
+        "english": {
+            "ENGL1101AEF": 3,
+            "ENGL1102AEF": 3
+        },
+        "university-core": {
+            "UNI1002ABW": 2,
+            "UNI1012ABW": 1,
+            "UNI2002BEW": 3,
+            "UNI3002BEW": 3
+        }
+    },
+    "BSSCHPAJ": {
+        "core": {
+            "ECON1001AEF": 3,
+            "POLS1001AEF": 3,
+            "PSYC1001AEF": 3,
+            "SOCI1001AEF": 3,
+            "POLS2001AEF": 3,
+            "POLS2002AEF": 3,
+            "POLS2003AEF": 3,
+            "PUAD2001AEF": 3,
+            "STAT2001AEF": 3,
+            "STAT2002AEF": 3,
+            "STAT2003AEF": 3,
+            "ECON3005AEF": 3,
+            "ECON3007AEF": 3,
+            "POLS3001AEF": 3,
+            "POLS3002AEF": 3,
+            "POLS3003AEF": 3,
+            "POLS3004AEF": 3,
+            "POLS3005AEF": 3,
+            "PUAD3001AEF": 3,
+            "SOCI3007AEF": 3,
+            "POLS4001AEF": 3,
+            "POLS4002AEF": 3,
+            "POLS4003AEF": 3,
+            "POLS4007AEF": 3,
+            "POLS4008AEF": 3,
+            "POLS4010AEF": 3,
+            "PUAD4001AEF": 3
+        },
+        "elective": {
+            "POLS4004AEF": 3,
+            "POLS4005AEF": 6,
+            "POLS4006AEF": 3,
+            "POLS4009AEF": 3,
+            "ECON2001AEF": 3,
+            "ECON2002AEF": 3,
+            "GCST2001AEF": 3,
+            "PSYC2001AEF": 3,
+            "SOCI2001AEF": 3,
+            "SOCI2002AEF": 3,
+            "SOCI2003AEF": 3,
+            "SOCI2004AEF": 3,
+            "SOSC2002AEF": 3,
+            "SOSC2003AEF": 3,
+            "ECON3001AEF": 3,
+            "ECON3002AEF": 3,
+            "ECON3003AEF": 3,
+            "ECON3006AEF": 3,
+            "GCST3001AEF": 3,
+            "GCST3002AEF": 3,
+            "GCST3003AEF": 3,
+            "GCST3004AEF": 3,
+            "PSYC3003AEF": 3,
+            "PSYC3004AEF": 3,
+            "PSYC3005AEF": 3,
+            "PSYC3006AEF": 3,
+            "PSYC3010AEF": 3,
+            "SOCI3004AEF": 3,
+            "ECON4001AEF": 3,
+            "GCST4001AEF": 3,
+            "GCST4002AEF": 3,
+            "GCST4003AEF": 3,
+            "GCST4004AEF": 3,
+            "GCST4006AEF": 3,
+            "SOCI4006AEF": 3,
+            "SOCI4007AEF": 3
+        },
+        "english": {
+            "ENGL1101AEF": 3,
+            "ENGL1102AEF": 3
+        },
+        "university-core": {
+            "UNI1002ABW": 2,
+            "UNI1012ABW": 1,
+            "UNI2002BEW": 3,
+            "UNI3002BEW": 3
+        }
+    },
     "BSSCHPWSJ": {
         "core": {
             "ECON1001AEF": 3,
@@ -5276,6 +5897,54 @@ RULE_COURSE_CREDITS = {
             "UNI1012ABW": 1,
             "UNI2002BEW": 3,
             "UNI3002BEW": 3
+        }
+    },
+    "HDNGF": {
+        "core": {
+            "NURS1301NCF": 6,
+            "NURS1302NCF": 6,
+            "NURS1303NCF": 6,
+            "NURS1304NCF": 6,
+            "NURS1305NCF": 6,
+            "NURS1306NCF": 6,
+            "NURS2301NCF": 3,
+            "NURS2302NCF": 3,
+            "NURS2303NCF": 3,
+            "NURS2304NCF": 3,
+            "NURS2305NCF": 3,
+            "NURS2306NCF": 3,
+            "NURS2309NCF": 3,
+            "NURS2314NCF": 3,
+            "NURS2315NCF": 3,
+            "NURS1310NCF": 3,
+            "NURS1311NCF": 3,
+            "NURS2310NCF": 6,
+            "NURS2311NCF": 6,
+            "NURS3310NCF": 9
+        }
+    },
+    "HDNMF": {
+        "core": {
+            "NURS1301NCF": 6,
+            "NURS1302NCF": 6,
+            "NURS1303NCF": 6,
+            "NURS1304NCF": 6,
+            "NURS1307NCF": 6,
+            "NURS1308NCF": 6,
+            "NURS2301NCF": 3,
+            "NURS2302NCF": 3,
+            "NURS2303NCF": 3,
+            "NURS2304NCF": 3,
+            "NURS2307NCF": 3,
+            "NURS2308NCF": 3,
+            "NURS2309NCF": 3,
+            "NURS2314NCF": 3,
+            "NURS2315NCF": 3,
+            "NURS1312NCF": 3,
+            "NURS1313NCF": 3,
+            "NURS2312NCF": 6,
+            "NURS2313NCF": 6,
+            "NURS3312NCF": 9
         }
     }
 }

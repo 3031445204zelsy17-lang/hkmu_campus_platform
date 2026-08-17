@@ -41,8 +41,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 PDF_BASE = "https://www.hkmu.edu.hk/REG/reg_grad/PR/"
 CF_WARMUP = "https://www.hkmu.edu.hk/REG/reg_ftae/GE/"  # any /REG/ HTML page passes CF
 
-# 57 full-time undergraduate 3cru programmes (code, school). Sourced from the
-# programme-requirements-3cru index (extracted 2026-08-13).
+# 64 full-time undergraduate 3cru programmes (code, school). Sourced from the
+# programme-requirements-3cru index (extracted 2026-08-13) + 2026-08-17 URL 探测
+# 补齐 7 个索引漏收的(5 个社科 J 码 + 2 个护理高级文凭,PDF 直接存在于
+# 3CRU_FTU_{school}_{code}.pdf 模式)。
 PROGRAMMES = [
     # School of Science & Technology (ST)
     ("BASCHRAEJ", "ST"), ("BASCHTICJ", "ST"), ("BENGHBSEJ", "ST"), ("BENGHCEJ", "ST"),
@@ -54,6 +56,8 @@ PROGRAMMES = [
     ("BAHCAMDJ", "AS"), ("BAHCLLJ", "AS"), ("BAHCWFAJ", "AS"), ("BAHELCJ", "AS"),
     ("BAHLTJ", "AS"), ("BAHNMIEJ", "AS"), ("BFAHAVEJ", "AS"), ("BFAHIDDAJ", "AS"),
     ("BSSCHPWSJ", "AS"),
+    ("BSSCHAGSJ", "AS"), ("BSSCHECJ", "AS"), ("BSSCHJ", "AS"),
+    ("BSSCHGCSJ", "AS"), ("BSSCHPAJ", "AS"),
     # Lee Shau Kee School of Business & Administration (BA)
     ("BAPHBMJ", "BA"), ("BBAHASMJ", "BA"), ("BBAHCGSJ", "BA"), ("BBAHFFTJ", "BA"),
     ("BBAHGBJ", "BA"), ("BBAHGMSMJ", "BA"), ("BBAHHRMJ", "BA"), ("BBAHIHAMJ", "BA"),
@@ -64,7 +68,7 @@ PROGRAMMES = [
     ("BLSEHJ", "EL"), ("BLSHACLSJ", "EL"), ("BLSHBSADJ", "EL"),
     # School of Nursing & Health Sciences (NHS)
     ("BNHGJ", "NHS"), ("BNHMJ", "NHS"), ("BSCHDRJ", "NHS"), ("BSCHMLSJ", "NHS"),
-    ("BSCHPTJ", "NHS"),
+    ("BSCHPTJ", "NHS"), ("HDNGF", "NHS"), ("HDNMF", "NHS"),
 ]
 
 
@@ -122,7 +126,7 @@ HEADING_PATTERNS = [
     (re.compile(r"elective", re.I), "elective"),
     (re.compile(r"periphery", re.I), "elective"),
     (re.compile(r"synergy", re.I), "elective"),
-    (re.compile(r"specialization", re.I), "elective"),  # choice menus (WBJ/ASMJ)
+    (re.compile(r"speciali[sz]ation", re.I), "elective"),  # choice menus (WBJ/ASMJ; GCSJ 用 s 拼写)
     (re.compile(r"clinical\s+practicum", re.I), "core"),
     (re.compile(r"practicum", re.I), "core"),
     (re.compile(r"specialized\s+professional", re.I), "core"),
@@ -213,9 +217,17 @@ def categories_from_text(text):
         if not cat_key:
             continue
         body = text[h.end(): (headings[i + 1].start() if i + 1 < len(headings) else len(text))]
-        notes = NOTES_RE.search(body)
-        if notes:
-            body = body[:notes.start()]
+        # "Note:" ends a table only when it FOLLOWS at least one course row.
+        # HD/NHS PDFs open their tables with a preamble attendance Note —
+        # truncating at the first Note: would swallow the whole table
+        # (HDNGF parsed 0 courses before this guard).
+        lines = body.splitlines()
+        for li, ln in enumerate(lines):
+            if NOTES_RE.match(ln) and any(
+                CODE_ROW_RE.match(x.strip()) for x in lines[:li]
+            ):
+                body = "\n".join(lines[:li])
+                break
         cat = categories.setdefault(
             cat_key, {"courses": [], "course_credits": {}, "credits_seen": 0})
         for line in body.splitlines():
@@ -263,9 +275,12 @@ PROSE_MIN = [
     (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+[\w&\-/ ]*?elective(?:\s+courses?)?", re.I), "elective"),
     (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+[\w&\-/ ]*?periphery\s+courses?", re.I), "elective"),
     (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+[\w&\-/ ]*?synergy\s+courses?", re.I), "elective"),
-    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+[\w&\-/ ]*?specialization\s+courses?", re.I), "elective"),
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+[\w&\-/ ]*?speciali[sz]ation\s+courses?", re.I), "elective"),
     (re.compile(r"(\d+)\s+credits?-units?\*?\s+from\s+one\s+of\s+the\s+following", re.I), "elective"),  # option group
     (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+Theoretical\s+courses?\s*\(core\)", re.I), "core"),
+    # HD 文凭的 Theoretical 无 (core)/(elective) 后缀("63 credit-units of
+    # Theoretical courses in Table 1")→ 计入 core(Clinical Practicum 同折 core)
+    (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+Theoretical\s+courses?(?!\s*\()", re.I), "core"),
     (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+Clinical\s+Practicum", re.I), "core"),
     (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+[\w&\-/ ]*?practicum\s+courses?", re.I), "core"),
     (re.compile(r"(\d+)\s+credits?-units?\*?\s+of\s+Core\s+Science\s+courses?", re.I), "core"),
@@ -354,8 +369,14 @@ def parse_text_to_entry(txt, school):
         if key == "general-ed":
             cats[key]["pool"] = "ge"
     apply_mhfa_mandate(txt, cats)
+    # 范围措辞标记("3 to 6 credit-units of … elective"):prose 正则取上限,
+    # 但配对范围是两条合计恒定的路径(做/不做毕业课题),Σmin 会超 PDF 总分
+    # ——builder 据此标记做 gap 校正(BSSCHPAJ 21→18)
+    ranged = bool(re.search(
+        r"\d+\s+to\s+\d+\s+credits?-units?\*?\s+of\s+[\w&\-/ ]*?elective",
+        y1_prose(latest_cohort_text(txt)), re.I))
     return {"school": school, "total_credits": total_credits_from_prose(txt),
-            "categories": cats}
+            "categories": cats, "_ranged_elective": ranged}
 
 
 def audit(raw):

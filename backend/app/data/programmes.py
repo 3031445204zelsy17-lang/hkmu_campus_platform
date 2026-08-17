@@ -175,6 +175,8 @@ PROGRAMME_ALIASES = {
     "BENGHECEJ1": "BENGHECEJ",
     "BSCHCEF3": "BSCHCEF",
     "BSSCHPJ": "BSSCHPWSJ",
+    "HDNGF1": "HDNGF",
+    "HDNMF1": "HDNMF",
 }
 for _alias, _main in PROGRAMME_ALIASES.items():
     if _alias not in PROGRAMMES and _main in PROGRAMMES:
