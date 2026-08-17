@@ -261,6 +261,17 @@ Page({
       app.globalData.coursesNeedRefresh = false;
       this._progress = null;
     }
+    // profile 页切专业后回切:跟随同专业并作废旧仪表盘(_selectedCode 优先级压过
+    // 已存专业,且暖路径跳过 /users/me,不消费信号会一直停在旧专业)
+    if (app && app.globalData && app.globalData.programmeSwitched) {
+      const switched = app.globalData.programmeSwitched;
+      app.globalData.programmeSwitched = null;
+      if (switched !== this._selectedCode) {
+        this._selectedCode = switched;
+        this._userProgrammeCode = switched;
+        this._status = null;
+      }
+    }
     // 只有首次（无 catalogue）才显示 loading 占位；之后切回都用缓存瞬间渲染
     this._loading = !this._catalogue;
     this._emit();

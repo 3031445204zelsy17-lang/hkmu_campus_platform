@@ -341,6 +341,10 @@ Page({
     this._setPickerTabBarHidden(false);
     request({ method: "PUT", path: "/users/me", data: { programme_code: code }, auth: true })
       .then(() => {
+        // 通知 planner 跟随切换(其 _selectedCode 优先级压过已存专业,不主动同步
+        // 会一直显示旧专业直到冷启动)
+        const app = getApp();
+        if (app && app.globalData) app.globalData.programmeSwitched = code;
         wx.showToast({ title: text.saveSuccess, icon: "success" });
         this.setData({ programmeName: name || "" }); // 即时反馈
         return this.refreshProfile(false); // 兜底:同步 storage + 重拉 user
