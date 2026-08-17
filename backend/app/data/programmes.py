@@ -161,6 +161,27 @@ from .programme_rules import PROGRAMME_RULES  # noqa: E402
 
 PROGRAMMES.update(PROGRAMME_RULES)
 
+# ── 同专业变体码别名 ─────────────────────────────────────────────────
+# 官方 Requirements PDF 每个专业只印一个主码,但课程目录 PDF 多收了 cohort
+# 变体码(J1/F3 等入学批次编码差异)——目录里同名专业两行,一行有毕业规则
+# 一行没有,学生会选到"没有"的那行。变体码直接复用主码规则(同名同专业,
+# 课程表略有出入不影响毕业要求计算)。BSSCHPJ/BSSCHPWSJ 是同名的异码对。
+PROGRAMME_ALIASES = {
+    "BAPHBMJ1": "BAPHBMJ",
+    "BEDHACLSJ1": "BEDHACLSJ",
+    "BNHGJ1": "BNHGJ",
+    "BNHMJ1": "BNHMJ",
+    "BSCHPTJ1": "BSCHPTJ",
+    "BENGHECEJ1": "BENGHECEJ",
+    "BSCHCEF3": "BSCHCEF",
+    "BSSCHPJ": "BSSCHPWSJ",
+}
+for _alias, _main in PROGRAMME_ALIASES.items():
+    if _alias not in PROGRAMMES and _main in PROGRAMMES:
+        _entry = dict(PROGRAMMES[_main])
+        _entry["code"] = _alias
+        PROGRAMMES[_alias] = _entry
+
 DEFAULT_PROGRAMME_CODE = "BSCHDSAIJ"
 
 

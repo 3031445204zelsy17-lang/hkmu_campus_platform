@@ -227,9 +227,12 @@ def test_generated_ge_pool_has_pickn():
 
 def _rule_rows(prog_code):
     """course rows for every rule course, credits as parsed from the PDF
-    (RULE_COURSE_CREDITS); DSAI's hand-curated project is 6cr."""
+    (RULE_COURSE_CREDITS); DSAI's hand-curated project is 6cr. 变体码别名
+    (J1/F3 等复用主码规则的)查主码的解析学分——别名码本身不在 PDF 里。"""
+    from backend.app.data.programmes import PROGRAMME_ALIASES
     from backend.app.data.programme_rules import RULE_COURSE_CREDITS
-    parsed = RULE_COURSE_CREDITS.get(prog_code, {})
+    main = PROGRAMME_ALIASES.get(prog_code, prog_code)
+    parsed = RULE_COURSE_CREDITS.get(main, {})
     rows = {}
     for key, cat in PROGRAMMES[prog_code]["categories"].items():
         if cat.get("pool") == "ge":
