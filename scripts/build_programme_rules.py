@@ -213,6 +213,15 @@ def main():
     for code in sorted(raw):
         if code in EXCLUDE or "_error" in raw[code]:
             continue
+        # BSSCHJ(Y1 段)Table 1 的 SOCI2003AEF 勾选列仅 Year-2 入学适用
+        # (Wingdings 勾在 pdfplumber 文本抽取中丢失,行级不可判),prose 69cr
+        # ÷3=23 门也证 24 行含杂。从 core 剔除后:截断自动保回真 Y1 必修
+        # SOCI4008AEF,其 Y1 身份(Table 2 主修选修)由 core/elective 去重器
+        # 保留在选修菜单。2026-08-17 子代理逐行核对裁定,唯一一处类别错置。
+        if code == "BSSCHJ":
+            c = raw[code]["categories"]["core"]["courses"]
+            if "SOCI2003AEF" in c:
+                c.remove("SOCI2003AEF")
         entry, cc = build_entry(code, raw[code], skill, PROGRAMMES)
         # sanity: non-ge categories must list courses; sums must match total.
         smin = sum(c["min_credits"] for c in entry["categories"].values())
