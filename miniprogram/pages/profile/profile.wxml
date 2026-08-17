@@ -125,7 +125,6 @@
     </view>
     <view class="empty-state flat">
       <view class="empty-title">{{text.emptyTitle}}</view>
-      <view class="empty-copy">{{text.emptyCopy}}</view>
       <view class="action-row">
         <button class="primary-action" bindtap="goToLogin">{{text.loginAction}}</button>
       </view>
