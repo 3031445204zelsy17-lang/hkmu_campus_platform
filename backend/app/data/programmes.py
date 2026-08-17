@@ -184,6 +184,18 @@ for _alias, _main in PROGRAMME_ALIASES.items():
         _entry["code"] = _alias
         PROGRAMMES[_alias] = _entry
 
+# ── 停招专业(2026-08-17 子代理核查:全部不在 2026/27 招生表、官方专业页 404、
+# 站内搜索无;毕业要求只剩旧 5 学分制 Prog_req_{CODE}.pdf,不建 3cru 规则)──
+# 目录里保留(存量 phase-out 学生仍可浏览课程目录),选课器挂「已停招」徽标。
+DISCONTINUED_CODES = frozenset({
+    "BBAACTF", "BBABFF", "BBACAF", "BBAHRMF", "BBAIBF", "BBAMGTF",
+    "BBAMKTF", "BBAHATJ", "BBAHBIAJ", "BBAHCGJ", "BBAHDBJ", "BBAHFJ",
+    "BBAHFREJ", "BBAHFRMJ", "BBAHFTIJ", "BBAHGBMJ", "BBAHHSTMJ", "BBAHREFMJ",
+    "BHMF", "BIHAMHJ", "BSRMHJ", "BTPMF", "BAHCIEF3", "BAHECLJ",
+    "BFAHPDAJ", "BSSCHEPAJ", "BSSCHPMHJ", "BLSBCGBHJ1", "BCOMPHITJ", "BENGHCEEJ",
+    "BENGHTCJ", "BSCHDSJ", "BSCHENSF3", "BSCHLSJ", "BSCHTSFF3", "BSCHTSCJ",
+})
+
 DEFAULT_PROGRAMME_CODE = "BSCHDSAIJ"
 
 

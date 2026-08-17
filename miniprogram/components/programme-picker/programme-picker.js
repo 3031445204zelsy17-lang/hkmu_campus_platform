@@ -133,7 +133,8 @@ Component({
               has_full_planning: !!p.has_full_planning || knownFull,
               school: p.school || (known && known.school) || "",
               name,
-              badge: (p.has_full_planning || knownFull) ? text.catalogueTagFull : "",
+              badge: (p.has_full_planning || knownFull) ? text.catalogueTagFull
+                : (p.discontinued ? text.catalogueTagDiscontinued : ""),
             });
           }
         }

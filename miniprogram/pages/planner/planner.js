@@ -1112,8 +1112,9 @@ Page({
             has_full_planning: !!p.has_full_planning || knownFull,
             school: p.school || (known && known.school) || "",
             name,
-            // 仅完整规划专业挂徽章；其余目录专业不再每行重复"课程目录"标签
-            badge: (p.has_full_planning || knownFull) ? text.catalogueTagFull : "",
+            // 完整规划挂徽章;停招专业挂灰标;其余不挂
+            badge: (p.has_full_planning || knownFull) ? text.catalogueTagFull
+              : (p.discontinued ? text.catalogueTagDiscontinued : ""),
           });
         }
       }

@@ -11,7 +11,9 @@ from ..models import (
     CourseTagAggregate, CourseReviewTagsOut, CourseReviewStatsOut,
     GECourseInfoOut,
 )
-from ..data.programmes import PROGRAMMES, DEFAULT_PROGRAMME_CODE, get_programme
+from ..data.programmes import (
+    PROGRAMMES, DEFAULT_PROGRAMME_CODE, get_programme, DISCONTINUED_CODES,
+)
 from ..data.ge_courses import (
     GE_FIELD_ORDER, PROGRAMME_GE_FIELDS, ge_courses_for, ge_course_by_id,
 )
@@ -131,6 +133,7 @@ class CatalogueProgrammeOut(BaseModel):
     school: str
     course_count: int
     has_full_planning: bool
+    discontinued: bool = False
 
 
 class CatalogueSchoolGroupOut(BaseModel):
@@ -608,6 +611,7 @@ async def list_catalogue_programmes():
             school=r["school"],
             course_count=r["course_count"],
             has_full_planning=r["has_full_planning"],
+            discontinued=r["programme_code"] in DISCONTINUED_CODES,
         ))
     resp = CatalogueProgrammesResponse(
         default_programme_code=DEFAULT_PROGRAMME_CODE,
