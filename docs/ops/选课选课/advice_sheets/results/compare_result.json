@@ -1,0 +1,2958 @@
+{
+ "BAHCAMDJ": {
+  "programme_absent": false,
+  "official_courses": 31,
+  "rows": 106,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "CAMD1002ABF",
+   "CAMD2002ABF",
+   "CAMD2003AEF",
+   "CAMD3003AEF",
+   "CAMD3004AEF",
+   "CAMD3005ABF",
+   "CAMD3006AEF",
+   "CAMD4004ABF",
+   "CAMD4005AEF",
+   "CAMD4006AEF",
+   "CAMD4007AEF",
+   "CCA1005ABF",
+   "UNI2002BCW"
+  ],
+  "year_mismatch": [
+   [
+    "IDDA3004AEF",
+    3,
+    [
+     4
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BAHCLLJ": {
+  "programme_absent": false,
+  "official_courses": 23,
+  "rows": 44,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "CHIN1004ACF",
+   "CHIN1005ACF",
+   "CHIN1006ACF",
+   "CHIN2004ACF",
+   "CHIN2005ACF",
+   "CHIN2006ACF",
+   "CHIN3005ACF",
+   "CHIN3006ACF",
+   "CHIN3007ACF",
+   "CHIN3008ACF",
+   "CHIN3009ACF",
+   "CHIN3011ACF",
+   "UNI3002BCW"
+  ],
+  "year_mismatch": [
+   [
+    "CCA1000ACF",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "CHIN3010ACF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "ENGL1002AEF",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "ENGL1031AEF",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "TRAN1261ACF",
+    1,
+    [
+     2
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BAHCWFAJ": {
+  "programme_absent": false,
+  "official_courses": 31,
+  "rows": 68,
+  "parse_fail": 0,
+  "missing": [
+   "UNI3002BEW"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "CCA1006ACF",
+   "CCA1007ACF",
+   "CCA2000ACF",
+   "CCA2009ACF",
+   "CCA3002ACF",
+   "CCA3014ACF",
+   "CCA3057ABF",
+   "CCA4004ACF",
+   "CCA4006ACF",
+   "CCA4007ACF",
+   "UNI2002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "AMVE1000AEF",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "CAMD1000AEF",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "CAMD1001AEF",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "CCA3056ACF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "CCA3059ACF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "IDDA1000AEF",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "IDDA3000AEF",
+    3,
+    [
+     2
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BAHELCJ": {
+  "programme_absent": false,
+  "official_courses": 24,
+  "rows": 42,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "ENGL1003AEF",
+   "ENGL1032AEF",
+   "ENGL1121AEF",
+   "ENGL2003AEF",
+   "ENGL2006AEF",
+   "ENGL3021AEF",
+   "ENGL3026AEF",
+   "ENGL4003AEF",
+   "ENGL4004AEF",
+   "ENGL4042AEF",
+   "LANG4139AEF",
+   "LANG4534AEF"
+  ],
+  "year_mismatch": [
+   [
+    "CCA2007ACF",
+    2,
+    [
+     4
+    ]
+   ],
+   [
+    "LANG3138AEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "POLS2003AEF",
+    2,
+    [
+     4
+    ]
+   ],
+   [
+    "PSYC2001AEF",
+    2,
+    [
+     4
+    ]
+   ],
+   [
+    "SOSC2001AEF",
+    2,
+    [
+     4
+    ]
+   ],
+   [
+    "TRAN1261ACF",
+    1,
+    [
+     4
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BAHLTJ": {
+  "programme_absent": false,
+  "official_courses": 26,
+  "rows": 56,
+  "parse_fail": 0,
+  "missing": [
+   "TRAN3603ABF",
+   "TRAN4654ABF",
+   "UNI3002BEW"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "ENGL1121AEF",
+   "ENGL3122AEF",
+   "LANG3143AEF",
+   "LANG4139AEF",
+   "TRAN1271ACF",
+   "TRAN2272ACF",
+   "TRAN3254ACF",
+   "TRAN3265ACF",
+   "TRAN4279ABF",
+   "UNI2002BCW"
+  ],
+  "year_mismatch": [
+   [
+    "CHIN1002ACF",
+    1,
+    [
+     3
+    ]
+   ],
+   [
+    "CHIN1003ACF",
+    1,
+    [
+     3
+    ]
+   ],
+   [
+    "ENGL1031AEF",
+    1,
+    [
+     3
+    ]
+   ],
+   [
+    "ENGL2035AEF",
+    2,
+    [
+     3
+    ]
+   ],
+   [
+    "PTH1901ACF",
+    1,
+    [
+     3
+    ]
+   ],
+   [
+    "TRAN3267ACF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "UNI2002BEW",
+    2,
+    [
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BAHNMIEJ": {
+  "programme_absent": false,
+  "official_courses": 33,
+  "rows": 43,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "AMVE2002AEF",
+   "COMP2090SEF",
+   "IDDA1003AEF",
+   "MATH2850SEF",
+   "NMIE1002AEF",
+   "NMIE1101AEF",
+   "NMIE3101AEF",
+   "NMIE3301AEF",
+   "NMIE3303AEF",
+   "NMIE4201AEF",
+   "UNI2002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "CAMD3000AEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "CCA3058ACF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "CCA3059ACF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "COMP3810SEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "IDDA3002AEF",
+    3,
+    [
+     4
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BAPHBMJ": {
+  "programme_absent": false,
+  "official_courses": 18,
+  "rows": 18,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "BUS3068BEF",
+   "BUS4088BEF",
+   "COUN2001AEF",
+   "ECON1001AEF",
+   "LAW3062BEF",
+   "MGT3045BEF",
+   "MGT4098BEF",
+   "PSYC3001AEF",
+   "PSYC3003AEF",
+   "PSYC4004AEF",
+   "PSYC4006AEF",
+   "UNI1002ABW",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "BUS2000BEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "POLS1001AEF",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "PSYC3009AEF",
+    3,
+    [
+     2
+    ]
+   ],
+   [
+    "SCM3072BEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     2
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BASCHRAEJ": {
+  "programme_absent": false,
+  "official_courses": 4,
+  "rows": 5,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "COMP2090SEF",
+   "COMP2640SEF",
+   "COMP2653SEF",
+   "COMP3203SEF",
+   "ELEC2013SEF",
+   "ELEC2410SEF",
+   "ENGG1001SEF",
+   "ENGG1011SEF",
+   "ENGG2021SEF",
+   "ENGG2022SEF",
+   "ENGG2023SEF",
+   "ENGG2024SEF",
+   "ENGG2095SEF",
+   "ENGG3001SEF",
+   "ENGG3025SEF",
+   "ENGG3026SEF",
+   "ENGG3027SEF",
+   "ENGG3083SEF",
+   "ENGG3095SEF",
+   "ENGG3096SEF",
+   "ENGG3097SEF",
+   "ENGG4028SEF",
+   "ENGG4097SEF",
+   "ENGG4098SEF",
+   "ST4020SEF",
+   "STAT1510SEF",
+   "UNI1002ABW",
+   "UNI1012ABW",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "COMP2083SEF",
+    2,
+    [
+     1
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BASCHTICJ": {
+  "programme_absent": false,
+  "official_courses": 13,
+  "rows": 31,
+  "parse_fail": 0,
+  "missing": [
+   "CHEM2035SEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "CHEM2034SEF",
+   "SCI1001SEF",
+   "ST1020SEF",
+   "ST4020SEF",
+   "STAT2610SEF",
+   "TC2020SEF",
+   "TC2040SEF",
+   "TC2080SEF",
+   "TC2090SEF",
+   "TC3040SEF",
+   "UNI2002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "TC4019SEF",
+    4,
+    [
+     3
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2,
+     3
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     2,
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BBAHASMJ": {
+  "programme_absent": false,
+  "official_courses": 20,
+  "rows": 66,
+  "parse_fail": 0,
+  "missing": [
+   "GIP100BEF",
+   "GIP200BEF",
+   "GIP300BEF",
+   "GIP400BEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [],
+  "year_mismatch": [
+   [
+    "ASM3057BEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "ASM4038BEF",
+    4,
+    [
+     3
+    ]
+   ],
+   [
+    "ASM4068BEF",
+    4,
+    [
+     3
+    ]
+   ],
+   [
+    "BUS2000BEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "UNI2002BEW",
+    2,
+    [
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BBAHCGSJ": {
+  "programme_absent": false,
+  "official_courses": 5,
+  "rows": 11,
+  "parse_fail": 0,
+  "missing": [
+   "GIP400BEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "ACT3011BEF",
+   "ACT3020BEF",
+   "ACT4014BEF",
+   "ACT4015BEF",
+   "BUS2000BEF",
+   "BUS2020BEF",
+   "BUS3068BEF",
+   "BUS3090BEF",
+   "BUS3092BEF",
+   "BUS4088BEF",
+   "CGV3011BEF",
+   "CGV4012BEF",
+   "CGV4013BEF",
+   "FIN3086BEF",
+   "LAW3033BEF",
+   "MGT4099BEF",
+   "UNI1002ABW",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "LAW3062BEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     4
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BBAHFFTJ": {
+  "programme_absent": false,
+  "official_courses": 17,
+  "rows": 45,
+  "parse_fail": 0,
+  "missing": [
+   "GIP100BEF",
+   "GIP200BEF",
+   "GIP300BEF",
+   "GIP400BEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "ACT3011BEF",
+   "BUS4088BEF",
+   "FIN3085BEF",
+   "FIN4089BEF",
+   "FINT3038BEF",
+   "MGT4056BEF",
+   "MGT4098BEF",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "BUS2000BEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "FINT2030BEF",
+    2,
+    [
+     3
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BBAHGBJ": {
+  "programme_absent": false,
+  "official_courses": 19,
+  "rows": 51,
+  "parse_fail": 0,
+  "missing": [
+   "GIP101BEF",
+   "GIP201BEF",
+   "GIP300BEF",
+   "GIP400BEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "IB4096BEF",
+   "IB4097BEF",
+   "MGT4098BEF",
+   "UNI1002ABW"
+  ],
+  "year_mismatch": [
+   [
+    "BUS2000BEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "IB3092BEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "IB4061BEF",
+    4,
+    [
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BBAHGMSMJ": {
+  "programme_absent": false,
+  "official_courses": 19,
+  "rows": 42,
+  "parse_fail": 0,
+  "missing": [
+   "GIP100BEF",
+   "GIP200BEF",
+   "GIP300BEF",
+   "GIP400BEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "BUS3068BEF",
+   "BUS4088BEF",
+   "MGT4098BEF",
+   "SCM3071BEF",
+   "SCM3073BEF",
+   "SCM4072BEF",
+   "UNI1002ABW"
+  ],
+  "year_mismatch": [
+   [
+    "BUS2000BEF",
+    2,
+    [
+     1
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BBAHHRMJ": {
+  "programme_absent": false,
+  "official_courses": 22,
+  "rows": 52,
+  "parse_fail": 0,
+  "missing": [
+   "GIP100BEF",
+   "GIP200BEF",
+   "GIP300BEF",
+   "GIP400BEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "BUS4088BEF",
+   "MGT3042BEF",
+   "MGT3045BEF",
+   "MGT4042BEF",
+   "MGT4043BEF",
+   "MGT4098BEF",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "BUS2000BEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BBAHIHAMJ": {
+  "programme_absent": false,
+  "official_courses": 20,
+  "rows": 42,
+  "parse_fail": 0,
+  "missing": [
+   "GIP100BEF",
+   "GIP200BEF",
+   "GIP300BEF",
+   "GIP400BEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "HPM3009BEF",
+   "HPM4008BEF",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "BUS2000BEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "FINT2030BEF",
+    2,
+    [
+     3
+    ]
+   ],
+   [
+    "HPM4005BEF",
+    4,
+    [
+     3
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BBAHMGTJ": {
+  "programme_absent": false,
+  "official_courses": 22,
+  "rows": 52,
+  "parse_fail": 0,
+  "missing": [
+   "GIP100BEF",
+   "GIP200BEF",
+   "GIP300BEF",
+   "GIP400BEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "BUS3068BEF",
+   "BUS4088BEF",
+   "MGT3045BEF",
+   "MGT4044BEF",
+   "MGT4098BEF",
+   "UNI1002ABW"
+  ],
+  "year_mismatch": [
+   [
+    "BUS2000BEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "IB4061BEF",
+    4,
+    [
+     3
+    ]
+   ],
+   [
+    "SCM3072BEF",
+    3,
+    [
+     4
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BBAHMKTJ": {
+  "programme_absent": false,
+  "official_courses": 18,
+  "rows": 48,
+  "parse_fail": 0,
+  "missing": [
+   "GIP100BEF",
+   "GIP200BEF",
+   "GIP300BEF",
+   "GIP400BEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "BUS4088BEF",
+   "MGT4098BEF",
+   "MKT3062BEF",
+   "MKT3063BEF",
+   "MKT4062BEF",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "BUS2000BEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "FINT2030BEF",
+    2,
+    [
+     3
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BBAHPAJ": {
+  "programme_absent": false,
+  "official_courses": 16,
+  "rows": 42,
+  "parse_fail": 0,
+  "missing": [
+   "GIP100BEF",
+   "GIP200BEF",
+   "GIP300BEF",
+   "GIP400BEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "ACT3013BEF",
+   "ACT3032BEF",
+   "BUS3068BEF",
+   "BUS4088BEF",
+   "LAW3033BEF",
+   "MGT4099BEF",
+   "UNI1002ABW",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "ACT4014BEF",
+    4,
+    [
+     3
+    ]
+   ],
+   [
+    "BUS2000BEF",
+    2,
+    [
+     1
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BBAHRESJ": {
+  "programme_absent": false,
+  "official_courses": 18,
+  "rows": 30,
+  "parse_fail": 0,
+  "missing": [
+   "GIP100BEF",
+   "GIP200BEF",
+   "GIP300BEF",
+   "GIP400BEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "RFM3036BEF",
+   "RFM4055BEF",
+   "RFM4056BEF",
+   "RFM4058BEF",
+   "RFM4059BEF"
+  ],
+  "year_mismatch": [
+   [
+    "BUS2000BEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BBAHSEMJ": {
+  "programme_absent": false,
+  "official_courses": 22,
+  "rows": 51,
+  "parse_fail": 0,
+  "missing": [
+   "GIP100BEF",
+   "GIP200BEF",
+   "GIP300BEF",
+   "GIP400BEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "BUS3068BEF",
+   "BUS4088BEF",
+   "MGT4098BEF",
+   "SPM3059BEF",
+   "SPM4036BEF",
+   "SPM4098BEF"
+  ],
+  "year_mismatch": [
+   [
+    "BUS2000BEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "SPM3015BEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "TRM3006BEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "UNI2002BEW",
+    2,
+    [
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BBAHSRMJ": {
+  "programme_absent": false,
+  "official_courses": 22,
+  "rows": 78,
+  "parse_fail": 0,
+  "missing": [
+   "COMR3002BEF",
+   "GIP100BEF",
+   "GIP200BEF",
+   "GIP300BEF",
+   "GIP400BEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "BUS3068BEF",
+   "BUS4088BEF",
+   "MGT4098BEF",
+   "SPM3017BEF",
+   "SPM3021BEF",
+   "SPM4036BEF"
+  ],
+  "year_mismatch": [
+   [
+    "BUS2000BEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BBAHSTHMJ": {
+  "programme_absent": false,
+  "official_courses": 23,
+  "rows": 63,
+  "parse_fail": 0,
+  "missing": [
+   "GIP100BEF",
+   "GIP200BEF",
+   "GIP300BEF",
+   "GIP400BEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "TRM3012BEF",
+   "TRM4014BEF",
+   "UNI1002ABW"
+  ],
+  "year_mismatch": [
+   [
+    "BUS2000BEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "FINT2030BEF",
+    2,
+    [
+     3
+    ]
+   ],
+   [
+    "TRM4011BEF",
+    4,
+    [
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BEDELSEHJ": {
+  "programme_absent": false,
+  "official_courses": 22,
+  "rows": 42,
+  "parse_fail": 2,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "EDU1100EEF",
+   "EDU2215EEF",
+   "EDU2219EEF",
+   "EDU2220EEF",
+   "EDU2253EEF",
+   "EDU2254EEF",
+   "EDU3350EEF",
+   "EDU3353EEF",
+   "ENGL1102EEF",
+   "ENGL2205EEF",
+   "ENGL2210EEF",
+   "ENGL3350EEF",
+   "ENGL4430EEF",
+   "LANG3366EEF",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "EDU3388EEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "EDU4400EEF",
+    4,
+    [
+     3
+    ]
+   ],
+   [
+    "EDU4465EEF",
+    4,
+    [
+     3
+    ]
+   ],
+   [
+    "ENGL2220EEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "ENGL2230EEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "ENGL3320EEF",
+    3,
+    [
+     2
+    ]
+   ],
+   [
+    "LANG3138AEF",
+    3,
+    [
+     2
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BEDHACLSJ": {
+  "programme_absent": false,
+  "official_courses": 25,
+  "rows": 51,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "CHIN2101ECF",
+   "CHIN2133ECF",
+   "CHIN2230ECF",
+   "CHIN2243ECF",
+   "CHIN2384ECF",
+   "CHIN3380ECF",
+   "CHIN4232ECF",
+   "EDU1100ECF",
+   "EDU2218ECF",
+   "EDU2229ECF",
+   "EDU3219ECF",
+   "EDU3220ECF",
+   "EDU3256ECF",
+   "EDU3355ECF",
+   "EDU3378ECF",
+   "EDU3388ECF",
+   "EDU4355ECF",
+   "EDU4422ECF",
+   "EDU4501ECF",
+   "PTH2250ECF",
+   "UNI3002BCW"
+  ],
+  "year_mismatch": [
+   [
+    "CHIN3255ECF",
+    3,
+    [
+     2,
+     4
+    ]
+   ],
+   [
+    "EDU4412ECF",
+    4,
+    [
+     3
+    ]
+   ],
+   [
+    "PTH3255ECF",
+    3,
+    [
+     2
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     2
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BEDHECEJ": {
+  "programme_absent": false,
+  "official_courses": 22,
+  "rows": 34,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "EDU1150ECF",
+   "EDU1161ECF",
+   "EDU1165ECF",
+   "EDU2246ECF",
+   "EDU2250ECF",
+   "EDU2260ECF",
+   "EDU2262ECF",
+   "EDU2263ECF",
+   "EDU3379ECF",
+   "EDU3382ECF",
+   "EDU3383ECF",
+   "EDU3386ECF",
+   "EDU4404ECF",
+   "EDU4469ECF",
+   "EDU4474ECF",
+   "EDU4485ECF",
+   "UNI3002BCW"
+  ],
+  "year_mismatch": [
+   [
+    "CHIN2230ECF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     3
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     3
+    ]
+   ],
+   [
+    "UNI2002BCW",
+    2,
+    [
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BEDHPCLSJ": {
+  "programme_absent": false,
+  "official_courses": 19,
+  "rows": 35,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "CHIN1202ECF",
+   "CHIN2133ECF",
+   "CHIN2384ECF",
+   "CHIN3201ECF",
+   "CHIN3231ECF",
+   "CHIN3301ECF",
+   "CHIN4420ECF",
+   "CHIN4503ECF",
+   "EDU1100ECF",
+   "EDU2201ECF",
+   "EDU2229ECF",
+   "EDU2401ECF",
+   "EDU3202ECF",
+   "EDU3219ECF",
+   "EDU3220ECF",
+   "EDU3355ECF",
+   "EDU3388ECF",
+   "EDU4501ECF",
+   "EDU4502ECF",
+   "EDU4503ECF",
+   "PTH3303ECF",
+   "UNI3002BCW"
+  ],
+  "year_mismatch": [
+   [
+    "EDU4301ECF",
+    4,
+    [
+     3
+    ]
+   ],
+   [
+    "EDU4302ECF",
+    4,
+    [
+     3
+    ]
+   ],
+   [
+    "PTH2100ECF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "PTH3100ECF",
+    3,
+    [
+     2
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BENGHBSEJ": {
+  "programme_absent": false,
+  "official_courses": 16,
+  "rows": 45,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "ENGG1001SEF",
+   "ENGG1011SEF",
+   "ENGG2004SEF",
+   "ENGG2005SEF",
+   "ENGG2006SEF",
+   "ENGG2091SEF",
+   "ENGG3001SEF",
+   "ENGG3021SEF",
+   "ENGG3092SEF",
+   "ENGG4004SEF",
+   "ENGG4021SEF",
+   "ENVR3008SEF",
+   "ENVR4028SEF",
+   "MATH2850SEF",
+   "ST1020SEF",
+   "ST4020SEF",
+   "STAT1510SEF",
+   "UNI2002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "ENGG2060SEF",
+    2,
+    [
+     3
+    ]
+   ],
+   [
+    "ENGG3022SEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2,
+     3
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     2,
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BENGHCEJ": {
+  "programme_absent": false,
+  "official_courses": 19,
+  "rows": 44,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "ENGG1001SEF",
+   "ENGG2007SEF",
+   "ENGG2009SEF",
+   "ENGG2090SEF",
+   "ENGG3001SEF",
+   "ENGG3007SEF",
+   "ENGG3041SEF",
+   "ENGG3043SEF",
+   "ENGG3091SEF",
+   "ENGG4004SEF",
+   "ENGG4006SEF",
+   "ENGG4008SEF",
+   "MATH2850SEF",
+   "ST1020SEF",
+   "ST4020SEF",
+   "STAT1510SEF",
+   "TC3030SEF",
+   "UNI2002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "ENGG2001SEF",
+    2,
+    [
+     3
+    ]
+   ],
+   [
+    "ENGG3042SEF",
+    3,
+    [
+     2
+    ]
+   ],
+   [
+    "ENVR4028SEF",
+    4,
+    [
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BENGHECEJ1": {
+  "programme_absent": false,
+  "official_courses": 16,
+  "rows": 17,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "COMP2090SEF",
+   "COMP2670SEF",
+   "ELEC2010SEF",
+   "ELEC2050SEF",
+   "ELEC2100SEF",
+   "ELEC3000SEF",
+   "ELEC3150SEF",
+   "ELEC3470SEF",
+   "ELEC4000SEF",
+   "ENGG3280SEF",
+   "MATH2850SEF",
+   "STAT1510SEF",
+   "STAT2610SEF",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "COMP1080SEF",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     3
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BFAHAVEJ": {
+  "programme_absent": false,
+  "official_courses": 32,
+  "rows": 60,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "AMVE1002ABF",
+   "AMVE1003AEF",
+   "AMVE1004AEF",
+   "AMVE2003AEF",
+   "AMVE2004AEF",
+   "AMVE2005ABF",
+   "AMVE3003ABF",
+   "AMVE3004AEF",
+   "AMVE4004AEF",
+   "AMVE4005AEF",
+   "CCA1005ABF"
+  ],
+  "year_mismatch": [],
+  "credit_mismatch": []
+ },
+ "BFAHIDDAJ": {
+  "programme_absent": false,
+  "official_courses": 17,
+  "rows": 40,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "IDDA1003AEF",
+   "IDDA1004ABF",
+   "IDDA2002AEF",
+   "IDDA2003AEF",
+   "IDDA3005AEF",
+   "IDDA3006AEF",
+   "IDDA3007AEF",
+   "IDDA4004AEF",
+   "IDDA4005AEF",
+   "IDDA4006AEF",
+   "IDDA4007AEF",
+   "UNI1002ABW",
+   "UNI1012ABW",
+   "UNI2002BCW"
+  ],
+  "year_mismatch": [
+   [
+    "UNI2002BEW",
+    2,
+    [
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BLSEHJ": {
+  "programme_absent": false,
+  "official_courses": 24,
+  "rows": 50,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "ENGL1102EEF",
+   "ENGL2210EEF",
+   "ENGL2235EEF",
+   "ENGL3330EEF",
+   "ENGL3350EEF",
+   "ENGL4425EEF",
+   "ENGL4430EEF",
+   "LANG3143AEF",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "ENGL2205EEF",
+    2,
+    [
+     4
+    ]
+   ],
+   [
+    "ENGL2220EEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "ENGL2230EEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "ENGL3320EEF",
+    3,
+    [
+     2
+    ]
+   ],
+   [
+    "ENGL3370EEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "LANG2133AEF",
+    2,
+    [
+     3
+    ]
+   ],
+   [
+    "TRAN1261ACF",
+    1,
+    [
+     3
+    ]
+   ],
+   [
+    "TRAN2253ACF",
+    2,
+    [
+     3
+    ]
+   ],
+   [
+    "TRAN3267ACF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "TRAN3602ABF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     2,
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BLSHACLSJ": {
+  "programme_absent": false,
+  "official_courses": 19,
+  "rows": 48,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "CHIN2132ECF",
+   "CHIN2133ECF",
+   "CHIN2230ECF",
+   "CHIN2243ECF",
+   "CHIN2384ECF",
+   "CHIN3231ECF",
+   "CHIN3338ECF",
+   "CHIN3366ECF",
+   "CHIN3369ECF",
+   "CHIN3380ECF",
+   "CHIN3382ECF",
+   "CHIN4232ECF",
+   "CHIN4244ECF",
+   "CHIN4245ECF",
+   "EDU3256ECF",
+   "PTH2250ECF",
+   "UNI3002BCW"
+  ],
+  "year_mismatch": [
+   [
+    "PTH3255ECF",
+    3,
+    [
+     2
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BLSHBSADJ": {
+  "programme_absent": false,
+  "official_courses": 5,
+  "rows": 5,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "CHIN1131ECF",
+   "CHIN2232ECF",
+   "CHIN2253ECF",
+   "CHIN3382ECF",
+   "CHIN3388ECF",
+   "CHIN4245ECF",
+   "CHIN4344ECF",
+   "CHIN4383ECF",
+   "DRAM1000EBF",
+   "DRAM2525ECF",
+   "DRAM3399ECF",
+   "DRAM3636ECF",
+   "DRAM4244EBF",
+   "DRAM4343EBF",
+   "DRAM4499ECF",
+   "ENGL2200EEF",
+   "ENGL2210EEF",
+   "ENGL2230EEF",
+   "ENGL3320EEF",
+   "ENGL3330EEF",
+   "IT1150ECF",
+   "LANG2000EEF",
+   "LANG3000ECF",
+   "LANG4000EBF",
+   "PTH2250ECF",
+   "UNI1002ABW",
+   "UNI1012ABW",
+   "UNI2002BCW",
+   "UNI3002BCW"
+  ],
+  "year_mismatch": [
+   [
+    "ENGL3370EEF",
+    3,
+    [
+     2
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BNHGJ1": {
+  "programme_absent": false,
+  "official_courses": 10,
+  "rows": 11,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "BSCI2012AEF",
+   "NURS1503NEF",
+   "NURS1504NEF",
+   "NURS2502NEF",
+   "NURS2503NEF",
+   "NURS2506NEF",
+   "NURS2507NEF",
+   "NURS2508NEF",
+   "NURS2509NEF",
+   "NURS2518NEF",
+   "NURS3503NEF",
+   "NURS3504NEF",
+   "NURS3505NEF",
+   "NURS3506NEF",
+   "NURS3507NEF",
+   "NURS3508NEF",
+   "NURS3509NEF",
+   "NURS3510NEF",
+   "NURS3511NEF",
+   "NURS3512NEF",
+   "NURS4501NEF",
+   "NURS4502NEF",
+   "NURS4503NEF",
+   "NURS4504NEF",
+   "NURS4505NEF",
+   "NURS4506NEF",
+   "NURS4510NEF",
+   "NURS4511NEF",
+   "NURS4512NEF",
+   "NURS4513NEF",
+   "NURS4514NEF",
+   "NURS4515NEF",
+   "NURS4516NEF",
+   "UNI1012ABW",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "BSCI2013AEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "NURS3501NEF",
+    3,
+    [
+     2
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BNHMJ1": {
+  "programme_absent": false,
+  "official_courses": 10,
+  "rows": 10,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "BSCI2012AEF",
+   "NRUS4518NEF",
+   "NURS1503NEF",
+   "NURS1510NEF",
+   "NURS2502NEF",
+   "NURS2513NEF",
+   "NURS2514NEF",
+   "NURS2515NEF",
+   "NURS2516NEF",
+   "NURS2520NEF",
+   "NURS3502NEF",
+   "NURS3513NEF",
+   "NURS3514NEF",
+   "NURS3515NEF",
+   "NURS4501NCF",
+   "NURS4502NEF",
+   "NURS4504NEF",
+   "NURS4506NEF",
+   "NURS4507NEF",
+   "NURS4508NEF",
+   "NURS4509NEF",
+   "NURS4519NEF",
+   "UNI1012ABW",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "BSCI2013AEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "NURS2519NEF",
+    2,
+    [
+     1
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BSCHATSJ": {
+  "programme_absent": false,
+  "official_courses": 9,
+  "rows": 23,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "BIOL1003SEF",
+   "BIOL2035SEF",
+   "BIOL2036SEF",
+   "CHEM1002SEF",
+   "CHEM3050SEF",
+   "SCI1010SEF",
+   "SCI1100SEF",
+   "SCI1101SEF",
+   "SCI2006SEF",
+   "SCI2100SEF",
+   "SCI2101SEF",
+   "SCI2102SEF",
+   "SCI3030SEF",
+   "SCI3065SEF",
+   "SCI3090SEF",
+   "SCI3101SEF",
+   "ST4020SEF",
+   "STAT2610SEF",
+   "TC2020SEF",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "UNI1002ABW",
+    1,
+    [
+     3
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BSCHBEMJ": {
+  "programme_absent": false,
+  "official_courses": 8,
+  "rows": 13,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "BEM1005SEF",
+   "BEM2005SEF",
+   "BEM2007SEF",
+   "BEM3001SEF",
+   "BEM3004SEF",
+   "BEM3005SEF",
+   "BEM4001SEF",
+   "BEM4004SEF",
+   "BEM4091SEF",
+   "CM1002SEF",
+   "CM2002SEF",
+   "CM3001SEF",
+   "CM3003SEF",
+   "CM4002SEF",
+   "ENGG2094SEF",
+   "ENGG3001SEF",
+   "ENGG3094SEF",
+   "ENGG4003SEF",
+   "ENGG4004SEF",
+   "ENGG4094SEF",
+   "QS2001SEF",
+   "QS2004SEF",
+   "QS3001SEF",
+   "QS4001SEF",
+   "QS4003SEF",
+   "ST4020SEF",
+   "UNI1002ABW",
+   "UNI1012ABW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [],
+  "credit_mismatch": []
+ },
+ "BSCHBSBJ": {
+  "programme_absent": false,
+  "official_courses": 18,
+  "rows": 43,
+  "parse_fail": 4,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "BIOL1003SEF",
+   "BIOL2012SEF",
+   "BIOL2036SEF",
+   "BIOL3008SEF",
+   "BIOL4006SEF",
+   "BIOL4013SEF",
+   "SCI1101SEF",
+   "SCI2005SEF",
+   "SCI2101SEF",
+   "SCI2102SEF",
+   "SCI3030SEF",
+   "SCI3101SEF",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     2
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BSCHCCSJ": {
+  "programme_absent": false,
+  "official_courses": 17,
+  "rows": 34,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "COMP2090SEF",
+   "COMP2670SEF",
+   "ELEC2010SEF",
+   "ELEC2050SEF",
+   "ELEC2100SEF",
+   "ELEC3150SEF",
+   "ELEC3650SEF",
+   "ELEC3720SEF",
+   "ELEC4710SEF",
+   "IT2900SEF",
+   "STAT1510SEF",
+   "STAT2610SEF",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "COMP1080SEF",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     3
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BSCHCEF3": {
+  "programme_absent": false,
+  "official_courses": 7,
+  "rows": 7,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "COMP3130SEF",
+   "ELEC3150SEF",
+   "ELEC3470SEF",
+   "ENGG3280SEF",
+   "UNI1012ABW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "UNI1002ABW",
+    1,
+    [
+     3
+    ]
+   ],
+   [
+    "UNI2002BEW",
+    2,
+    [
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BSCHCMQSJ": {
+  "programme_absent": false,
+  "official_courses": 15,
+  "rows": 30,
+  "parse_fail": 0,
+  "missing": [
+   "UNI2002BEW"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "CM1002SEF",
+   "CM2002SEF",
+   "CM3002SEF",
+   "CM3003SEF",
+   "CM4001SEF",
+   "CM4002SEF",
+   "ENGG2080SEF",
+   "ENGG2093SEF",
+   "ENGG3001SEF",
+   "ENGG3093SEF",
+   "ENGG4003SEF",
+   "ENGG4004SEF",
+   "ENGG4093SEF",
+   "QS2001SEF",
+   "QS2004SEF",
+   "QS4001SEF",
+   "QS4002SEF",
+   "QS4003SEF",
+   "ST1020SEF",
+   "ST4019SEF",
+   "ST4020SEF",
+   "UNI2022BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [],
+  "credit_mismatch": []
+ },
+ "BSCHCOMPF3": {
+  "programme_absent": true,
+  "official_courses": 8,
+  "rows": 8,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [
+   "COMP3122SEF",
+   "COMP3200SEF",
+   "COMP3500SEF",
+   "COMP3810SEF",
+   "COMP4570SEF",
+   "UNI1002ABW",
+   "UNI1012ABW",
+   "UNI2002BEW"
+  ],
+  "extra_core": [],
+  "year_mismatch": [],
+  "credit_mismatch": []
+ },
+ "BSCHCSJ": {
+  "programme_absent": false,
+  "official_courses": 16,
+  "rows": 37,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "COMP2030SEF",
+   "COMP2090SEF",
+   "COMP2650SEF",
+   "COMP2670SEF",
+   "COMP3130SEF",
+   "COMP3510SEF",
+   "COMP3800SEF",
+   "COMP3920SEF",
+   "IT1030SEF",
+   "IT2900SEF",
+   "STAT1510SEF",
+   "STAT2610SEF",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2,
+     3
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     2,
+     3
+    ]
+   ],
+   [
+    "UNI2002BEW",
+    2,
+    [
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BSCHDRJ": {
+  "programme_absent": false,
+  "official_courses": 6,
+  "rows": 7,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "NURS2501NEF",
+   "RAD1503NEF",
+   "RAD1504NEF",
+   "RAD2501NEF",
+   "RAD2502NEF",
+   "RAD2503NEF",
+   "RAD2504NEF",
+   "RAD2505NEF",
+   "RAD2506NEF",
+   "RAD2507NEF",
+   "RAD2508NEF",
+   "RAD2509NEF",
+   "RAD2510NEF",
+   "RAD3501NEF",
+   "RAD3502NEF",
+   "RAD3503NEF",
+   "RAD3504NEF",
+   "RAD3505NEF",
+   "RAD3506NEF",
+   "RAD3507NEF",
+   "RAD3508NEF",
+   "RAD3509NEF",
+   "RAD3510NEF",
+   "RAD4501NEF",
+   "RAD4502NEF",
+   "RAD4510NEF",
+   "RAD4511NEF",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [],
+  "credit_mismatch": []
+ },
+ "BSCHDSAIJ": {
+  "programme_absent": false,
+  "official_courses": 21,
+  "rows": 36,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "COMP2030SEF",
+   "COMP2090SEF",
+   "COMP3130SEF",
+   "COMP3510SEF",
+   "COMP3920SEF",
+   "COMP4210SEF",
+   "COMP4600SEF",
+   "COMP4820SEF",
+   "IT1030SEF",
+   "IT2900SEF",
+   "STAT1510SEF",
+   "STAT2520SEF",
+   "STAT2610SEF",
+   "STAT2630SEF",
+   "STAT3110SEF"
+  ],
+  "year_mismatch": [
+   [
+    "COMP3810SEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "ELEC3050SEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "ELEC3250SEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     3
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     3
+    ]
+   ],
+   [
+    "UNI2002BEW",
+    2,
+    [
+     3
+    ]
+   ],
+   [
+    "UNI3002BEW",
+    3,
+    [
+     4
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BSCHESGMJ": {
+  "programme_absent": false,
+  "official_courses": 17,
+  "rows": 43,
+  "parse_fail": 3,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "BIOL1003SEF",
+   "BIOL2036SEF",
+   "ENVR1000SEF",
+   "ENVR2036SEF",
+   "ENVR3041SEF",
+   "ENVR4007SEF",
+   "ENVR4042SEF",
+   "ENVR4074SEF",
+   "SCI1101SEF",
+   "SCI2101SEF",
+   "SCI2103SEF",
+   "SCI3030SEF",
+   "SCI3101SEF",
+   "SCI3103SEF",
+   "UNI2002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "SCI3031SEF",
+    3,
+    [
+     2
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2,
+     3
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     2,
+     3
+    ]
+   ],
+   [
+    "UNI3002BEW",
+    3,
+    [
+     4
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BSCHFTSJ": {
+  "programme_absent": false,
+  "official_courses": 21,
+  "rows": 51,
+  "parse_fail": 0,
+  "missing": [
+   "BIOL3056SEF",
+   "SCI4010SEF",
+   "TC3015SEF",
+   "TC3020SEF",
+   "TC4019SEF",
+   "TC4026SEF",
+   "TC4062SEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "BIOL1003SEF",
+   "BIOL2036SEF",
+   "CHEM2002SEF",
+   "SCI1101SEF",
+   "SCI2101SEF",
+   "SCI2102SEF",
+   "SCI3030SEF",
+   "SCI3065SEF",
+   "SCI3091SEF",
+   "SCI3101SEF",
+   "SCI4064SEF",
+   "SCI4065SEF",
+   "SCI4066SEF",
+   "SCI4067SEF",
+   "ST4020SEF",
+   "STAT2610SEF",
+   "TC3080SEF",
+   "UNI2002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "CHEM3050SEF",
+    3,
+    [
+     2
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2,
+     3
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     2,
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BSCHMLSJ": {
+  "programme_absent": false,
+  "official_courses": 20,
+  "rows": 22,
+  "parse_fail": 1,
+  "missing": [
+   "MLS4016NEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "BIOL2002NEF",
+   "BIOL2006NEF",
+   "BIOL2012NEF",
+   "BIOL2036NEF",
+   "BIOL4011NEF",
+   "BIOL4012NEF",
+   "MLS1004NEF",
+   "MLS2011NEF",
+   "MLS3007NEF",
+   "MLS3008NEF",
+   "MLS3009NEF",
+   "MLS3010NEF",
+   "MLS4001NEF",
+   "MLS4002NEF",
+   "MLS4007NEF",
+   "MLS4008NEF",
+   "MLS4013NEF",
+   "MLS4021NEF",
+   "MLS4022NEF",
+   "MLS4023NEF",
+   "MLS4024NEF",
+   "SCI2006NEF",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "MLS4009NEF",
+    4,
+    [
+     2
+    ]
+   ],
+   [
+    "MLS4015NEF",
+    4,
+    [
+     2
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "UNI2002BEW",
+    2,
+    [
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BSCHPTJ1": {
+  "programme_absent": false,
+  "official_courses": 13,
+  "rows": 13,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "BSCI2024AEF",
+   "PHSI2501NEF",
+   "PHSI2506NEF",
+   "PHSI2507NEF",
+   "PHSI2509NEF",
+   "PHSI4501NEF",
+   "PHSI4506NEF",
+   "PHSI4507NEF",
+   "PHSI4508NEF",
+   "PHSI4509NEF",
+   "PHSI4510NEF",
+   "PHSI4511NEF",
+   "PHSI4512NEF",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "PHSI2502NEF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "PHSI2508NEF",
+    2,
+    [
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BSCHSTAMJ": {
+  "programme_absent": false,
+  "official_courses": 11,
+  "rows": 22,
+  "parse_fail": 0,
+  "missing": [
+   "SCI3000SEF",
+   "SCI3091SEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "COMP2020SEF",
+   "COMP2660SEF",
+   "ENGG1001SEF",
+   "ENGG2095SEF",
+   "IT2900SEF",
+   "MATH2150SEF",
+   "SCI1001SEF",
+   "ST1020SEF",
+   "STAT1510SEF",
+   "STAT2510SEF",
+   "STAT2520SEF",
+   "TC2080SEF",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2,
+     3
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     2,
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": [
+   [
+    "MATH1410SEF",
+    2,
+    [
+     3
+    ]
+   ]
+  ]
+ },
+ "BSCHSTEMJ": {
+  "programme_absent": false,
+  "official_courses": 1,
+  "rows": 3,
+  "parse_fail": 0,
+  "missing": [
+   "SCI4090SEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "COMP1080SEF",
+   "COMP2020SEF",
+   "COMP2660SEF",
+   "ELEC1010SEF",
+   "ENGG1001SEF",
+   "IT1020SEF",
+   "IT1030SEF",
+   "IT2900SEF",
+   "SCI1001SEF",
+   "SCI1010SEF",
+   "ST1020SEF",
+   "TC2080SEF",
+   "UNI1002ABW",
+   "UNI1012ABW",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "year_mismatch": [],
+  "credit_mismatch": []
+ },
+ "BSSCHPWSJ": {
+  "programme_absent": false,
+  "official_courses": 31,
+  "rows": 90,
+  "parse_fail": 0,
+  "missing": [
+   "COUN1001AEF",
+   "COUN2002AEF",
+   "COUN4002AEF",
+   "COUN4008AEF",
+   "PSYC4002AEF"
+  ],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "ECON1001AEF",
+   "PSYC3001AEF",
+   "PSYC3003AEF",
+   "PSYC3004AEF",
+   "PSYC3005AEF",
+   "PSYC3007AEF",
+   "SOCI1001AEF",
+   "STAT2001AEF"
+  ],
+  "year_mismatch": [
+   [
+    "ECON3006AEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "ECON3008AEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "SOCI2001AEF",
+    2,
+    [
+     3
+    ]
+   ],
+   [
+    "SOCI3005AEF",
+    3,
+    [
+     4
+    ]
+   ],
+   [
+    "UNI1002ABW",
+    1,
+    [
+     2,
+     3
+    ]
+   ],
+   [
+    "UNI1012ABW",
+    1,
+    [
+     2,
+     3
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "BSSCHWSJ": {
+  "programme_absent": true,
+  "official_courses": 57,
+  "rows": 424,
+  "parse_fail": 2,
+  "missing": [],
+  "missing_all_if_absent": [
+   "ECON2001AEF",
+   "ECON3001AEF",
+   "ECON3002AEF",
+   "ECON3003AEF",
+   "ECON3006AEF",
+   "ECON3008AEF",
+   "ECON4004AEF",
+   "ECON4005AEF",
+   "ECON4007AEF",
+   "ENGL1101AEF",
+   "GCST2001AEF",
+   "GCST3002AEF",
+   "GCST3003AEF",
+   "GCST3004AEF",
+   "GCST4003AEF",
+   "GCST4004AEF",
+   "POLS1001AEF",
+   "POLS2002AEF",
+   "POLS2003AEF",
+   "POLS3002AEF",
+   "POLS3004AEF",
+   "POLS4002AEF",
+   "POLS4004AEF",
+   "POLS4005AEF",
+   "POLS4006AEF",
+   "POLS4007AEF",
+   "POLS4008AEF",
+   "POLS4009AEF",
+   "PSYC1001AEF",
+   "PSYC2001AEF",
+   "PSYC3001AEF",
+   "PSYC3010AEF",
+   "PSYC4003AEF",
+   "PSYC4005AEF",
+   "PUAD3001AEF",
+   "PUAD4001AEF",
+   "SOCI2001AEF",
+   "SOCI2005AEF",
+   "SOCI3003AEF",
+   "SOCI3005AEF",
+   "SOCI3006AEF",
+   "SOCI3007AEF",
+   "SOCI3009AEF",
+   "SOCI4002AEF",
+   "SOCI4004AEF",
+   "SOCI4005AEF",
+   "SOCI4006AEF",
+   "SOSC2001AEF",
+   "SOSC2002AEF",
+   "SOSC3002AEF",
+   "SOSC4002AEF",
+   "STAT2002AEF",
+   "STAT2003AEF",
+   "UNI1002ABW",
+   "UNI1012ABW",
+   "UNI2002BEW",
+   "UNI3002BEW"
+  ],
+  "extra_core": [],
+  "year_mismatch": [],
+  "credit_mismatch": []
+ },
+ "HDNGF1": {
+  "programme_absent": false,
+  "official_courses": 7,
+  "rows": 7,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "NURS1302NCF",
+   "NURS1304NCF",
+   "NURS1306NCF",
+   "NURS2303NCF",
+   "NURS2304NCF",
+   "NURS2305NCF",
+   "NURS2306NCF",
+   "NURS2309NCF",
+   "NURS2310NCF",
+   "NURS2311NCF",
+   "NURS2314NCF",
+   "NURS2315NCF",
+   "NURS3310NCF"
+  ],
+  "year_mismatch": [
+   [
+    "NURS1310NCF",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "NURS1311NCF",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "NURS2301NCF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "NURS2302NCF",
+    2,
+    [
+     1
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ },
+ "HDNMF1": {
+  "programme_absent": false,
+  "official_courses": 7,
+  "rows": 7,
+  "parse_fail": 0,
+  "missing": [],
+  "missing_all_if_absent": [],
+  "extra_core": [
+   "NURS1302NCF",
+   "NURS1304NCF",
+   "NURS1308NCF",
+   "NURS2303NCF",
+   "NURS2304NCF",
+   "NURS2307NCF",
+   "NURS2308NCF",
+   "NURS2309NCF",
+   "NURS2312NCF",
+   "NURS2313NCF",
+   "NURS2314NCF",
+   "NURS2315NCF",
+   "NURS3312NCF"
+  ],
+  "year_mismatch": [
+   [
+    "NURS1312NCF",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "NURS1313NCF",
+    1,
+    [
+     2
+    ]
+   ],
+   [
+    "NURS2301NCF",
+    2,
+    [
+     1
+    ]
+   ],
+   [
+    "NURS2302NCF",
+    2,
+    [
+     1
+    ]
+   ]
+  ],
+  "credit_mismatch": []
+ }
+}
