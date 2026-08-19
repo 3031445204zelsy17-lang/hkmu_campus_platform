@@ -121,6 +121,13 @@
   <view wx:elif="{{viewMode==='catalogue'}}" class="planner-catalogue">
     <view class="catalogue-disclaimer">{{catalogueDisclaimer}}</view>
 
+    <!-- 停招/无规则专业:GE 通识选课与课评全校通用,不该随专业规则连坐。
+         (规划视图的 seg-bar 只在 planning 分支渲染,目录视图在此补通识入口;
+         点课进 course-detail 即课评) -->
+    <view wx:if="{{loggedIn}}" class="seg-bar">
+      <view class="seg-item seg-on" bindtap="onOpenGePicker">{{text.segGe}} ▸</view>
+    </view>
+
     <view wx:if="{{catalogueLoading}}" class="web-panel">
       <view class="panel-copy">{{text.loading}}</view>
     </view>

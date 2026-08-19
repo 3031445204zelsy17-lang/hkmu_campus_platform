@@ -925,8 +925,10 @@ Page({
   // GE 浮层 view：按 field 分组（GE_FIELD_ORDER 顺序）、taken/blocked、实时门数（field 去重）
   // T19: mode="ranking" 时出评分榜（分数降序）；T20: 空榜显"抢首评"空态。
   _buildGePicker(prog, entry, locale, text) {
-    if (!this._gePickerOpen || !prog) return { open: false };
-    const geCat = (prog.categories || {})["general-ed"] || {};
+    // 停招/目录专业不在规则载荷里(prog=null):GE 全校通用不随规则连坐,
+    // need 退官方默认 2 门(pick_n 仅规则专业有)
+    if (!this._gePickerOpen) return { open: false };
+    const geCat = ((prog && prog.categories) || {})["general-ed"] || {};
     const need = geCat.pick_n || 2;
     // 维度/避坑标签词条与 course-detail 同源,不重复造 key
     const cdText = getTexts("courseDetail", locale);
@@ -1283,6 +1285,9 @@ Page({
         view.catalogueLoading = true;
         this._loadCatalogueCourses(entry.code).then(() => this._emit());
       }
+      // GE 浮层全校通用(停招专业也不连坐):目录分支提前 return 前补建视图,
+      // prog 传 null → _buildGePicker 内部退默认 need=2
+      view.gePicker = this._buildGePicker(null, entry, locale, text);
       this.setData(view);
       return;
     }
