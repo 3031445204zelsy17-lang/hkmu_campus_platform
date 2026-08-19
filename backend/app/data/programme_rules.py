@@ -26,7 +26,7 @@ PROGRAMME_RULES = {
         "name": {
             "en": 'Bachelor of Arts with Honours in Creative Advertising and Media Design'
         },
-        "school": 'School of Arts and Social Sciences',
+        "school": 'Wu Jieh Yee School of Arts and Social Sciences',
         "total_credits": 120,
         "categories": {
             "core": {
@@ -65,7 +65,7 @@ PROGRAMME_RULES = {
         "name": {
             "en": 'Bachelor of Arts with Honours in Chinese'
         },
-        "school": 'School of Arts and Social Sciences',
+        "school": 'Wu Jieh Yee School of Arts and Social Sciences',
         "total_credits": 120,
         "categories": {
             "core": {
@@ -104,7 +104,7 @@ PROGRAMME_RULES = {
         "name": {
             "en": 'Bachelor of Arts with Honours in Creative Writing and Film Arts'
         },
-        "school": 'School of Arts and Social Sciences',
+        "school": 'Wu Jieh Yee School of Arts and Social Sciences',
         "total_credits": 120,
         "categories": {
             "core": {
@@ -143,7 +143,7 @@ PROGRAMME_RULES = {
         "name": {
             "en": 'Bachelor of Arts with Honours in English Language and Culture'
         },
-        "school": 'School of Arts and Social Sciences',
+        "school": 'Wu Jieh Yee School of Arts and Social Sciences',
         "total_credits": 120,
         "categories": {
             "core": {
@@ -182,7 +182,7 @@ PROGRAMME_RULES = {
         "name": {
             "en": 'Bachelor of Arts with Honours in Language Studies and Translation'
         },
-        "school": 'School of Arts and Social Sciences',
+        "school": 'Wu Jieh Yee School of Arts and Social Sciences',
         "total_credits": 120,
         "categories": {
             "core": {
@@ -221,7 +221,7 @@ PROGRAMME_RULES = {
         "name": {
             "en": 'Bachelor of Arts with Honours in New Music and Interactive Entertainment'
         },
-        "school": 'School of Arts and Social Sciences',
+        "school": 'Wu Jieh Yee School of Arts and Social Sciences',
         "total_credits": 120,
         "categories": {
             "core": {
@@ -1144,7 +1144,7 @@ PROGRAMME_RULES = {
         "name": {
             "en": 'Bachelor of Fine Arts with Honours in Animation and Visual Effects'
         },
-        "school": 'School of Arts and Social Sciences',
+        "school": 'Wu Jieh Yee School of Arts and Social Sciences',
         "total_credits": 120,
         "categories": {
             "core": {
@@ -1183,7 +1183,7 @@ PROGRAMME_RULES = {
         "name": {
             "en": 'Bachelor of Fine Arts with Honours in Imaging Design and Digital Art'
         },
-        "school": 'School of Arts and Social Sciences',
+        "school": 'Wu Jieh Yee School of Arts and Social Sciences',
         "total_credits": 120,
         "categories": {
             "core": {
@@ -1942,7 +1942,7 @@ PROGRAMME_RULES = {
         "name": {
             "en": 'Bachelor of Social Sciences with Honours in Ageing Society and Services Studies'
         },
-        "school": 'School of Arts and Social Sciences',
+        "school": 'Wu Jieh Yee School of Arts and Social Sciences',
         "total_credits": 120,
         "categories": {
             "core": {
@@ -1981,7 +1981,7 @@ PROGRAMME_RULES = {
         "name": {
             "en": 'Bachelor of Social Sciences with Honours in Applied Economics'
         },
-        "school": 'School of Arts and Social Sciences',
+        "school": 'Wu Jieh Yee School of Arts and Social Sciences',
         "total_credits": 120,
         "categories": {
             "core": {
@@ -2020,7 +2020,7 @@ PROGRAMME_RULES = {
         "name": {
             "en": 'Bachelor of Social Sciences with Honours in Global and China Studies'
         },
-        "school": 'School of Arts and Social Sciences',
+        "school": 'Wu Jieh Yee School of Arts and Social Sciences',
         "total_credits": 120,
         "categories": {
             "core": {
@@ -2059,7 +2059,7 @@ PROGRAMME_RULES = {
         "name": {
             "en": 'Bachelor of Social Sciences with Honours in Applied Social Studies'
         },
-        "school": 'School of Arts and Social Sciences',
+        "school": 'Wu Jieh Yee School of Arts and Social Sciences',
         "total_credits": 120,
         "categories": {
             "core": {
@@ -2098,7 +2098,7 @@ PROGRAMME_RULES = {
         "name": {
             "en": 'Bachelor of Social Sciences with Honours in Politics and Public Administration'
         },
-        "school": 'School of Arts and Social Sciences',
+        "school": 'Wu Jieh Yee School of Arts and Social Sciences',
         "total_credits": 120,
         "categories": {
             "core": {
@@ -2137,7 +2137,7 @@ PROGRAMME_RULES = {
         "name": {
             "en": 'Bachelor of Social Sciences with Honours in Psychology'
         },
-        "school": 'School of Arts and Social Sciences',
+        "school": 'Wu Jieh Yee School of Arts and Social Sciences',
         "total_credits": 120,
         "categories": {
             "core": {

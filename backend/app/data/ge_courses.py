@@ -16,6 +16,12 @@ Offering terms (`terms`, 2026 Autumn → 2027 Summer window) were parsed at
 coordinate level from the same PDF's per-term tables (2026-08-14); empty
 list = not offered in the window. Re-check each academic year.
 
+⚠️ 2026-08-19 批次 1(复核报告):池扩为官方目录全集 89 门 = 73 门本学年开课
++ 16 门不开课(terms=[],见 MISSING_16/复核报告第一节;含 GEN2045ECF——它只在
+春表 Remarks 里作为 GEN2045EEF 的不可兼修对象出现,本学年不开课)。16 门的
+双语课名/field/school 取自 GE_catalog_3cru.pdf 正文条目;新增 3 个官方领域
+(Gender Studies / History / Student Wellness)进 GE_FIELD_ORDER。
+
 ⚠️ DATA QUALITY: 62 unique course codes were extracted automatically; ~7 more
 were recovered by splitting merged table cells (Creative Arts / Performance
 Studies rows render side-by-side in the PDF). Course titles were
@@ -24,11 +30,13 @@ please spot-check against the PDF before relying on every title, and re-run
 the scrape each academic year (course offerings change).
 """
 
-# Each GE course on offer in the 2026/27 AY (3-credit-unit system).
+# Official GE catalog (3-credit-unit system), 89 courses: 73 offered in the
+# 2026/27 AY + 16 not offered this year (terms=[]).
 # fields: see the 'field of study' column in the PDF. school: offering school.
 GE_COURSES = [
     # ── Area Studies ──
     {"code": "GEN 1022AEF", "name_en": "Contemporary China", "name_zh": "當代中國", "field": "Area Studies", "school": "A&SS", "terms": ["autumn"]},
+    {"code": "GEN 2019ABF", "name_en": "Introduction to South China Studies", "name_zh": "華南研究概論", "field": "Area Studies", "school": "A&SS", "terms": []},
     # ── Business Innovation & Intelligence ──
     {"code": "GEN 2034BCF", "name_en": "Unleashing Innovation in Business", "name_zh": "無限創意在商界", "field": "Business Innovation & Intelligence", "school": "B&A", "terms": ["autumn"]},
     # ── Chinese Language Studies & Literature ──
@@ -37,6 +45,8 @@ GE_COURSES = [
     {"code": "GEN 2005ACF", "name_en": "Discovering Cultures in China", "name_zh": "中國文化探索", "field": "Chinese Language Studies & Literature", "school": "A&SS", "terms": ["autumn"]},
     {"code": "GEN 2255ECF", "name_en": "Comprehensive Preparation for PSC", "name_zh": "普通話水平測試備考精研", "field": "Chinese Language Studies & Literature", "school": "E&L", "terms": ["autumn", "spring"]},
     {"code": "GEN 2001ACF", "name_en": "Hong Kong Literature and Society", "name_zh": "香港文學與社會", "field": "Chinese Language Studies & Literature", "school": "A&SS", "terms": ["spring"]},
+    {"code": "GEN 1005ACF", "name_en": "Love in Literature", "name_zh": "愛情與文學", "field": "Chinese Language Studies & Literature", "school": "A&SS", "terms": []},
+    {"code": "GEN 1013ACF", "name_en": "The Art of Humour and Daily Life", "name_zh": "幽默語言與生活", "field": "Chinese Language Studies & Literature", "school": "A&SS", "terms": []},
     # ── Computing / Electronic & Computer Engineering ──
     {"code": "GEN 1100SEW", "name_en": "Introduction to Digital Technologies and Tools", "name_zh": "數碼技術及工具", "field": "Computing/Electronic & Computer Engineering", "school": "S&T", "terms": ["autumn"]},
     {"code": "GEN 1110SEW", "name_en": "AI in Action: Practical Applications Across Fields", "name_zh": "人工智能實踐：跨領域應用", "field": "Computing/Electronic & Computer Engineering", "school": "S&T", "terms": ["spring"]},
@@ -46,13 +56,15 @@ GE_COURSES = [
     {"code": "GEN 2007AEF", "name_en": "Mobile Culture and Communication in the Digital Era", "name_zh": "數碼時代的移動文化與傳訊", "field": "Creative Arts", "school": "A&SS", "terms": ["autumn"]},
     {"code": "GEN 1010ABF", "name_en": "The Art and Practice of Digital Photography", "name_zh": "數碼攝影藝術與實踐", "field": "Creative Arts", "school": "A&SS", "terms": ["spring"]},
     {"code": "GEN 1011ABF", "name_en": "Colour, Culture and Art", "name_zh": "色彩、文化與藝術", "field": "Creative Arts", "school": "A&SS", "terms": ["spring"]},
-    {"code": "GEN 1012ACF", "name_en": "Women in Hong Kong Cantonese Films", "name_zh": "香港粵語電影中的女性", "field": "Creative Arts", "school": "A&SS", "terms": []},
+    {"code": "GEN 1012ACF", "name_en": "Women in Hong Kong Cantonese Films", "name_zh": "香港粵語電影中的女性", "field": "Creative Arts", "school": "A&SS", "terms": ["spring"]},
     {"code": "GEN 1144ECF", "name_en": "Enhancing Creativity Through Drama", "name_zh": "透過戲劇提升創意", "field": "Creative Arts", "school": "E&L", "terms": ["spring"]},
     {"code": "GEN 2003ABF", "name_en": "Science Fiction Films", "name_zh": "科幻電影", "field": "Creative Arts", "school": "A&SS", "terms": ["spring"]},
     # ── Digital Business ──
     {"code": "GEN 1066BCF", "name_en": "Flip the KOL Classroom", "name_zh": "翻轉 KOL 教室", "field": "Digital Business", "school": "B&A", "terms": ["autumn"]},
     # ── Education ──
     {"code": "GEN 2045EEF", "name_en": "Smart Learning and Teaching with AI", "name_zh": "智慧學習與教學", "field": "Education", "school": "E&L", "terms": ["spring"]},
+    # 中文授课孪生码(ECF):本学年不开课;目录明确与 EEF 互斥
+    {"code": "GEN 2045ECF", "name_en": "Smart Learning and Teaching with AI", "name_zh": "智慧學習與教學", "field": "Education", "school": "E&L", "terms": []},
     # ── English Language Studies & Literature ──
     {"code": "GEN 1003ABF", "name_en": "Language, Society and Culture", "name_zh": "語言、社會與文化", "field": "English Language Studies & Literature", "school": "A&SS", "terms": ["spring"]},
     {"code": "GEN 1024AEF", "name_en": "Creative English: Hong Kong Literature and Popular Culture", "name_zh": "創意英語：香港文學及流行文化", "field": "English Language Studies & Literature", "school": "A&SS", "terms": ["spring"]},
@@ -60,17 +72,21 @@ GE_COURSES = [
     {"code": "GEN 2205EEF", "name_en": "Essential Skills for IELTS", "name_zh": "雅思重點技巧", "field": "English Language Studies & Literature", "school": "E&L", "terms": ["spring"]},
     # ── Environmental Studies ──
     {"code": "GEN 1009SEF", "name_en": "Environment and Health", "name_zh": "環境與健康", "field": "Environmental Studies", "school": "S&T", "terms": ["autumn"]},
-    {"code": "GEN 2013SEF", "name_en": "Nature Conservation: Exploring Biodiversity and Natural Landscapes of Hong Kong", "name_zh": "自然保育︰探索香港的生物多樣性和自然景觀", "field": "Environmental Studies", "school": "S&T", "terms": []},
+    {"code": "GEN 2013SEF", "name_en": "Nature Conservation: Exploring Biodiversity and Natural Landscapes of Hong Kong", "name_zh": "自然保育︰探索香港的生物多樣性和自然景觀", "field": "Environmental Studies", "school": "S&T", "terms": ["spring"]},
     {"code": "GEN 2037SEF", "name_en": "Environmental Control and Management", "name_zh": "環境控制及管理", "field": "Environmental Studies", "school": "S&T", "terms": ["summer"]},
     # ── Finance and Fintech ──
     {"code": "GEN 1088BEF", "name_en": "Stock Investing Made Easy", "name_zh": "股票投資入門", "field": "Finance and Fintech", "school": "B&A", "terms": ["autumn"]},
     {"code": "GEN 1067BCF", "name_en": "Investment Fundamentals", "name_zh": "基礎投資知識", "field": "Finance and Fintech", "school": "B&A", "terms": ["spring"]},
+    # ── Gender Studies (官方目录领域,批次 1 新增) ──
+    {"code": "GEN 1025AEF", "name_en": "Gender, Sexuality, and Intimacy in Modern Societies", "name_zh": "現代社會的性別、性與親密關係", "field": "Gender Studies", "school": "A&SS", "terms": []},
     # ── Health Sciences ──
     {"code": "GEN 1508NEF", "name_en": "Pandemics and Humans", "name_zh": "人類與大流行病", "field": "Health Sciences", "school": "N&HS", "terms": ["autumn"]},
     {"code": "GEN 1510NCF", "name_en": "Exercise and Health", "name_zh": "運動與健康", "field": "Health Sciences", "school": "N&HS", "terms": ["autumn"]},
     {"code": "GEN 2501NEF", "name_en": "Understanding Health Through Statistics", "name_zh": "從統計學了解健康", "field": "Health Sciences", "school": "N&HS", "terms": ["autumn"]},
     {"code": "GEN 1502NCF", "name_en": "Strive to Be Healthy", "name_zh": "向健康出發", "field": "Health Sciences", "school": "N&HS", "terms": ["spring"]},
     {"code": "GEN 2504NEF", "name_en": "Unravelling the Cancer Odyssey From Bench to Bedside: an Introduction to Translational Oncology", "name_zh": "揭秘癌症從實驗室到臨床的征程：轉化腫瘤學簡介", "field": "Health Sciences", "school": "N&HS", "terms": ["spring"]},
+    # ── History (官方目录领域,批次 1 新增) ──
+    {"code": "GEN 2002AEF", "name_en": "Highlights in World Civilizations", "name_zh": "世界文明精粹", "field": "History", "school": "A&SS", "terms": []},
     # ── Hospitality and Tourism Management ──
     {"code": "GEN 2033BCF", "name_en": "Gastronomy and Business", "name_zh": "美食中尋商機", "field": "Hospitality and Tourism Management", "school": "B&A", "terms": ["spring"]},
     {"code": "GEN 2001BCF", "name_en": "Cultural Heritage and Tourism: Practising the Fundamentals", "name_zh": "文化遺產與旅遊: 理論實務初探", "field": "Hospitality and Tourism Management", "school": "B&A", "terms": ["summer"]},
@@ -83,8 +99,10 @@ GE_COURSES = [
     {"code": "GEN 2088BCF", "name_en": "Startup Bootcamp", "name_zh": "創業特訓班", "field": "Management", "school": "B&A", "terms": ["autumn"]},
     # ── Marketing ──
     {"code": "GEN 1064BEF", "name_en": "Social Media and Content Marketing", "name_zh": "社交媒體及內容營銷", "field": "Marketing", "school": "B&A", "terms": ["spring"]},
+    {"code": "GEN 1500SEF", "name_en": "Data Visualization for Impressive Presentations", "name_zh": "精彩悅目的數據圖像演示", "field": "Marketing", "school": "S&T", "terms": []},
     # ── Mathematics & Statistics  (DSAI's own field → DSAI students CANNOT take these) ──
     {"code": "GEN 2503NEF", "name_en": "AI Superpowers for Health Heroes", "name_zh": "智健康的 AI 新世界", "field": "Mathematics & Statistics", "school": "N&HS", "terms": ["summer"]},
+    {"code": "GEN 1000SEF", "name_en": "Mathematics in Daily Life", "name_zh": "生活數學", "field": "Mathematics & Statistics", "school": "S&T", "terms": []},
     # ── Performance Studies ──
     {"code": "GEN 1020ACF", "name_en": "Cantonese Opera Culture: Appreciation and Experience", "name_zh": "粵劇文化：導賞與體驗", "field": "Performance Studies", "school": "A&SS", "terms": ["autumn"]},
     {"code": "GEN 1026ACF", "name_en": "Musical Culture of Hong Kong I: Chinese Music", "name_zh": "香港音樂文化 (一)：中國音樂", "field": "Performance Studies", "school": "A&SS", "terms": ["autumn"]},
@@ -100,6 +118,7 @@ GE_COURSES = [
     {"code": "GEN 1503NEF", "name_en": "Food for Shape", "name_zh": "營養 ∙ 養型", "field": "Social Sciences", "school": "N&HS", "terms": ["spring"]},
     {"code": "GEN 2044EBF", "name_en": "Developing Media Literacy", "name_zh": "媒體素養的建立", "field": "Social Sciences", "school": "E&L", "terms": ["spring", "summer"]},
     {"code": "GEN 2042EEF", "name_en": "Society and Interpersonal Relationships", "name_zh": "社會與人際關係", "field": "Social Sciences", "school": "E&L", "terms": ["summer"]},
+    {"code": "GEN 2013AEF", "name_en": "Cultures and Strategies of Games of Chance", "name_zh": "機率遊戲的文化與策略", "field": "Social Sciences", "school": "A&SS", "terms": []},
     # ── Sports and eSports Management ──
     {"code": "GEN 1078BEF", "name_en": "Cultivating Employee Wellness in the Workplace", "name_zh": "建立康健的職場文化", "field": "Sports and eSports Management", "school": "B&A", "terms": ["spring"]},
     {"code": "GEN 2078BCF", "name_en": "E-Sports: Game-Changing Business", "name_zh": "電競：玩 • 轉商業", "field": "Sports and eSports Management", "school": "B&A", "terms": ["summer"]},
@@ -119,6 +138,14 @@ GE_COURSES = [
     {"code": "GEN 2012ACF", "name_en": "What Did the Ancient Chinese Think?", "name_zh": "中國古人想什麼?", "field": "Student Development", "school": "A&SS", "terms": ["spring"]},
     {"code": "GEN 1080EBF", "name_en": "Hallyu: Language, K-Pop and Culture", "name_zh": "韓流: 語言、流行音樂與文化", "field": "Student Development", "school": "E&L", "terms": ["summer"]},
     {"code": "GEN 1509NEF", "name_en": "Challenges in \"Changing\" Global Health", "name_zh": "全球衛生演變與應對之挑戰", "field": "Student Development", "school": "N&HS", "terms": ["summer"]},
+    {"code": "GEN 1021AEF", "name_en": "A Journey to Master Your Life Through Interdisciplinary Navigation", "name_zh": "掌握你的人生：從跨學科探索開始", "field": "Student Development", "school": "A&SS", "terms": []},
+    {"code": "GEN 1028ACF", "name_en": "Science Fiction Writing", "name_zh": "科幻小說創作實踐", "field": "Student Development", "school": "A&SS", "terms": []},
+    {"code": "GEN 1501NEF", "name_en": "Positive Education and Mental Health", "name_zh": "正向教育和精神健康", "field": "Student Development", "school": "N&HS", "terms": []},
+    {"code": "GEN 2014ABF", "name_en": "Death and Dying: the Personal and the Social", "name_zh": "生命的衰與亡：個人與社會視野", "field": "Student Development", "school": "A&SS", "terms": []},
+    {"code": "GEN 2015ACF", "name_en": "Foodways, Local Society and Globalization", "name_zh": "飲食方式、在地社會與全球化", "field": "Student Development", "school": "A&SS", "terms": []},
+    # ── Student Wellness (官方目录领域,批次 1 新增) ──
+    {"code": "GEN 1504NEF", "name_en": "Rock, Paper, Scissors: Path to Mental Wellbeing", "name_zh": "猜情尋", "field": "Student Wellness", "school": "N&HS", "terms": []},
+    {"code": "GEN 2502NEF", "name_en": "Mindfulness and Wellbeing in Global Society", "name_zh": "全球社會的正念與幸福", "field": "Student Wellness", "school": "N&HS", "terms": []},
     # ── Testing and Certification ──
     {"code": "GEN 2001SEF", "name_en": "Testing and Certification in Daily Life", "name_zh": "日常生活中的檢測和認證", "field": "Testing and Certification", "school": "S&T", "terms": ["autumn"]},
     # ── Accounting and Corporate Governance ──
@@ -130,10 +157,12 @@ GE_FIELD_ORDER = [
     "Business Innovation & Intelligence", "Chinese Language Studies & Literature",
     "Computing/Electronic & Computer Engineering", "Creative Arts", "Digital Business",
     "Education", "English Language Studies & Literature", "Environmental Studies",
-    "Finance and Fintech", "Health Sciences", "Hospitality and Tourism Management",
+    "Finance and Fintech", "Gender Studies", "Health Sciences", "History",
+    "Hospitality and Tourism Management",
     "International Business", "Life Sciences", "Management", "Marketing",
     "Mathematics & Statistics", "Performance Studies", "Social Sciences",
-    "Sports and eSports Management", "Student Development", "Testing and Certification",
+    "Sports and eSports Management", "Student Development", "Student Wellness",
+    "Testing and Certification",
 ]
 
 # Programme code -> its GE 'field(s) of study' (PDF P.2-6). A student may NOT

@@ -20,6 +20,32 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", "backend", ".env"))
 
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# ── 学分裁定表(选课数据修复批次 1)─────────────────────────────────────────
+# 依据:docs/ops/选课选课/advice_sheets/复核报告-2026-08-19.md 第五节。15 门为
+# 三方一致(官方 yr 年级表 = RCC(programme-requirements PDF) = skill.md 叶标题
+# 尾数)直修;NURS1313NCF 官方源自相矛盾(yr 表 6 vs RCC/skill.md 标记 3),
+# 2026-08-19 人工裁定取 yr 表的 6。
+# 错值根源:skill.md 的 [学分:N] 标记被 PDF 页码污染(吃进 "Page N of M" 尾数),
+# 经 T34「catalogue 学分优先」传播进 courses 表。
+CREDIT_FIXES = {
+    "TC4019SEF": 3,    # catalogue 错值 4
+    "TC4026SEF": 3,    # 5
+    "CHIN3004ACF": 3,  # 6
+    "CHIN4243ECF": 3,  # 8
+    "CHIN4383ECF": 3,  # 8
+    "COMP4570SEF": 6,  # 2
+    "TC4094SEF": 12,   # 5
+    "CHIN4009ACF": 6,  # 5
+    "CAMD2000AEF": 3,  # 5
+    "CCA4002ACF": 3,   # 5
+    "IDDA2001AEF": 3,  # 6
+    "TRM3013BEF": 3,   # 6
+    "SCI4063SEF": 3,   # 4
+    "ASM4057BEF": 9,   # 6
+    "SPM4098BEF": 9,   # 5
+    "NURS1313NCF": 6,  # 3;官方源矛盾,人工裁定 yr 表
+}
+
 COURSES = [
     {"id":"COMP1080SEF","code":"COMP 1080SEF","name":"Introduction to Computer Programming","credits":3,"category":"core","year":1,"semester":"autumn","prerequisites":[],"description":"Fundamental programming concepts using Python."},
     {"id":"IT1020SEF","code":"IT 1020SEF","name":"Computing Fundamentals","credits":3,"category":"core","year":1,"semester":"autumn","prerequisites":[],"description":"Introduction to computer systems, hardware, software, and basic IT concepts."},
@@ -112,8 +138,14 @@ async def seed():
         # Insert rule-referenced courses missing from the table (T34): every
         # course listed in PROGRAMME_RULES needs a courses-table row, or
         # _compute_graduation silently skips it (course_rows lookup fails).
-        # Name/credits prefer course_catalogue (official tree, with display
-        # names); RULE_COURSE_CREDITS (PDF-parsed) is the credits fallback.
+        # Name still prefers course_catalogue (official tree, with display
+        # names). Credits priority was CORRECTED 2026-08-19 (复核报告第五节):
+        # the catalogue [学分:N] markers are polluted by PDF page numbers, so
+        # RCC (RULE_COURSE_CREDITS, PDF-parsed per course) now wins over
+        # catalogue; CREDIT_FIXES (human-adjudicated) beats both. Note
+        # MATH1410SEF carries a known RCC dirty value (STAMJ=2) but is always
+        # inserted first by the DSAI hand table above, so the existing_ids
+        # check keeps the RCC chain away from it.
         # Public PDFs carry no term data, so year defaults to the course-code
         # LEVEL (HKMU convention: 1xxx→Y1 … 4xxx→Y4) and semester to autumn —
         # the planner's year tabs filter on course.year, so year=0 sentinels
@@ -139,9 +171,15 @@ async def seed():
                 for cid in cat["courses"]:
                     if cid in existing_ids:
                         continue
-                    name, credits = catalogue.get(cid, (None, None))
+                    name = catalogue.get(cid, (None, None))[0]
+                    # CREDIT_FIXES(人工裁定)> RCC > catalogue(标记被页码污染) > 3
+                    credits = CREDIT_FIXES.get(cid)
                     if credits is None:
-                        credits = RULE_COURSE_CREDITS.get(code, {}).get(cat_key, {}).get(cid, 3)
+                        credits = RULE_COURSE_CREDITS.get(code, {}).get(cat_key, {}).get(cid)
+                    if credits is None:
+                        credits = catalogue.get(cid, (None, None))[1]
+                    if credits is None:
+                        credits = 3
                     if not name:
                         # No official display name anywhere — use the spaced
                         # code so the UI at least shows a stable identifier.
@@ -160,6 +198,19 @@ async def seed():
                     except Exception as e:
                         print(f"  skip rule course {cid}: {e}")
 
+        # Existing-row credit corrections: the inserts above are all
+        # ON CONFLICT DO NOTHING, so rows already carrying a polluted credit
+        # (from the old catalogue-first T34) would keep it forever. The
+        # adjudicated table must UPDATE them in place — this is what actually
+        # repairs production on re-seed.
+        credit_fixed = 0
+        for cid, cr in CREDIT_FIXES.items():
+            res = await conn.execute(
+                "UPDATE courses SET credits = $1 WHERE id = $2 AND credits <> $1",
+                cr, cid,
+            )
+            credit_fixed += int(res.split()[-1])
+
         # Create test user
         test_pw = pwd_ctx.hash("test123456")
         try:
@@ -177,7 +228,8 @@ async def seed():
         ge_count = await conn.fetchval("SELECT COUNT(*) FROM courses WHERE category = 'general-ed'")
         user_count = await conn.fetchval("SELECT COUNT(*) FROM users")
         print(f"Seeded {inserted} courses + {ge_inserted} GE + {rules_inserted} rule courses "
-              f"({rules_missing_name} nameless) ({count} in DB, {ge_count} GE), {user_count} users")
+              f"({rules_missing_name} nameless, {credit_fixed} credit fixes) "
+              f"({count} in DB, {ge_count} GE), {user_count} users")
 
     finally:
         await conn.close()

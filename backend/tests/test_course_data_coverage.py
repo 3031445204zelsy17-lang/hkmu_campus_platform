@@ -20,8 +20,10 @@
 不可兼修」引用里,无正文条目、无 TOC 行(复核报告第一节)。除直接排除外,还锁死
 「朴素正则恰好比 89 多出这 3 个」——锚点解析若退化成朴素扫描,立即红。
 
-批次 1 施工后需同步翻转两处断言(本文件内有标注):缺 16 门带 terms=[] 进池后,
-池 73→89;GEN1012ACF/2013SEF 元数据修正后,terms 空集门清零。
+批次 1(2026-08-19)已施工:缺 16 门带 terms=[] 进池,池 73→89;GEN1012ACF/
+2013SEF terms 已修为 spring;A&SS 15 专业 school 已换伍絜宜新名;seed_courses
+CREDIT_FIXES 裁定 16 门学分(15 门三方一致 + NURS1313NCF 人工裁 6)。相关断言
+均已翻转并加批次 1 锁定测试。
 """
 import ast
 import json
@@ -29,6 +31,7 @@ import re
 from pathlib import Path
 
 from backend.app.data.ge_courses import GE_COURSES
+from backend.app.data.programmes import PROGRAMMES
 from backend.app.data.programme_rules import PROGRAMME_RULES
 
 REPO = Path(__file__).resolve().parents[2]
@@ -204,39 +207,53 @@ def test_ge_offered_73_dual_engine():
     )
 
 
-def test_ge_pool_equals_offered_set():
-    """池=本学年开课集(复核报告:池建自同一版指南,集合完全相等)。批次 1 后池→89。"""
+def test_ge_pool_equals_offered_plus_missing16():
+    """批次 1 后:池 = 本学年开课 73 + 不开课 16 = 目录全集 89(复核报告第一节)。"""
     pool, offered = _pool_ids(), set(_load("ge_offered.json")["all"])
-    assert pool == offered, (
-        f"GE 池({len(pool)})≠开课集({len(offered)}):"
-        f"池多 {_head(pool - offered)} | 池缺 {_head(offered - pool)};"
-        "对账:backend/app/data/ge_courses.py vs verify/ge_offered.json"
+    assert pool == offered | MISSING_16, (
+        f"GE 池({len(pool)})≠开课集∪缺课 16(={len(offered | MISSING_16)}):"
+        f"池多 {_head(pool - offered - MISSING_16)} | 池缺 {_head((offered | MISSING_16) - pool)};"
+        "对账:backend/app/data/ge_courses.py vs verify/ge_offered.json + MISSING_16"
+    )
+    assert len(pool) == OFFICIAL_GE_N == 89, (
+        f"GE 池应为 {OFFICIAL_GE_N}(73 开课 + 16 不开),实得 {len(pool)};"
+        "对账:复核报告第一节(批次 1 验收标准)"
     )
 
 
-def test_ge_missing16_worklist_locked():
-    """目录−开课 = 缺 16 门工作单(全部不开课);批次 1 前不得提前混入池。"""
+def test_ge_missing16_in_pool_with_empty_terms():
+    """批次 1 后:目录−开课 = 缺 16 门工作单,且全部已带 terms=[] 进池。"""
     official = set(_load("ge_sets.json")["toc"])
     offered = set(_load("ge_offered.json")["all"])
     diff = official - offered
     assert diff == MISSING_16, (
         f"缺课工作单应为 16 门,实得 {len(diff)} 门:"
         f"新增 {_head(diff - MISSING_16)} | 消失 {_head(MISSING_16 - diff)}。"
-        "批次 1 按此清单灌池(全部 terms=[]);对账:复核报告第一节"
+        "对账:复核报告第一节"
     )
-    early = MISSING_16 & _pool_ids()
-    assert not early, (
-        f"缺课尚未进池却有 {_head(early)} 在池(批次 1 施工时应带 terms=[] 进,"
-        "并同步翻转本断言与 test_ge_pool_equals_offered_set)"
+    pool = _pool_ids()
+    absent = MISSING_16 - pool
+    assert not absent, (
+        f"缺课 16 门应全部进池(批次 1),池缺 {_head(absent)};"
+        "对账:backend/app/data/ge_courses.py vs MISSING_16"
+    )
+    wrongly_offered = {
+        c["code"].replace(" ", ""): c["terms"]
+        for c in GE_COURSES
+        if c["code"].replace(" ", "") in MISSING_16 and c["terms"]
+    }
+    assert not wrongly_offered, (
+        f"缺课 16 门本学年一律不开课(terms=[]),却带学期:{wrongly_offered};"
+        "尤其 GEN2045ECF 是春表 Remarks 互斥引用,不得给学期(复核报告第一节)"
     )
 
 
-def test_ge_pool_terms_known_bugs_locked():
-    """池内 terms 元数据已知错仅 2 门(1012ACF/2013SEF 应为 spring);批次 1 修后翻转。"""
+def test_ge_pool_terms_match_guide():
+    """批次 1 后:terms 空集门=缺课 16 门(合法);池内其余课与指南轮次零出入。"""
     empty = {c["code"].replace(" ", "") for c in GE_COURSES if not c["terms"]}
-    assert empty == {"GEN1012ACF", "GEN2013SEF"}, (
-        f"terms 空集门应为已知 2 门,实得 {len(empty)} 门 {_head(empty)} —— "
-        "出现新空门=开课学期回退;对账:verify/ge_offered.json(指南三轮)"
+    assert empty == MISSING_16, (
+        f"terms 空集门应为缺课 16 门,实得 {len(empty)} 门,多出 {_head(empty - MISSING_16)};"
+        "空门=开课学期回退或新缺课混入;对账:verify/ge_offered.json(指南三轮)"
     )
     guide_terms = {}
     for term, codes in _load("ge_offered.json")["poppler"].items():
@@ -244,13 +261,13 @@ def test_ge_pool_terms_known_bugs_locked():
         for c in codes:
             guide_terms.setdefault(c, set()).add(t)
     mismatch = {
-        c["code"].replace(" ", ""): (sorted(c["terms"]), sorted(guide_terms[c["code"].replace(" ", "")]))
+        c["code"].replace(" ", ""): (sorted(c["terms"]), sorted(guide_terms.get(c["code"].replace(" ", ""), set())))
         for c in GE_COURSES
         if set(c["terms"]) != guide_terms.get(c["code"].replace(" ", ""), set())
     }
-    assert set(mismatch) == {"GEN1012ACF", "GEN2013SEF"}, (
-        f"池 terms 与指南轮次的出入应仅已知 2 门,实得 {len(mismatch)} 门:"
-        f"{dict(list(mismatch.items())[:8])};对账:复核报告第二节(批次1修 1012ACF/2013SEF→spring)"
+    assert not mismatch, (
+        f"池 terms 与指南轮次有出入 {len(mismatch)} 门(1012ACF/2013SEF 已于批次 1 修为 spring):"
+        f"{dict(list(mismatch.items())[:8])};对账:复核报告第二节 + verify/ge_offered.json"
     )
 
 
@@ -320,4 +337,88 @@ def test_elective_catalog_gap_in_db_locked():
         f"选修目录全库缺口应为 5 门(2026-08-19 双引擎重数,旧结论 106 被引用码污染),"
         f"实得 {len(gap)} 门 {_head(gap)};批次 5 按 NOT_IN_WHOLE_DB_5 导入;"
         "对账:verify/elec_coverage.json"
+    )
+
+
+# ── 批次 1:学院更名 + 学分裁定 + results/ 禁用 ─────────────────────────────
+AASS_NEW_NAME = "Wu Jieh Yee School of Arts and Social Sciences"
+AASS_OLD_NAME = "School of Arts and Social Sciences"
+
+
+def test_aass_programmes_renamed():
+    """A&SS 15 个专业 school = 伍絜宜新名(2026-09-01 更名,与 GE_SCHOOL_NAMES 口径
+    一致);旧名仅允许存在于 PDF verbatim 锁定处(GE_SCHOOL_NAMES.pdf_verbatim、
+    skill.md 官方导出),不得再作任何专业的 school 值。"""
+    aass = {c for c, p in PROGRAMMES.items() if "Arts and Social" in (p.get("school") or "")}
+    assert len(aass) == 15, f"A&SS 专业应为 15 个,实得 {len(aass)}:{sorted(aass)}"
+    stale = sorted(c for c in aass if PROGRAMMES[c].get("school") == AASS_OLD_NAME)
+    assert not stale, (
+        f"A&SS 专业仍挂旧名:{stale};应换 {AASS_NEW_NAME!r}"
+        "(含 BSSCHPJ 别名副本);对账:批次 1 验收标准 + GE_SCHOOL_NAMES"
+    )
+    assert all(PROGRAMMES[c]["school"] == AASS_NEW_NAME for c in aass)
+
+
+# 复核报告第五节表(16 门;NURS1313NCF 官方源矛盾,2026-08-19 人工裁定取 yr 表 6)
+REPORT_CREDIT_FIXES = {
+    "TC4019SEF": 3, "TC4026SEF": 3, "CHIN3004ACF": 3, "CHIN4243ECF": 3,
+    "CHIN4383ECF": 3, "COMP4570SEF": 6, "TC4094SEF": 12, "CHIN4009ACF": 6,
+    "CAMD2000AEF": 3, "CCA4002ACF": 3, "IDDA2001AEF": 3, "TRM3013BEF": 3,
+    "SCI4063SEF": 3, "ASM4057BEF": 9, "SPM4098BEF": 9, "NURS1313NCF": 6,
+}
+
+
+def _credit_fixes():
+    """seed_courses.py 顶层 CREDIT_FIXES(只 ast 解析不执行——免 import 副作用,
+    也免同秒 mtime 的 stale pycache 陷阱,与 _seed_ids 同款)。"""
+    tree = ast.parse((REPO / "scripts" / "seed_courses.py").read_text())
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and getattr(node.targets[0], "id", "") == "CREDIT_FIXES":
+            return ast.literal_eval(node.value)
+    return None
+
+
+def test_seed_credit_fixes_match_report():
+    """seed_courses.CREDIT_FIXES == 复核报告第五节 16 门裁定值(NURS1313NCF 人工
+    裁 6);除 NURS 外每门与 RCC 一致(三方投票的机器复核)。"""
+    from backend.app.data.programme_rules import RULE_COURSE_CREDITS
+    fixes = _credit_fixes()
+    assert fixes, "seed_courses.py 顶层 CREDIT_FIXES 解析失败(变量被改名?)——修这里别绕过"
+    assert fixes == REPORT_CREDIT_FIXES, (
+        f"CREDIT_FIXES 与复核报告第五节不符:"
+        f"多 {sorted(set(fixes) - set(REPORT_CREDIT_FIXES))} | "
+        f"少 {sorted(set(REPORT_CREDIT_FIXES) - set(fixes))} | "
+        f"值异 { {k: (fixes.get(k), v) for k, v in REPORT_CREDIT_FIXES.items() if fixes.get(k) != v} };"
+        "对账:复核报告-2026-08-19.md 第五节"
+    )
+    # 三方一致性:除 NURS1313NCF(官方源自相矛盾,人工裁)外,裁定值应与 RCC 相等
+    rcc = {}
+    for prog, cats in RULE_COURSE_CREDITS.items():
+        for cat, courses in cats.items():
+            for cid, cr in courses.items():
+                rcc.setdefault(cid, set()).add(cr)
+    bad = {
+        cid: (cr, rcc.get(cid))
+        for cid, cr in fixes.items()
+        if cid != "NURS1313NCF" and rcc.get(cid) != {cr}
+    }
+    assert not bad, (
+        f"裁定值与 RCC 不一致(复核报告:15 门 yr=RCC=叶标题尾数 三方一致):{bad};"
+        "若 RCC 改版须先重验再动 CREDIT_FIXES"
+    )
+
+
+def test_results_dir_not_referenced():
+    """results/(丢行解析器旧产物,2026-08-19 复核推翻)禁用:代码与 CI 配置零引用。
+    任何断言/施工清单只允许引用 verify/ 下的双引擎产物。"""
+    hits = []
+    guard = REPO / "backend/tests/test_course_data_coverage.py"  # 本测试自身豁免
+    for pattern in ("backend/**/*.py", "scripts/**/*.py", ".github/**/*.yml",
+                    "frontend/**/*.js", "miniprogram/**/*.js"):
+        for f in REPO.glob(pattern):
+            if f.is_file() and f != guard and "advice_sheets/results" in f.read_text(encoding="utf-8", errors="ignore"):
+                hits.append(str(f.relative_to(REPO)))
+    assert not hits, (
+        f"以下文件引用了已禁用的 advice_sheets/results 旧产物:{hits};"
+        "可信数据在 advice_sheets/verify/(双引擎);对账:results/README.md"
     )

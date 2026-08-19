@@ -766,8 +766,9 @@ async def get_graduation_status(
 async def list_ge_courses(programme_code: str | None = None):
     """General Education course pool (3-credit-unit, 2026/27 AY). Public.
 
-    Returns every GE course on offer, each flagged ``blocked`` if it falls in
-    the given programme's own 'field of study' — the student may not take GE
+    Returns the full official GE catalog (89 courses: 73 offered this AY +
+    16 not offered, terms=[]), each flagged ``blocked`` if it falls in the
+    given programme's own 'field of study' — the student may not take GE
     from their own field. Group/field order follows the official guide.
     """
     own = PROGRAMME_GE_FIELDS.get(programme_code or "", [])

@@ -77,6 +77,12 @@ LABELS = [
     ("excluded", re.compile(r"^\s*(?:Excluded Combination|不可兼修的科目組合)\s*[::]\s*(.*)$")),
 ]
 
+# 官方目录本身只有一句话介绍的课(人眼核过 PDF 原文,下一行就是下一门课的
+# 課碼行,非解析截断):豁免 60 字最低长度门槛。
+SHORT_DESC_OFFICIAL = frozenset({
+    "GEN 1028ACF",  # 科幻小說創作實踐,官方即 54 字(2026-08-19 批次 1 人眼核对)
+})
+
 CJK = r"　-〿一-鿿＀-￯"
 
 
@@ -353,7 +359,7 @@ def main() -> int:
             errors.append(f"{code}: 千位={lvl_digit} ≠ 目录 level={e['level']}")
         if e["credits"] != 3:
             errors.append(f"{code}: credits={e['credits']} ≠ 3")
-        if not e["description"] or len(e["description"]) < 60:
+        if (not e["description"] or len(e["description"]) < 60) and code not in SHORT_DESC_OFFICIAL:
             errors.append(f"{code}: description 过短({len(e['description'])} 字符)")
         if not e["school_name"]:
             errors.append(f"{code}: school_name 为空")

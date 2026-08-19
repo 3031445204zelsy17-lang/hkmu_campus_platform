@@ -60,6 +60,13 @@ SCHOOL_BY_SEG = {
     "ST": "School of Science and Technology",
 }
 
+# A&SS 于 2026-09-01 更名伍絜宜人文社會科學院(与 ge_catalog_enrichment 的
+# GE_SCHOOL_NAMES / scrape_ge_catalog.py AASS_RENAME 同口径)。skill.md 是官方
+# PDF 逐字导出、保留旧名,故在装配层统一换成新名,再生成不会回退。
+SCHOOL_RENAME = {
+    "School of Arts and Social Sciences": "Wu Jieh Yee School of Arts and Social Sciences",
+}
+
 _PROG_RE = re.compile(r"^\|\s*\+-- (.+?)\s*\(([A-Z0-9]{4,})\)/\s*$")
 _SCHOOL_RE = re.compile(r"^\+-- (.+)/\s*$")
 
@@ -109,6 +116,7 @@ def build_entry(code, raw, skill, existing):
 
     school = sk.get("school") or base.get("school") \
         or SCHOOL_BY_SEG.get(raw.get("school", "")) or "HKMU"
+    school = SCHOOL_RENAME.get(school, school)
 
     cats_out = {}
     core_courses = set(raw["categories"].get("core", {}).get("courses", []))

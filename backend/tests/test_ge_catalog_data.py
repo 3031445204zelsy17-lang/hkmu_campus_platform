@@ -31,7 +31,8 @@ KNOWN_MOI_CONFLICTS = {
 
 def test_every_ge_course_enriched():
     assert CATALOG_UPDATED == "2026-08-07"
-    assert len(GE_COURSES) == 73
+    # 批次 1(2026-08-19):池=官方目录全集 89(73 开课 + 16 不开 terms=[])
+    assert len(GE_COURSES) == 89
     for c in GE_COURSES:
         e = GE_ENRICH.get(c["code"])
         assert e, f"{c['code']}: 不在 GE_ENRICH"
@@ -39,7 +40,11 @@ def test_every_ge_course_enriched():
         assert e["level"] in (1000, 2000), f"{c['code']}: level={e['level']}"
         assert e["moi"] in ("english", "chinese", "bilingual"), f"{c['code']}: moi={e['moi']}"
         assert e["school_name"], f"{c['code']}: school_name 空"
-        assert len(e["description"]) >= 60, f"{c['code']}: description 过短"
+        # GEN 1028ACF 官方介绍即 54 字(人眼核过原文,非截断),豁免门槛
+        min_len = 54 if c["code"] == "GEN 1028ACF" else 60
+        assert len(e["description"]) >= min_len, (
+            f"{c['code']}: description 过短({len(e['description'])})"
+        )
         for x in e["excluded"]:
             assert EXCLUDED_RE.match(x), f"{c['code']}: excluded 格式坏 {x}"
 
