@@ -145,10 +145,19 @@ function _getProgrammeCourseIds() {
   return ids;
 }
 
-/** Course objects filtered to current programme */
+/** Course objects filtered to current programme.
+ *  批次 2:命中 per-专业官方年份映射(prog.placements,advice sheet 口径)时
+ *  覆盖全局 year/semester;未命中保持 courses 表全局值(DSAI 手工年份外溢
+ *  撞 16+ 专业的根修,见复核报告第四节)。 */
 function _getProgrammeCourses() {
   const ids = _getProgrammeCourseIds();
-  return _courses.filter((c) => ids.has(c.id));
+  const placements = (_programme && _programme.placements) || {};
+  return _courses
+    .filter((c) => ids.has(c.id))
+    .map((c) => {
+      const p = placements[c.id];
+      return p ? { ...c, year: p.year, semester: p.term || c.semester } : c;
+    });
 }
 
 /** Whether a category's graduation requirement is met (mirrors backend _category_satisfied). */
@@ -409,8 +418,35 @@ function SemesterGroup(year, semester, courses) {
   const grid = document.createElement("div");
   grid.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4";
   courses.forEach((c) => grid.appendChild(CourseCard(c, true)));
+  // 批次 2:官方 GE 占位行(对照 advice sheet 的 GE (I)/(II))— 该学年学期
+  // 官方预留的通识槽,渲染成待选占位卡
+  const slots = ((_programme && _programme.ge_slots) || [])
+    .filter((s) => s.year === year && s.term === semester).length;
+  if (slots > 0) grid.appendChild(GeSlotCard(slots));
   group.appendChild(grid);
   return group;
+}
+
+/** GE 占位卡(规划视图):该学期官方预留的通识课槽位,非具体课程 */
+function GeSlotCard(count) {
+  const card = document.createElement("div");
+  card.className = "bg-white rounded-2xl p-4 shadow-md border-l-4 border-pink-400 flex flex-col justify-center";
+
+  const code = document.createElement("div");
+  code.className = "text-xs font-mono font-bold text-pink-500 mb-1";
+  code.textContent = "GE";
+  card.appendChild(code);
+
+  const name = document.createElement("div");
+  name.className = "text-sm font-semibold text-gray-800 mb-2";
+  name.textContent = `${t("planner.ge_slot_title")} ×${count}`;
+  card.appendChild(name);
+
+  const hint = document.createElement("div");
+  hint.className = "text-xs text-gray-400";
+  hint.textContent = t("planner.ge_slot_pending");
+  card.appendChild(hint);
+  return card;
 }
 
 function StatCard(label, value, colorClass, iconName) {

@@ -117,9 +117,14 @@ const MOVE_OPTIONS = [
   { year: 4, semester: "autumn" }, { year: 4, semester: "spring" },
 ];
 
-function placementOf(course, schedule) {
+// 批次 2 三层优先级:用户排课覆盖 > per-专业官方映射(prog.placements,
+// advice sheet 口径)> courses 表全局 year/semester 回退。DSAI 手工年份曾全局
+// 外溢撞 16+ 专业(复核报告第四节),映射层按当前专业隔离。
+function placementOf(course, schedule, placements) {
   const ov = schedule && schedule[course.id];
   if (ov) return { year: ov.year, semester: ov.semester, planned: true };
+  const mp = placements && placements[course.id];
+  if (mp) return { year: mp.year, semester: mp.term || "autumn", planned: false };
   return { year: course.year != null ? course.year : 0, semester: course.semester || "other", planned: false };
 }
 
@@ -130,6 +135,8 @@ function placementRank(p) {
 function buildCoursesView(prog, idToCourse, progress, keyword, text, opts, schedule) {
   if (!prog || !idToCourse) return { semesters: [], empty: true };
   const cats = prog.categories || {};
+  const placements = prog.placements || {};
+  const geSlots = prog.ge_slots || [];
   const all = [];
   Object.keys(cats).forEach((key) => {
     (cats[key].courses || []).forEach((cid) => {
@@ -145,14 +152,25 @@ function buildCoursesView(prog, idToCourse, progress, keyword, text, opts, sched
     : all;
   const yearFilter = opts && opts.year;
   if (yearFilter) {
-    filtered = filtered.filter((c) => placementOf(c, schedule).year === yearFilter);
+    filtered = filtered.filter((c) => placementOf(c, schedule, placements).year === yearFilter);
   }
   const groups = {};
   filtered.forEach((c) => {
-    const p = placementOf(c, schedule);
+    const p = placementOf(c, schedule, placements);
     const gk = p.year + "::" + p.semester;
     if (!groups[gk]) groups[gk] = { year: p.year, semester: p.semester, courses: [] };
     groups[gk].courses.push(c);
+  });
+  // 官方 GE 占位行(advice sheet 无课码的通识槽):挂到对应学年学期组,
+  // 年份过滤时只在被选学年渲染(对照官方 Yr 表的 GE (I)/(II) 行)
+  const slotGroups = yearFilter
+    ? geSlots.filter((s) => s.year === yearFilter)
+    : geSlots;
+  slotGroups.forEach((s) => {
+    const gk = s.year + "::" + s.term;
+    if (!groups[gk]) groups[gk] = { year: s.year, semester: s.term, courses: [] };
+    const g = groups[gk];
+    g.geSlotCount = (g.geSlotCount || 0) + 1;
   });
   const semLabelMap = {
     autumn: text.semAutumn, spring: text.semSpring, summer: text.semSummer,
@@ -177,13 +195,13 @@ function buildCoursesView(prog, idToCourse, progress, keyword, text, opts, sched
         prereqLabel = met ? text.prereqMet : (text.prereqPrefix + prereqIds.join(", "));
       }
       // T28 先修顺序校验: 先修未完成且排在本人之后(含同期) → 提示,不阻塞
-      const myPlacement = placementOf(c, schedule);
+      const myPlacement = placementOf(c, schedule, placements);
       const myRank = placementRank(myPlacement);
       const after = prereqIds.filter((id) => {
         if (progress[id] === "completed") return false;
         const pc = idToCourse[id];
         if (!pc) return false;
-        return placementRank(placementOf(pc, schedule)) >= myRank;
+        return placementRank(placementOf(pc, schedule, placements)) >= myRank;
       });
       const moveIndex = MOVE_OPTIONS.findIndex((m) =>
         m.year === myPlacement.year &&

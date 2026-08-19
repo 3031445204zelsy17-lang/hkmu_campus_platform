@@ -161,6 +161,32 @@ from .programme_rules import PROGRAMME_RULES  # noqa: E402
 
 PROGRAMMES.update(PROGRAMME_RULES)
 
+# ── 批次 2 补池(选课数据修复,advice sheet 缺课 78 课次)─────────────────────
+# 官方 Course Advice Sheets 列出但 PROGRAMME_RULES(Requirements PDF)没覆盖的课
+# (GIP 系列 / UNI3002BEW 外溢课 / STAMJ 菜单页课等,清单与口径见
+# programme_year_map.py 的 POOL_ADDITIONS)。在别名复制前并入,别名专业同步生效。
+# 幂等:courses 列表按去重追加,重复调用不会重复插入(测试用)。
+from .programme_year_map import POOL_ADDITIONS  # noqa: E402
+
+
+def _apply_pool_additions(additions: dict) -> None:
+    for _code, _cats in additions.items():
+        _prog = PROGRAMMES.get(_code)
+        if not _prog or _prog.get("coming_soon"):
+            continue
+        _pcats = _prog.setdefault("categories", {})
+        for _cat_key, _courses in _cats.items():
+            _cat = _pcats.setdefault(
+                _cat_key, {"min_credits": 0, "color": "blue", "courses": []}
+            )
+            _ids = _cat.setdefault("courses", [])
+            for _cid in _courses:
+                if _cid not in _ids:
+                    _ids.append(_cid)
+
+
+_apply_pool_additions(POOL_ADDITIONS)
+
 # ── 同专业变体码别名 ─────────────────────────────────────────────────
 # 官方 Requirements PDF 每个专业只印一个主码,但课程目录 PDF 多收了 cohort
 # 变体码(J1/F3 等入学批次编码差异)——目录里同名专业两行,一行有毕业规则

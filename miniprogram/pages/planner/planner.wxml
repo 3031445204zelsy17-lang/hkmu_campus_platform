@@ -273,6 +273,14 @@
           <view wx:if="{{c.statusKey==='completed'}}" class="mini-pill green">{{c.statusLabel}}</view>
           <view wx:elif="{{c.statusKey==='in_progress'}}" class="mini-pill amber">{{c.statusLabel}}</view>
         </view>
+        <!-- 批次 2 官方 GE 占位行(对照 advice sheet 的 GE (I)/(II)):点开 GE 选课浮层 -->
+        <view wx:if="{{sem.geSlotCount}}" class="course-row ge-slot-row" bindtap="onOpenGePicker">
+          <view class="course-main">
+            <view class="course-code">GE</view>
+            <view class="course-name">{{text.geSlotTitle}} ×{{sem.geSlotCount}}</view>
+          </view>
+          <view class="mini-pill pink">{{text.geSlotPending}}</view>
+        </view>
       </block>
 
       <view wx:if="{{coursesView.empty}}" class="web-panel">

@@ -463,6 +463,15 @@
   color: #ffffff;
 }
 
+/* 批次 2 官方 GE 占位行(通识待选槽,advice sheet 的 GE (I)/(II) 行) */
+.ge-slot-row {
+  border-left: 6rpx solid var(--cat-pink, #DB2777);
+}
+.mini-pill.pink {
+  background: var(--cat-pink, #DB2777);
+  color: #ffffff;
+}
+
 /* 课程目录（非完整规划专业） */
 .catalogue-disclaimer {
   margin: 0 0 24rpx;

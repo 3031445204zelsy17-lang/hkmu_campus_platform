@@ -504,6 +504,9 @@ const DICTIONARY = {
       semAutumn: "\u79cb\u5b63",
       semSpring: "\u6625\u5b63",
       semSummer: "\u6691\u671f",
+      // \u6279\u6b21 2 \u5b98\u65b9 GE \u5360\u4f4d\u884c(\u89c4\u5212\u89c6\u56fe\u7684\u901a\u8bc6\u5f85\u9009\u69fd)
+      geSlotTitle: "\u901a\u8bc6\u8bfe\u7a0b",
+      geSlotPending: "\u5f85\u9009",
       yearLabel: "\u7b2c {n} \u5e74",
       catalogueTagFull: "\u5b8c\u6574\u89c4\u5212",
       catalogueTagDiscontinued: "\u5df2\u505c\u62db",
@@ -1123,6 +1126,8 @@ DICTIONARY["zh-Hant"] = {
     schedMove: "\u6539\u5b78\u671f",
     schedUpdateFail: "\u6392\u8ab2\u66f4\u65b0\u5931\u6557\uff0c\u5df2\u9084\u539f",
     prereqOrderPrefix: "\u5148\u4fee\u8ab2\u6392\u5728\u4e4b\u5f8c\uff1a",
+    geSlotTitle: "\u901a\u8b58\u8ab2\u7a0b",
+    geSlotPending: "\u5f85\u9078",
     catalogueTagFull: "\u5b8c\u6574\u898f\u5283",
     catalogueTagDiscontinued: "\u5df2\u505c\u62db",
     programmeSearchPlaceholder: "\u641c\u5c0b\u5c08\u696d\u3001\u4ee3\u78bc\u6216\u5b78\u9662",
@@ -1745,6 +1750,9 @@ DICTIONARY.en = {
     semAutumn: "Autumn",
     semSpring: "Spring",
     semSummer: "Summer",
+    // 批次 2 官方 GE 占位行(规划视图的通识待选槽)
+    geSlotTitle: "General Education",
+    geSlotPending: "To pick",
     yearLabel: "Year {n}",
     catalogueTagFull: "Full Planning",
     catalogueTagDiscontinued: "Discontinued",

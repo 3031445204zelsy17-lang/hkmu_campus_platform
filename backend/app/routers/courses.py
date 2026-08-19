@@ -13,11 +13,13 @@ from ..models import (
 )
 from ..data.programmes import (
     PROGRAMMES, DEFAULT_PROGRAMME_CODE, get_programme, DISCONTINUED_CODES,
+    PROGRAMME_ALIASES,
 )
 from ..data.ge_courses import (
     GE_FIELD_ORDER, PROGRAMME_GE_FIELDS, ge_courses_for, ge_course_by_id,
 )
 from ..data.ge_catalog_enrichment import GE_SCHOOL_NAMES
+from ..data.programme_year_map import PROGRAMME_GE_SLOTS, PROGRAMME_YEAR_MAP
 from ..services.cache import TTLCache
 from ..services.content_security import audit_user_text, SCENE_COMMENT
 from pydantic import BaseModel, Field, field_validator
@@ -94,6 +96,11 @@ class ProgrammeOut(BaseModel):
     coming_soon: bool = False
     categories: list[ProgrammeCategoryOut]
     template: dict = {}
+    # 批次 2 per-专业年份映射:课程在该专业的官方修读年份/学期(advice sheet
+    # 口径)。空映射 = 该课无官方行,前端回退 courses 表全局 year/semester
+    # (用户 schedule 覆盖仍最高优先)。ge_slots = 官方 GE 占位行(无课码)。
+    placements: dict[str, dict] = {}
+    ge_slots: list[dict] = []
 
 
 class ProgrammeCatalogueOut(BaseModel):
@@ -379,6 +386,13 @@ async def list_courses(
 # NOTE: these single-segment routes MUST be declared before ``GET /{course_id}``,
 # otherwise ``programmes`` / ``graduation-status`` would be captured as a course_id.
 
+def _placements_for(programme_code: str) -> tuple[dict[str, dict], list[dict]]:
+    """按专业取官方年份映射(批次 2)。别名码归一到主码;未知专业返回空
+    (前端回退 courses 表全局 year/semester)。"""
+    main = PROGRAMME_ALIASES.get(programme_code, programme_code)
+    return PROGRAMME_YEAR_MAP.get(main) or {}, PROGRAMME_GE_SLOTS.get(main) or []
+
+
 def _programme_to_out(code: str, prog: dict) -> ProgrammeOut:
     cats = [
         ProgrammeCategoryOut(
@@ -390,6 +404,7 @@ def _programme_to_out(code: str, prog: dict) -> ProgrammeOut:
         )
         for key, cat in prog.get("categories", {}).items()
     ]
+    placements, ge_slots = _placements_for(code)
     return ProgrammeOut(
         code=code,
         name=dict(prog.get("name", {})),
@@ -398,6 +413,8 @@ def _programme_to_out(code: str, prog: dict) -> ProgrammeOut:
         coming_soon=prog.get("coming_soon", False),
         categories=cats,
         template=prog.get("template", {}),
+        placements=placements,
+        ge_slots=ge_slots,
     )
 
 
