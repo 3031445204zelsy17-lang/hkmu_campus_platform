@@ -283,6 +283,22 @@ DISCONTINUED_CODES = frozenset({
     "BHMF", "BIHAMHJ", "BSRMHJ", "BTPMF", "BAHCIEF3", "BAHECLJ",
     "BFAHPDAJ", "BSSCHEPAJ", "BSSCHPMHJ", "BLSBCGBHJ1", "BCOMPHITJ", "BENGHCEEJ",
     "BENGHTCJ", "BSCHDSJ", "BSCHENSF3", "BSCHLSJ", "BSCHTSFF3", "BSCHTSCJ",
+    # ── 批次 3(2026-08-19 官方招生页核查,admissions.hkmu.edu.hk)──────────
+    # 社科 5 个独立学位 2023 秋重组为 BSSCHWSJ 大类学位的五个 Stream
+    # (招生总列表 admissions.hkmu.edu.hk/ug/programmes/ 已无此 5 行;详情页
+    # hkmu.edu.hk/ss/programmes/undergraduate/bachelor-of-social-sciences-
+    # with-honours-with-streams/ Streams 表逐一对应;「New Programme from
+    # 2023 Autumn」;毕业证按 Stream 授名,故在读存量仍按旧规则规划):
+    "BSSCHAGSJ",   # → BSSCHWSJ Stream I(旧招生页 /ug/as/ageing-society…/ 存档)
+    "BSSCHECJ",    # → Stream II(Applied Economics)
+    "BSSCHJ",      # → Stream III(Applied Social Studies,3 specialization)
+    "BSSCHGCSJ",   # → Stream IV(Global and China Studies)
+    "BSSCHPAJ",    # → Stream V(Politics and Public Administration)
+    # 定性但**不挂标**:BBAHWBJ(World Business,Requirements PDF 202607_V1)
+    # 2026/27 招生面三锚均无(总列表/BA 学院 Y1+Senior 列表/招生站搜索),
+    # 疑 2027/28 新开——非停招,无目录行,不进本集合;BAPHBMJ1 经核查为
+    # **在招**现行码(JUPAS JS9280,admissions.hkmu.edu.hk/ug/inter-school/
+    # applied-psychology-business-management/),维持 PROGRAMME_ALIASES 变体。
 })
 
 DEFAULT_PROGRAMME_CODE = "BSCHDSAIJ"
