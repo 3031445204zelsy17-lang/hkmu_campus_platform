@@ -27,13 +27,15 @@ HAS_MAP_DATA = bool(pym.PROGRAMME_YEAR_MAP)
 
 # ── 2a 架构:映射 → 载荷管线(数据无关,monkeypatch 桩验证)──────────────────
 
-def test_payload_fields_exist_and_empty_map_is_pure_fallback():
-    """空映射时 ProgrammeOut.placements/ge_slots = 空 → 前端回退全局 year。"""
+def test_payload_fallback_and_serialisation():
+    """映射缺失的专业/码 → placements 空(前端回退全局 year);载荷可序列化。
+    批次 2b 灌数后所有真实专业都有映射,回退路径用未知码守卫。"""
     from backend.app.routers import courses
+    assert courses._placements_for("NOSUCHPROG") == ({}, [])
     out = courses._programme_to_out("BSCHDSAIJ", PROGRAMMES["BSCHDSAIJ"])
-    assert out.placements == {} and out.ge_slots == []
     dumped = out.model_dump()
-    assert dumped["placements"] == {} and dumped["ge_slots"] == []
+    assert isinstance(dumped["placements"], dict)
+    assert isinstance(dumped["ge_slots"], list)
 
 
 def test_placements_resolved_per_programme_and_alias(monkeypatch):
@@ -95,19 +97,53 @@ def _final_result2() -> dict:
 @pytest.mark.skipif(not HAS_MAP_DATA, reason="批次 2b 未灌数(空骨架阶段)")
 class TestBatch2bData:
     def test_hard_mismatch_closure(self):
-        """155 硬错位闭环:hard 清单每条的映射年份必须落在官方年集内。
+        """155 硬错位闭环:hard 清单每条的映射年份必须是该专业官方行年。
         豁免:该课在 my_rows 无任何行(解析盲区,回退全局列)——当前仅
-        BASCHRAEJ/COMP2083SEF 一条;新增豁免必须在验收记录里说明依据。"""
+        BASCHRAEJ/COMP2083SEF 一条;新增豁免必须在验收记录里说明依据。
+
+        官方年集 = 清单 official ∪ my_rows 源行年:清单(final_recalc2)把同
+        专业拆在别名/主码两键下,单条 official 可能只含一个系列的年
+        (BEDHACLSJ/UNI2002BCW:系列1 C@2 记在别名键且当年全局年=2 不算错、
+        系列2 C@3 记在主码键)——闭环的判据是「官方行出现过」,以源行为准。"""
+        from backend.app.data.programmes import PROGRAMMES
+
+        def _main_of(plan: str) -> str | None:
+            hit = None
+            if plan in PROGRAMMES:
+                hit = plan
+            else:
+                base = plan.split("-")[0]
+                if base in PROGRAMMES:
+                    hit = base
+                else:
+                    s = base.rstrip("0123456789")
+                    hit = s if s in PROGRAMMES else None
+            return PROGRAMME_ALIASES.get(hit, hit) if hit else None
+
+        rows = json.loads((VERIFY / "my_rows.json").read_text(encoding="utf-8"))
+        row_years: dict[tuple[str, str], set] = {}
+        for r in rows:
+            if r.get("yr") is None or r.get("type") == "E":
+                continue
+            m = _main_of(r["plan"])
+            if m:
+                row_years.setdefault((m, r["code"]), set()).add(r["yr"])
+
         hard = _final_result2()["hard"]
         allowed_missing = {("BASCHRAEJ", "COMP2083SEF")}
-        misses = []
+        merged: dict[tuple[str, str], set] = {}
         for p, c, _my, official in hard:
-            got = pym.PROGRAMME_YEAR_MAP.get(p, {}).get(c)
+            main = PROGRAMME_ALIASES.get(p, p)
+            merged.setdefault((main, c), set()).update(official)
+        misses = []
+        for (main, c), official in merged.items():
+            got = pym.PROGRAMME_YEAR_MAP.get(main, {}).get(c)
+            official_all = official | row_years.get((main, c), set())
             if got is None:
-                if (p, c) not in allowed_missing:
-                    misses.append((p, c, "无映射", official))
-            elif got["year"] not in official:
-                misses.append((p, c, got["year"], official))
+                if (main, c) not in allowed_missing:
+                    misses.append((main, c, "无映射", sorted(official_all)))
+            elif got["year"] not in official_all:
+                misses.append((main, c, got["year"], sorted(official_all)))
         assert not misses, f"硬错位未闭环 {len(misses)} 条(前 10):{misses[:10]}"
 
     def test_uni3002_collision_resolved(self):

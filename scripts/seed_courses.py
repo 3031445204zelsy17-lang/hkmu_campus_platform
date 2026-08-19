@@ -13,6 +13,11 @@ from app.data.programme_rules import (  # noqa: E402 — 54-programme rules (T33
     PROGRAMME_RULES,
     RULE_COURSE_CREDITS,
 )
+from app.data.programme_year_map import (  # noqa: E402 — 批次 2 补池/课名(advice sheet)
+    ADDITION_CREDITS,
+    COURSE_NAME_BACKFILL,
+    POOL_ADDITIONS,
+)
 from passlib.context import CryptContext
 from dotenv import load_dotenv
 
@@ -198,6 +203,53 @@ async def seed():
                     except Exception as e:
                         print(f"  skip rule course {cid}: {e}")
 
+        # ── 批次 2 补池(选课数据修复,advice sheet 缺课 78 课次)─────────────
+        # GIP100-400BEF 等:官方 Course Advice Sheet 列出、Requirements PDF 规则
+        # 没覆盖的课。courses 行要进表(_compute_graduation 的 course_rows 查找),
+        # 学分取官方行值(GIP 类 0);名称优先官方标题列。幂等:ON CONFLICT DO
+        # NOTHING + existing_ids 跳过,重跑零重复(生产灌库脚本要求)。
+        existing_ids = {r["id"] for r in await conn.fetch("SELECT id FROM courses")}
+        additions_inserted = 0
+        for prog_code, cats in POOL_ADDITIONS.items():
+            entry_name = PROGRAMME_RULES.get(prog_code, {}).get("name", {}).get("en", prog_code)
+            for cat_key, courses in cats.items():
+                for cid in courses:
+                    if cid in existing_ids:
+                        continue
+                    name = COURSE_NAME_BACKFILL.get(cid) or catalogue.get(cid, (None, None))[0]
+                    if not name:
+                        name = re.sub(r"^([A-Z]{2,5})(\d{4})", r"\1 \2", cid)
+                    credits = ADDITION_CREDITS.get(cid)
+                    if credits is None:
+                        credits = CREDIT_FIXES.get(cid)
+                    if credits is None:
+                        credits = catalogue.get(cid, (None, None))[1]
+                    if credits is None:
+                        credits = 3
+                    try:
+                        await conn.execute(
+                            """INSERT INTO courses (id, code, name, credits, category, year, semester, prerequisites, description)
+                               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                               ON CONFLICT (id) DO NOTHING""",
+                            cid, name, name, credits, cat_key,
+                            _level_year(cid), "autumn", "[]",
+                            f"{entry_name} · {cat_key} · advice sheet",
+                        )
+                        existing_ids.add(cid)
+                        additions_inserted += 1
+                    except Exception as e:
+                        print(f"  skip addition {cid}: {e}")
+
+        # 课名回填:裸码课(名字 = 空格化课码,seed T34 的兜底产物)换成官方
+        # advice sheet 标题列。只动裸码行,不覆盖任何真名(catalogue/GE/手工表)。
+        names_fixed = 0
+        for cid, name in COURSE_NAME_BACKFILL.items():
+            res = await conn.execute(
+                "UPDATE courses SET name = $1 WHERE id = $2 AND name ~ $3",
+                name, cid, r"^[A-Z]{2,5} [0-9]{4}[A-Z]{3}$",
+            )
+            names_fixed += int(res.split()[-1])
+
         # Existing-row credit corrections: the inserts above are all
         # ON CONFLICT DO NOTHING, so rows already carrying a polluted credit
         # (from the old catalogue-first T34) would keep it forever. The
@@ -228,7 +280,8 @@ async def seed():
         ge_count = await conn.fetchval("SELECT COUNT(*) FROM courses WHERE category = 'general-ed'")
         user_count = await conn.fetchval("SELECT COUNT(*) FROM users")
         print(f"Seeded {inserted} courses + {ge_inserted} GE + {rules_inserted} rule courses "
-              f"({rules_missing_name} nameless, {credit_fixed} credit fixes) "
+              f"+ {additions_inserted} advice-sheet additions ({names_fixed} names backfilled, "
+              f"{credit_fixed} credit fixes) "
               f"({count} in DB, {ge_count} GE), {user_count} users")
 
     finally:

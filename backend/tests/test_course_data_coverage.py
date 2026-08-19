@@ -53,8 +53,13 @@ PHANTOM_GE = frozenset({"GEN1064BCF", "GEN1078BCF", "GEN2078BEF"})
 ELECTIVE_CATALOG_N = 451    # 双引擎双锚重数(旧 477 为朴素正则污染值)
 # 有正文条目但官方 TOC 没行的 4 门(PDF 官方自身漏行,人工核过原文)
 ELECTIVE_TOC_OMISSIONS = frozenset({"PSYC3001AEF", "PTH3256ECF", "SCI3101SEF", "SCI3102SEF"})
-# 选修目录里全库(catalogue 表 ∪ 可规划课程宇宙)都没有的 5 门 —— 批次 5 导入工作单
-NOT_IN_WHOLE_DB_5 = frozenset({"COUN1001AEF", "DRAM1000ECF", "DRAM4244ECF", "TRAN3603ABF", "TRAN4654ABF"})
+# 选修目录里全库(catalogue 表 ∪ 可规划课程宇宙)都没有的 —— 批次 5 导入工作单。
+# 2026-08-19 批次 2 前 = 5 门;批次 2 补池把其中 3 门经官方 advice sheet 提前
+# 带进可规划宇宙(COUN1001AEF→BSSCHPWSJ core、TRAN3603ABF/TRAN4654ABF→
+# BAHLTJ elective),缺口缩到 2。
+_NOT_IN_WHOLE_DB = frozenset({"DRAM1000ECF", "DRAM4244ECF"})
+_BATCH2_BROUGHT_IN = frozenset({"COUN1001AEF", "TRAN3603ABF", "TRAN4654ABF"})
+NOT_IN_WHOLE_DB_NOW = _NOT_IN_WHOLE_DB | _BATCH2_BROUGHT_IN  # 兼容旧引用,= 批次2前全量5门
 
 # ── 选修白名单(显式列出,逐门注明理由)─────────────────────────────────────
 # 规则 elective 类目里不在官方选修目录的课 = 白名单全体;两类划分可被
@@ -103,6 +108,15 @@ WHITELIST_RULES_ONLY = frozenset({
     "ELEC3038SEF", "ELEC3047SEF", "ELEC3063SEF", "ELEC4021SEF", "ELEC4025SEF", "ENGG3023SEF",
     "ENGL4004AEF", "GCST3005AEF", "IT2090SEF", "LAW3000BEF", "LAW4000BEF", "NMIE4003AEF",
     "PTH1902ACF", "SOCI4006AEF", "STAT2051SEF", "TC3019SEF", "TC4063SEF",
+})
+# 批次 2(2026-08-19)advice-sheet 补池带入:仅出现在官方 Course Advice Sheet
+# 横版选修菜单页(无表头,final_recalc2 后扫捕获;my_pipeline 丢行故无 type/学分行),
+# skill.md 与 Requirements PDF 均无条目。2 门。依据:复核报告第三节
+# 「差 = STAMJ 菜单页的 CHEM2035SEF、IT1020SEF」同源菜单页;IT1020SEF 已在
+# DSAI 手工表不重复列。
+WHITELIST_ADVICE_SHEET = frozenset({
+    "CHEM2035SEF",  # BSCHSTAMJ Y3 / BASCHTICJ 选修菜单
+    "SCI4090SEF",   # BSCHSTEMJ 选修菜单
 })
 
 
@@ -298,7 +312,7 @@ def test_elective_pool_subset_of_catalog_or_whitelist():
     catalog = set(_load("elec_catalog.json")["poppler_body"])
     pool = _elective_pool()
     outside = pool - catalog
-    whitelist = WHITELIST_CATALOGUE | WHITELIST_RULES_ONLY
+    whitelist = WHITELIST_CATALOGUE | WHITELIST_RULES_ONLY | WHITELIST_ADVICE_SHEET
     assert outside == whitelist, (
         f"选修池 {len(pool)} 门中目录外 {len(outside)} 门 ≠ 白名单 {len(whitelist)} 门:"
         f"新落目录外 {_head(outside - whitelist)}(逐门定性后补白名单并注明理由)"
@@ -323,7 +337,11 @@ def test_whitelist_reason_tags_verifiable():
 
 
 def test_elective_catalog_gap_in_db_locked():
-    """选修目录−全库(catalogue 表 ∪ 可规划宇宙)= 5 门,批次 5 的导入工作单。"""
+    """选修目录−全库(catalogue 表 ∪ 可规划宇宙)= 2 门,批次 5 的导入工作单。
+
+    批次 2(2026-08-19)补池前 = 5 门;补池把 COUN1001AEF/TRAN3603ABF/
+    TRAN4654ABF 经官方 advice sheet 带进 POOL_ADDITIONS → 可规划宇宙,缺口 5→2。
+    批次 2 带入的 3 门必须有映射/补池落点(防静默漂移回 5)。"""
     catalog = set(_load("elec_catalog.json")["poppler_body"])
     seed = _seed_ids()
     assert seed, "seed_courses.py 顶层 COURSES 解析失败(变量被改名?)——修这里别绕过"
@@ -331,13 +349,19 @@ def test_elective_catalog_gap_in_db_locked():
     for e in PROGRAMME_RULES.values():
         for v in e["categories"].values():
             plannable.update(v.get("courses", []))
+    from backend.app.data.programme_year_map import POOL_ADDITIONS
+    for cats in POOL_ADDITIONS.values():
+        for cs in cats.values():
+            plannable.update(cs)
     whole_db = plannable | _skill_md_codes()
     gap = catalog - whole_db
-    assert gap == NOT_IN_WHOLE_DB_5, (
-        f"选修目录全库缺口应为 5 门(2026-08-19 双引擎重数,旧结论 106 被引用码污染),"
-        f"实得 {len(gap)} 门 {_head(gap)};批次 5 按 NOT_IN_WHOLE_DB_5 导入;"
+    assert gap == _NOT_IN_WHOLE_DB, (
+        f"选修目录全库缺口应为 {len(_NOT_IN_WHOLE_DB)} 门(批次 2 后),"
+        f"实得 {len(gap)} 门 {_head(gap)};批次 5 按 _NOT_IN_WHOLE_DB 导入;"
         "对账:verify/elec_coverage.json"
     )
+    for c in _BATCH2_BROUGHT_IN:
+        assert c in plannable, f"{c} 应已被批次 2 补池带入(检查 POOL_ADDITIONS)"
 
 
 # ── 批次 1:学院更名 + 学分裁定 + results/ 禁用 ─────────────────────────────

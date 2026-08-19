@@ -44,6 +44,14 @@ OUT = os.path.join(REPO, "backend/app/data/programme_year_map.py")
 CODE = re.compile(r"\b([A-Z]{2,5})\s(\d{3,4}[A-Z]{3})\b")
 TAIL = re.compile(r"(?<![0-9,:])(\d)\s+(\d{1,2})\s+(C|E|ENG|GE|UNI)\s+(PN|PC|SE|N/A)\b")
 TERM = re.compile(r"(20\d{2})\s*(Autumn|Spring|Summer)")
+# 表注/说明行(码行前置兜底时不得当标题收,实测 MATH1410SEF 吃进 Table 4 注文)
+CAPTION = re.compile(r"^Table \d|Advisory Prerequisite|Prerequisite Requirement")
+# 终名垃圾过滤:advice sheet 的先修建议注记/表引用跨行混进标题列(行级守卫
+# 挡不住跨行包裹),凡命中一律拒收该名(课留待其他文件或裸码回退)
+JUNK_TITLE = re.compile(
+    r"Table \d|Advisory Prerequisite|Prerequisite Requirement|Can Be Found|^Advisory:",
+    re.IGNORECASE,
+)
 GE_SLOT = re.compile(r"\bGE\s*\(([IVX]+)\)")
 STOP_TITLE = re.compile(
     r"Courses for the term|No\. of courses to take|\*\s*Enrolment Arrangement"
@@ -53,15 +61,24 @@ STOP_TITLE = re.compile(
 SEM = {"Autumn": "autumn", "Spring": "spring", "Summer": "summer"}
 
 
-def norm_plan(plan: str, programmes: dict) -> str | None:
-    """plan 码 → PROGRAMMES 主码(与 final_recalc2.py 同款口径)。"""
+def norm_plan(plan: str, programmes: dict, aliases: dict | None = None) -> str | None:
+    """plan 码 → PROGRAMMES 主码(final_recalc2 同款口径 + 别名归一)。
+
+    别名码(BAPHBMJ1 等)本身在 PROGRAMMES 里,直接命中会把映射灌到别名键下;
+    而运行时(courses._placements_for)按「别名 → 主码」查表,键必须是主码。"""
+    hit = None
     if plan in programmes:
-        return plan
-    base = plan.split("-")[0]
-    if base in programmes:
-        return base
-    s = re.sub(r"\d+$", "", base)
-    return s if s in programmes else None
+        hit = plan
+    else:
+        base = plan.split("-")[0]
+        if base in programmes:
+            hit = base
+        else:
+            s = re.sub(r"\d+$", "", base)
+            hit = s if s in programmes else None
+    if hit and aliases:
+        hit = aliases.get(hit, hit)
+    return hit
 
 
 def series_of(plan: str) -> str:
@@ -75,7 +92,7 @@ def read_rows():
         return json.load(f)
 
 
-def build_year_map(rows, programmes):
+def build_year_map(rows, programmes, aliases=None):
     """{主码: {课码: {"year","term"}}} — 跨系列行合并,非 E 行 > 系列新 > 年小。
 
     优先级依据:复核报告第四/七节(年份按非 E 行口径) + 系列 = cohort 新旧
@@ -91,7 +108,7 @@ def build_year_map(rows, programmes):
     prog_plans = collections.defaultdict(list)
     unmapped = collections.Counter()
     for plan, rs in by_plan.items():
-        p = norm_plan(plan, programmes)
+        p = norm_plan(plan, programmes, aliases)
         if p is None:
             unmapped[plan] += len(rs)
             continue
@@ -162,6 +179,28 @@ def _title_cluster(line: str, code_x: int) -> str:
     return cands[0] if cands else ""
 
 
+_CJK = re.compile(r"[一-鿿]")
+_DANGLING = re.compile(r"\s(&|,|AND|OF|FOR|TO|IN|THE)$", re.IGNORECASE)
+
+
+def _cjk_ratio(s: str) -> float:
+    if not s:
+        return 0.0
+    cjk = len(_CJK.findall(s))
+    return cjk / max(len(re.sub(r"\s", "", s)), 1)
+
+
+def _clean_title_parts(parts: list[str]) -> str:
+    """中英混排去重(码行上中文名、下行英文名 → 留英;纯中 → 留中)+ 悬尾修剪。"""
+    parts = [p for p in (x.strip() for x in parts) if p]
+    if any(_cjk_ratio(p) > 0.3 for p in parts) and any(_cjk_ratio(p) <= 0.3 for p in parts):
+        parts = [p for p in parts if _cjk_ratio(p) <= 0.3]
+    title = re.sub(r"\s+", " ", " ".join(parts)).strip()
+    while _DANGLING.search(title):
+        title = _DANGLING.sub("", title)
+    return title
+
+
 def parse_pdf(fn: str):
     """返回 (ge_slots, titles):GE 占位 (year, term) 集 + 码行课名。
 
@@ -198,6 +237,17 @@ def parse_pdf(fn: str):
         if not cm:
             continue
         code_x = cm.start()
+
+        def _next_frag(k: int) -> str:
+            """码行后第 k 行的标题列簇(空行/结构行返回空)。"""
+            if k >= len(lines):
+                return ""
+            nl = lines[k]
+            if (CODE.search(nl) or TERM.search(nl) or STOP_TITLE.search(nl)
+                    or TAIL.search(nl)):
+                return ""
+            return _title_cluster(nl, code_x)
+
         # 码行自身的标题:码后到尾块之间
         region, j = [ln], i + 1
         while j < len(lines):
@@ -209,34 +259,31 @@ def parse_pdf(fn: str):
         joined = " ".join(x.strip() for x in region)
         jm = CODE.search(joined)
         t = TAIL.search(joined)
-        title = re.sub(r"\s+", " ", joined[jm.end():t.start()].strip()) if jm and t else ""
-        if not title:
-            # 标题行前置:取码行前一行标题列簇 + 码行后 1 行续簇
-            # (续簇上限 1:第 2 行起无法与「下一行的前置标题」区分,宁缺勿贪)
-            parts = []
+        on_line = re.sub(r"\s+", " ", joined[jm.end():t.start()].strip()) if jm and t else ""
+        parts = [on_line] if on_line else []
+        if not parts:
+            # 标题行前置(多行标题单元格把首行吐在码行前,UNI3002BEW/GIP 类);
+            # 中文课名行同位 —— _clean_title_parts 负责中英混排去重
             if i > 0:
                 prev = lines[i - 1]
                 if not (CODE.search(prev) or TERM.search(prev)
-                        or STOP_TITLE.search(prev) or TAIL.search(prev)):
+                        or STOP_TITLE.search(prev) or TAIL.search(prev)
+                        or CAPTION.search(prev)):
                     parts.append(_title_cluster(prev, code_x))
-            k = i + 1
-            taken = 0
-            while k < len(lines) and taken < 1:
-                nl = lines[k]
-                if CODE.search(nl) or TERM.search(nl) or STOP_TITLE.search(nl) or TAIL.search(nl):
-                    break
-                frag = _title_cluster(nl, code_x)
-                if frag:
-                    parts.append(frag)
-                    taken += 1
-                k += 1
-            title = re.sub(r"\s+", " ", " ".join(p for p in parts if p)).strip()
-        if title:
+        # 续行:标题在码行外(前置路径)/为空/悬尾连接词/括号未闭合时,补 1 行
+        # (上限 1:第 2 行起无法与「下一行的前置标题」区分,宁缺勿贪)
+        probe = _clean_title_parts(parts)
+        need_more = (not on_line) or not probe or _DANGLING.search(probe) \
+            or probe.count("(") > probe.count(")")
+        if _next_frag(i + 1) and need_more:
+            parts.append(_next_frag(i + 1))
+        title = _clean_title_parts(parts)
+        if title and not JUNK_TITLE.search(title):
             titles.setdefault(cm.group(1) + cm.group(2), titlecase(title))
     return slots, titles
 
 
-def build_ge_slots_and_names(rows, programmes, year_map):
+def build_ge_slots_and_names(rows, programmes, year_map, aliases=None):
     """只解析选定系列的文件(全 433 份逐份 pdftotext 太慢且无必要)。"""
     by_plan_files = collections.defaultdict(set)
     for r in rows:
@@ -244,7 +291,7 @@ def build_ge_slots_and_names(rows, programmes, year_map):
 
     plans_by_prog = collections.defaultdict(list)
     for plan in by_plan_files:
-        p = norm_plan(plan, programmes)
+        p = norm_plan(plan, programmes, aliases)
         if p is not None:
             plans_by_prog[p].append(plan)
 
@@ -265,7 +312,7 @@ def build_ge_slots_and_names(rows, programmes, year_map):
     return ge_slots, all_titles
 
 
-def build_additions(rows, programmes):
+def build_additions(rows, programmes, aliases=None):
     """missing 78 → {主码: {cat: [课码]}} + 官方学分 {课码: cr}。"""
     with open(os.path.join(AS, "verify/final_result2.json"), encoding="utf-8") as f:
         missing = json.load(f)["missing"]
@@ -274,7 +321,7 @@ def build_additions(rows, programmes):
     types = collections.defaultdict(set)
     crs = collections.defaultdict(collections.Counter)
     for r in rows:
-        p = norm_plan(r["plan"], programmes)
+        p = norm_plan(r["plan"], programmes, aliases)
         if p is None or not r.get("type"):
             continue
         types[(p, r["code"])].add(r["type"])
@@ -366,12 +413,12 @@ def emit(year_map, ge_slots, titles, additions, credits, unmapped):
 
 
 def main():
-    from app.data.programmes import PROGRAMMES
+    from app.data.programmes import PROGRAMMES, PROGRAMME_ALIASES
 
     rows = read_rows()
-    year_map, unmapped = build_year_map(rows, PROGRAMMES)
-    ge_slots, titles = build_ge_slots_and_names(rows, PROGRAMMES, year_map)
-    additions, credits, no_type = build_additions(rows, PROGRAMMES)
+    year_map, unmapped = build_year_map(rows, PROGRAMMES, PROGRAMME_ALIASES)
+    ge_slots, titles = build_ge_slots_and_names(rows, PROGRAMMES, year_map, PROGRAMME_ALIASES)
+    additions, credits, no_type = build_additions(rows, PROGRAMMES, PROGRAMME_ALIASES)
 
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(emit(year_map, ge_slots, titles, additions, credits, unmapped))
