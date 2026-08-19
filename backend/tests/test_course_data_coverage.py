@@ -370,11 +370,12 @@ AASS_OLD_NAME = "School of Arts and Social Sciences"
 
 
 def test_aass_programmes_renamed():
-    """A&SS 15 个专业 school = 伍絜宜新名(2026-09-01 更名,与 GE_SCHOOL_NAMES 口径
+    """A&SS 专业 school = 伍絜宜新名(2026-09-01 更名,与 GE_SCHOOL_NAMES 口径
     一致);旧名仅允许存在于 PDF verbatim 锁定处(GE_SCHOOL_NAMES.pdf_verbatim、
-    skill.md 官方导出),不得再作任何专业的 school 值。"""
+    skill.md 官方导出),不得再作任何专业的 school 值。
+    批次 1 时 15 个;批次 3(2026-08-19)+BSSCHWSJ 实体 → 16。"""
     aass = {c for c, p in PROGRAMMES.items() if "Arts and Social" in (p.get("school") or "")}
-    assert len(aass) == 15, f"A&SS 专业应为 15 个,实得 {len(aass)}:{sorted(aass)}"
+    assert len(aass) == 16, f"A&SS 专业应为 16 个(批次 3 +BSSCHWSJ),实得 {len(aass)}:{sorted(aass)}"
     stale = sorted(c for c in aass if PROGRAMMES[c].get("school") == AASS_OLD_NAME)
     assert not stale, (
         f"A&SS 专业仍挂旧名:{stale};应换 {AASS_NEW_NAME!r}"

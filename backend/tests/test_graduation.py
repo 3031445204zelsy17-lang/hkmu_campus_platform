@@ -208,9 +208,14 @@ def test_satisfied_credits_pool():
 
 
 def test_all_programmes_category_sums_match_total():
-    """Data invariant across all 55 programmes (1 hand-curated + 54 generated):
-    each category's min_credits sums exactly to the PDF's obtain-total."""
+    """Data invariant across all rule-complete programmes (1 hand-curated +
+    54 generated): each category's min_credits sums exactly to the PDF's
+    obtain-total. 批次 3 起排除 ``pool_seed`` 骨架实体(BSSCHWSJ:五 Stream
+    分档互不相同,min_credits=0 不裁学分,毕业数学归批次 4;total_credits
+    仍取官方 Y1 总分 120,由 test_guide_programme_coverage 锁定)。"""
     for code, prog in PROGRAMMES.items():
+        if prog.get("pool_seed"):
+            continue
         smin = sum(c["min_credits"] for c in prog["categories"].values())
         assert smin == prog["total_credits"], \
             f"{code}: Σmin={smin} != total={prog['total_credits']}"
