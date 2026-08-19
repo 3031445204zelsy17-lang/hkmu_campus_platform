@@ -1139,13 +1139,19 @@ Page({
     const planning = this._catalogue;
     const browse = this._courseCatalogue;
 
-    // code→目录条目映射(三语专业名来源,规则专业载荷只有英文)
+    // code→目录条目映射(三语专业名来源,规则专业载荷只有英文)+
+    // 别名码→主码映射(批次 3:picker 单入口后,旧保存码/官方变体码解析)
     if (browse && browse.schools && !this._catByCode) {
       const m = {};
+      const aliases = {};
       for (const sch of browse.schools) {
-        for (const p of sch.programmes) m[p.programme_code] = p;
+        for (const p of sch.programmes) {
+          m[p.programme_code] = p;
+          for (const a of p.alias_codes || []) aliases[a] = p.programme_code;
+        }
       }
       this._catByCode = m;
+      this._aliasToMain = aliases;
     }
 
     // 扁平 picker 列表：优先 browse 目录（全校 ~107），否则回退 planning 3 专业
@@ -1165,6 +1171,8 @@ Page({
             has_full_planning: !!p.has_full_planning || knownFull,
             school: p.school || (known && known.school) || "",
             name,
+            // 同专业在招变体/系列码(BSCHCOMPF3、BSSCHWSJ1…):单入口后靠它可搜
+            aliases: (p.alias_codes || []).join(" "),
             // 完整规划挂徽章;停招专业挂灰标;其余不挂
             badge: (p.has_full_planning || knownFull) ? text.catalogueTagFull
               : (p.discontinued ? text.catalogueTagDiscontinued : ""),
@@ -1183,7 +1191,10 @@ Page({
     this._pickerList = pickerList;
 
     // 选中优先级：手动选 > 已保存(须完整规划专业) > 默认
-    const saved = this._userProgrammeCode;
+    // 已保存码若已折叠为变体(BNHGJ1→BNHGJ 等),解析到主码防静默回退默认
+    const saved = this._aliasToMain
+      ? (this._aliasToMain[this._userProgrammeCode] || this._userProgrammeCode)
+      : this._userProgrammeCode;
     // 账户存的专业即采用（含 catalogue，会进目录视图）；不再只认完整规划专业，
     // 否则选了 catalogue 专业下次会被静默回退到 DSAI（"选了没记住"的根因）
     const savedValid = saved && pickerList.some((p) => p.code === saved);
@@ -1204,7 +1215,7 @@ Page({
       const gmap = new Map();
       for (const p of pickerList) {
         if (pq) {
-          const hay = `${p.name} ${p.code} ${p.school || ""}`.toLowerCase();
+          const hay = `${p.name} ${p.code} ${p.aliases || ""} ${p.school || ""}`.toLowerCase();
           if (!hay.includes(pq)) continue;
         }
         if (!gmap.has(p.school)) gmap.set(p.school, []);

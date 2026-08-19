@@ -23,6 +23,13 @@ let _CATALOGUE_COURSES = {}; // cache: programme_code -> CatalogueCoursesRespons
 let _catalogueOnly = false; // true when the selected programme has no planning data
 let _programmeQuery = ""; // programme picker search query (web)
 let _programmeSearchOpen = false; // programme picker dropdown open (web)
+// 变体/系列码 → 主码(批次 3 picker 单入口):旧保存码解析 + 选择器高亮
+let _ALIAS_TO_MAIN = {};
+
+/** Fold a variant/admit code (BNHGJ1, BSCHCOMPF3…) to its picker main code. */
+function _resolveProgrammeCode(code) {
+  return _ALIAS_TO_MAIN[code] || code;
+}
 
 // ── Programmes (fetched from /courses/programmes; backend programmes.py is the single source of truth) ─
 function _adaptProgramme(p) {
@@ -63,7 +70,16 @@ async function _loadProgrammes() {
       _PROGRAMMES[p.code] = _adaptProgramme(p);
     }
     if (data.default_code) _defaultProgrammeCode = data.default_code;
-    if (cat && Array.isArray(cat.schools)) _CATALOGUE = { schools: cat.schools };
+    if (cat && Array.isArray(cat.schools)) {
+      _CATALOGUE = { schools: cat.schools };
+      const m = {};
+      for (const s of cat.schools) {
+        for (const p of s.programmes) {
+          for (const a of p.alias_codes || []) m[a] = p.programme_code;
+        }
+      }
+      _ALIAS_TO_MAIN = m;
+    }
   } catch (err) {
     // keep _PROGRAMMES empty; _loadData surfaces a load error downstream
   }
@@ -564,7 +580,9 @@ function _filteredProgrammeGroups(query) {
       if (!q) return true;
       const known = _PROGRAMMES[p.programme_code];
       const name = known ? programmeName(known, lang) : p.programme_name;
+      const aliasHit = (p.alias_codes || []).some((a) => a.toLowerCase().includes(q));
       return (
+        aliasHit ||
         name.toLowerCase().includes(q) ||
         (p.programme_code || "").toLowerCase().includes(q) ||
         (g.school || "").toLowerCase().includes(q)
@@ -1694,6 +1712,8 @@ async function _renderCatalogue(container) {
 
 async function _loadData() {
   await _loadProgrammes();
+  // 旧保存码可能是已折叠的变体(BNHGJ1→BNHGJ):先解析到主码再判定归属
+  _programmeCode = _resolveProgrammeCode(_programmeCode);
   if (!_programme) {
     const inCat = _CATALOGUE.schools.some((s) =>
       s.programmes.some((p) => p.programme_code === _programmeCode));
@@ -1729,7 +1749,7 @@ async function _loadData() {
       try {
         const user = await api.get("/users/me");
         if (user.programme_code && _PROGRAMMES[user.programme_code]) {
-          _programmeCode = user.programme_code;
+          _programmeCode = _resolveProgrammeCode(user.programme_code);
           _programme = _PROGRAMMES[_programmeCode];
           _catalogueOnly = false;
           localStorage.setItem("hkmu_programme", _programmeCode);

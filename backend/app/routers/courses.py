@@ -12,8 +12,8 @@ from ..models import (
     GECourseInfoOut,
 )
 from ..data.programmes import (
-    PROGRAMMES, DEFAULT_PROGRAMME_CODE, get_programme, DISCONTINUED_CODES,
-    PROGRAMME_ALIASES,
+    PROGRAMMES, PROGRAMME_ALIASES, PROGRAMME_SERIES_HINTS,
+    DEFAULT_PROGRAMME_CODE, get_programme, DISCONTINUED_CODES,
 )
 from ..data.ge_courses import (
     GE_FIELD_ORDER, PROGRAMME_GE_FIELDS, ge_courses_for, ge_course_by_id,
@@ -141,6 +141,9 @@ class CatalogueProgrammeOut(BaseModel):
     course_count: int
     has_full_planning: bool
     discontinued: bool = False
+    # 同专业的在招变体/系列码(BSCHCOMPF3、BSSCHWSJ1/2/3 等):picker 单入口后,
+    # 官方码与目录主码不一致的学生靠它搜到唯一入口、旧保存码靠它解析到主码
+    alias_codes: list[str] = Field(default_factory=list)
 
 
 class CatalogueSchoolGroupOut(BaseModel):
@@ -593,17 +596,27 @@ async def list_programmes():
 # NOTE: these two /catalogue routes MUST stay before @router.get("/{course_id}")
 # below — otherwise FastAPI captures "catalogue" as a course_id path param.
 # Catalogue responses are static reference data seeded from HKMU's public PDFs
-# (107 programmes / ~4700 courses) — read on every planner open, written only
+# (~98 programmes / ~4700 courses) — read on every planner open, written only
 # by a re-seed. Cache 10 min per instance so the hot path skips Postgres.
 _CATALOGUE_CACHE = TTLCache(ttl_seconds=600, max_entries=128)
+
+# 主码 → 在招变体/系列码(批次 3:picker 单入口后供搜索与旧保存码解析)
+_ALIASES_OF: dict[str, list[str]] = {}
+for _variant, _main in PROGRAMME_ALIASES.items():
+    _ALIASES_OF.setdefault(_main, []).append(_variant)
+for _main, _series in PROGRAMME_SERIES_HINTS.items():
+    _ALIASES_OF.setdefault(_main, []).extend(_series)
+
+
 @router.get("/catalogue/programmes", response_model=CatalogueProgrammesResponse)
 async def list_catalogue_programmes():
     """All programmes with an official course catalogue (public, no auth).
 
     Returns every HKMU programme extracted from the public Programme
-    Requirements PDFs, grouped by school. ``has_full_planning`` marks the few
-    programmes (currently DSAI) that additionally carry graduation-planning
-    data via /programmes + /graduation-status.
+    Requirements PDFs, grouped by school (variant/umbrella codes folded to one
+    entry per programme — 批次 3 picker 单入口). ``has_full_planning`` marks
+    the programmes that additionally carry graduation-planning data via
+    /programmes + /graduation-status.
     """
     cached = _CATALOGUE_CACHE.get("programmes")
     if cached is not None:
@@ -629,6 +642,7 @@ async def list_catalogue_programmes():
             course_count=r["course_count"],
             has_full_planning=r["has_full_planning"],
             discontinued=r["programme_code"] in DISCONTINUED_CODES,
+            alias_codes=sorted(_ALIASES_OF.get(r["programme_code"], [])),
         ))
     resp = CatalogueProgrammesResponse(
         default_programme_code=DEFAULT_PROGRAMME_CODE,

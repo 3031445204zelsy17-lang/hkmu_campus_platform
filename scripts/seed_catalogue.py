@@ -26,7 +26,7 @@ from collections import Counter, defaultdict
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
-from app.data.programmes import PROGRAMMES  # noqa: E402  — pure dict, safe to import
+from app.data.programmes import PROGRAMMES, PROGRAMME_ALIASES  # noqa: E402  — pure dicts, safe to import
 from dotenv import load_dotenv  # noqa: E402
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", "backend", ".env"))
@@ -43,9 +43,12 @@ SKILL_MD = os.path.join(
 #   |   |   +-- Group Name/      (group:   ends '/', no '[代码:]', no '(CODE)/')
 #   |   |   |   +-- Name [代码: X] [学分: N]   (course leaf)
 _COURSE_RE = re.compile(r"\[代码: (.+?)\]\s*\[学分: (\d+)\]")
-_PROG_RE = re.compile(r"^\|\s+\+-- .+\(([A-Z0-9]{4,})\)/\s*$")
+# 头部码 token 允许复合形式(BSSCHWSJ_SCHJ-AGS 伞码_子计划,批次 3):不带 _ 的部分
+# 归一为专业码(BSSCHWSJ),复合 token 本身不进表。变体码(BNHGJ1 等)经
+# PROGRAMME_ALIASES 折到主码,picker 单入口(指南 9 对 + 2 变体)。
+_PROG_RE = re.compile(r"^\|\s+\+-- .+\(([A-Z][A-Z0-9]*(?:[_-][A-Z0-9]+)*)\)/\s*$")
 _SCHOOL_RE = re.compile(r"^\+-- (.+)/\s*$")
-_PROGCLOSE_RE = re.compile(r"\([A-Z0-9]{4,}\)/\s*$")
+_PROGCLOSE_RE = re.compile(r"\([A-Z][A-Z0-9]*(?:[_-][A-Z0-9]+)*\)/\s*$")
 
 _SCHOOL_ORDER = {
     "Lee Shau Kee School of Business and Administration": 1,
@@ -199,7 +202,14 @@ def parse_skill_md(path: str):
         mp = _PROG_RE.match(line)
         if mp:
             code = mp.group(1)
-            prog_name = re.sub(r"\s*\([A-Z0-9]{4,}\)/?\s*$", "", _after_plus(line)).strip()
+            # 伞码复合 token(BSSCHWSJ_SCHJ-AGS / BSSCHWSJ-SCHJ-PPA)→ 专业码取
+            # 首个 _/- 前段;变体码(BNHGJ1 / BSCHCEF3 …)→ 折到主码。
+            if "_" in code or "-" in code:
+                code = re.split(r"[_-]", code, maxsplit=1)[0]
+            code = PROGRAMME_ALIASES.get(code, code)
+            prog_name = re.sub(
+                r"\s*\([A-Z][A-Z0-9]*(?:[_-][A-Z0-9]+)*\)/?\s*$", "", _after_plus(line)
+            ).strip()
             if code not in programmes:
                 programmes[code] = {
                     "programme_code": code,
@@ -245,6 +255,10 @@ def parse_skill_md(path: str):
         known = PROGRAMMES.get(code)
         if known:
             names = known.get("name", {})
+            # PROGRAMMES 侧名字是人工核准的权威串(伞码段标题会带专修后缀),
+            # 三语统一以它为准
+            if names.get("en"):
+                prog["programme_name"] = names["en"]
             prog["name_zh_cn"] = names.get("zh-CN")
             prog["name_zh_tw"] = names.get("zh-TW")
             prog["has_full_planning"] = not known.get("coming_soon", False)
