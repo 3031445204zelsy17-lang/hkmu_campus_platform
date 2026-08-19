@@ -13,10 +13,13 @@ from app.data.programme_rules import (  # noqa: E402 — 54-programme rules (T33
     PROGRAMME_RULES,
     RULE_COURSE_CREDITS,
 )
-from app.data.programme_year_map import (  # noqa: E402 — 批次 2 补池/课名(advice sheet)
+from app.data.programmes import PROGRAMMES  # noqa: E402 — 批次 3 骨架实体名
+from app.data.programme_year_map import (  # noqa: E402 — 批次 2/3 补池/种池/课名
     ADDITION_CREDITS,
     COURSE_NAME_BACKFILL,
     POOL_ADDITIONS,
+    POOL_SEED_CREDITS,
+    PROGRAMME_POOL_SEED,
 )
 from passlib.context import CryptContext
 from dotenv import load_dotenv
@@ -239,6 +242,44 @@ async def seed():
                         additions_inserted += 1
                     except Exception as e:
                         print(f"  skip addition {cid}: {e}")
+
+        # ── 批次 3 骨架实体种池(BSSCHWSJ 类)──────────────────────────────────
+        # 无 Requirements 规则的实体,课池来自官方 advice 行(PROGRAMME_POOL_SEED),
+        # courses 行同源进表;学分取官方行值(POOL_SEED_CREDITS)。幂等同上。
+        seed_inserted = 0
+        for prog_code, cats in PROGRAMME_POOL_SEED.items():
+            entry = PROGRAMMES.get(prog_code) or PROGRAMME_RULES.get(prog_code) or {}
+            entry_name = entry.get("name", {}).get("en", prog_code)
+            for cat_key, courses in cats.items():
+                for cid in courses:
+                    if cid in existing_ids:
+                        continue
+                    name = COURSE_NAME_BACKFILL.get(cid) or catalogue.get(cid, (None, None))[0]
+                    if not name:
+                        name = re.sub(r"^([A-Z]{2,5})(\d{4})", r"\1 \2", cid)
+                    credits = POOL_SEED_CREDITS.get(cid)
+                    if credits is None:
+                        credits = ADDITION_CREDITS.get(cid)
+                    if credits is None:
+                        credits = CREDIT_FIXES.get(cid)
+                    if credits is None:
+                        credits = catalogue.get(cid, (None, None))[1]
+                    if credits is None:
+                        credits = 3
+                    try:
+                        await conn.execute(
+                            """INSERT INTO courses (id, code, name, credits, category, year, semester, prerequisites, description)
+                               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                               ON CONFLICT (id) DO NOTHING""",
+                            cid, name, name, credits, cat_key,
+                            _level_year(cid), "autumn", "[]",
+                            f"{entry_name} · {cat_key} · advice sheet",
+                        )
+                        existing_ids.add(cid)
+                        seed_inserted += 1
+                    except Exception as e:
+                        print(f"  skip pool-seed {cid}: {e}")
+        print(f"  pool-seed inserted: {seed_inserted}")
 
         # 课名回填:裸码课(名字 = 空格化课码,seed T34 的兜底产物)换成官方
         # advice sheet 标题列。只动裸码行,不覆盖任何真名(catalogue/GE/手工表)。

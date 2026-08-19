@@ -148,6 +148,55 @@ PROGRAMMES = {
         },
         "template": {},
     },
+
+    # ── Social Sciences (generic, five streams) — 批次 3 ──────────────────
+    # BSSCHWSJ 是 HKMU 社科大类学位(官方:「Bachelor of Social Sciences
+    # with Honours — New Programme from 2023 Autumn」,五大 Stream:I AGS /
+    # II ECON / III AS(再分 Criminology/Cultural&Heritage/Social Policy&
+    # Youth 三 specialization)/ IV GCS / V PPA;源 = 招生列表注脚 12 +
+    # hkmu.edu.hk/ss/programmes/undergraduate/bachelor-of-social-sciences-
+    # with-honours-with-streams/,繁中官名「社會科學榮譽學士」)。2023 秋重组
+    # 起 Year-1 统一大类入学(JS9009 / BSSCHWSJ1),学年末选 Stream,毕业证
+    # 按 Stream 授名 —— 原 5 个独立码(BSSCHAGSJ/ECHJ/GCSJ/J/PAJ)随之停招
+    # (见 DISCONTINUED_CODES 批次 3 注)。advice sheet 按 BSSCHWSJ1/2/3 三套
+    # 入学系列出 57 份年表(covers/BSSCHWSJ.pdf 封面:「Programme Code:
+    # BSSCHWSJ1 / BSSCHWSJ2 / BSSCHWSJ3」)。
+    # 此前 skill.md 目录树把 8 个伞码段(BSSCHWSJ_SCHJ-AGS 等)误当组名,
+    # 463 行官方课整段挂到前一个专业(BFAHIDDAJ)名下,且专业本体不在
+    # PROGRAMMES → 不可搜不可规划(复核报告声明 12)。批次 3 建实体:课池由
+    # 生成器从官方 advice sheet 行(my_rows.json, type C/E/ENG)按「C(含
+    # C∩E,非 E 口径)→core / E→elective / ENG→english / UNI 前缀→
+    # university-core」灌入(PROGRAMME_POOL_SEED,programmes.py import 时并入)。
+    # ⚠️ min_credits 全 0 = 本实体不裁毕业学分:各 Stream 构成互不相同
+    # (官方 Requirements PDF 3CRU_FTU_AS_BSSCHWSJ_{SCHJ-AGS,SCHJ-AS,
+    # SCHJ-PPA}_202607_V5,Y1 入学:AGS=core72+ME9+EA15+UC9+UE6+GE9,
+    # AS=core69+ME12+EA15+UC9+UE6+GE9,PPA=core81+ME3-6+EA12-15+UC9+UE6+
+    # GE6),伞形单实体无法断言单一分档;各 Stream 分档 + 1000-level≤30 /
+    # 3000≥24 / 4000≥24 层级约束 + PPA FYRP 双路径,归批次 4 规则建模。
+    # total_credits=120 依据 = 上述官方 PDF Y1 入学「obtain 120 credit-units」
+    # (三个 Stream 恒和验证;Y2/Y3 入学为 93/66)。
+    "BSSCHWSJ": {
+        "code": "BSSCHWSJ",
+        "name": {
+            "en": "Bachelor of Social Sciences with Honours",
+            "zh-CN": "社会科学荣誉学士",
+            "zh-TW": "社會科學榮譽學士",
+        },
+        "school": "Wu Jieh Yee School of Arts and Social Sciences",
+        "total_credits": 120,
+        # 骨架实体标记:build_programme_year_map.py 据此为该实体生成
+        # PROGRAMME_POOL_SEED(官方 advice 行种池),本文件 import 时并回
+        "pool_seed": True,
+        "categories": {
+            "core": {"min_credits": 0, "color": "blue", "courses": []},
+            "elective": {"min_credits": 0, "color": "purple", "courses": []},
+            "project": {"min_credits": 0, "color": "amber", "courses": []},
+            "english": {"min_credits": 0, "color": "emerald", "courses": []},
+            "general-ed": {"min_credits": 0, "color": "pink", "pool": "ge", "pick_n": 2, "courses": []},
+            "university-core": {"min_credits": 0, "color": "indigo", "courses": []},
+        },
+        "template": {},
+    },
 }
 
 # ── Auto-generated graduation rules for the other 54 FT undergraduate
@@ -166,7 +215,7 @@ PROGRAMMES.update(PROGRAMME_RULES)
 # (GIP 系列 / UNI3002BEW 外溢课 / STAMJ 菜单页课等,清单与口径见
 # programme_year_map.py 的 POOL_ADDITIONS)。在别名复制前并入,别名专业同步生效。
 # 幂等:courses 列表按去重追加,重复调用不会重复插入(测试用)。
-from .programme_year_map import POOL_ADDITIONS  # noqa: E402
+from .programme_year_map import POOL_ADDITIONS, PROGRAMME_POOL_SEED  # noqa: E402
 
 
 def _apply_pool_additions(additions: dict) -> None:
@@ -186,6 +235,8 @@ def _apply_pool_additions(additions: dict) -> None:
 
 
 _apply_pool_additions(POOL_ADDITIONS)
+# 批次 3 骨架实体种池(BSSCHWSJ:官方 advice 行 type 分类),幂等同上
+_apply_pool_additions(PROGRAMME_POOL_SEED)
 
 # ── 同专业变体码别名 ─────────────────────────────────────────────────
 # 官方 Requirements PDF 每个专业只印一个主码,但课程目录 PDF 多收了 cohort
@@ -203,12 +254,24 @@ PROGRAMME_ALIASES = {
     "BSSCHPJ": "BSSCHPWSJ",
     "HDNGF1": "HDNGF",
     "HDNMF1": "HDNMF",
+    # 批次 3:BSCHCOMPF3 = BSc (Hons) Computing 的 Y3 入学(senior entry)在招
+    # 码——官方指南 57 封面之一(BSCHCOMPF3.pdf,内文仅此一码);4 年制裸码
+    # BSCHCOMPF 的 Requirements 规则(63cr,FTU_ST_BSCHCOMPF_202403_V1)同样
+    # 适用。年份映射侧 my_rows 的 BSCHCOMPF3 17 行批次 2 已经裸码回退灌在
+    # BSCHCOMPF 名下,此处补上规划入口。
+    "BSCHCOMPF3": "BSCHCOMPF",
 }
 for _alias, _main in PROGRAMME_ALIASES.items():
     if _alias not in PROGRAMMES and _main in PROGRAMMES:
         _entry = dict(PROGRAMMES[_main])
         _entry["code"] = _alias
         PROGRAMMES[_alias] = _entry
+
+# 伞形专业的官方入学系列码(covers/ 封面「Programme Code」行原样):非变体
+# (同专业同规则),仅作 picker 搜索别名与旧保存码解析提示,不复制规则实体。
+PROGRAMME_SERIES_HINTS = {
+    "BSSCHWSJ": ["BSSCHWSJ1", "BSSCHWSJ2", "BSSCHWSJ3"],
+}
 
 # ── 停招专业(2026-08-17 子代理核查:全部不在 2026/27 招生表、官方专业页 404、
 # 站内搜索无;毕业要求只剩旧 5 学分制 Prog_req_{CODE}.pdf,不建 3cru 规则)──
