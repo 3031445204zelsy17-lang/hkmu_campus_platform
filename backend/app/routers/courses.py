@@ -20,6 +20,10 @@ from ..data.ge_courses import (
 )
 from ..data.ge_catalog_enrichment import GE_SCHOOL_NAMES
 from ..data.programme_year_map import PROGRAMME_GE_SLOTS, PROGRAMME_YEAR_MAP
+from ..data.programme_rules_extra import (
+    EXCLUDED_COMBINATIONS, MHFA_COURSES, MHFA_FROM_AY, THREE_CR_FROM_AY,
+    cohort_profile, excluded_conflicts, level_of_course, level_rules_for,
+)
 from ..services.cache import TTLCache
 from ..services.content_security import audit_user_text, SCENE_COMMENT
 from pydantic import BaseModel, Field, field_validator
@@ -101,11 +105,21 @@ class ProgrammeOut(BaseModel):
     # (用户 schedule 覆盖仍最高优先)。ge_slots = 官方 GE 占位行(无课码)。
     placements: dict[str, dict] = {}
     ge_slots: list[dict] = []
+    # 批次 4 层级学分约束(全校 30/24/24 + per-programme scoped 附加;空列表 =
+    # 该专业豁免,如 HD)。列表项 {max?, min?, scope_categories?, rule_id}。
+    # 前端本地镜像毕业计算用同一份数据。
+    level_rules: list = []
+    # WSJ 类伞形专业的 Stream 子选择器数据(picker 单入口后的二次细化):
+    # [{code, key, name}];非伞形专业为空。
+    streams: list[dict] = []
 
 
 class ProgrammeCatalogueOut(BaseModel):
     default_code: str
     programmes: list[ProgrammeOut]
+    # 批次 4 全校规则层(前端本地镜像与后端 _compute_graduation 同源):
+    # 互斥组合、MHFA 自修课、cohort 学制分界。详见 programme_rules_extra.py。
+    rule_extras: dict = {}
 
 
 # ── Course catalogue (read-only official course lists) ───────────────────────
@@ -195,6 +209,11 @@ class GraduationStatusOut(BaseModel):
     categories: list[CategoryProgressOut]
     recommendations: list[RecommendedCourseOut]
     all_categories_satisfied: bool = False
+    # 批次 4 规则层:cohort 闸(entry_term → 学制 + MHFA 适用;5cr 老 cohort
+    # 由前端展示「以官方 5cr 版文件为准」提示,不硬拦截)与互斥冲突提示
+    # (警告不拦截)。老客户端忽略新字段不受影响。
+    cohort: dict = {}
+    conflicts: list[dict] = []
 
 
 class GECourseOut(BaseModel):
@@ -390,9 +409,12 @@ async def list_courses(
 # otherwise ``programmes`` / ``graduation-status`` would be captured as a course_id.
 
 def _placements_for(programme_code: str) -> tuple[dict[str, dict], list[dict]]:
-    """按专业取官方年份映射(批次 2)。别名码归一到主码;未知专业返回空
-    (前端回退 courses 表全局 year/semester)。"""
+    """按专业取官方年份映射(批次 2)。别名码归一到主码;WSJ Stream 限定码
+    (BSSCHWSJ-AGS,批次 4)回退伞码映射(advice sheet 三套系列全 Stream 共用);
+    未知专业返回空(前端回退 courses 表全局 year/semester)。"""
     main = PROGRAMME_ALIASES.get(programme_code, programme_code)
+    if main not in PROGRAMME_YEAR_MAP:
+        main = main.split("-")[0]
     return PROGRAMME_YEAR_MAP.get(main) or {}, PROGRAMME_GE_SLOTS.get(main) or []
 
 
@@ -418,6 +440,8 @@ def _programme_to_out(code: str, prog: dict) -> ProgrammeOut:
         template=prog.get("template", {}),
         placements=placements,
         ge_slots=ge_slots,
+        level_rules=level_rules_for(code),
+        streams=list(prog.get("streams", [])),
     )
 
 
@@ -460,18 +484,27 @@ def _category_satisfied(cat: dict, earned: int, completed_count: int) -> bool:
 
 
 def _compute_graduation(
-    prog: dict, course_rows: dict, progress: dict
+    prog: dict, course_rows: dict, progress: dict,
+    entry_term: str | None = None,
 ) -> tuple[list[CategoryProgressOut], int, list[RecommendedCourseOut], bool]:
     """Mirror of the web client's graduation math.
 
     course_rows: {course_id: {"id","code","name","credits","prerequisites"}}
     progress:    {course_id: status}
+    entry_term:  users.entry_term("2025-autumn"/"2025-spring");None = 旧调用
+                 (无 cohort 判定,MHFA/学制不注入——存量测试与未填用户)。
     Returns (categories, total_earned, recommendations, all_satisfied).
 
     total_earned is de-duplicated across categories: a completed course's
     credits count once even if (erroneously) listed in multiple categories,
     so the grand total never exceeds the student's real earned credits.
     Per-category earned_credits still reflect that category's own pool.
+
+    批次 4 规则层以伪分类追加(不进静态 categories,前端免费渲染):
+      - "mhfa":2025/26+ Y1 入学 cohort 注入,完成 NURS1050 任一班别即满足,
+        0 学分但不满足则 all_satisfied=False(影响毕业判定);
+      - "level-{n}":官方层级学分约束(1000 级上限 = cap 语义,3000/4000
+        级下限 = min 语义),5cr 老 cohort 不套 3cr 层约束。
     """
     categories: list[CategoryProgressOut] = []
     recs: list[RecommendedCourseOut] = []
@@ -576,6 +609,80 @@ def _compute_graduation(
                 ))
                 recommended_here += 1
 
+    # ── 批次 4 规则层:MHFA cohort 注入 + 层级学分约束(伪分类)──────────
+    flags = cohort_profile(entry_term)
+
+    if flags["mhfa_required"] and MHFA_COURSES:
+        done = [c for c in MHFA_COURSES if progress.get(c) == "completed"]
+        mhfa_sat = bool(done)
+        if not mhfa_sat:
+            all_satisfied = False
+        categories.append(CategoryProgressOut(
+            key="mhfa",
+            min_credits=0,
+            earned_credits=0,
+            color="rose",
+            pick_n=1,
+            completed_count=len(done),
+            total_courses=len(MHFA_COURSES),
+            satisfied=mhfa_sat,
+            missing_course_ids=[] if mhfa_sat else list(MHFA_COURSES),
+        ))
+
+    # 层级学分约束:全校默认(30/24/24)+ per-programme scoped 附加(WSJ
+    # Stream 的 ME+EA 内 ≥N@4000/3000 官方脚注)。5cr 老 cohort 不套 3cr 层约束。
+    if flags["credit_system"] != "5cr":
+        for rule in level_rules_for(prog.get("code", "")):
+            scope_cats = rule.get("scope_categories")
+            if scope_cats:
+                # 作用域规则:只聚合 scope 分类池内已完成的课
+                pool_ids = {
+                    cid
+                    for ck in scope_cats
+                    for cid in prog.get("categories", {}).get(ck, {}).get("courses", [])
+                }
+                agg = {cid: cr for cid, cr in completed_global.items() if cid in pool_ids}
+            else:
+                agg = completed_global
+            earned_by_level: dict[int, int] = {}
+            for cid, credits in agg.items():
+                lvl = level_of_course(cid)
+                if lvl:
+                    earned_by_level[lvl] = earned_by_level.get(lvl, 0) + credits
+            suffix = "-major" if scope_cats else ""
+            for lvl, cap in sorted(rule.get("max", {}).items()):
+                lvl_n, cap_n = int(lvl), int(cap)
+                earned = earned_by_level.get(lvl_n, 0)
+                ok = earned <= cap_n
+                if not ok:
+                    all_satisfied = False
+                categories.append(CategoryProgressOut(
+                    key=f"level-{lvl_n}{suffix}",
+                    min_credits=cap_n,
+                    earned_credits=earned,
+                    color="rose",
+                    completed_count=0,
+                    total_courses=0,
+                    satisfied=ok,
+                    missing_course_ids=[],
+                ))
+            for lvl, floor in sorted(rule.get("min", {}).items()):
+                lvl_n, floor_n = int(lvl), int(floor)
+                earned = earned_by_level.get(lvl_n, 0)
+                ok = earned >= floor_n
+                if not ok:
+                    all_satisfied = False
+                categories.append(CategoryProgressOut(
+                    key=f"level-{lvl_n}{suffix}",
+                    min_credits=floor_n,
+                    earned_credits=earned,
+                    color="indigo",
+                    completed_count=0,
+                    total_courses=0,
+                    satisfied=ok,
+                    missing_course_ids=[],
+                ))
+
     total_earned = sum(completed_global.values())
     return categories, total_earned, recs, all_satisfied
 
@@ -590,6 +697,16 @@ async def list_programmes():
     programmes = [_programme_to_out(code, prog) for code, prog in PROGRAMMES.items()]
     return ProgrammeCatalogueOut(
         default_code=DEFAULT_PROGRAMME_CODE, programmes=programmes,
+        rule_extras={
+            "excluded_combinations": [
+                {"courses": g["courses"], "rule_id": g["rule_id"],
+                 "programmes": g.get("programmes", [])}
+                for g in EXCLUDED_COMBINATIONS
+            ],
+            "mhfa_courses": list(MHFA_COURSES),
+            "mhfa_from_ay": MHFA_FROM_AY,
+            "three_cr_from_ay": THREE_CR_FROM_AY,
+        },
     )
 
 
@@ -732,11 +849,15 @@ async def get_graduation_status(
     """
     async with get_db() as db:
         code = programme_code
-        if not code:
-            row = await db.fetchrow(
-                "SELECT programme_code FROM users WHERE id = $1", user["id"],
-            )
-            code = row["programme_code"] if row else None
+        # 批次 4:cohort(MHFA/学制闸)始终读用户档案的 entry_term;
+        # programme_code 仍按 查询参数 > 档案 > 默认 解析
+        row = await db.fetchrow(
+            "SELECT programme_code, entry_term FROM users WHERE id = $1",
+            user["id"],
+        )
+        entry_term = row["entry_term"] if row else None
+        if not code and row:
+            code = row["programme_code"]
         prog = get_programme(code)
         resolved_code = prog["code"]
         coming_soon = prog.get("coming_soon", False)
@@ -777,7 +898,9 @@ async def get_graduation_status(
             recommendations=[],
         )
 
-    categories, total_earned, recs, all_satisfied = _compute_graduation(prog, course_rows, progress)
+    categories, total_earned, recs, all_satisfied = _compute_graduation(
+        prog, course_rows, progress, entry_term=entry_term,
+    )
     total_required = prog.get("total_credits", 0)
     pct = min(100.0, total_earned / total_required * 100) if total_required > 0 else 0.0
 
@@ -790,6 +913,8 @@ async def get_graduation_status(
         categories=categories,
         recommendations=recs,
         all_categories_satisfied=all_satisfied,
+        cohort=cohort_profile(entry_term),
+        conflicts=excluded_conflicts(progress, resolved_code),
     )
 
 

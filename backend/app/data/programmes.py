@@ -238,6 +238,16 @@ _apply_pool_additions(POOL_ADDITIONS)
 # 批次 3 骨架实体种池(BSSCHWSJ:官方 advice 行 type 分类),幂等同上
 _apply_pool_additions(PROGRAMME_POOL_SEED)
 
+# ── 批次 4:WSJ 五 Stream 实体(规则建模,programme_rules_extra.py)─────────
+# BSSCHWSJ 伞码骨架(min_credits=0,「未选 Stream」浏览态)之上,五个 Stream
+# 各建独立规则实体(BSSCHWSJ-AGS 等,Y1 入学 120cr 真实分档,证据与口径见
+# programme_rules_extra.py 的 WSJ_STREAM_PROGRAMMES 注)。伞码挂 streams 元数据
+# 供 planner 子选择器;Stream 限定码持久化进 users.programme_code。
+from .programme_rules_extra import WSJ_STREAM_META, WSJ_STREAM_PROGRAMMES  # noqa: E402
+
+PROGRAMMES.update(WSJ_STREAM_PROGRAMMES)
+PROGRAMMES["BSSCHWSJ"]["streams"] = WSJ_STREAM_META
+
 # ── 同专业变体码别名 ─────────────────────────────────────────────────
 # 官方 Requirements PDF 每个专业只印一个主码,但课程目录 PDF 多收了 cohort
 # 变体码(J1/F3 等入学批次编码差异)——目录里同名专业两行,一行有毕业规则
@@ -269,8 +279,15 @@ for _alias, _main in PROGRAMME_ALIASES.items():
 
 # 伞形专业的官方入学系列码(covers/ 封面「Programme Code」行原样):非变体
 # (同专业同规则),仅作 picker 搜索别名与旧保存码解析提示,不复制规则实体。
+# 批次 4:BSSCHWSJ 追加五个 Stream 限定码(BSSCHWSJ-AGS 等,独立规则实体,
+# 见 programme_rules_extra.py)——picker 折叠回伞码单入口显示,但 graduation
+# 状态按 Stream 限定码解析,不会被折丢。
 PROGRAMME_SERIES_HINTS = {
-    "BSSCHWSJ": ["BSSCHWSJ1", "BSSCHWSJ2", "BSSCHWSJ3"],
+    "BSSCHWSJ": [
+        "BSSCHWSJ1", "BSSCHWSJ2", "BSSCHWSJ3",
+        "BSSCHWSJ-AGS", "BSSCHWSJ-ECON", "BSSCHWSJ-AS",
+        "BSSCHWSJ-GCS", "BSSCHWSJ-PPA",
+    ],
 }
 
 # ── 停招专业(2026-08-17 子代理核查:全部不在 2026/27 招生表、官方专业页 404、

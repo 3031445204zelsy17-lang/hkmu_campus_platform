@@ -86,6 +86,14 @@
       <view class="planner-title-row">
         <text class="planner-title">{{programmeName}}</text>
       </view>
+      <!-- 批次 4:伞形专业 Stream 子选择器(BSSCHWSJ 五选一,毕业分档各不同) -->
+      <view wx:if="{{streamsView.length}}" class="stream-pills">
+        <text class="stream-pills-label">{{text.streamsLabel}}</text>
+        <view class="stream-pill {{item.active ? 'stream-pill-on' : ''}}"
+              wx:for="{{streamsView}}" wx:key="code"
+              data-code="{{item.code}}" hover-class="stream-pill-hover"
+              bindtap="onSelectStream">{{item.label}}</view>
+      </view>
       <!-- T08: 距毕业学分 + 进度行(· 毕业年)；无 status 时回退原 copy 分支 -->
       <block wx:if="{{heroStat}}">
         <view class="hero-remain">{{heroStat.remainText}}</view>
@@ -110,6 +118,12 @@
       </view>
     </view>
     <view wx:elif="{{loggedIn && !comingSoon && viewMode==='planning'}}" class="planner-score">{{percent}}%</view>
+  </view>
+
+  <!-- 批次 4 cohort 闸:5 学分制老 cohort 提示(不硬拦截,以官方 5cr 版为准) -->
+  <view wx:if="{{cohortNotice}}" class="cohort-notice">
+    <text class="cohort-notice-ic">!</text>
+    <text class="cohort-notice-txt">{{cohortNotice}}</text>
   </view>
 
   <!-- 加载中 -->
@@ -204,6 +218,11 @@
 
     <!-- 规划视图：分类竖条 + 建议 + 年份 seg + 该学年两学期课表 -->
     <block wx:if="{{viewSeg==='plan'}}">
+      <!-- 批次 4:互斥组合冲突(警告不拦截;官方 Excluded combination 口径) -->
+      <view wx:if="{{conflictsView.length}}" class="conflict-panel">
+        <view class="conflict-title">{{text.conflictTitle}}</view>
+        <view wx:for="{{conflictsView}}" wx:key="line" class="conflict-line">{{item.line}}</view>
+      </view>
       <view class="web-panel">
         <view class="section-title">{{text.categoriesTitle}}</view>
         <!-- T09: 6 类竖条（2 列网格）；通识格点按开 GE 浮层 -->
@@ -213,8 +232,9 @@
             wx:key="key"
             class="cat-cell {{item.hasGePool ? 'cat-cell-ge' : ''}}"
             data-ge="{{item.hasGePool}}"
+            data-mhfa="{{item.isMhfa}}"
             bindtap="onCatCellTap"
-            hover-class="{{item.hasGePool ? 'cat-cell-hover' : 'none'}}"
+            hover-class="{{(item.hasGePool || item.isMhfa) ? 'cat-cell-hover' : 'none'}}"
           >
             <view class="cat-bar">
               <view class="cat-bar-fill cat-{{item.color}}" style="height: {{item.pct}}%"></view>

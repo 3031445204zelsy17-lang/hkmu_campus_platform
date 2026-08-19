@@ -732,10 +732,37 @@ Page({
 
   // ── GE 通识选择浮层（屏③）── 复用 programmeSearch 的全屏浮层范式 ──────
 
-  // T09: 分类格点按 — 仅通识格（有 GE 池）进 GE 选择浮层，其余格无动作
+  // T09: 分类格点按 — 仅通识格（有 GE 池）进 GE 选择浮层，其余格无动作;
+  // 批次 4:MHFA 格点按进课程详情页标记(自修课经 MyHKMU 自登记后自标)
   onCatCellTap(e) {
     if (e.currentTarget.dataset.ge) {
       this.onOpenGePicker();
+      return;
+    }
+    if (e.currentTarget.dataset.mhfa) {
+      wx.navigateTo({
+        url: "/pages/course-detail/course-detail?id=NURS1050NEF",
+      });
+    }
+  },
+
+  // 批次 4:伞形专业 Stream 切换(BSSCHWSJ 五选一)——限定码持久化进
+  // programme_code,毕业判定按 Stream 真实分档;伞码选择器入口不变
+  onSelectStream(e) {
+    const code = e.currentTarget.dataset.code;
+    if (!code || !this._catalogue) return;
+    const has = this._catalogue.programmes.some((p) => p.code === code);
+    if (!has) return;
+    this._selectedCode = code;
+    this._status = null;
+    this._emit();
+    if (this._user) {
+      request({
+        method: "PUT",
+        path: "/users/me",
+        data: { programme_code: code },
+        auth: true,
+      }).catch(() => {}).then(() => this._loadStatus());
     }
   },
 
@@ -1264,6 +1291,9 @@ Page({
       creditsSummary: "",
       categoriesView: [],
       recommendations: [],
+      streamsView: [],
+      conflictsView: [],
+      cohortNotice: "",
       heroCopy: "",
       viewSeg: this._viewTab,
       activeYear: 0,
@@ -1323,11 +1353,30 @@ Page({
 
     // ── 完整规划专业（DSAI）→ 既有仪表盘/课程流 ──
     const programmes = planning ? planning.programmes : [];
-    const prog = programmes.find((p) => p.code === entry.code) || programmes[0];
+    // 批次 4:Stream 限定码(BSSCHWSJ-AGS)精确优先——伞码 entry 仅作 picker
+    // 显示折号新址;saved/_selected 的未折叠码直接解析到 Stream 规则实体
+    const activeCode = (this._selectedCode
+      && programmes.some((p) => p.code === this._selectedCode))
+      ? this._selectedCode
+      : (this._userProgrammeCode
+          && programmes.some((p) => p.code === this._userProgrammeCode))
+        ? this._userProgrammeCode
+        : entry.code;
+    const prog = programmes.find((p) => p.code === activeCode) || programmes[0];
     view.programmeName = (prog && catalogueName(this._catByCode && this._catByCode[prog.code], locale))
       || (prog ? localizeName(prog.name, locale) : view.programmeName);
     view.programmeSchool = prog ? prog.school || "" : view.programmeSchool;
     view.comingSoon = prog ? !!prog.coming_soon : false;
+
+    // 批次 4:伞形专业的 Stream 子选择器(BSSCHWSJ 五 Stream,planning 载荷
+    // 的 streams 元数据);已选 Stream 高亮,点按切换并持久化限定码
+    view.streamsView = (prog && prog.streams && prog.streams.length)
+      ? prog.streams.map((s) => ({
+          code: s.code,
+          label: localizeName(s.name, locale),
+          active: prog.code === s.code,
+        }))
+      : [];
 
     // 仅当 status 属于当前选中专业时才用它（切专业后旧 status 自动失效）
     const status =
@@ -1342,6 +1391,18 @@ Page({
         earned: status.earned_credits,
         total: status.total_credits,
       });
+      // 批次 4 cohort 闸:5cr 老 cohort 横幅(不硬拦截,以官方 5cr 版为准)
+      if (status.cohort && status.cohort.credit_system === "5cr") {
+        view.cohortNotice = fillTemplate(text.cohort5crNotice, {
+          ay: status.cohort.ay || "",
+        });
+      }
+      // 批次 4 互斥冲突(警告不拦截;清单 per-sheet,后端已按专业 scope 过滤)
+      view.conflictsView = (status.conflicts || []).map((c) => ({
+        line: fillTemplate(text.conflictItem, {
+          courses: (c.marked || []).join(" + "),
+        }),
+      }));
       // T08: hero 绿渐变卡统计 —— 距毕业学分 + 进度行（有 entry_term 才拼毕业年）
       const gradSemLabel = studyInfo
         ? (studyInfo.gradSem === "spring" ? text.heroSemSpring : text.heroSemAutumn)
@@ -1360,16 +1421,32 @@ Page({
           total: status.total_credits,
         }) + (gradLabel ? " · " + gradLabel : ""),
       };
-      view.categoriesView = (status.categories || []).map((c) => ({
-        key: c.key,
-        label: text.categories[c.key] || c.key,
-        earned: c.earned_credits,
-        required: c.min_credits,
-        pct: categoryPercent(c.earned_credits, c.min_credits),
-        done: (c.earned_credits || 0) >= (c.min_credits || 0) && (c.min_credits || 0) > 0,
-        color: c.color,
-        hasGePool: c.key === "general-ed",
-      }));
+      view.categoriesView = (status.categories || []).map((c) => {
+        // 批次 4 伪分类标签:MHFA(cohort 注入)与层级约束行(level-N /
+        // level-N-major = WSJ Stream 的 ME+EA 内下限)
+        let label = text.categories[c.key] || c.key;
+        if (c.key === "mhfa") label = text.catMhfa;
+        else if (c.key.indexOf("level-") === 0) {
+          const parts = c.key.split("-");
+          label = parts[2] === "major"
+            ? fillTemplate(text.catLevelMajor, { n: parts[1] })
+            : fillTemplate(text.catLevel, { n: parts[1] });
+        }
+        const isPseudo = c.key === "mhfa" || c.key.indexOf("level-") === 0;
+        return {
+          key: c.key,
+          label,
+          earned: c.earned_credits,
+          required: c.min_credits,
+          pct: categoryPercent(c.earned_credits, c.min_credits),
+          // 伪分类(MHFA 0 学分/层级 cap)直接用后端 satisfied,不算学分不等式
+          done: isPseudo ? !!c.satisfied
+            : (c.earned_credits || 0) >= (c.min_credits || 0) && (c.min_credits || 0) > 0,
+          color: c.color,
+          hasGePool: c.key === "general-ed",
+          isMhfa: c.key === "mhfa",
+        };
+      });
       view.recommendations = (status.recommendations || []).map((r) => ({
         course_id: r.course_id,
         code: r.code,

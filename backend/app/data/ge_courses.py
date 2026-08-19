@@ -201,6 +201,12 @@ PROGRAMME_GE_FIELDS = {
     "BFAHIDDAJ": ["Creative Arts"],
     "BSSCHPWSJ": ["Social Sciences"],
     "BSSCHWSJ": ["Social Sciences"],
+    # 批次 4 WSJ Stream 限定码(同伞码,社科领域 GE 禁选)
+    "BSSCHWSJ-AGS": ["Social Sciences"],
+    "BSSCHWSJ-ECON": ["Social Sciences"],
+    "BSSCHWSJ-AS": ["Social Sciences"],
+    "BSSCHWSJ-GCS": ["Social Sciences"],
+    "BSSCHWSJ-PPA": ["Social Sciences"],
     "BBAHASMJ": ["Aviation Services Management"],
     "BBAHCGSJ": ["Accounting and Corporate Governance"],
     "BBAHFFTJ": ["Finance and Fintech", "Business Innovation & Intelligence"],
