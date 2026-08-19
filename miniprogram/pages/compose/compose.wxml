@@ -9,6 +9,8 @@
     <button class="top-action" loading="{{loading}}" bindtap="submitPost">{{text.publish}}</button>
   </view>
 
+  <view class="compose-notice">⚠️ {{text.warningNotice}}</view>
+
   <view class="composer-sheet">
     <view class="composer-head">
       <view class="avatar small">

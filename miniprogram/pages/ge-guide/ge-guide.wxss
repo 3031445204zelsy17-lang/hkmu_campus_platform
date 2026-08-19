@@ -1,0 +1,156 @@
+/* T23: GE 选课教程页 — 4 步卡片 + 第 3 步红底高亮本专业领域。
+   token 引用 styles/tokens.wxss（page 级 CSS 变量，app.wxss 已 @import）。 */
+
+.gg-intro {
+  margin: 8rpx 0 26rpx;
+  padding: 20rpx 24rpx;
+  background: var(--pill-green-bg);
+  border-radius: var(--radius-entry);
+  font-size: var(--fs-link);
+  color: var(--green-deep);
+  line-height: 1.5;
+}
+
+.gg-sec {
+  margin: 26rpx 0 16rpx;
+  font-size: var(--fs-eyebrow);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--eyebrow);
+  text-transform: uppercase;
+}
+
+.gg-step {
+  display: flex;
+  gap: 20rpx;
+  background: var(--surface);
+  border-radius: var(--radius-entry);
+  padding: 26rpx 24rpx;
+  margin-bottom: 16rpx;
+  box-shadow: var(--shadow-card);
+}
+
+/* 第 3 步「避开你的专业领域」— 红底警示（原型屏⑥ warn 样式） */
+.gg-step-warn {
+  background: var(--danger-bg);
+  border: 1rpx solid var(--danger-border);
+}
+
+.gg-step-num {
+  flex-shrink: 0;
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: var(--segmented-bg);
+  color: var(--green-deep);
+  font-size: var(--fs-chip);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gg-step-num-warn {
+  background: var(--danger-text);
+  color: #ffffff;
+}
+
+.gg-step-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.gg-step-title {
+  font-size: var(--fs-subtitle);
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.gg-step-detail {
+  margin-top: 6rpx;
+  font-size: var(--fs-feed-meta);
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+/* 本专业禁选领域 pills（第 3 步内嵌） */
+.gg-own-fields {
+  margin-top: 14rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  align-items: center;
+}
+
+.gg-own-label {
+  font-size: var(--fs-link);
+  color: var(--danger-text);
+  font-weight: 600;
+  margin-right: 4rpx;
+}
+
+.gg-own-pill {
+  padding: 6rpx 18rpx;
+  background: var(--danger-pill-bg);
+  border: 1rpx solid var(--danger-border);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-link);
+  color: var(--danger-text);
+}
+
+/* CTA：去 MyHKMU 选课（主）+ 官方 PDF（次链接） */
+.gg-cta {
+  margin: 34rpx 0 0;
+  padding: 26rpx;
+  border-radius: var(--radius-pill);
+  background: var(--accent-blue);
+  color: #ffffff;
+  font-size: var(--fs-btn);
+  font-weight: 600;
+  text-align: center;
+  box-shadow: var(--shadow-btn-primary);
+}
+
+.gg-cta-hv {
+  opacity: var(--press-opacity);
+  transform: scale(var(--press-scale));
+}
+
+.gg-pdf {
+  margin: 20rpx 0 8rpx;
+  text-align: center;
+  font-size: var(--fs-link);
+  color: var(--green-deep);
+  padding: 12rpx;
+}
+
+.gg-pdf-hv {
+  opacity: var(--press-opacity);
+}
+
+/* 加载失败重试面板 */
+.gg-panel {
+  background: var(--surface);
+  border-radius: var(--radius-entry);
+  padding: 48rpx 32rpx;
+  text-align: center;
+  box-shadow: var(--shadow-card);
+}
+
+.gg-panel-copy {
+  font-size: var(--fs-feed-meta);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.gg-retry {
+  display: inline-block;
+  margin-top: 24rpx;
+  padding: 14rpx 48rpx;
+  border-radius: var(--radius-pill);
+  background: var(--segmented-bg);
+  color: var(--green-deep);
+  font-size: var(--fs-btn);
+  font-weight: 600;
+}

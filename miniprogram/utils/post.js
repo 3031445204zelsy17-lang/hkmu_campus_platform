@@ -36,7 +36,11 @@ function normalizePost(item, text, opts) {
     authorId: item.author_id,
     authorInitial: getInitial(authorName),
     authorName,
-    category: item.category || text.defaultCategory,
+    // F7: translate the stored category key into the viewer's locale. New posts
+    // store a key ("campus"); old posts stored the localized label — for those,
+    // text.categories[<label>] is undefined so we fall back to the raw stored
+    // value (keeps legacy posts readable without a data migration).
+    category: (text.categories && text.categories[item.category]) || item.category || text.defaultCategory,
     commentsLabel: compactNumber(item.comments_count),
     content,
     createdAtLabel: formatDate(item.created_at) || text.justNow,

@@ -30,6 +30,9 @@
   margin: 0 0 22rpx;
   padding: 32rpx;
   border-radius: var(--radius-card-lg);
+  /* T08: 绿渐变（tokens --hero-gradient），替代纯色 #2E7D52 */
+  background: var(--hero-gradient);
+  box-shadow: 0 24rpx 64rpx rgba(109, 179, 68, 0.28);
 }
 
 .planner-shell .planner-title {
@@ -58,6 +61,166 @@
   font-size: 26rpx;
   line-height: 52rpx;
   box-sizing: border-box;
+}
+
+/* ── T08: hero 毕业统计 + conic 进度环（渐变背景见上方 .planner-hero） ── */
+.planner-shell .hero-remain {
+  margin-top: 12rpx;
+  padding-right: 160rpx; /* 避让右侧进度环 */
+  font-size: 34rpx;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #ffffff;
+}
+
+.planner-shell .hero-cr {
+  margin-top: 6rpx;
+  padding-right: 160rpx;
+  font-size: 24rpx;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.planner-shell .hero-ring {
+  position: absolute;
+  right: 32rpx;
+  bottom: 32rpx;
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.planner-shell .hero-ring-in {
+  width: 98rpx;
+  height: 98rpx;
+  border-radius: 50%;
+  /* 内圆取渐变尾色，视觉上从卡面"挖"出环 */
+  background: #6db344;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.planner-shell .hero-ring-pct {
+  font-size: 26rpx;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #ffffff;
+}
+
+.planner-shell .hero-ring-lab {
+  margin-top: 2rpx;
+  font-size: 18rpx;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ── T09: 分类竖条卡（2 列网格 + 竖向进度条，替代横条 progress-track） ── */
+.planner-shell .cat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx 24rpx;
+}
+
+.planner-shell .cat-cell {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 12rpx 14rpx;
+  border-radius: var(--radius-entry);
+}
+
+/* 通识格：浅绿底示意可点（开 GE 选择浮层） */
+.planner-shell .cat-cell-ge {
+  background: var(--pill-green-bg);
+}
+
+.planner-shell .cat-cell-hover {
+  background: var(--segmented-bg);
+}
+
+.planner-shell .cat-bar {
+  position: relative;
+  width: 8rpx;
+  height: 48rpx;
+  border-radius: 4rpx;
+  background: var(--segmented-bg);
+  overflow: hidden;
+  flex: none;
+}
+
+.planner-shell .cat-bar-fill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  border-radius: 4rpx;
+}
+
+.planner-shell .cat-line {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8rpx;
+}
+
+.planner-shell .cat-label {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.planner-shell .cat-cr {
+  flex: none;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.planner-shell .cat-ge-arrow {
+  flex: none;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: var(--accent-blue);
+}
+
+/* ── T10: 系统建议卡（青蓝浅底，原型 .advice） ── */
+.planner-shell .advice-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  margin: 0 0 24rpx;
+  padding: 24rpx 26rpx;
+  background: rgba(15, 143, 190, 0.07);
+  border: 2rpx solid rgba(15, 143, 190, 0.16);
+  border-radius: var(--radius-entry);
+}
+
+.planner-shell .advice-ic {
+  flex: none;
+  font-size: 26rpx;
+  line-height: 1.6;
+  color: var(--accent-blue);
+}
+
+.planner-shell .advice-txt {
+  flex: 1;
+  font-size: 26rpx;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.planner-shell .advice-strong {
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 /* 专业选择器 */
@@ -166,7 +329,7 @@
   flex-direction: column;
 }
 
-/* segmented 总览/我的课程 */
+/* segmented（T11 起用于年份 seg，T12 复用为 规划/课程/通识） */
 .seg-bar {
   display: flex;
   gap: 8rpx;
@@ -188,6 +351,31 @@
   background: var(--surface, #ffffff);
   color: var(--text-primary);
   box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.06);
+}
+
+/* T11: 年份 seg 的"当前学年"小标 */
+.seg-bar .seg-cur {
+  margin-left: 6rpx;
+  font-size: 18rpx;
+  font-weight: 700;
+  color: var(--green-deep);
+}
+
+/* T11: 学期头（学期名 + 学分合计右对齐） */
+.term-header {
+  display: flex;
+  align-items: center;
+  margin: 24rpx 4rpx 12rpx;
+  font-size: var(--fs-link);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.term-header .term-cr {
+  margin-left: auto;
+  font-size: var(--fs-link);
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* 搜索框 */
@@ -233,9 +421,54 @@
   color: var(--text-secondary);
 }
 
+/* T28 排课台:改学期下拉 pill + 先修顺序琥珀提示 */
+.move-line {
+  margin-top: 8rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.move-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 4rpx 16rpx;
+  border-radius: var(--radius-pill);
+  background: var(--surface-subtle);
+  border: 1rpx solid var(--border-soft);
+  font-size: var(--fs-link);
+  color: var(--text-secondary);
+}
+
+.move-pill-custom {
+  background: var(--pill-green-bg);
+  border-color: var(--border-soft);
+  color: var(--green-deep);
+}
+
+.move-caret {
+  font-size: 20rpx;
+}
+
+.order-warn {
+  font-size: var(--fs-link);
+  color: var(--cat-amber, #B45309);
+}
+
 /* 状态 pill:进行中 amber(已完成 green 已在 app.wxss) */
 .mini-pill.amber {
   background: var(--cat-amber);
+  color: #ffffff;
+}
+
+/* 批次 2 官方 GE 占位行(通识待选槽,advice sheet 的 GE (I)/(II) 行) */
+.ge-slot-row {
+  border-left: 6rpx solid var(--cat-pink, #DB2777);
+}
+.mini-pill.pink {
+  background: var(--cat-pink, #DB2777);
   color: #ffffff;
 }
 
@@ -503,3 +736,326 @@
   font-size: 34rpx;
   font-weight: 700;
 }
+
+/* ═══ GE 通识选择浮层（屏③）═══ 复用 ps-overlay 骨架，补列表区与 GE 专属样式 */
+
+/* 分类行的"选择通识 ▸"入口（仅 general-ed 行渲染） */
+.ge-entry {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6rpx;
+  margin-top: 12rpx;
+  font-size: var(--fs-link);
+  color: var(--accent-blue);
+  font-weight: 600;
+}
+.ge-entry-hover {
+  opacity: 0.55;
+}
+
+/* 浮层列表区 */
+.ge-overlay-list {
+  flex: 1;
+  height: 0;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 28rpx 16rpx; /* T24: 底部让位给常驻 footer，收窄原 48rpx */
+}
+.ge-panel-msg {
+  margin: 48rpx 28rpx;
+}
+
+/* T24: GE 浮层 footer — 选 GEN 教程 + 去 MyHKMU 选课（复制链接） */
+.ge-foot {
+  flex-shrink: 0;
+  border-top: 1rpx solid var(--divider);
+  background: var(--surface);
+  padding: 12rpx 28rpx calc(16rpx + env(safe-area-inset-bottom));
+}
+
+.ge-foot-entry {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  padding: 18rpx 8rpx;
+}
+
+.ge-foot-hv {
+  opacity: var(--press-opacity);
+}
+
+.ge-foot-ic {
+  font-size: 30rpx;
+}
+
+.ge-foot-tx {
+  flex: 1;
+  font-size: var(--fs-feed-meta);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.ge-foot-arrow {
+  color: var(--text-secondary);
+  font-size: 32rpx;
+}
+
+.ge-foot-copy {
+  color: var(--green-deep);
+  font-size: 30rpx;
+}
+
+/* 规则提示（绿底）+ 进度 */
+.ge-note {
+  margin: 20rpx 0 14rpx;
+  padding: 20rpx 24rpx;
+  background: var(--pill-green-bg);
+  border-radius: var(--radius-entry);
+  font-size: var(--fs-link);
+  color: var(--green-deep);
+  line-height: 1.5;
+}
+.ge-progress {
+  margin-bottom: 24rpx;
+  font-size: var(--fs-link);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* field 分组卡片（复用 ps-group-card 视觉） */
+.ge-field {
+  margin-bottom: 20rpx;
+  border: 1rpx solid var(--border-hair);
+  background: var(--surface);
+  border-radius: var(--radius-entry);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.ge-field-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 18rpx 24rpx;
+  background: var(--surface-subtle);
+}
+.ge-field-name {
+  flex: 1;
+  color: var(--text-primary);
+  font-size: 26rpx;
+  font-weight: 700;
+}
+.ge-field-ct {
+  color: var(--text-secondary);
+  font-size: 22rpx;
+  font-weight: 500;
+}
+.ge-field-blk .ge-field-name,
+.ge-field-blk .ge-field-ct {
+  color: var(--danger-text);
+}
+
+/* GE 课程行 */
+.ge-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 18rpx 24rpx;
+  border-top: 1rpx solid var(--border-hair);
+}
+.ge-code {
+  flex: none;
+  width: 168rpx;
+  color: var(--text-secondary);
+  font-size: 20rpx;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.ge-name {
+  flex: 1;
+  color: var(--text-primary);
+  font-size: var(--fs-link);
+  line-height: 1.35;
+}
+.ge-mark {
+  flex: none;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+.ge-mark-done {
+  color: var(--accent-green);
+}
+.ge-mark-blk {
+  color: var(--text-secondary);
+}
+/* A 方案:行尾「选」钮 —— 未选=空心 +,已选=绿底白 ✓(catchtap 防冒泡,行主体点按进详情) */
+.ge-pick {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  border: 2rpx solid var(--accent-blue);
+  color: var(--accent-blue);
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+.ge-pick-on {
+  border-color: var(--accent-green);
+  background: var(--accent-green);
+  color: #ffffff;
+}
+.ge-row-hv {
+  /* 互动蓝 6% 淡底(不用 pill-green-bg,避免 hover 与「已选」状态混淆) */
+  background: rgba(15, 143, 190, 0.06);
+}
+/* GE 领域视图搜索框:课码/中英文名跨领域过滤 */
+.ge-search {
+  padding: 16rpx 24rpx 4rpx;
+}
+/* GE 学期筛选胶囊:搜索框下,与 .ge-search 左右 24rpx 对齐;压缩变体 */
+.ge-term-seg {
+  margin: 8rpx 24rpx 4rpx;
+}
+.ge-term-seg .seg-item {
+  padding: 10rpx 0;
+  font-size: 24rpx;
+}
+/* GE 开课学期徽标(2026秋→2027暑窗口;未排课不显示) */
+.ge-term {
+  flex: none;
+  margin-right: 8rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 999rpx;
+  background: rgba(15, 143, 190, 0.1);
+  color: var(--accent-blue);
+  font-size: 18rpx;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ge-search-input {
+  background: #ffffff;
+  border: 1rpx solid var(--border-hair);
+  border-radius: 16rpx;
+  padding: 14rpx 20rpx;
+  font-size: 26rpx;
+  color: var(--text-primary);
+}
+.ge-row-taken {
+  background: var(--pill-green-bg);
+}
+.ge-row-taken .ge-name {
+  color: var(--green-deep);
+  font-weight: 600;
+}
+.ge-row-blocked {
+  opacity: 0.5;
+}
+.ge-row-blocked .ge-name {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+/* ═══ 屏④:新生引导(全屏,替代突然弹选专业)T04 骨架 ═══ */
+.ob-screen {
+  position: fixed;
+  left: 0; right: 0; top: 0; bottom: 0;
+  z-index: 1000;
+  display: flex; flex-direction: column;
+  background: var(--page-bg);
+}
+.ob-nav {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 88rpx;
+  box-sizing: border-box;
+}
+.ob-nav-title {
+  color: var(--text-primary);
+  font-size: var(--fs-section);
+  font-weight: 700;
+}
+.ob-scroll {
+  flex: 1; min-height: 0;
+  padding: 20rpx 36rpx 32rpx;
+  box-sizing: border-box;
+}
+.ob-prog { display: flex; gap: 10rpx; margin: 12rpx 0 36rpx; }
+.ob-prog-seg { flex: 1; height: 8rpx; border-radius: 4rpx; background: var(--border-soft); }
+.ob-prog-seg.on { background: var(--accent-green); }
+.ob-q { font-size: 40rpx; font-weight: 700; line-height: 1.3; color: var(--text-primary); margin-bottom: 12rpx; }
+.ob-sub { font-size: var(--fs-subtitle); color: var(--text-secondary); line-height: 1.55; margin-bottom: 32rpx; }
+.ob-placeholder {
+  padding: 64rpx 32rpx; text-align: center;
+  color: var(--text-secondary); font-size: var(--fs-body);
+  background: var(--surface); border: 1rpx dashed var(--border-soft);
+  border-radius: var(--radius-entry);
+}
+.ob-next {
+  padding: 20rpx 36rpx calc(40rpx + env(safe-area-inset-bottom));
+}
+.ob-next-btns { display: flex; gap: 16rpx; }
+.ob-btn {
+  flex: 1; text-align: center; padding: 24rpx 0;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-btn); font-weight: 600;
+  background: var(--surface-subtle); color: var(--text-primary);
+  border: 1rpx solid var(--border-soft);
+}
+.ob-btn.pri {
+  background: var(--accent-blue); color: #fffaf0; border: none;
+  box-shadow: var(--shadow-btn-primary);
+}
+.ob-btn-hover { opacity: 0.86; }
+.ob-btn-disabled { opacity: 0.45; }
+
+/* T05: 步骤② 上一步已选 + 年份/学期 chips */
+.ob-prev-pick {
+  margin-bottom: 28rpx;
+  padding: 20rpx 24rpx;
+  background: var(--surface-subtle);
+  border-radius: var(--radius-entry);
+}
+.ob-prev-pick-label {
+  font-size: var(--fs-link);
+  color: var(--text-secondary);
+  margin-bottom: 6rpx;
+}
+.ob-prev-pick-val {
+  font-size: var(--fs-body);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.ob-field-label {
+  font-size: var(--fs-subtitle);
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin: 8rpx 0 14rpx;
+}
+.ob-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+  margin-bottom: 28rpx;
+}
+.ob-chip {
+  padding: 16rpx 30rpx;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1rpx solid var(--border-soft);
+  color: var(--text-primary);
+  font-size: var(--fs-btn);
+  font-weight: 600;
+}
+.ob-chip.sel {
+  background: var(--accent-blue);
+  color: #fffaf0;
+  border-color: var(--accent-blue);
+}
+.ob-chip-hover { opacity: 0.86; }

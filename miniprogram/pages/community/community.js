@@ -97,9 +97,32 @@ Page({
     user: null,
   },
 
+  // 微信胶囊「···」菜单:点亮转发(未定义则菜单里该钮置灰)。
+  // 卡片标题带品牌后缀,收卡人不装 app 也能看懂这是什么
+  onShareAppMessage() {
+    const t = (this.data.text && this.data.text.title) || "";
+    return { title: t ? `${t} · HKMU Campus` : "HKMU Campus", path: "/pages/community/community" };
+  },
+
   onShow() {
     this.applyLocale(getLocale());
     syncTabBar(this, 1);
+
+    // F6: 首次进社区弹一次规范摘要,点「我知道了」记 storage 不再重弹。
+    // (storage 不绑语言,换语言不重弹——可接受:这是首访引导,非每次提醒。)
+    if (!wx.getStorageSync("hkmu_community_terms_ack")) {
+      wx.showModal({
+        title: this.data.text.termsModalTitle,
+        content: this.data.text.termsModalContent,
+        showCancel: false,
+        confirmText: this.data.text.termsModalConfirm,
+        success: (res) => {
+          if (res.confirm) {
+            wx.setStorageSync("hkmu_community_terms_ack", true);
+          }
+        },
+      });
+    }
 
     // revision 比较(不清零):别处发帖/删帖/点赞/评论 bump 后,探测到比自己新 → 触发重拉。
     // 不在此处记已消费——仅 loadPosts 成功渲染后记(失败则下次 onShow 仍重试)。

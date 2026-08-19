@@ -48,12 +48,20 @@
           <view class="profile-row-label">{{text.studentIdLabel}}</view>
           <view class="profile-row-value">{{user.studentIdLabel}}</view>
         </view>
+        <view class="profile-row" bindtap="onOpenProgrammePicker">
+          <view class="profile-row-label">{{text.programmeLabel}}</view>
+          <view class="profile-row-value">{{programmeName || text.programmeUnset}} ›</view>
+        </view>
         <view class="profile-row">
           <view class="profile-row-label">{{text.bioLabel}}</view>
           <view class="profile-row-value">{{user.bioLabel}}</view>
         </view>
         <view class="profile-row" bindtap="openPrivacy">
           <view class="profile-row-label">{{privacyAction}}</view>
+          <view class="profile-row-value">›</view>
+        </view>
+        <view class="profile-row" bindtap="openTerms">
+          <view class="profile-row-label">{{termsAction}}</view>
           <view class="profile-row-value">›</view>
         </view>
         <view class="profile-row" bindtap="openFeedback">
@@ -117,10 +125,18 @@
     </view>
     <view class="empty-state flat">
       <view class="empty-title">{{text.emptyTitle}}</view>
-      <view class="empty-copy">{{text.emptyCopy}}</view>
       <view class="action-row">
         <button class="primary-action" bindtap="goToLogin">{{text.loginAction}}</button>
       </view>
     </view>
   </view>
+
+  <!-- T03: 专业切换浮层（programme-picker 自包含组件，open 控制显隐） -->
+  <programme-picker
+    open="{{pickerOpen}}"
+    selected-code="{{user.programme_code}}"
+    locale="{{locale}}"
+    bind:select="onProgrammeSelect"
+    bind:close="onProgrammePickerClose"
+  />
 </view>

@@ -2,6 +2,7 @@ const auth = require("../../utils/auth");
 const { request } = require("../../utils/request");
 const { getLocale, getTexts } = require("../../utils/i18n");
 const { syncTabBar } = require("../../utils/tabbar");
+const { localizeField } = require("../../utils/gefields");
 
 // 小程序 locale → programmes.name 的字典 key
 const LOCALE_NAME_KEY = {
@@ -16,6 +17,15 @@ function localizeName(name, locale) {
   }
   const key = LOCALE_NAME_KEY[locale] || "en";
   return name[key] || name.en || "";
+}
+
+// 目录条目的三语名:中文优先官方目录名(name_zh_cn/tw),缺失回退英文。
+// 规则专业(/programmes 载荷)只有英文名,中文展示全靠这里的目录字段。
+function catalogueName(p, locale) {
+  if (!p) return "";
+  if (locale === "zh-Hans") return p.name_zh_cn || p.name_zh_tw || p.programme_name || "";
+  if (locale === "zh-Hant") return p.name_zh_tw || p.name_zh_cn || p.programme_name || "";
+  return p.programme_name || "";
 }
 
 function categoryPercent(earned, required) {
@@ -62,6 +72,32 @@ function prereqsMet(prereqIds, progress) {
   return prereqIds.every((id) => progress[id] === "completed");
 }
 
+// ── T07: entry_term → 当前学年 + 毕业年 ────────────────────────────────
+// entry_term 形如 "2025-autumn" / "2025-spring"（T06 引导步骤③写入）。
+// HKMU 两学期制下的学年归属：
+//   秋入学 E：Y1 = {E 秋, E+1 春} → 4 年最后一学期 = E+4 春
+//   春入学 E：Y1 = {E 春, E 秋}   → 4 年最后一学期 = E+3 秋
+// 当前时间归属：8 月起进入新学年的秋学期；1-7 月仍属上一学年（春/暑期）。
+// 纯函数：entry_term 缺失/格式错 → null（展示层自行降级隐藏年份信息）。
+function computeStudyInfo(entryTerm, now) {
+  const m = /^(\d{4})-(autumn|spring)$/.exec(String(entryTerm || "").trim());
+  if (!m) return null;
+  const entryYear = parseInt(m[1], 10);
+  const springEntry = m[2] === "spring";
+  const curYear = now.getFullYear();
+  const curMonth = now.getMonth() + 1; // 1-12
+  const studyYear = springEntry
+    ? curYear - entryYear + 1                       // 春入学：学年随公历年切换
+    : (curMonth >= 8 ? curYear - entryYear + 1 : curYear - entryYear); // 秋入学：8 月进新学年
+  return {
+    entryYear,
+    entrySem: m[2],
+    studyYear, // 1 起整数；0 = 秋季准新生（选了未来年份），>4 = 超期在读——展示层自行处理
+    gradYear: springEntry ? entryYear + 3 : entryYear + 4,
+    gradSem: springEntry ? "autumn" : "spring",
+  };
+}
+
 const SEMESTER_ORDER = { autumn: 0, spring: 1, summer: 2 };
 
 function semesterRank(name) {
@@ -69,10 +105,38 @@ function semesterRank(name) {
   return SEMESTER_ORDER[key] != null ? SEMESTER_ORDER[key] : 99;
 }
 
-// 当前专业的课程按学年学期分组,每张卡带 status + 先修提示(仅提示,不阻塞标记)
-function buildCoursesView(prog, idToCourse, progress, keyword, text) {
+// 当前专业的课程按学年学期分组,每张卡带 status + 先修提示(仅提示,不阻塞标记)。
+// T11: opts.year 传学年时只出该年两组学期(标签不带年份,年份在页内 seg 上)
+// T28/T29: schedule(用户排课覆盖)优先于课程默认 year/semester;卡上带"改学期"
+// 下拉(picker)与先修顺序校验(先修未完成且排在本人之后 → 琥珀提示,不阻塞)。
+const MOVE_OPTIONS = [
+  { year: 1, semester: "autumn" }, { year: 1, semester: "spring" },
+  { year: 2, semester: "autumn" }, { year: 2, semester: "spring" },
+  { year: 3, semester: "autumn" }, { year: 3, semester: "spring" },
+  { year: 3, semester: "summer" },
+  { year: 4, semester: "autumn" }, { year: 4, semester: "spring" },
+];
+
+// 批次 2 三层优先级:用户排课覆盖 > per-专业官方映射(prog.placements,
+// advice sheet 口径)> courses 表全局 year/semester 回退。DSAI 手工年份曾全局
+// 外溢撞 16+ 专业(复核报告第四节),映射层按当前专业隔离。
+function placementOf(course, schedule, placements) {
+  const ov = schedule && schedule[course.id];
+  if (ov) return { year: ov.year, semester: ov.semester, planned: true };
+  const mp = placements && placements[course.id];
+  if (mp) return { year: mp.year, semester: mp.term || "autumn", planned: false };
+  return { year: course.year != null ? course.year : 0, semester: course.semester || "other", planned: false };
+}
+
+function placementRank(p) {
+  return p.year * 10 + semesterRank(p.semester);
+}
+
+function buildCoursesView(prog, idToCourse, progress, keyword, text, opts, schedule) {
   if (!prog || !idToCourse) return { semesters: [], empty: true };
   const cats = prog.categories || {};
+  const placements = prog.placements || {};
+  const geSlots = prog.ge_slots || [];
   const all = [];
   Object.keys(cats).forEach((key) => {
     (cats[key].courses || []).forEach((cid) => {
@@ -81,18 +145,32 @@ function buildCoursesView(prog, idToCourse, progress, keyword, text) {
     });
   });
   const kw = keyword ? keyword.toLowerCase() : "";
-  const filtered = kw
+  let filtered = kw
     ? all.filter((c) =>
         (c.code && String(c.code).toLowerCase().includes(kw)) ||
         (c.name && String(c.name).toLowerCase().includes(kw)))
     : all;
+  const yearFilter = opts && opts.year;
+  if (yearFilter) {
+    filtered = filtered.filter((c) => placementOf(c, schedule, placements).year === yearFilter);
+  }
   const groups = {};
   filtered.forEach((c) => {
-    const yr = c.year != null ? c.year : 0;
-    const sem = c.semester || "other";
-    const gk = yr + "::" + sem;
-    if (!groups[gk]) groups[gk] = { year: yr, semester: sem, courses: [] };
+    const p = placementOf(c, schedule, placements);
+    const gk = p.year + "::" + p.semester;
+    if (!groups[gk]) groups[gk] = { year: p.year, semester: p.semester, courses: [] };
     groups[gk].courses.push(c);
+  });
+  // 官方 GE 占位行(advice sheet 无课码的通识槽):挂到对应学年学期组,
+  // 年份过滤时只在被选学年渲染(对照官方 Yr 表的 GE (I)/(II) 行)
+  const slotGroups = yearFilter
+    ? geSlots.filter((s) => s.year === yearFilter)
+    : geSlots;
+  slotGroups.forEach((s) => {
+    const gk = s.year + "::" + s.term;
+    if (!groups[gk]) groups[gk] = { year: s.year, semester: s.term, courses: [] };
+    const g = groups[gk];
+    g.geSlotCount = (g.geSlotCount || 0) + 1;
   });
   const semLabelMap = {
     autumn: text.semAutumn, spring: text.semSpring, summer: text.semSummer,
@@ -101,9 +179,13 @@ function buildCoursesView(prog, idToCourse, progress, keyword, text) {
     if (a.year !== b.year) return a.year - b.year;
     return semesterRank(a.semester) - semesterRank(b.semester);
   });
+  const moveLabels = MOVE_OPTIONS.map((m) =>
+    fillTemplate(text.yearLabel, { n: m.year }) + " · " + semLabelMap[m.semester]);
   semesters.forEach((g) => {
-    g.label = fillTemplate(text.yearLabel, { n: g.year }) + " · " +
-      (semLabelMap[String(g.semester).toLowerCase()] || g.semester);
+    g.label = yearFilter
+      ? (semLabelMap[String(g.semester).toLowerCase()] || g.semester)
+      : fillTemplate(text.yearLabel, { n: g.year }) + " · " +
+        (semLabelMap[String(g.semester).toLowerCase()] || g.semester);
     g.courses = g.courses.map((c) => {
       const status = progress[c.id] || "not_started";
       const prereqIds = parsePrereqs(c.prerequisites);
@@ -112,6 +194,18 @@ function buildCoursesView(prog, idToCourse, progress, keyword, text) {
       if (prereqIds.length) {
         prereqLabel = met ? text.prereqMet : (text.prereqPrefix + prereqIds.join(", "));
       }
+      // T28 先修顺序校验: 先修未完成且排在本人之后(含同期) → 提示,不阻塞
+      const myPlacement = placementOf(c, schedule, placements);
+      const myRank = placementRank(myPlacement);
+      const after = prereqIds.filter((id) => {
+        if (progress[id] === "completed") return false;
+        const pc = idToCourse[id];
+        if (!pc) return false;
+        return placementRank(placementOf(pc, schedule, placements)) >= myRank;
+      });
+      const moveIndex = MOVE_OPTIONS.findIndex((m) =>
+        m.year === myPlacement.year &&
+        m.semester === String(myPlacement.semester).toLowerCase());
       return {
         courseId: c.id,
         code: c.code,
@@ -122,10 +216,15 @@ function buildCoursesView(prog, idToCourse, progress, keyword, text) {
           status === "in_progress" ? text.statusInProgress : "",
         prereqsMet: met,
         prereqLabel,
+        orderWarn: after.length ? (text.prereqOrderPrefix + after.join(", ")) : "",
+        planned: myPlacement.planned,
+        placementLabel: moveIndex >= 0 ? moveLabels[moveIndex] : "",
+        moveIndex: moveIndex >= 0 ? moveIndex : 0,
       };
     });
+    g.crTotal = g.courses.reduce((n, c) => n + (c.credits || 0), 0);
   });
-  return { semesters, empty: !filtered.length };
+  return { semesters, moveLabels, empty: !filtered.length };
 }
 
 Page({
@@ -139,10 +238,13 @@ Page({
   _selectedCode: null,     // 用户手动选的专业（优先于 saved）
   _loading: true,
   _loadError: null,
-  _courses: null,           // /courses?page_size=50 → items
+  _courses: null,           // /courses?page_size=200 → items
   _idToCourse: null,        // {course_id: course 对象}
   _progress: null,          // /courses/progress/me → {course_id: status}
-  _activeTab: "overview",   // "overview" | "courses"
+  _schedule: null,          // T28: /courses/progress/schedule → {course_id: {year,semester}} 覆盖
+  _lastUserId: undefined,   // T29: 身份变化检测(登出/换号作废上面三个缓存)
+  _activeYear: null,        // T11: 课表展示学年(1-4);首次算出 studyInfo 时按当前学年初始化
+  _viewTab: "plan",         // T12: 二级视图 "plan"(合并规划屏) | "courses"(全课程列表);"通识"项开 GE 浮层
   _searchKeyword: "",
   _searchTimer: null,
   _courseCatalogue: null,        // /courses/catalogue/programmes (全校 ~107 专业 browse 目录)
@@ -153,19 +255,62 @@ Page({
   _programmeQuery: "",           // 专业搜索词（实时过滤）
   _programmeSearchTimer: null,   // 搜索防抖 timer
   _programmeSearchOpen: false,   // 全屏专业搜索浮层开关（点 hero 触发，默认收起）
-  _programmePrompted: false,     // 首屏引导：本会话是否已判过自动弹浮层（防反复弹）
+  _programmePrompted: false,     // 首屏引导：本会话是否已判过自动弹引导（防反复弹）
+  _onboardingActive: false,      // T04: 新生引导全屏开关（无 programme 时激活，替代弹浮层）
+  _onboardingStep: 1,            // T04: 引导当前步 1/2/3
+  _obStatusBar: 0,               // T04: 状态栏高度(px)，引导 nav 避让用
+  _onboardingProgrammeCode: "",  // T05: 步骤①选的专业 code
+  _onboardingProgrammeName: "",  // T05: 步骤①选的专业名
+  _onboardingYears: [],          // T05: 步骤②候选年份
+  _onboardingYear: 0,            // T05: 步骤②选中年份
+  _onboardingSemester: "autumn", // T05: 步骤②选中学期
+  _geList: null,                 // /courses/ge 结果（GEListOut）— GE 选择浮层数据源
+  _geListCode: null,             // _geList 对应专业码（切专业后失效重拉）
+  _gePickerOpen: false,          // GE 选择浮层开关（overview 通识分类行触发）
+  _gePickerLoadError: null,      // GE 列表加载失败标记
+  _geMode: "fields",             // T19: GE 浮层视图 "fields"(按领域) | "ranking"(评分榜)
+  _geRanking: null,              // /courses/ge/ranking 结果（会话级，随 code 失效）
+  _geRankingCode: null,
+  _geGuide: null,                // T24: /courses/ge/guide 静态配置（会话级，select_url 等）
 
   // ── 生命周期 ──────────────────────────────────────────────────────────
 
+  // 微信胶囊「···」菜单:点亮转发(未定义则菜单里该钮置灰)。
+  // 卡片标题带品牌后缀,收卡人不装 app 也能看懂这是什么
+  onShareAppMessage() {
+    const t = (this.data.text && this.data.text.title) || "";
+    return { title: t ? `${t} · HKMU Campus` : "HKMU Campus", path: "/pages/planner/planner" };
+  },
+
+  // 点亮收藏(学生可把规划页收进「我的小程序收藏」快捷回访)
+  onAddToFavorites() {
+    const t = (this.data.text && this.data.text.title) || "";
+    return { title: t ? `${t} · HKMU Campus` : "HKMU Campus", path: "/pages/planner/planner" };
+  },
+
   onShow() {
     syncTabBar(this, 3);
-    this._setTabBarHidden(this._programmeSearchOpen);
+    this._setTabBarHidden(this._programmeSearchOpen || this._gePickerOpen || this._onboardingActive);
     this._locale = getLocale();
+    if (!this._obStatusBar) {
+      this._obStatusBar = (wx.getWindowInfo().statusBarHeight || 24);
+    }
     // course-detail 页标记课程后回返:作废会话级进度缓存,强制重拉(仪表盘/卡片状态)
     const app = getApp();
     if (app && app.globalData && app.globalData.coursesNeedRefresh) {
       app.globalData.coursesNeedRefresh = false;
       this._progress = null;
+    }
+    // profile 页切专业后回切:跟随同专业并作废旧仪表盘(_selectedCode 优先级压过
+    // 已存专业,且暖路径跳过 /users/me,不消费信号会一直停在旧专业)
+    if (app && app.globalData && app.globalData.programmeSwitched) {
+      const switched = app.globalData.programmeSwitched;
+      app.globalData.programmeSwitched = null;
+      if (switched !== this._selectedCode) {
+        this._selectedCode = switched;
+        this._userProgrammeCode = switched;
+        this._status = null;
+      }
     }
     // 只有首次（无 catalogue）才显示 loading 占位；之后切回都用缓存瞬间渲染
     this._loading = !this._catalogue;
@@ -222,6 +367,17 @@ Page({
     return auth
       .bootstrapSession()
       .then((user) => {
+        // T29: 用户身份变化(登出/换号) → 作废会话级进度/排课/仪表盘缓存,
+        // 防上一账号的 user_courses / user_course_schedule 泄漏到下一账号。
+        const uid = (user && user.id) || null;
+        if (this._lastUserId !== uid) {
+          if (this._lastUserId !== undefined) {
+            this._progress = null;
+            this._schedule = null;
+            this._status = null;
+          }
+          this._lastUserId = uid;
+        }
         this._user = user;
         this._userProgrammeCode = (user && user.programme_code) || null;
         this._emit();
@@ -246,7 +402,18 @@ Page({
     this._programmePrompted = true;
     const pickerList = this._pickerList || [];
     if (pickerList.length && !this._selectedCode && !this._userProgrammeCode) {
-      this._programmeSearchOpen = true;
+      // T04: 进全屏 3 步引导(选专业/选学期/生成),替代原"突然弹选专业浮层"。
+      // T05: 初始化步骤①②选择(年份=当前年,学期默认秋季)
+      this._onboardingActive = true;
+      this._onboardingStep = 1;
+      this._onboardingProgrammeCode = "";
+      this._onboardingProgrammeName = "";
+      if (!this._onboardingYears.length) {
+        const cy = new Date().getFullYear();
+        this._onboardingYears = [cy - 3, cy - 2, cy - 1, cy, cy + 1];
+      }
+      this._onboardingYear = new Date().getFullYear();
+      this._onboardingSemester = "autumn";
       this._setTabBarHidden(true);
       this._emit();
     }
@@ -258,8 +425,8 @@ Page({
       return Promise.resolve();
     }
     const path = `/courses/graduation-status?programme_code=${encodeURIComponent(code)}`;
-    // 并行预拉课程全量 + 用户进度(会话级缓存),再拉仪表盘
-    return Promise.all([this._loadCourses(), this._loadProgress()])
+    // 并行预拉课程全量 + 用户进度 + 排课覆盖(会话级缓存),再拉仪表盘
+    return Promise.all([this._loadCourses(), this._loadProgress(), this._loadSchedule()])
       .then(() => request({ path, auth: true }))
       .then((status) => {
         this._status = status;
@@ -273,17 +440,27 @@ Page({
 
   _loadCourses() {
     if (this._courses) return Promise.resolve();
-    return request({ path: "/courses?page_size=50", auth: false })
-      .then((data) => {
-        this._courses = (data && data.items) || [];
-        const map = {};
-        this._courses.forEach((c) => { if (c && c.id) map[c.id] = c; });
-        this._idToCourse = map;
-      })
-      .catch(() => {
-        this._courses = [];
-        this._idToCourse = {};
-      });
+    // courses 表已 1100+ 门(55 专业规则课 + GE):单页拉不全会让不在首页的
+    // 专业课程全部从课表消失(年份 tab 空)。后端 page_size 上限 500 → 循环
+    // 分页拉全(3 页左右;响应走 GZip)。上限 10 页防御未来膨胀。
+    const fetchPage = (page) =>
+      request({ path: `/courses?page_size=500&page=${page}`, auth: false });
+    const all = [];
+    const loop = (page) =>
+      fetchPage(page)
+        .then((data) => {
+          const items = (data && data.items) || [];
+          all.push(...items);
+          if (items.length >= 500 && page < 10) return loop(page + 1);
+          this._courses = all;
+          const map = {};
+          all.forEach((c) => { if (c && c.id) map[c.id] = c; });
+          this._idToCourse = map;
+        });
+    return loop(1).catch(() => {
+      this._courses = [];
+      this._idToCourse = {};
+    });
   },
 
   _loadProgress() {
@@ -296,6 +473,25 @@ Page({
       })
       .catch(() => {
         this._progress = {};
+      });
+  },
+
+  // T28 排课台: 用户学年覆盖(GET /progress/schedule)。失败静默 — 拉不到就
+  // 全按课程默认安排渲染,下拉改学期时 PUT 仍可写。
+  _loadSchedule() {
+    if (this._schedule) return Promise.resolve();
+    return request({ path: "/courses/progress/schedule", auth: true })
+      .then((data) => {
+        const map = {};
+        (data || []).forEach((r) => {
+          if (r && r.course_id && r.planned_year) {
+            map[r.course_id] = { year: r.planned_year, semester: r.planned_semester || "autumn" };
+          }
+        });
+        this._schedule = map;
+      })
+      .catch(() => {
+        this._schedule = {};
       });
   },
 
@@ -322,6 +518,115 @@ Page({
     this._programmeSearchOpen = false;
     this._setTabBarHidden(false);
     this._emit();
+  },
+
+  // ── 屏④:新生引导(T04 骨架)── 步骤前进/后退;完成关闭进主屏 ──
+  onObNext() {
+    const text = getTexts("planner", this._locale);
+    if (this._onboardingStep === 1) {
+      if (!this._onboardingProgrammeCode) {
+        wx.showToast({ title: text.obPickProgramme, icon: "none" });
+        return;
+      }
+      this._onboardingStep = 2;
+      this._emit();
+    } else if (this._onboardingStep === 2) {
+      if (!this._onboardingYear || !this._onboardingSemester) {
+        wx.showToast({ title: text.obPickTerm, icon: "none" });
+        return;
+      }
+      this._onboardingStep = 3;
+      this._emit();
+    } else {
+      // 步骤③:生成课表 + 持久化 programme_code/entry_term + 进主屏
+      this._obFinish();
+    }
+  },
+
+  onObBack() {
+    if (this._onboardingStep > 1) {
+      this._onboardingStep -= 1;
+      this._emit();
+    }
+  },
+
+  // T05: 当前步"下一步"是否可走(步骤①需选专业,②需选学期)
+  _obCanNext() {
+    if (this._onboardingStep === 1) return !!this._onboardingProgrammeCode;
+    if (this._onboardingStep === 2) return !!this._onboardingYear && !!this._onboardingSemester;
+    return true;
+  },
+
+  onObPickProgramme(e) {
+    const { code, name } = e.detail;
+    this._onboardingProgrammeCode = code;
+    this._onboardingProgrammeName = name;
+    this._emit();
+  },
+
+  onObPickYear(e) {
+    this._onboardingYear = e.currentTarget.dataset.year;
+    this._emit();
+  },
+
+  onObPickSem(e) {
+    this._onboardingSemester = e.currentTarget.dataset.sem;
+    this._emit();
+  },
+
+  // T06: 入学学期展示串(年份 + 本地化学期)
+  _obEntryTermDisplay() {
+    const text = getTexts("planner", this._locale);
+    const sem = this._onboardingSemester === "spring" ? text.obSpring : text.obAutumn;
+    return (this._onboardingYear || "") + " " + (sem || "");
+  },
+
+  // T06: 步骤③完成 — 持久化 programme_code + entry_term,按专业生成课表,进主屏
+  _obFinish() {
+    const text = getTexts("planner", this._locale);
+    const code = this._onboardingProgrammeCode;
+    if (!code) return;
+    const entryTerm = this._onboardingYear + "-" + this._onboardingSemester; // 2025-autumn
+    const entry = (this._pickerList || []).find((p) => p.code === code);
+    const hasFull = entry ? entry.has_full_planning : false;
+
+    // 未登录：引导无关闭入口，硬走 PUT 必 401 会把人困在步骤③ — 对齐
+    // onSelectProgramme 的未登录路径仅本会话生效（entry_term 不落库，
+    // T07 studyInfo 维持 null，hero 不显毕业年）
+    if (!this._user) {
+      this._obApplyResult(code, hasFull, null);
+      return;
+    }
+
+    wx.showLoading({ title: text.obGenerating, mask: true });
+    request({
+      method: "PUT",
+      path: "/users/me",
+      data: { programme_code: code, entry_term: entryTerm },
+      auth: true,
+    })
+      .then((user) => this._obApplyResult(code, hasFull, user))
+      .catch((err) => {
+        wx.hideLoading();
+        wx.showToast({ title: (err && err.message) || text.obGenFail, icon: "none" });
+      });
+  },
+
+  // 引导完成落屏：选中专业生效 + 清旧 status 触发重拉(完整规划专业走
+  // graduation-status; catalogue 专业 _emit 自动进目录视图)。user 非空时同步
+  // 缓存（PUT 返回含 entry_term 的 UserOut，T07 当前学年/毕业年无需等下次
+  // bootstrap 即可算出）
+  _obApplyResult(code, hasFull, user) {
+    if (user) this._user = user;
+    this._selectedCode = code;
+    this._userProgrammeCode = code;
+    this._status = null;
+    this._onboardingActive = false;
+    this._setTabBarHidden(false);
+    this._emit();
+    wx.hideLoading();
+    wx.showToast({ title: getTexts("planner", this._locale).obGenSuccess, icon: "success" });
+    if (hasFull) this._loadStatus();
   },
 
   _setTabBarHidden(hidden) {
@@ -394,7 +699,10 @@ Page({
       const label = text[labelKey] || b.key.replace(/-/g, " ");
       const all = (b.courses || []).map((c) => ({
         code: c.course_code,
-        name: c.display_name,
+        // F8: zh-CN viewers get the OpenCC-simplified name when available;
+        // everyone else (and English-only courses with name_zh_cn=null) falls
+        // back to display_name (Traditional humanities / English as stored).
+        name: (this._locale === "zh-Hans" && c.name_zh_cn) ? c.name_zh_cn : c.display_name,
         credits: c.credits,
         system: c.code_system,
       }));
@@ -422,10 +730,383 @@ Page({
     wx.navigateTo({ url: "/pages/login/login" });
   },
 
-  onTabChange(e) {
+  // ── GE 通识选择浮层（屏③）── 复用 programmeSearch 的全屏浮层范式 ──────
+
+  // T09: 分类格点按 — 仅通识格（有 GE 池）进 GE 选择浮层，其余格无动作
+  onCatCellTap(e) {
+    if (e.currentTarget.dataset.ge) {
+      this.onOpenGePicker();
+    }
+  },
+
+  onOpenGePicker() {
+    if (!this._user) { this.goLogin(); return; }
+    this._gePickerOpen = true;
+    this._setTabBarHidden(true);
+    this._gePickerLoadError = null;
+    this._geKeyword = "";  // 每次打开清空搜索(上次关键词不该带入新会话)
+    this._geTermFilter = "";  // 学期筛选一并重置(默认「全部」= 不过滤)
+    this._emit();
+    const code = this._selectedCode || this._userProgrammeCode;
+    if (code) {
+      this._loadGe(code);
+      this._loadGeRanking(code); // T19: 评分榜数据并行预拉
+    }
+    this._loadGeGuide(); // T24: 教程配置（select_url 等）一并预拉
+  },
+
+  onCloseGePicker() {
+    this._gePickerOpen = false;
+    this._setTabBarHidden(false);
+    this._emit();
+  },
+
+  _loadGe(code) {
+    if (!code) return Promise.resolve(null);
+    if (this._geList && this._geListCode === code) return Promise.resolve(this._geList);
+    const path = `/courses/ge?programme_code=${encodeURIComponent(code)}`;
+    return request({ path, auth: false })
+      .then((data) => {
+        this._geList = data;
+        this._geListCode = code;
+        this._gePickerLoadError = null;
+        this._emit();
+        return data;
+      })
+      .catch((err) => {
+        this._gePickerLoadError = (err && err.message) || "fail";
+        this._emit();
+        return null;
+      });
+  },
+
+  // T19: GE 评分榜数据（会话级缓存，失败静默 — ranking tab 显 loading/空态）
+  _loadGeRanking(code) {
+    if (!code) return Promise.resolve(null);
+    if (this._geRanking && this._geRankingCode === code) return Promise.resolve(this._geRanking);
+    const path = `/courses/ge/ranking?programme_code=${encodeURIComponent(code)}`;
+    return request({ path, auth: false })
+      .then((data) => {
+        this._geRanking = data;
+        this._geRankingCode = code;
+        this._emit();
+        return data;
+      })
+      .catch(() => null);
+  },
+
+  // T24: GE 教程配置（select_url 等，静态端点）— 会话级缓存，失败静默：
+  // footer 的「去 MyHKMU 选课」复制按钮在未拉到前隐藏，教程入口不受影响。
+  _loadGeGuide() {
+    if (this._geGuide) return Promise.resolve(this._geGuide);
+    return request({ path: "/courses/ge/guide", auth: false })
+      .then((data) => {
+        this._geGuide = data || null;
+        this._emit();
+        return data;
+      })
+      .catch(() => null);
+  },
+
+  // T19: GE 浮层 按领域/评分榜 视图切换
+  onGeModeTap(e) {
+    const mode = e.currentTarget.dataset.mode;
+    if ((mode === "fields" || mode === "ranking") && mode !== this._geMode) {
+      this._geMode = mode;
+      this._emit();
+    }
+  },
+
+  // T24: 教程入口 → ge-guide 页（传本专业 own_fields 供步骤③高亮；浮层保留，
+  // 返回键回到浮层继续选课）。未拉到 GE 列表时传空数组，页内走通用文案。
+  onOpenGeGuide() {
+    const code = this._selectedCode || this._userProgrammeCode;
+    const geData = (this._geList && this._geListCode === code) ? this._geList : null;
+    const fields = (geData && Array.isArray(geData.own_fields)) ? geData.own_fields : [];
+    wx.navigateTo({
+      url: `/pages/ge-guide/ge-guide?fields=${encodeURIComponent(JSON.stringify(fields))}`,
+    });
+  },
+
+  // T24: 去 MyHKMU 选课 — 复制链接（小程序开不了外链，复制是既定交互）
+  onCopyMyhkmuLink() {
+    const url = this._geGuide && this._geGuide.select_url;
+    if (!url) return;
+    const text = getTexts("planner", this._locale);
+    wx.setClipboardData({
+      data: url,
+      success: () => wx.showToast({ title: text.geLinkCopied, icon: "none" }),
+      fail: () => wx.showToast({ title: text.geLinkCopyFail, icon: "none" }),
+    });
+  },
+
+  // T19: 评分榜行点按 → 关浮层进课程详情（去三维评价/避坑投票）
+  onOpenGeCourse(e) {
+    const id = e.currentTarget.dataset.id;
+    if (!id) return;
+    this._gePickerOpen = false;
+    this._setTabBarHidden(false);
+    this._emit();
+    wx.navigateTo({ url: `/pages/course-detail/course-detail?id=${encodeURIComponent(id)}` });
+  },
+
+  // T28 排课台: 卡上"改学期"picker → 乐观写入 _schedule + PUT /progress/schedule。
+  // 失败回滚 + toast;成功后若先修(未完成)排在新区之后,顺手 toast 提示(不阻塞)。
+  onMoveCourse(e) {
+    if (!this._user) { this.goLogin(); return; }
+    const courseId = e.currentTarget.dataset.courseId;
+    const idx = Number(e.detail.value);
+    const target = MOVE_OPTIONS[idx];
+    if (!courseId || !target) return;
+    const prevSchedule = this._schedule || {};
+    const prev = prevSchedule[courseId] || null;
+
+    this._schedule = Object.assign({}, prevSchedule, {
+      [courseId]: { year: target.year, semester: target.semester },
+    });
+    this._emit(); // 卡片即时挪组
+
+    request({
+      path: "/courses/progress/schedule",
+      method: "PUT",
+      data: {
+        course_id: courseId,
+        planned_year: target.year,
+        planned_semester: target.semester,
+      },
+      auth: true,
+    })
+      .then(() => {
+        const text = getTexts("planner", this._locale);
+        // 先修顺序校验(toast 级,仅提示): 挪完后先修未完成且排在 >= 新位次
+        const c = (this._idToCourse || {})[courseId];
+        const prereqIds = c ? parsePrereqs(c.prerequisites) : [];
+        const myRank = target.year * 10 + semesterRank(target.semester);
+        const after = prereqIds.filter((id) => {
+          if ((this._progress || {})[id] === "completed") return false;
+          const pc = (this._idToCourse || {})[id];
+          if (!pc) return false;
+          const pp = placementOf(pc, this._schedule);
+          return placementRank(pp) >= myRank;
+        });
+        if (after.length) {
+          wx.showToast({ title: text.prereqOrderPrefix + after.join(", "), icon: "none", duration: 2500 });
+        }
+      })
+      .catch(() => {
+        // 回滚乐观更新
+        const restored = Object.assign({}, this._schedule);
+        if (prev) restored[courseId] = prev; else delete restored[courseId];
+        this._schedule = restored;
+        this._emit();
+        wx.showToast({ title: getTexts("planner", this._locale).schedUpdateFail, icon: "none" });
+      });
+  },
+
+  // picker 载体: 吞掉冒泡,避免触发卡片 openCourseDetail
+  stopBubble() {},
+
+  // 点 GE 课 → 乐观切换 completed（复用 PUT /courses/progress，与 course-detail 同语义）
+  onToggleGeCourse(e) {
+    if (!this._user) { this.goLogin(); return; }
+    const ds = e.currentTarget.dataset;
+    if (ds.blocked) {
+      // 本专业领域的 GE 不可选（官方规则）— 提示并拦截
+      wx.showToast({ title: getTexts("planner", this._locale).geFieldBlocked, icon: "none" });
+      return;
+    }
+    const id = ds.id;
+    if (!id) return;
+    const prev = (this._progress || {})[id];
+    const next = prev === "completed" ? "not_started" : "completed";
+    this._progress = Object.assign({}, this._progress, { [id]: next });
+    this._emit(); // 即时反馈：taken 计数 + 行高亮
+    request({
+      method: "PUT",
+      path: "/courses/progress",
+      data: { course_id: id, status: next },
+      auth: true,
+    })
+      .then(() => {
+        wx.showToast({ title: this.data.text.geMarkSuccess, icon: "success" });
+        // 进度变了：回 overview 后重拉 graduation-status
+        const app = getApp();
+        if (app && app.globalData) app.globalData.coursesNeedRefresh = true;
+      })
+      .catch(() => {
+        this._progress = Object.assign({}, this._progress, { [id]: prev }); // 回滚
+        this._emit();
+        wx.showToast({ title: getTexts("planner", this._locale).loadFail, icon: "none" });
+      });
+  },
+
+  // GE 浮层 view：按 field 分组（GE_FIELD_ORDER 顺序）、taken/blocked、实时门数（field 去重）
+  // T19: mode="ranking" 时出评分榜（分数降序）；T20: 空榜显"抢首评"空态。
+  _buildGePicker(prog, entry, locale, text) {
+    // 停招/目录专业不在规则载荷里(prog=null):GE 全校通用不随规则连坐,
+    // need 退官方默认 2 门(pick_n 仅规则专业有)
+    if (!this._gePickerOpen) return { open: false };
+    const geCat = ((prog && prog.categories) || {})["general-ed"] || {};
+    const need = geCat.pick_n || 2;
+    // 维度/避坑标签词条与 course-detail 同源,不重复造 key
+    const cdText = getTexts("courseDetail", locale);
+    const base = {
+      open: true,
+      title: text.gePickerTitle,
+      ruleNote: text.geRuleNote,
+      need,
+      mode: this._geMode,
+      tabFields: text.geTabFields,
+      tabRanking: text.geTabRanking,
+      // T24: 浮层底部常驻 footer — 教程入口 + 去 MyHKMU 选课（复制链接，
+      // 静态配置未拉到前隐藏该按钮）
+      guideEntry: text.geGuideEntry,
+      selectLabel: text.geMyhkmuLink,
+      selectUrl: (this._geGuide && this._geGuide.select_url) || "",
+    };
+    if (this._gePickerLoadError) {
+      return Object.assign(base, { loadError: text.geLoadFail });
+    }
+    if (this._geMode === "ranking") {
+      const rk = (this._geRanking && this._geRankingCode === entry.code) ? this._geRanking : null;
+      if (!rk) {
+        return Object.assign(base, { rankingLoading: true });
+      }
+      const rankRows = (rk.items || []).map((i) => ({
+        id: i.id,
+        code: i.code,
+        name: locale === "en" ? i.name_en : i.name_zh,
+        fieldLabel: localizeField(i.field, locale),
+        score: Number(i.score).toFixed(1),
+        dimsLine: cdText.dimTeaching + " " + i.teaching_avg + " · " +
+          cdText.dimWorkload + " " + i.workload_avg + " · " +
+          cdText.dimGain + " " + i.gain_avg,
+        countLabel: fillTemplate(text.geRankCount, { n: i.review_count }),
+        tags: (i.top_tags || []).map((t) => ({
+          label: cdText["tag_" + t.tag] || t.tag,
+          count: t.count,
+        })),
+      }));
+      return Object.assign(base, {
+        rankingLoading: false,
+        rankingEmpty: rankRows.length ? "" : text.geRankEmpty,
+        rankRows,
+      });
+    }
+    const geData = (this._geList && this._geListCode === entry.code) ? this._geList : null;
+    if (!geData) {
+      return Object.assign(base, { loading: true });
+    }
+    const order = geData.field_order || [];
+    const ownFields = new Set(geData.own_fields || []);
+    const progress = this._progress || {};
+    const byField = new Map();
+    for (const c of geData.courses || []) {
+      if (!byField.has(c.field)) byField.set(c.field, []);
+      byField.get(c.field).push(c);
+    }
+    // 实时算已选门数（field 去重，对齐后端 _compute_graduation 规则）
+    const usedFields = new Set();
+    let taken = 0;
+    for (const c of geData.courses || []) {
+      if (progress[c.id] === "completed" && !c.blocked && !usedFields.has(c.field)) {
+        usedFields.add(c.field);
+        taken++;
+      }
+    }
+    const kw = String(this._geKeyword || "").trim().toLowerCase();
+    const tf = this._geTermFilter || "";  // 学期筛选:autumn|spring|summer,空=全部
+    const fields = order
+      .filter((f) => byField.has(f))
+      .map((f) => {
+        const fBlocked = ownFields.has(f);
+        let fCourses = byField.get(f);
+        if (tf) {
+          // 学期胶囊先行(便宜的数组 includes),与下面的搜索天然 AND
+          fCourses = fCourses.filter((c) => (c.terms || []).includes(tf));
+        }
+        if (kw) {
+          // 搜索:课码/英文名/中文名/开课学期跨领域过滤(中文原样 contains)
+          fCourses = fCourses.filter((c) => {
+            if (String(c.code || "").toLowerCase().includes(kw) ||
+                String(c.name_en || "").toLowerCase().includes(kw) ||
+                String(c.name_zh || "").includes(kw)) return true;
+            return (c.terms || []).some((t) => this._geTermLabel(t, text).toLowerCase().includes(kw));
+          });
+        }
+        return {
+          name: localizeField(f, locale),
+          blocked: fBlocked,
+          headRight: fBlocked
+            ? text.geFieldBlocked
+            : fillTemplate(text.geFieldCount, { n: fCourses.length }),
+          courses: fCourses.map((c) => ({
+            id: c.id,
+            code: c.code,
+            name: locale === "en" ? c.name_en : c.name_zh,
+            credits: 3, // GE 课程统一 3 学分（3cru 体系，ge_courses.py）
+            taken: progress[c.id] === "completed",
+            blocked: !!c.blocked,
+            termLabel: (c.terms || []).map((t) => this._geTermLabel(t, text)).join("·"),
+          })),
+        };
+      })
+      .filter((f) => (!kw && !tf) || f.courses.length); // 搜索/学期筛选时收起无命中领域
+    return Object.assign(base, {
+      progress: fillTemplate(text.geProgress, { taken, need }),
+      taken,
+      fields,
+      searchPlaceholder: text.geSearchPlaceholder,
+      searchEmpty: ((kw || tf) && !fields.length) ? text.geSearchEmpty : "",
+      termSegs: ["", "autumn", "spring", "summer"].map((k) => ({
+        key: k,
+        active: tf === k,
+        label: k ? this._geTermLabel(k, text) : text.geTermAll,
+      })),
+    });
+  },
+
+  // GE 学期筛选胶囊点按:切换 全部/秋季/春季/暑期(与搜索叠加 AND)
+  onGeTermTap(e) {
+    const t = e.currentTarget.dataset.term || "";
+    if (t !== (this._geTermFilter || "")) {
+      this._geTermFilter = t;
+      this._emit();
+    }
+  },
+
+  // GE 领域视图搜索:实时按课码/中英文名跨领域过滤(73 门本地数据,无需节流)
+  onGeSearchInput(e) {
+    this._geKeyword = e.detail.value || "";
+    this._emit();
+  },
+
+  // GE 开课学期标签(复用 planner 学期词条:秋季/春季/暑期;2026秋→2027暑窗口)
+  _geTermLabel(t, text) {
+    if (t === "autumn") return text.semAutumn;
+    if (t === "spring") return text.semSpring;
+    if (t === "summer") return text.semSummer;
+    return t;
+  },
+
+  // T11: 年份 seg 点按 — 切课表展示学年(Y1-Y4)
+  onYearTap(e) {
+    const y = parseInt(e.currentTarget.dataset.year, 10);
+    if (y >= 1 && y <= 4 && y !== this._activeYear) {
+      this._activeYear = y;
+      this._emit();
+    }
+  },
+
+  // T12: 二级 seg(规划/课程/通识)— 通识项直接开 GE 浮层,不切内联视图
+  onViewSegTap(e) {
     const tab = e.currentTarget.dataset.tab;
-    if (tab && tab !== this._activeTab) {
-      this._activeTab = tab;
+    if (tab === "ge") {
+      this.onOpenGePicker();
+      return;
+    }
+    if ((tab === "plan" || tab === "courses") && tab !== this._viewTab) {
+      this._viewTab = tab;
       this._emit();
     }
   },
@@ -440,7 +1121,7 @@ Page({
   },
 
   openCourseDetail(e) {
-    // 课程卡只在登录态渲染(showTabs = _user && status),点按即进详情页(页内内联标记)
+    // 课程卡只在登录态仪表盘渲染(_user && status),点按即进详情页(页内内联标记)
     const courseId = e.currentTarget.dataset.courseId;
     if (!courseId) {
       return;
@@ -458,20 +1139,43 @@ Page({
     const planning = this._catalogue;
     const browse = this._courseCatalogue;
 
+    // code→目录条目映射(三语专业名来源,规则专业载荷只有英文)+
+    // 别名码→主码映射(批次 3:picker 单入口后,旧保存码/官方变体码解析)
+    if (browse && browse.schools && !this._catByCode) {
+      const m = {};
+      const aliases = {};
+      for (const sch of browse.schools) {
+        for (const p of sch.programmes) {
+          m[p.programme_code] = p;
+          for (const a of p.alias_codes || []) aliases[a] = p.programme_code;
+        }
+      }
+      this._catByCode = m;
+      this._aliasToMain = aliases;
+    }
+
     // 扁平 picker 列表：优先 browse 目录（全校 ~107），否则回退 planning 3 专业
     let pickerList = [];
     if (browse && browse.schools) {
       for (const sch of browse.schools) {
         for (const p of sch.programmes) {
           const known = planning && planning.programmes.find((x) => x.code === p.programme_code);
-          const name = known ? localizeName(known.name, locale) : p.programme_name;
+          // 完整规划判定：DB flag(仅 DSAI)或 /programmes 已收录的规则专业(55 门,
+          // v1.11 起带毕业规则+GE 池但 DB has_full_planning 列未回填)→ 以载荷为准
+          const knownFull = !!(known && !known.coming_soon);
+          const name = (locale === "zh-Hans" || locale === "zh-Hant")
+            ? (catalogueName(p, locale) || localizeName(known && known.name, locale))
+            : (known ? localizeName(known.name, locale) : p.programme_name);
           pickerList.push({
             code: p.programme_code,
-            has_full_planning: !!p.has_full_planning,
+            has_full_planning: !!p.has_full_planning || knownFull,
             school: p.school || (known && known.school) || "",
             name,
-            // 仅完整规划专业挂徽章；其余 106 个目录专业不再每行重复"课程目录"标签
-            badge: p.has_full_planning ? text.catalogueTagFull : "",
+            // 同专业在招变体/系列码(BSCHCOMPF3、BSSCHWSJ1…):单入口后靠它可搜
+            aliases: (p.alias_codes || []).join(" "),
+            // 完整规划挂徽章;停招专业挂灰标;其余不挂
+            badge: (p.has_full_planning || knownFull) ? text.catalogueTagFull
+              : (p.discontinued ? text.catalogueTagDiscontinued : ""),
           });
         }
       }
@@ -487,7 +1191,10 @@ Page({
     this._pickerList = pickerList;
 
     // 选中优先级：手动选 > 已保存(须完整规划专业) > 默认
-    const saved = this._userProgrammeCode;
+    // 已保存码若已折叠为变体(BNHGJ1→BNHGJ 等),解析到主码防静默回退默认
+    const saved = this._aliasToMain
+      ? (this._aliasToMain[this._userProgrammeCode] || this._userProgrammeCode)
+      : this._userProgrammeCode;
     // 账户存的专业即采用（含 catalogue，会进目录视图）；不再只认完整规划专业，
     // 否则选了 catalogue 专业下次会被静默回退到 DSAI（"选了没记住"的根因）
     const savedValid = saved && pickerList.some((p) => p.code === saved);
@@ -508,7 +1215,7 @@ Page({
       const gmap = new Map();
       for (const p of pickerList) {
         if (pq) {
-          const hay = `${p.name} ${p.code} ${p.school || ""}`.toLowerCase();
+          const hay = `${p.name} ${p.code} ${p.aliases || ""} ${p.school || ""}`.toLowerCase();
           if (!hay.includes(pq)) continue;
         }
         if (!gmap.has(p.school)) gmap.set(p.school, []);
@@ -523,9 +1230,14 @@ Page({
       programmeSearchEmpty = !!pq && searchGroups.length === 0;
     }
 
+    // T07: 入学学期 → 当前学年/毕业年（T08 hero 毕业年、T10 下学期建议、T11 年份 tab 数据源）。
+    // entry_term 未存（老用户/未走引导）→ null，消费方 wx:if 降级隐藏。
+    const studyInfo = computeStudyInfo(this._user && this._user.entry_term, new Date());
+
     const view = {
       locale,
       text,
+      studyInfo,
       loading: this._loading,
       loggedIn: !!this._user,
       programmeOptions: pickerList,
@@ -553,10 +1265,24 @@ Page({
       categoriesView: [],
       recommendations: [],
       heroCopy: "",
-      activeTab: this._activeTab,
-      showTabs: false,
+      viewSeg: this._viewTab,
+      activeYear: 0,
+      yearsView: [],
       searchKeyword: this._searchKeyword,
       coursesView: { semesters: [], empty: true },
+      gePicker: { open: false },
+      onboarding: {
+        active: !!this._onboardingActive,
+        step: this._onboardingStep || 1,
+        statusBar: this._obStatusBar || 0,
+        programmeCode: this._onboardingProgrammeCode || "",
+        programmeName: this._onboardingProgrammeName || "",
+        years: this._onboardingYears || [],
+        year: this._onboardingYear || 0,
+        semester: this._onboardingSemester || "",
+        entryTermDisplay: this._obEntryTermDisplay(),
+        canNext: this._obCanNext(),
+      },
     };
 
     if (!entry || this._loading) {
@@ -572,11 +1298,11 @@ Page({
       const cached = this._catalogueCoursesCache[entry.code];
       if (cached && cached._failed) {
         // 负缓存命中：显加载失败，不再重拉（避免死循环）
-        view.catalogueProgrammeName = view.programmeName;
+        view.catalogueProgrammeName = catalogueName(this._catByCode && this._catByCode[entry.code], locale) || view.programmeName;
         view.catalogueSchool = view.programmeSchool;
         view.catalogueLoadError = text.catalogueLoadFail;
       } else if (cached) {
-        view.catalogueProgrammeName = cached.programme_name || view.programmeName;
+        view.catalogueProgrammeName = catalogueName(this._catByCode && this._catByCode[entry.code], locale) || cached.programme_name || view.programmeName;
         view.catalogueSchool = cached.school || view.programmeSchool;
         view.catalogueBuckets = this._buildCatalogueBuckets(cached, text);
         view.catalogueTotal = (cached.buckets || []).reduce(
@@ -588,6 +1314,9 @@ Page({
         view.catalogueLoading = true;
         this._loadCatalogueCourses(entry.code).then(() => this._emit());
       }
+      // GE 浮层全校通用(停招专业也不连坐):目录分支提前 return 前补建视图,
+      // prog 传 null → _buildGePicker 内部退默认 need=2
+      view.gePicker = this._buildGePicker(null, entry, locale, text);
       this.setData(view);
       return;
     }
@@ -595,7 +1324,8 @@ Page({
     // ── 完整规划专业（DSAI）→ 既有仪表盘/课程流 ──
     const programmes = planning ? planning.programmes : [];
     const prog = programmes.find((p) => p.code === entry.code) || programmes[0];
-    view.programmeName = prog ? localizeName(prog.name, locale) : view.programmeName;
+    view.programmeName = (prog && catalogueName(this._catByCode && this._catByCode[prog.code], locale))
+      || (prog ? localizeName(prog.name, locale) : view.programmeName);
     view.programmeSchool = prog ? prog.school || "" : view.programmeSchool;
     view.comingSoon = prog ? !!prog.coming_soon : false;
 
@@ -612,28 +1342,93 @@ Page({
         earned: status.earned_credits,
         total: status.total_credits,
       });
+      // T08: hero 绿渐变卡统计 —— 距毕业学分 + 进度行（有 entry_term 才拼毕业年）
+      const gradSemLabel = studyInfo
+        ? (studyInfo.gradSem === "spring" ? text.heroSemSpring : text.heroSemAutumn)
+        : "";
+      const gradLabel = studyInfo
+        ? (locale === "en"
+            ? gradSemLabel + " " + studyInfo.gradYear
+            : studyInfo.gradYear + " " + gradSemLabel)
+        : "";
+      view.heroStat = {
+        remainText: fillTemplate(text.heroRemaining, {
+          n: Math.max((status.total_credits || 0) - (status.earned_credits || 0), 0),
+        }),
+        progressLine: fillTemplate(text.heroProgress, {
+          earned: status.earned_credits,
+          total: status.total_credits,
+        }) + (gradLabel ? " · " + gradLabel : ""),
+      };
       view.categoriesView = (status.categories || []).map((c) => ({
         key: c.key,
         label: text.categories[c.key] || c.key,
         earned: c.earned_credits,
         required: c.min_credits,
         pct: categoryPercent(c.earned_credits, c.min_credits),
+        done: (c.earned_credits || 0) >= (c.min_credits || 0) && (c.min_credits || 0) > 0,
         color: c.color,
+        hasGePool: c.key === "general-ed",
       }));
       view.recommendations = (status.recommendations || []).map((r) => ({
         course_id: r.course_id,
         code: r.code,
         name: r.name,
         credits: r.credits,
+        categoryKey: r.category_key,
         categoryLabel: text.categories[r.category_key] || r.category_key,
       }));
-      view.showTabs = true;
+      // T10: 系统建议卡 —— "排进下学期"一句话（替代逐条 course-row 列表）。
+      // 学期边界与 entry 类型对齐：秋入学按秋切换班级年，春入学按春切换。
+      if (view.recommendations.length) {
+        const recs = status.recommendations || [];
+        const codes = recs.map((r) => r.code).filter(Boolean).join(" · ");
+        const credits = recs.reduce((n, r) => n + (r.credits || 0), 0);
+        const month = new Date().getMonth() + 1;
+        let heading = text.adviceHeadingPlain;
+        if (studyInfo && studyInfo.studyYear >= 1) {
+          const nextSem = month >= 8 ? "spring" : "autumn";
+          const nextY = studyInfo.studyYear + (studyInfo.entrySem === nextSem ? 1 : 0);
+          heading = fillTemplate(text.adviceHeadingTerm, {
+            y: nextY,
+            sem: nextSem === "spring" ? text.heroSemSpring : text.heroSemAutumn,
+          });
+        }
+        // 推荐全属同一分类时拼"XX还差 N cr"子句，多分类则省略
+        let gapClause = "";
+        const catKeys = Array.from(new Set(recs.map((r) => r.category_key)));
+        if (catKeys.length === 1) {
+          const cat = (status.categories || []).find((c) => c.key === catKeys[0]);
+          if (cat && cat.min_credits > 0) {
+            gapClause = fillTemplate(text.adviceGap, {
+              cat: text.categories[catKeys[0]] || catKeys[0],
+              gap: Math.max(cat.min_credits - (cat.earned_credits || 0), 0),
+            });
+          }
+        }
+        view.advice = {
+          heading,
+          text: gapClause + fillTemplate(text.adviceBody, { codes, credits }),
+        };
+      }
+      // T11: 年份 seg(当前学年高亮)+ 该学年两学期课表,合并一屏滚动
+      const curY = studyInfo ? Math.min(Math.max(studyInfo.studyYear, 1), 4) : 1;
+      if (!this._activeYear) this._activeYear = curY;
+      view.activeYear = this._activeYear;
+      view.yearsView = [1, 2, 3, 4].map((n) => ({
+        n,
+        label: "Y" + n,
+        current: n === curY,
+        active: n === this._activeYear,
+      }));
       if (this._idToCourse && this._progress) {
-        view.coursesView = buildCoursesView(prog, this._idToCourse, this._progress, this._searchKeyword, text);
+        // T12: 规划视图出当前学年两学期;课程视图出全量分组(带搜索)
+        view.coursesView = this._viewTab === "courses"
+          ? buildCoursesView(prog, this._idToCourse, this._progress, this._searchKeyword, text, null, this._schedule)
+          : buildCoursesView(prog, this._idToCourse, this._progress, this._searchKeyword, text, { year: this._activeYear }, this._schedule);
       }
     } else if (prog.coming_soon) {
       view.heroCopy = text.comingSoonCopy;
-      view.activeTab = "overview";
     } else {
       // 未登录 / status 未到：用目录静态学分要求
       view.categoriesView = (prog.categories || []).map((c) => ({
@@ -643,9 +1438,13 @@ Page({
         required: c.min_credits,
         pct: 0,
         color: c.color,
+        hasGePool: c.key === "general-ed",
       }));
       view.heroCopy = this._user ? "" : text.heroCopy;
     }
+
+    // ── GE 选择浮层 view（仅完整规划专业 + 已打开）──
+    view.gePicker = this._buildGePicker(prog, entry, locale, text);
 
     this.setData(view);
   },

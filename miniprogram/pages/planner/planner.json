@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "选课规划"
+  "navigationBarTitleText": "选课规划",
+  "usingComponents": {
+    "programme-picker": "../../components/programme-picker/programme-picker"
+  }
 }

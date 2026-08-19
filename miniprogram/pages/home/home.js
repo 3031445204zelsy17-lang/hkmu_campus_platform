@@ -33,6 +33,13 @@ Page({
     userInitial: "H",
   },
 
+  // 微信胶囊「···」菜单:点亮转发(未定义则菜单里该钮置灰)。
+  // 卡片标题带品牌后缀,收卡人不装 app 也能看懂这是什么
+  onShareAppMessage() {
+    const t = (this.data.text && this.data.text.title) || "";
+    return { title: t ? `${t} · HKMU Campus` : "HKMU Campus", path: "/pages/home/home" };
+  },
+
   onShow() {
     this.applyLocale(getLocale());
     syncTabBar(this, 0);
@@ -260,11 +267,14 @@ Page({
     });
   },
 
-  openComments() {
-    wx.showToast({
-      title: this.data.text.commentsSoon,
-      icon: "none",
-    });
+  // 首页评论图标 → 跳帖子详情(与 community.openDetail 同一入口;
+  // 此前是 UI 预览遗留的「即将接入」toast,用户反馈点不开评论区)
+  openComments(event) {
+    const id = event.currentTarget.dataset.id;
+    if (!id) {
+      return;
+    }
+    wx.navigateTo({ url: `/pages/post-detail/post-detail?id=${id}` });
   },
 
   goCompose() {

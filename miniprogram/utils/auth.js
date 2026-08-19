@@ -27,6 +27,7 @@ function decorateUser(user) {
     displayName,
     emailLabel: user.email || "未填写",
     initial: getInitial(displayName),
+    isAdmin: user.identity === "admin",
     providerLabel: user.oauth_provider || "账号密码",
     studentIdLabel: user.student_id || "未填写",
   });

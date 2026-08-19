@@ -35,10 +35,13 @@ Page({
     loading: false,
     locale: getLocale(),
     privacyAction: getTexts("privacy").openAction,
+    termsAction: getTexts("terms").openAction,
     feedbackAction: getTexts("feedback").title,
     text: getTexts("profile"),
     user: null,
     sharePath: "", // Phase 5: 预取的邀请分享路径(onShareAppMessage 用)
+    pickerOpen: false, // T03: 专业选择浮层开关
+    programmeName: "", // T03: 当前专业名（catalogue code→name 映射）
   },
 
   onShow() {
@@ -72,6 +75,7 @@ Page({
       feedbackAction: getTexts("feedback", locale).title,
       text,
     });
+    this._applyProgrammeName(); // 专业名随语言切换重取(中文/英文)
   },
 
   onPullDownRefresh() {
@@ -99,7 +103,10 @@ Page({
       .bootstrapSession()
       .then((user) => {
         this._renderUser(user);
-        if (user) this._prefetchSharePath();
+        if (user) {
+          this._prefetchSharePath();
+          this._loadProgrammeName();
+        }
       })
       .catch((error) => {
         wx.showToast({
@@ -248,6 +255,13 @@ Page({
     });
   },
 
+  // 用户协议(登录后入口;登录页另有入口)。terms 页正文含第 9 段禁止行为。
+  openTerms() {
+    wx.navigateTo({
+      url: "/pages/terms/terms",
+    });
+  },
+
   openFeedback() {
     wx.navigateTo({
       url: "/pages/feedback/feedback",
@@ -279,6 +293,84 @@ Page({
       .catch(() => {
         // 静默失败:未验证/网络异常时分享按钮走默认 path(不带 inv)
       });
+  },
+
+  // ── T03: 我的专业展示 + 切换（programme-picker 组件）──
+
+  // 拉全校专业建 code→name 映射,展示"我的专业"名（仅登录态调）。
+  // 存原始三语字段,应用时按 locale 取:中文优先官方目录名,缺失回退英文
+  _loadProgrammeName() {
+    if (this._progNameMap) {
+      this._applyProgrammeName();
+      return;
+    }
+    request({ path: "/courses/catalogue/programmes", auth: false })
+      .then((data) => {
+        const map = {};
+        ((data && data.schools) || []).forEach((sch) => {
+          (sch.programmes || []).forEach((p) => {
+            map[p.programme_code] = {
+              en: p.programme_name,
+              zh_cn: p.name_zh_cn || "",
+              zh_tw: p.name_zh_tw || "",
+            };
+          });
+        });
+        this._progNameMap = map;
+        this._applyProgrammeName();
+      })
+      .catch(() => {
+        // 静默失败:拉不到专业名时 value 显 programmeUnset
+      });
+  },
+
+  _programmeNameForLocale(entry, locale) {
+    if (!entry) return "";
+    if (locale === "zh-Hans") return entry.zh_cn || entry.zh_tw || entry.en;
+    if (locale === "zh-Hant") return entry.zh_tw || entry.zh_cn || entry.en;
+    return entry.en;
+  },
+
+  _applyProgrammeName() {
+    const code = this.data.user && this.data.user.programme_code;
+    const entry = code && this._progNameMap && this._progNameMap[code];
+    const name = this._programmeNameForLocale(entry, this.data.locale) || "";
+    this.setData({ programmeName: name });
+  },
+
+  onOpenProgrammePicker() {
+    this.setData({ pickerOpen: true });
+    this._setPickerTabBarHidden(true);
+  },
+
+  onProgrammePickerClose() {
+    this.setData({ pickerOpen: false });
+    this._setPickerTabBarHidden(false);
+  },
+
+  onProgrammeSelect(e) {
+    const { code, name } = e.detail;
+    const text = this.data.text;
+    this.setData({ pickerOpen: false });
+    this._setPickerTabBarHidden(false);
+    request({ method: "PUT", path: "/users/me", data: { programme_code: code }, auth: true })
+      .then(() => {
+        // 通知 planner 跟随切换(其 _selectedCode 优先级压过已存专业,不主动同步
+        // 会一直显示旧专业直到冷启动)
+        const app = getApp();
+        if (app && app.globalData) app.globalData.programmeSwitched = code;
+        wx.showToast({ title: text.saveSuccess, icon: "success" });
+        this.setData({ programmeName: name || "" }); // 即时反馈
+        return this.refreshProfile(false); // 兜底:同步 storage + 重拉 user
+      })
+      .catch((err) => {
+        wx.showToast({ title: (err && err.message) || text.saveFail, icon: "none" });
+      });
+  },
+
+  _setPickerTabBarHidden(hidden) {
+    const tabBar = typeof this.getTabBar === "function" ? this.getTabBar() : null;
+    if (tabBar) tabBar.setData({ externallyHidden: !!hidden });
   },
 
   // Phase 5 P0: 补绑 HKMU 邮箱,解锁同校验证层

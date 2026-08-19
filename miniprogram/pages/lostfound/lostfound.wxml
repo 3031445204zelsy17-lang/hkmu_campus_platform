@@ -50,9 +50,9 @@
         <view class="utility-title">{{item.title}}</view>
         <view class="utility-summary">{{item.description}}</view>
         <view class="card-footer">{{item.category}} {{text.separator}} {{item.location}} {{text.separator}} {{item.author}}</view>
-        <view wx:if="{{item.isMine}}" class="item-actions">
-          <view wx:if="{{item.statusLabel !== text.statusResolved}}" class="item-action" data-id="{{item.id}}" bindtap="markResolved">{{text.markResolvedAction}}</view>
-          <view class="item-action" data-id="{{item.id}}" bindtap="openEditForm">{{text.editAction}}</view>
+        <view wx:if="{{item.isMine || isAdmin}}" class="item-actions">
+          <view wx:if="{{item.isMine && item.statusLabel !== text.statusResolved}}" class="item-action" data-id="{{item.id}}" bindtap="markResolved">{{text.markResolvedAction}}</view>
+          <view wx:if="{{item.isMine}}" class="item-action" data-id="{{item.id}}" bindtap="openEditForm">{{text.editAction}}</view>
           <view class="item-action danger" data-id="{{item.id}}" bindtap="deleteItem">{{text.deleteAction}}</view>
         </view>
       </view>

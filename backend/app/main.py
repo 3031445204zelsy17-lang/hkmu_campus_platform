@@ -17,6 +17,20 @@ from .services.rate_limiter import check_rate_limit
 
 # Security/observability logger. Propagates to uvicorn root → stdout → Azure Log
 # Stream + Application Insights. WARNING+ surfaces in App Insights failure views.
+#
+# 上面第二行的假设是错的,且代价真实:uvicorn 只给 uvicorn.* 挂 handler,不配
+# root;无 APPLICATIONINSIGHTS 时 root 更是零 handler → hkmu.* 记录靠 Python
+# lastResort(stderr),但容器里 azure-monitor/其它库一旦碰过 root,lastResort
+# 就不再兜底 —— 8-04 与 8-16 两次审核 503 排障都因此拿不到 errcode 铁证
+# (content_security 的 logger.exception 在 docker 日志里 0 条)。这里显式给
+# hkmu 家族挂 stdout handler:无论 root 被谁动过,关键日志必然进容器日志。
+_hkmu_root = logging.getLogger("hkmu")
+if not _hkmu_root.handlers:
+    _h = logging.StreamHandler()
+    _h.setFormatter(logging.Formatter(
+        "%(asctime)s %(levelname)s %(name)s %(message)s"))
+    _hkmu_root.addHandler(_h)
+    _hkmu_root.setLevel(logging.INFO)
 logger = logging.getLogger("hkmu.security")
 
 

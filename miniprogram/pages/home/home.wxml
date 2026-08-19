@@ -43,13 +43,6 @@
     </view>
   </view>
 
-  <view wx:if="{{posts.length === 0 && !loading}}" class="empty-state">
-    <view class="empty-icon">{{text.emptyIcon}}</view>
-    <view class="empty-title">{{text.emptyTitle}}</view>
-    <view class="empty-copy">{{text.emptyCopy}}</view>
-    <button class="primary-action empty-action" bindtap="goCompose">{{text.emptyAction}}</button>
-  </view>
-
   <view class="feed-list">
     <view wx:for="{{posts}}" wx:key="id" class="feed-card">
       <view class="feed-head">
@@ -73,7 +66,7 @@
               <text class="{{item.likeIconClass}}">{{item.likeIcon}}</text>
               <text class="post-action-count">{{item.likeLabel}}</text>
             </view>
-            <view class="post-action comment-action" catchtap="openComments" hover-class="post-action-press">
+            <view class="post-action comment-action" data-id="{{item.id}}" catchtap="openComments" hover-class="post-action-press">
               <view class="post-comment-icon">
                 <view class="post-comment-bubble"></view>
                 <view class="post-comment-tail"></view>

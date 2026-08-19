@@ -26,7 +26,7 @@ from collections import Counter, defaultdict
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
-from app.data.programmes import PROGRAMMES  # noqa: E402  — pure dict, safe to import
+from app.data.programmes import PROGRAMMES, PROGRAMME_ALIASES  # noqa: E402  — pure dicts, safe to import
 from dotenv import load_dotenv  # noqa: E402
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", "backend", ".env"))
@@ -43,9 +43,12 @@ SKILL_MD = os.path.join(
 #   |   |   +-- Group Name/      (group:   ends '/', no '[代码:]', no '(CODE)/')
 #   |   |   |   +-- Name [代码: X] [学分: N]   (course leaf)
 _COURSE_RE = re.compile(r"\[代码: (.+?)\]\s*\[学分: (\d+)\]")
-_PROG_RE = re.compile(r"^\|\s+\+-- .+\(([A-Z0-9]{4,})\)/\s*$")
+# 头部码 token 允许复合形式(BSSCHWSJ_SCHJ-AGS 伞码_子计划,批次 3):不带 _ 的部分
+# 归一为专业码(BSSCHWSJ),复合 token 本身不进表。变体码(BNHGJ1 等)经
+# PROGRAMME_ALIASES 折到主码,picker 单入口(指南 9 对 + 2 变体)。
+_PROG_RE = re.compile(r"^\|\s+\+-- .+\(([A-Z][A-Z0-9]*(?:[_-][A-Z0-9]+)*)\)/\s*$")
 _SCHOOL_RE = re.compile(r"^\+-- (.+)/\s*$")
-_PROGCLOSE_RE = re.compile(r"\([A-Z0-9]{4,}\)/\s*$")
+_PROGCLOSE_RE = re.compile(r"\([A-Z][A-Z0-9]*(?:[_-][A-Z0-9]+)*\)/\s*$")
 
 _SCHOOL_ORDER = {
     "Lee Shau Kee School of Business and Administration": 1,
@@ -110,6 +113,25 @@ def clean_name(raw_name: str, code_token: str) -> str:
     return name
 
 
+# Traditional→Simplified for the ~545 CJK (humanities) courses so zh-CN viewers
+# see 简体; English-only courses have no CJK → return None and the front end
+# falls back to display_name. OpenCC is lazy/optional so --check (parser-only,
+# no DB) still runs without the dep installed.
+try:
+    from opencc import OpenCC as _OpenCC
+    _T2S = _OpenCC("t2s")
+except Exception:  # noqa: BLE001 — optional dep, --check must work without it
+    _T2S = None
+
+_CJK_RE = re.compile(r"[一-鿿]")
+
+
+def to_simplified(name):
+    if not name or _T2S is None or not _CJK_RE.search(name):
+        return None
+    return _T2S.convert(name)
+
+
 def detect_code_system(code_token: str) -> str:
     parts = code_token.split(" ", 1)
     rest = parts[1] if len(parts) > 1 else code_token
@@ -170,6 +192,7 @@ def parse_skill_md(path: str):
                 "course_code_sort": code_token.replace(" ", ""),
                 "display_name": clean_name(name_raw, code_token),
                 "raw_name": name_raw[:500],
+                "name_zh_cn": to_simplified(clean_name(name_raw, code_token)),
                 "credits": credits,
                 "code_system": detect_code_system(code_token),
                 "source_line_no": idx + 1,
@@ -179,7 +202,14 @@ def parse_skill_md(path: str):
         mp = _PROG_RE.match(line)
         if mp:
             code = mp.group(1)
-            prog_name = re.sub(r"\s*\([A-Z0-9]{4,}\)/?\s*$", "", _after_plus(line)).strip()
+            # 伞码复合 token(BSSCHWSJ_SCHJ-AGS / BSSCHWSJ-SCHJ-PPA)→ 专业码取
+            # 首个 _/- 前段;变体码(BNHGJ1 / BSCHCEF3 …)→ 折到主码。
+            if "_" in code or "-" in code:
+                code = re.split(r"[_-]", code, maxsplit=1)[0]
+            code = PROGRAMME_ALIASES.get(code, code)
+            prog_name = re.sub(
+                r"\s*\([A-Z][A-Z0-9]*(?:[_-][A-Z0-9]+)*\)/?\s*$", "", _after_plus(line)
+            ).strip()
             if code not in programmes:
                 programmes[code] = {
                     "programme_code": code,
@@ -225,6 +255,10 @@ def parse_skill_md(path: str):
         known = PROGRAMMES.get(code)
         if known:
             names = known.get("name", {})
+            # PROGRAMMES 侧名字是人工核准的权威串(伞码段标题会带专修后缀),
+            # 三语统一以它为准
+            if names.get("en"):
+                prog["programme_name"] = names["en"]
             prog["name_zh_cn"] = names.get("zh-CN")
             prog["name_zh_tw"] = names.get("zh-TW")
             prog["has_full_planning"] = not known.get("coming_soon", False)
@@ -296,6 +330,7 @@ async def seed(programmes, order, courses):
                     c["programme_code"], c["school"], c["official_group"],
                     c["canonical_bucket"], c["bucket_order"], c["course_code"],
                     c["course_code_sort"], c["display_name"], c["raw_name"],
+                    c["name_zh_cn"],
                     c["credits"], c["code_system"], c["source_line_no"],
                 )
                 for c in courses
@@ -306,8 +341,8 @@ async def seed(programmes, order, courses):
                     """INSERT INTO course_catalogue
                        (programme_code, school, official_group, canonical_bucket,
                         bucket_order, course_code, course_code_sort, display_name,
-                        raw_name, credits, code_system, source_line_no)
-                       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+                        raw_name, name_zh_cn, credits, code_system, source_line_no)
+                       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
                        ON CONFLICT (programme_code, course_code, official_group)
                        DO NOTHING""",
                     course_rows[i:i + BATCH],

@@ -149,6 +149,13 @@
   padding: 0;
 }
 
+/* Category satisfied — all requirements met for this category */
+[data-page="planner"] .category-progress-row.cat-satisfied {
+  background: rgba(16, 185, 129, 0.08);
+  border-radius: 8px;
+  padding: 0.5rem 0.625rem;
+}
+
 /* Recommendation card */
 [data-page="planner"] .recommendation-card {
   padding: 1.25rem;

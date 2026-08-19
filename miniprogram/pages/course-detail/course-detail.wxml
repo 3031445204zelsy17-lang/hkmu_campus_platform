@@ -16,13 +16,38 @@
         <view wx:if="{{course.categoryLabel}}" class="mini-pill green">{{course.categoryLabel}}</view>
       </view>
       <view class="course-hero-name">{{course.name}}</view>
-      <view class="course-hero-meta">{{course.creditsLabel}} · {{course.yearLabel}} · {{course.semesterLabel}}</view>
+      <view class="course-hero-meta">{{course.metaLine}}</view>
       <view wx:if="{{course.description}}" class="course-desc">{{course.description}}</view>
       <view wx:if="{{course.hasPrereqs}}" class="course-prereqs">
         <text class="course-prereq-label">{{text.prereqLabel}}</text>
         <text class="course-prereq-text">{{course.prereqText}}</text>
       </view>
       <view class="course-official-note">{{text.officialNote}}</view>
+    </view>
+
+    <!-- GE 官方目录信息(官方 GE_catalog_3cru.pdf 富化;介绍为官方原文单语) -->
+    <view wx:if="{{course.geInfo}}" class="web-panel ge-info-card">
+      <view class="section-title">{{text.geInfoTitle}}</view>
+      <view class="ge-info-row" wx:for="{{course.geInfo.rows}}" wx:key="label">
+        <text class="ge-info-label">{{item.label}}</text>
+        <text class="ge-info-val">{{item.value}}</text>
+      </view>
+      <view class="ge-info-row" wx:if="{{course.geInfo.terms.length}}">
+        <text class="ge-info-label">{{text.geTermsLabel}}</text>
+        <view class="ge-info-terms">
+          <text
+            wx:for="{{course.geInfo.terms}}"
+            wx:for-item="tm"
+            wx:key="*this"
+            class="ge-info-term"
+          >{{tm}}</text>
+        </view>
+      </view>
+      <view wx:if="{{course.geInfo.description}}" class="ge-info-desc">{{course.geInfo.description}}</view>
+      <view wx:if="{{course.geInfo.excludedText}}" class="ge-info-excl">
+        <text class="ge-info-excl-label">{{text.geExcludedLabel}}</text>
+        <text class="ge-info-excl-val">{{course.geInfo.excludedText}}</text>
+      </view>
     </view>
 
     <!-- 内联标记(登录态) -->
@@ -47,21 +72,46 @@
         <text class="reviews-count">· {{reviewsTotal}}</text>
       </view>
 
-      <view wx:if="{{reviewsTotal > 0}}" class="rating-summary">
-        <text class="rating-avg">{{avgRatingLabel}}</text>
-        <text class="rating-stars">{{avgStarsText}}</text>
-        <text class="rating-count">{{reviewsTotal}} {{text.reviewsSuffix}}</text>
+      <!-- T15: 三维评分卡(某维无评分不出行;三维全无但有老 5 星 → 老样式) -->
+      <view wx:if="{{ratingStats}}" class="rating-stats">
+        <block wx:if="{{ratingStats.dims.length}}">
+          <view wx:for="{{ratingStats.dims}}" wx:key="key" class="dim-row">
+            <view class="dim-label">
+              <text class="dim-name">{{item.label}}</text>
+              <text wx:if="{{item.hint}}" class="dim-hint">{{item.hint}}</text>
+            </view>
+            <view class="dim-track">
+              <view class="dim-fill" style="width: {{item.pct}}%"></view>
+            </view>
+            <text class="dim-val">{{item.value}}</text>
+          </view>
+          <view class="rating-count">{{ratingStats.count}} {{text.reviewsSuffix}}</view>
+          <!-- T17: 少评价降级提示 -->
+          <view wx:if="{{ratingStats.count < 3}}" class="rating-few-hint">{{text.reviewsFewHint}}</view>
+        </block>
+        <block wx:elif="{{ratingStats.legacyAvg}}">
+          <text class="rating-avg">{{ratingStats.legacyAvg}}</text>
+          <text class="rating-stars">{{ratingStats.legacyStars}}</text>
+          <view class="rating-count">{{ratingStats.count}} {{text.reviewsSuffix}}</view>
+        </block>
       </view>
 
       <view wx:if="{{reviewsLoading}}" class="review-status">{{text.reviewsLoading}}</view>
       <block wx:else>
-        <view wx:if="{{reviews.length === 0}}" class="review-status">{{text.reviewsEmpty}}</view>
+        <!-- T17: 冷启动空态 — 抢首评 CTA(composer 就在下方) -->
+        <view wx:if="{{reviews.length === 0}}" class="review-empty">
+          <view class="review-empty-icon">✍️</view>
+          <view class="review-empty-title">{{text.reviewsEmpty}}</view>
+          <view wx:if="{{loggedIn && !myReviewId}}" class="review-empty-cta">{{text.reviewsFirstCta}}</view>
+        </view>
         <view wx:for="{{reviews}}" wx:key="id" class="review-item">
           <view class="review-head">
             <view class="comment-avatar">{{item.authorInitial}}</view>
             <view class="review-head-main">
               <view class="comment-author">{{item.authorName}}</view>
-              <view class="review-stars">{{item.starsText}}</view>
+              <!-- T17: 老 5 星显星;新三维评论显维度摘要 -->
+              <view wx:if="{{item.starsText}}" class="review-stars">{{item.starsText}}</view>
+              <view wx:elif="{{item.dimsSummary}}" class="review-dims">{{item.dimsSummary}}</view>
             </view>
             <view
               wx:if="{{item.isMine}}"
@@ -71,22 +121,53 @@
             >{{text.deleteAction}}</view>
           </view>
           <view class="review-content">{{item.content}}</view>
+          <view wx:if="{{item.tagLabels.length}}" class="review-tag-row">
+            <text wx:for="{{item.tagLabels}}" wx:for-item="tl" wx:key="*this" class="review-tag">{{tl}}</text>
+          </view>
           <view class="comment-meta">{{item.dateLabel}}{{item.helpfulLabel}}</view>
         </view>
       </block>
     </view>
 
-    <!-- 发课评(登录 + 未评过) -->
-    <view wx:if="{{loggedIn && !myReviewId}}" class="web-panel review-composer">
-      <view wx:if="{{draftRating === 0}}" class="star-hint">{{text.reviewRatingHint}}</view>
-      <view class="star-picker">
+    <!-- T16: 避坑标签云(点投票,全量 8 标签) -->
+    <view class="web-panel tags-section">
+      <view class="reviews-header">
+        <text class="section-title">{{text.tagsTitle}}</text>
+      </view>
+      <view class="tags-hint">{{text.tagsHint}}</view>
+      <view class="tag-cloud">
         <view
-          wx:for="{{composerStars}}"
-          wx:key="value"
-          class="star {{item.filled ? 'star-on' : ''}}"
-          data-value="{{item.value}}"
-          bindtap="onPickStar"
-        >★</view>
+          wx:for="{{tagCloud}}"
+          wx:key="tag"
+          class="tag-pill {{item.tone}} {{item.voted ? 'tag-voted' : ''}}"
+          data-tag="{{item.tag}}"
+          bindtap="onTagVote"
+        >
+          <text>{{item.voted ? '✓ ' : ''}}{{item.label}}</text>
+          <text class="tag-count">{{item.count}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 发课评(登录 + 未评过)— T15 三维 composer(给分/工作量/收获) -->
+    <view wx:if="{{loggedIn && !myReviewId}}" class="web-panel review-composer">
+      <view class="star-hint">{{text.reviewDimHint}}</view>
+      <view wx:for="{{dimDrafts}}" wx:for-item="dim" wx:key="key" class="dim-picker">
+        <view class="dim-picker-label">
+          <text class="dim-name">{{dim.label}}</text>
+          <text wx:if="{{dim.hint}}" class="dim-hint">{{dim.hint}}</text>
+        </view>
+        <view class="star-picker">
+          <view
+            wx:for="{{dim.stars}}"
+            wx:for-item="s"
+            wx:key="value"
+            class="star {{s.filled ? 'star-on' : ''}}"
+            data-key="{{dim.key}}"
+            data-value="{{s.value}}"
+            bindtap="onPickDimStar"
+          >★</view>
+        </view>
       </view>
       <textarea
         class="review-textarea"

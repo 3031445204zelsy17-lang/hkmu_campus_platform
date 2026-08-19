@@ -1,12 +1,26 @@
 """Seed courses table with DSAI programme data and create test account."""
 import asyncio
 import asyncpg
+import re
 import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
 from app.database import init_db  # noqa: E402 — sys.path set above
+from app.data.ge_courses import GE_COURSES  # noqa: E402 — real 2026/27 GE pool
+from app.data.programme_rules import (  # noqa: E402 — 54-programme rules (T33)
+    PROGRAMME_RULES,
+    RULE_COURSE_CREDITS,
+)
+from app.data.programmes import PROGRAMMES  # noqa: E402 — 批次 3 骨架实体名
+from app.data.programme_year_map import (  # noqa: E402 — 批次 2/3 补池/种池/课名
+    ADDITION_CREDITS,
+    COURSE_NAME_BACKFILL,
+    POOL_ADDITIONS,
+    POOL_SEED_CREDITS,
+    PROGRAMME_POOL_SEED,
+)
 from passlib.context import CryptContext
 from dotenv import load_dotenv
 
@@ -14,12 +28,37 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", "backend", ".env"))
 
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# ── 学分裁定表(选课数据修复批次 1)─────────────────────────────────────────
+# 依据:docs/ops/选课选课/advice_sheets/复核报告-2026-08-19.md 第五节。15 门为
+# 三方一致(官方 yr 年级表 = RCC(programme-requirements PDF) = skill.md 叶标题
+# 尾数)直修;NURS1313NCF 官方源自相矛盾(yr 表 6 vs RCC/skill.md 标记 3),
+# 2026-08-19 人工裁定取 yr 表的 6。
+# 错值根源:skill.md 的 [学分:N] 标记被 PDF 页码污染(吃进 "Page N of M" 尾数),
+# 经 T34「catalogue 学分优先」传播进 courses 表。
+CREDIT_FIXES = {
+    "TC4019SEF": 3,    # catalogue 错值 4
+    "TC4026SEF": 3,    # 5
+    "CHIN3004ACF": 3,  # 6
+    "CHIN4243ECF": 3,  # 8
+    "CHIN4383ECF": 3,  # 8
+    "COMP4570SEF": 6,  # 2
+    "TC4094SEF": 12,   # 5
+    "CHIN4009ACF": 6,  # 5
+    "CAMD2000AEF": 3,  # 5
+    "CCA4002ACF": 3,   # 5
+    "IDDA2001AEF": 3,  # 6
+    "TRM3013BEF": 3,   # 6
+    "SCI4063SEF": 3,   # 4
+    "ASM4057BEF": 9,   # 6
+    "SPM4098BEF": 9,   # 5
+    "NURS1313NCF": 6,  # 3;官方源矛盾,人工裁定 yr 表
+}
+
 COURSES = [
     {"id":"COMP1080SEF","code":"COMP 1080SEF","name":"Introduction to Computer Programming","credits":3,"category":"core","year":1,"semester":"autumn","prerequisites":[],"description":"Fundamental programming concepts using Python."},
     {"id":"IT1020SEF","code":"IT 1020SEF","name":"Computing Fundamentals","credits":3,"category":"core","year":1,"semester":"autumn","prerequisites":[],"description":"Introduction to computer systems, hardware, software, and basic IT concepts."},
     {"id":"MATH1410SEF","code":"MATH 1410SEF","name":"Algebra and Calculus","credits":3,"category":"core","year":1,"semester":"autumn","prerequisites":[],"description":"Mathematical foundations including linear algebra, differential and integral calculus."},
     {"id":"ENGL1101AEF","code":"ENGL 1101AEF","name":"University English: Reading and Writing","credits":3,"category":"english","year":1,"semester":"autumn","prerequisites":[],"description":"Academic English reading and writing skills for university-level coursework."},
-    {"id":"GEN001","code":"GEN 001","name":"General Education Course 1","credits":3,"category":"general-ed","year":1,"semester":"autumn","prerequisites":[],"description":"First general education course covering broad interdisciplinary topics."},
     {"id":"UNI1002ABW","code":"UNI 1002ABW","name":"University Core Values","credits":2,"category":"university-core","year":1,"semester":"autumn","prerequisites":[],"description":"Introduction to university core values and academic integrity."},
     {"id":"UNI1012ABW","code":"UNI 1012ABW","name":"Social Responsibilities","credits":1,"category":"university-core","year":1,"semester":"autumn","prerequisites":[],"description":"Understanding social responsibilities and civic engagement."},
     {"id":"COMP2090SEF","code":"COMP 2090SEF","name":"Data Structures, Algorithms & Problem Solving","credits":3,"category":"core","year":1,"semester":"spring","prerequisites":["COMP1080SEF"],"description":"Advanced data structures and algorithms for efficient problem solving."},
@@ -27,7 +66,6 @@ COURSES = [
     {"id":"STAT1510SEF","code":"STAT 1510SEF","name":"Probability & Distributions","credits":3,"category":"core","year":1,"semester":"spring","prerequisites":[],"description":"Probability theory and statistical distributions."},
     {"id":"STAT2610SEF","code":"STAT 2610SEF","name":"Data Analytics with Applications","credits":3,"category":"core","year":1,"semester":"spring","prerequisites":[],"description":"Introduction to data analytics methods and tools."},
     {"id":"ENGL1202EEF","code":"ENGL 1202EEF","name":"University English: Listening and Speaking","credits":3,"category":"english","year":1,"semester":"spring","prerequisites":[],"description":"Academic English listening and speaking skills."},
-    {"id":"GEN002","code":"GEN 002","name":"General Education Course 2","credits":3,"category":"general-ed","year":1,"semester":"spring","prerequisites":[],"description":"Second general education course."},
     {"id":"COMP2020SEF","code":"COMP 2020SEF","name":"Java Programming Fundamentals","credits":3,"category":"core","year":2,"semester":"autumn","prerequisites":[],"description":"Object-oriented programming with Java."},
     {"id":"COMP2640SEF","code":"COMP 2640SEF","name":"Discrete Mathematics","credits":3,"category":"core","year":2,"semester":"autumn","prerequisites":[],"description":"Discrete mathematical structures for computer science."},
     {"id":"MATH2150SEF","code":"MATH 2150SEF","name":"Linear Algebra","credits":3,"category":"core","year":2,"semester":"autumn","prerequisites":[],"description":"Advanced linear algebra concepts."},
@@ -85,6 +123,187 @@ async def seed():
             except Exception as e:
                 print(f"  skip {c['id']}: {e}")
 
+        # Insert GE courses (real 2026/27 pool from ge_courses.py — gives each
+        # a courses-table id so PUT /courses/progress can mark them, and the
+        # graduation calc can count them toward general-ed). GE courses are
+        # cross-programme, so year/semester carry sentinel defaults that the
+        # planner's by-year grouping ignores.
+        ge_inserted = 0
+        for g in GE_COURSES:
+            gid = g["code"].replace(" ", "")
+            try:
+                await conn.execute(
+                    """INSERT INTO courses (id, code, name, credits, category, year, semester, prerequisites, description)
+                       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                       ON CONFLICT (id) DO NOTHING""",
+                    gid, g["code"], g["name_en"], 3, "general-ed",
+                    0, "any", "[]", f"{g['name_zh']} · {g['field']}",
+                )
+                ge_inserted += 1
+            except Exception as e:
+                print(f"  skip GE {gid}: {e}")
+
+        # Insert rule-referenced courses missing from the table (T34): every
+        # course listed in PROGRAMME_RULES needs a courses-table row, or
+        # _compute_graduation silently skips it (course_rows lookup fails).
+        # Name still prefers course_catalogue (official tree, with display
+        # names). Credits priority was CORRECTED 2026-08-19 (复核报告第五节):
+        # the catalogue [学分:N] markers are polluted by PDF page numbers, so
+        # RCC (RULE_COURSE_CREDITS, PDF-parsed per course) now wins over
+        # catalogue; CREDIT_FIXES (human-adjudicated) beats both. Note
+        # MATH1410SEF carries a known RCC dirty value (STAMJ=2) but is always
+        # inserted first by the DSAI hand table above, so the existing_ids
+        # check keeps the RCC chain away from it.
+        # Public PDFs carry no term data, so year defaults to the course-code
+        # LEVEL (HKMU convention: 1xxx→Y1 … 4xxx→Y4) and semester to autumn —
+        # the planner's year tabs filter on course.year, so year=0 sentinels
+        # would render every new programme as 「无课程」. Users can move any
+        # course via the schedule picker (planned placement overrides).
+        def _level_year(cid):
+            m = re.search(r"\d", cid)
+            return min(int(m.group()), 4) if m and 1 <= int(m.group()) <= 4 else 4
+
+        existing_ids = {r["id"] for r in await conn.fetch("SELECT id FROM courses")}
+        cat_rows = await conn.fetch(
+            """SELECT DISTINCT REPLACE(course_code, ' ', '') AS cid,
+                      display_name, credits
+               FROM course_catalogue"""
+        )
+        catalogue = {r["cid"]: (r["display_name"], r["credits"]) for r in cat_rows}
+        rules_inserted = 0
+        rules_missing_name = 0
+        for code, entry in PROGRAMME_RULES.items():
+            for cat_key, cat in entry["categories"].items():
+                if cat.get("pool") == "ge":
+                    continue  # GE pool resolves dynamically via ge_courses_for
+                for cid in cat["courses"]:
+                    if cid in existing_ids:
+                        continue
+                    name = catalogue.get(cid, (None, None))[0]
+                    # CREDIT_FIXES(人工裁定)> RCC > catalogue(标记被页码污染) > 3
+                    credits = CREDIT_FIXES.get(cid)
+                    if credits is None:
+                        credits = RULE_COURSE_CREDITS.get(code, {}).get(cat_key, {}).get(cid)
+                    if credits is None:
+                        credits = catalogue.get(cid, (None, None))[1]
+                    if credits is None:
+                        credits = 3
+                    if not name:
+                        # No official display name anywhere — use the spaced
+                        # code so the UI at least shows a stable identifier.
+                        name = re.sub(r"^([A-Z]{2,5})(\d{4})", r"\1 \2", cid)
+                        rules_missing_name += 1
+                    try:
+                        await conn.execute(
+                            """INSERT INTO courses (id, code, name, credits, category, year, semester, prerequisites, description)
+                               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                               ON CONFLICT (id) DO NOTHING""",
+                            cid, name, name, credits, cat_key,
+                            _level_year(cid), "autumn", "[]",
+                            f"{entry['name']['en']} · {cat_key}",
+                        )
+                        rules_inserted += 1
+                    except Exception as e:
+                        print(f"  skip rule course {cid}: {e}")
+
+        # ── 批次 2 补池(选课数据修复,advice sheet 缺课 78 课次)─────────────
+        # GIP100-400BEF 等:官方 Course Advice Sheet 列出、Requirements PDF 规则
+        # 没覆盖的课。courses 行要进表(_compute_graduation 的 course_rows 查找),
+        # 学分取官方行值(GIP 类 0);名称优先官方标题列。幂等:ON CONFLICT DO
+        # NOTHING + existing_ids 跳过,重跑零重复(生产灌库脚本要求)。
+        existing_ids = {r["id"] for r in await conn.fetch("SELECT id FROM courses")}
+        additions_inserted = 0
+        for prog_code, cats in POOL_ADDITIONS.items():
+            entry_name = PROGRAMME_RULES.get(prog_code, {}).get("name", {}).get("en", prog_code)
+            for cat_key, courses in cats.items():
+                for cid in courses:
+                    if cid in existing_ids:
+                        continue
+                    name = COURSE_NAME_BACKFILL.get(cid) or catalogue.get(cid, (None, None))[0]
+                    if not name:
+                        name = re.sub(r"^([A-Z]{2,5})(\d{4})", r"\1 \2", cid)
+                    credits = ADDITION_CREDITS.get(cid)
+                    if credits is None:
+                        credits = CREDIT_FIXES.get(cid)
+                    if credits is None:
+                        credits = catalogue.get(cid, (None, None))[1]
+                    if credits is None:
+                        credits = 3
+                    try:
+                        await conn.execute(
+                            """INSERT INTO courses (id, code, name, credits, category, year, semester, prerequisites, description)
+                               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                               ON CONFLICT (id) DO NOTHING""",
+                            cid, name, name, credits, cat_key,
+                            _level_year(cid), "autumn", "[]",
+                            f"{entry_name} · {cat_key} · advice sheet",
+                        )
+                        existing_ids.add(cid)
+                        additions_inserted += 1
+                    except Exception as e:
+                        print(f"  skip addition {cid}: {e}")
+
+        # ── 批次 3 骨架实体种池(BSSCHWSJ 类)──────────────────────────────────
+        # 无 Requirements 规则的实体,课池来自官方 advice 行(PROGRAMME_POOL_SEED),
+        # courses 行同源进表;学分取官方行值(POOL_SEED_CREDITS)。幂等同上。
+        seed_inserted = 0
+        for prog_code, cats in PROGRAMME_POOL_SEED.items():
+            entry = PROGRAMMES.get(prog_code) or PROGRAMME_RULES.get(prog_code) or {}
+            entry_name = entry.get("name", {}).get("en", prog_code)
+            for cat_key, courses in cats.items():
+                for cid in courses:
+                    if cid in existing_ids:
+                        continue
+                    name = COURSE_NAME_BACKFILL.get(cid) or catalogue.get(cid, (None, None))[0]
+                    if not name:
+                        name = re.sub(r"^([A-Z]{2,5})(\d{4})", r"\1 \2", cid)
+                    credits = POOL_SEED_CREDITS.get(cid)
+                    if credits is None:
+                        credits = ADDITION_CREDITS.get(cid)
+                    if credits is None:
+                        credits = CREDIT_FIXES.get(cid)
+                    if credits is None:
+                        credits = catalogue.get(cid, (None, None))[1]
+                    if credits is None:
+                        credits = 3
+                    try:
+                        await conn.execute(
+                            """INSERT INTO courses (id, code, name, credits, category, year, semester, prerequisites, description)
+                               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                               ON CONFLICT (id) DO NOTHING""",
+                            cid, name, name, credits, cat_key,
+                            _level_year(cid), "autumn", "[]",
+                            f"{entry_name} · {cat_key} · advice sheet",
+                        )
+                        existing_ids.add(cid)
+                        seed_inserted += 1
+                    except Exception as e:
+                        print(f"  skip pool-seed {cid}: {e}")
+        print(f"  pool-seed inserted: {seed_inserted}")
+
+        # 课名回填:裸码课(名字 = 空格化课码,seed T34 的兜底产物)换成官方
+        # advice sheet 标题列。只动裸码行,不覆盖任何真名(catalogue/GE/手工表)。
+        names_fixed = 0
+        for cid, name in COURSE_NAME_BACKFILL.items():
+            res = await conn.execute(
+                "UPDATE courses SET name = $1 WHERE id = $2 AND name ~ $3",
+                name, cid, r"^[A-Z]{2,5} [0-9]{4}[A-Z]{3}$",
+            )
+            names_fixed += int(res.split()[-1])
+
+        # Existing-row credit corrections: the inserts above are all
+        # ON CONFLICT DO NOTHING, so rows already carrying a polluted credit
+        # (from the old catalogue-first T34) would keep it forever. The
+        # adjudicated table must UPDATE them in place — this is what actually
+        # repairs production on re-seed.
+        credit_fixed = 0
+        for cid, cr in CREDIT_FIXES.items():
+            res = await conn.execute(
+                "UPDATE courses SET credits = $1 WHERE id = $2 AND credits <> $1",
+                cr, cid,
+            )
+            credit_fixed += int(res.split()[-1])
+
         # Create test user
         test_pw = pwd_ctx.hash("test123456")
         try:
@@ -99,8 +318,12 @@ async def seed():
 
         # Verify
         count = await conn.fetchval("SELECT COUNT(*) FROM courses")
+        ge_count = await conn.fetchval("SELECT COUNT(*) FROM courses WHERE category = 'general-ed'")
         user_count = await conn.fetchval("SELECT COUNT(*) FROM users")
-        print(f"Seeded {inserted} courses ({count} in DB), {user_count} users")
+        print(f"Seeded {inserted} courses + {ge_inserted} GE + {rules_inserted} rule courses "
+              f"+ {additions_inserted} advice-sheet additions ({names_fixed} names backfilled, "
+              f"{credit_fixed} credit fixes) "
+              f"({count} in DB, {ge_count} GE), {user_count} users")
 
     finally:
         await conn.close()

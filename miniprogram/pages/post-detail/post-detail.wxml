@@ -31,7 +31,7 @@
               <text class="{{post.likeIconClass}}">{{post.likeIcon}}</text>
               <text class="post-action-count">{{post.likeLabel}}</text>
             </view>
-            <view wx:if="{{user && post.authorId === user.id}}" class="post-action delete-action" catchtap="onDeletePost" hover-class="post-action-press">
+            <view wx:if="{{user && (post.authorId === user.id || user.isAdmin)}}" class="post-action delete-action" catchtap="onDeletePost" hover-class="post-action-press">
               <text class="social-glyph">🗑</text>
               <text class="post-action-count">{{text.deleteAction}}</text>
             </view>

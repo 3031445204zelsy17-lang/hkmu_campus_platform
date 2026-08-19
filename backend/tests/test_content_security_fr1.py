@@ -179,3 +179,35 @@ async def test_wechat_user_unknown_suggest_blocked(client, make_user, monkeypatc
         return {"errcode": 0, "result": {"suggest": "weird"}}
     res = await _post_as_wechat(client, make_user, monkeypatch, fake)
     assert res.status_code == 503, res.text
+
+
+# --- kill switch: ENABLE_CONTENT_MODERATION=false bypasses moderation entirely ---
+
+async def test_moderation_disabled_bypasses_check(client, make_user, monkeypatch):
+    """ENABLE_CONTENT_MODERATION=false → audit_user_text returns immediately;
+    check_text NOT called; even a WeChat user's risky post is allowed (201).
+
+    Temporary degradation path for when the moderation service is unreachable
+    (e.g. Azure outbound IPs outside WeChat IP whitelist). Asserting check_text
+    is never reached locks the kill switch in.
+    """
+    from backend.app.services import content_security
+
+    monkeypatch.setattr(content_security, "ENABLE_CONTENT_MODERATION", False)
+    _uid, token = await _make_wechat_user(make_user, "wxdisabled")
+
+    calls = {"n": 0}
+
+    async def fake_check_text(openid, content, scene):
+        calls["n"] += 1
+        return {"errcode": 0, "result": {"suggest": "risky"}}
+
+    monkeypatch.setattr(content_security, "check_text", fake_check_text)
+
+    res = await client.post(
+        "/api/v1/posts",
+        json={"title": "t", "content": "would-be-risky text", "category": "chat"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert calls["n"] == 0, "moderation disabled → check_text must not be called"
+    assert res.status_code == 201, res.text

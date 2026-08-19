@@ -55,6 +55,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* 有头像时 <image> 必须被圆框裁切(对齐 app.wxss .avatar 的做法) */
+  overflow: hidden;
+}
+
+.comment-avatar image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
 }
 
 .comment-main {

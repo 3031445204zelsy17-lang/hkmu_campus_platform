@@ -23,6 +23,13 @@ let _CATALOGUE_COURSES = {}; // cache: programme_code -> CatalogueCoursesRespons
 let _catalogueOnly = false; // true when the selected programme has no planning data
 let _programmeQuery = ""; // programme picker search query (web)
 let _programmeSearchOpen = false; // programme picker dropdown open (web)
+// 变体/系列码 → 主码(批次 3 picker 单入口):旧保存码解析 + 选择器高亮
+let _ALIAS_TO_MAIN = {};
+
+/** Fold a variant/admit code (BNHGJ1, BSCHCOMPF3…) to its picker main code. */
+function _resolveProgrammeCode(code) {
+  return _ALIAS_TO_MAIN[code] || code;
+}
 
 // ── Programmes (fetched from /courses/programmes; backend programmes.py is the single source of truth) ─
 function _adaptProgramme(p) {
@@ -32,6 +39,7 @@ function _adaptProgramme(p) {
       minCredits: c.min_credits,
       color: c.color,
       pickN: c.pick_n,
+      pool: c.pool, // "credits" (programme_rules electives) / "ge" / undefined
       courses: c.courses || [],
     };
   }
@@ -62,7 +70,16 @@ async function _loadProgrammes() {
       _PROGRAMMES[p.code] = _adaptProgramme(p);
     }
     if (data.default_code) _defaultProgrammeCode = data.default_code;
-    if (cat && Array.isArray(cat.schools)) _CATALOGUE = { schools: cat.schools };
+    if (cat && Array.isArray(cat.schools)) {
+      _CATALOGUE = { schools: cat.schools };
+      const m = {};
+      for (const s of cat.schools) {
+        for (const p of s.programmes) {
+          for (const a of p.alias_codes || []) m[a] = p.programme_code;
+        }
+      }
+      _ALIAS_TO_MAIN = m;
+    }
   } catch (err) {
     // keep _PROGRAMMES empty; _loadData surfaces a load error downstream
   }
@@ -144,16 +161,38 @@ function _getProgrammeCourseIds() {
   return ids;
 }
 
-/** Course objects filtered to current programme */
+/** Course objects filtered to current programme.
+ *  批次 2:命中 per-专业官方年份映射(prog.placements,advice sheet 口径)时
+ *  覆盖全局 year/semester;未命中保持 courses 表全局值(DSAI 手工年份外溢
+ *  撞 16+ 专业的根修,见复核报告第四节)。 */
 function _getProgrammeCourses() {
   const ids = _getProgrammeCourseIds();
-  return _courses.filter((c) => ids.has(c.id));
+  const placements = (_programme && _programme.placements) || {};
+  return _courses
+    .filter((c) => ids.has(c.id))
+    .map((c) => {
+      const p = placements[c.id];
+      return p ? { ...c, year: p.year, semester: p.term || c.semester } : c;
+    });
+}
+
+/** Whether a category's graduation requirement is met (mirrors backend _category_satisfied). */
+function _categorySatisfied(cat, earned, completedCount) {
+  const required = cat.minCredits;
+  const pickN = cat.pickN;
+  const total = cat.courses.length;
+  // Credit pool (programme_rules electives, incl. 150-course STEAM menus):
+  // satisfied purely by earned credits, any course combination.
+  if (cat.pool === "credits") return earned >= required;
+  if (pickN != null) return completedCount >= pickN && earned >= required;
+  if (total === 0) return required === 0;
+  return completedCount === total && earned >= required;
 }
 
 /** Calculate earned & required credits for a category */
 function _calcCategoryCredits(catKey) {
   const cat = _programme.categories[catKey];
-  if (!cat) return { earned: 0, required: 0 };
+  if (!cat) return { earned: 0, required: 0, satisfied: true };
 
   let earned = 0;
   let completedCount = 0;
@@ -167,22 +206,35 @@ function _calcCategoryCredits(catKey) {
     }
   }
 
-  return { earned, required: cat.minCredits, completedCount, totalCourses: cat.courses.length, pickN: cat.pickN };
+  return {
+    earned,
+    required: cat.minCredits,
+    completedCount,
+    totalCourses: cat.courses.length,
+    pickN: cat.pickN,
+    satisfied: _categorySatisfied(cat, earned, completedCount),
+  };
 }
 
 /** Overall graduation progress */
 function _calcGraduationProgress() {
-  let totalEarned = 0;
-  let totalRequired = 0;
+  // De-duplicate totalEarned across categories: a completed course's credits
+  // count once even if listed in multiple categories (mirrors backend).
+  const completedGlobal = new Map(); // courseId -> credits
   const categories = [];
 
   for (const [catKey, cat] of Object.entries(_programme.categories)) {
     const info = _calcCategoryCredits(catKey);
-    totalEarned += info.earned;
-    totalRequired += cat.minCredits;
+    for (const courseId of cat.courses) {
+      if (_getProgress(courseId) === "completed") {
+        const course = _courses.find((c) => c.id === courseId);
+        if (course) completedGlobal.set(courseId, course.credits);
+      }
+    }
     categories.push({ key: catKey, ...info, color: cat.color, courses: cat.courses, pickN: cat.pickN });
   }
 
+  const totalEarned = [...completedGlobal.values()].reduce((a, b) => a + b, 0);
   return {
     totalEarned,
     totalRequired: _programme.totalCredits,
@@ -197,10 +249,15 @@ function _getRecommendations(maxResults = 3) {
   const grad = _calcGraduationProgress();
 
   for (const cat of grad.categories) {
-    if (cat.earned >= cat.required) continue;
+    if (cat.satisfied) continue;
+
+    // For a pick_n pool, cap recommendations at the remaining slot count.
+    const deficit = cat.pickN != null ? Math.max(0, cat.pickN - cat.completedCount) : Infinity;
+    let recommendedHere = 0;
 
     // Find not-started courses in this category whose prereqs are met
     for (const courseId of cat.courses) {
+      if (recommendedHere >= deficit) break;
       const course = _courses.find((c) => c.id === courseId);
       if (!course) continue;
 
@@ -210,7 +267,8 @@ function _getRecommendations(maxResults = 3) {
       const prereqs = _parsePrereqs(course.prerequisites);
       if (prereqs.length > 0 && !_prereqsMet(prereqs)) continue;
 
-      recs.push({ course, catKey: cat.key, needed: cat.required - cat.earned });
+      recs.push({ course, catKey: cat.key, needed: Math.max(0, cat.required - cat.earned) });
+      recommendedHere++;
       if (recs.length >= maxResults) return recs;
     }
   }
@@ -376,8 +434,35 @@ function SemesterGroup(year, semester, courses) {
   const grid = document.createElement("div");
   grid.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4";
   courses.forEach((c) => grid.appendChild(CourseCard(c, true)));
+  // 批次 2:官方 GE 占位行(对照 advice sheet 的 GE (I)/(II))— 该学年学期
+  // 官方预留的通识槽,渲染成待选占位卡
+  const slots = ((_programme && _programme.ge_slots) || [])
+    .filter((s) => s.year === year && s.term === semester).length;
+  if (slots > 0) grid.appendChild(GeSlotCard(slots));
   group.appendChild(grid);
   return group;
+}
+
+/** GE 占位卡(规划视图):该学期官方预留的通识课槽位,非具体课程 */
+function GeSlotCard(count) {
+  const card = document.createElement("div");
+  card.className = "bg-white rounded-2xl p-4 shadow-md border-l-4 border-pink-400 flex flex-col justify-center";
+
+  const code = document.createElement("div");
+  code.className = "text-xs font-mono font-bold text-pink-500 mb-1";
+  code.textContent = "GE";
+  card.appendChild(code);
+
+  const name = document.createElement("div");
+  name.className = "text-sm font-semibold text-gray-800 mb-2";
+  name.textContent = `${t("planner.ge_slot_title")} ×${count}`;
+  card.appendChild(name);
+
+  const hint = document.createElement("div");
+  hint.className = "text-xs text-gray-400";
+  hint.textContent = t("planner.ge_slot_pending");
+  card.appendChild(hint);
+  return card;
 }
 
 function StatCard(label, value, colorClass, iconName) {
@@ -495,7 +580,9 @@ function _filteredProgrammeGroups(query) {
       if (!q) return true;
       const known = _PROGRAMMES[p.programme_code];
       const name = known ? programmeName(known, lang) : p.programme_name;
+      const aliasHit = (p.alias_codes || []).some((a) => a.toLowerCase().includes(q));
       return (
+        aliasHit ||
         name.toLowerCase().includes(q) ||
         (p.programme_code || "").toLowerCase().includes(q) ||
         (g.school || "").toLowerCase().includes(q)
@@ -929,7 +1016,7 @@ function _renderGraduationDashboard(container, grad) {
 
   for (const cat of grad.categories) {
     const row = document.createElement("div");
-    row.className = "category-progress-row";
+    row.className = "category-progress-row" + (cat.satisfied ? " cat-satisfied" : "");
 
     const rowHeader = document.createElement("div");
     rowHeader.className = "flex justify-between items-center mb-1";
@@ -940,12 +1027,11 @@ function _renderGraduationDashboard(container, grad) {
     rowHeader.appendChild(catLabel);
 
     const creditLabel = document.createElement("span");
-    creditLabel.className = "text-sm text-gray-500";
-    if (cat.pickN) {
-      creditLabel.textContent = t("planner.pick_courses", { pick: cat.pickN, total: cat.totalCourses }) + ` — ${cat.earned}/${cat.required}`;
-    } else {
-      creditLabel.textContent = `${cat.earned}/${cat.required} cr`;
-    }
+    creditLabel.className = "text-sm " + (cat.satisfied ? "text-emerald-600 font-medium" : "text-gray-500");
+    const crText = cat.pickN
+      ? t("planner.pick_courses", { pick: cat.pickN, total: cat.totalCourses }) + ` — ${cat.earned}/${cat.required}`
+      : `${cat.earned}/${cat.required} cr`;
+    creditLabel.textContent = cat.satisfied ? `✓ ${crText}` : crText;
     rowHeader.appendChild(creditLabel);
 
     row.appendChild(rowHeader);
@@ -958,6 +1044,12 @@ function _renderGraduationDashboard(container, grad) {
 
   overviewRow.appendChild(catList);
   overviewCard.appendChild(overviewRow);
+
+  const estimateNote = document.createElement("p");
+  estimateNote.className = "text-xs text-gray-400 mt-4";
+  estimateNote.textContent = t("planner.estimate_disclaimer");
+  overviewCard.appendChild(estimateNote);
+
   section.appendChild(overviewCard);
   container.appendChild(section);
 }
@@ -1620,6 +1712,8 @@ async function _renderCatalogue(container) {
 
 async function _loadData() {
   await _loadProgrammes();
+  // 旧保存码可能是已折叠的变体(BNHGJ1→BNHGJ):先解析到主码再判定归属
+  _programmeCode = _resolveProgrammeCode(_programmeCode);
   if (!_programme) {
     const inCat = _CATALOGUE.schools.some((s) =>
       s.programmes.some((p) => p.programme_code === _programmeCode));
@@ -1635,8 +1729,15 @@ async function _loadData() {
     }
   }
   try {
-    const data = await api.get("/courses?page_size=50");
-    _courses = data.items;
+    // courses 表已 1100+ 门(55 专业规则课 + GE):单页拉不全会让不在首页的
+    // 专业课程从课表消失(年份 tab 空)。后端 page_size 上限 500 → 循环分页拉全。
+    _courses = [];
+    for (let page = 1; page <= 10; page++) {
+      const data = await api.get(`/courses?page_size=500&page=${page}`);
+      const items = data.items || [];
+      _courses.push(...items);
+      if (items.length < 500) break;
+    }
 
     if (isLoggedIn()) {
       try {
@@ -1648,7 +1749,7 @@ async function _loadData() {
       try {
         const user = await api.get("/users/me");
         if (user.programme_code && _PROGRAMMES[user.programme_code]) {
-          _programmeCode = user.programme_code;
+          _programmeCode = _resolveProgrammeCode(user.programme_code);
           _programme = _PROGRAMMES[_programmeCode];
           _catalogueOnly = false;
           localStorage.setItem("hkmu_programme", _programmeCode);

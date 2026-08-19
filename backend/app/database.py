@@ -114,15 +114,39 @@ CREATE TABLE IF NOT EXISTS user_courses (
     PRIMARY KEY (user_id, course_id)
 );
 
+-- T26 排课台: 用户对单课学年的覆盖(planned 优先于 courses 表默认 year+semester)
+CREATE TABLE IF NOT EXISTS user_course_schedule (
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    course_id TEXT NOT NULL REFERENCES courses(id),
+    planned_year INTEGER CHECK(planned_year BETWEEN 1 AND 4),
+    planned_semester TEXT CHECK(planned_semester IN ('autumn','spring','summer')),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (user_id, course_id)
+);
+
 CREATE TABLE IF NOT EXISTS course_reviews (
     id SERIAL PRIMARY KEY,
     course_id TEXT REFERENCES courses(id),
     author_id INTEGER NOT NULL REFERENCES users(id),
     rating INTEGER CHECK(rating BETWEEN 1 AND 5),
+    rating_teaching INTEGER CHECK(rating_teaching BETWEEN 1 AND 5),
+    rating_workload INTEGER CHECK(rating_workload BETWEEN 1 AND 5),
+    rating_gain INTEGER CHECK(rating_gain BETWEEN 1 AND 5),
     content TEXT NOT NULL,
     helpful_count INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- one vote per user per course per tag the PK dedupes repeat votes
+CREATE TABLE IF NOT EXISTS course_review_tags (
+    course_id TEXT NOT NULL REFERENCES courses(id),
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    tag TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (course_id, user_id, tag)
+);
+
+CREATE INDEX IF NOT EXISTS idx_review_tags_course ON course_review_tags(course_id, tag);
 
 CREATE TABLE IF NOT EXISTS news (
     id SERIAL PRIMARY KEY,
@@ -225,6 +249,26 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_column THEN NULL;
 END $$;
 
+-- Add entry_term column for planner onboarding to record intake term
+DO $$ BEGIN
+    ALTER TABLE users ADD COLUMN entry_term TEXT;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
+-- Add three dimension review ratings teaching workload gain for existing DBs
+DO $$ BEGIN
+    ALTER TABLE course_reviews ADD COLUMN rating_teaching INTEGER;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+DO $$ BEGIN
+    ALTER TABLE course_reviews ADD COLUMN rating_workload INTEGER;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+DO $$ BEGIN
+    ALTER TABLE course_reviews ADD COLUMN rating_gain INTEGER;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
 -- Add image_url column for post images (safe for existing DBs)
 DO $$ BEGIN
     ALTER TABLE posts ADD COLUMN image_url TEXT;
@@ -307,6 +351,7 @@ CREATE TABLE IF NOT EXISTS course_catalogue (
     course_code_sort TEXT NOT NULL,
     display_name     TEXT NOT NULL,
     raw_name         TEXT,
+    name_zh_cn       TEXT,
     credits          INTEGER NOT NULL,
     code_system      TEXT NOT NULL,
     source_line_no   INTEGER
@@ -314,6 +359,12 @@ CREATE TABLE IF NOT EXISTS course_catalogue (
 
 CREATE INDEX IF NOT EXISTS idx_course_catalogue_prog ON course_catalogue(programme_code);
 CREATE INDEX IF NOT EXISTS idx_cc_prog_bucket ON course_catalogue(programme_code, bucket_order);
+
+-- Add name_zh_cn to course_catalogue for simplified course names
+DO $$ BEGIN
+    ALTER TABLE course_catalogue ADD COLUMN name_zh_cn TEXT;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_cc_unique ON course_catalogue(programme_code, course_code, official_group);
 CREATE INDEX IF NOT EXISTS idx_pc_school ON programmes_catalogue(school_order, prog_order);
 

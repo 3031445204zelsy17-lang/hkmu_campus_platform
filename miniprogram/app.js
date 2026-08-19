@@ -6,6 +6,7 @@ App({
     postsRevision: 0, // Feed 版本号:写操作(发帖/删帖/点赞/评论)成功后 bump。列表页比较不清零(替代旧 postsNeedRefresh 布尔)
     user: null,
     pendingInvite: null, // Phase 5: 暂存邀请码,home 页 onShow 消费
+    programmeSwitched: null, // profile 切专业成功后暂存新 code,planner onShow 消费跟随
   },
 
   // 全局错误兜底(内测监控 B3):未捕获错误 / 未处理 Promise 拒绝 → 上报微信后台实时日志。

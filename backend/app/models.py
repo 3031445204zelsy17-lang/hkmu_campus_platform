@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator
-from typing import Optional
+from pydantic import BaseModel, Field, field_validator, model_validator
+from typing import List, Optional
 
 
 # --- Auth ---
@@ -102,6 +102,7 @@ class UserOut(BaseModel):
     email: Optional[str] = None
     oauth_provider: Optional[str] = None
     programme_code: Optional[str] = None
+    entry_term: Optional[str] = None
     hkmu_verified: bool = False
     # invite_code intentionally absent — only exposed via /users/me/invite-code (self).
     # Returning another user's invite_code enabled a force-friend vector.
@@ -124,6 +125,7 @@ class UserUpdate(BaseModel):
     bio: Optional[str] = Field(None, max_length=300)
     avatar_url: Optional[str] = None
     programme_code: Optional[str] = None
+    entry_term: Optional[str] = None
 
 
 # --- Posts ---
@@ -189,6 +191,21 @@ class CommentOut(BaseModel):
 
 # --- Courses ---
 
+class GECourseInfoOut(BaseModel):
+    """官方 GE 目录信息(GE_catalog_3cru.pdf 富化),挂在 CourseOut.ge 上。
+
+    school 是池内缩写(A&SS 等),前端 i18n 映射双语全称;school_name 是目录
+    逐课打印的学院名原文——官方文件内课码字母与学院栏偶有出入,展示以目录为准。"""
+    field: str
+    level: int = 0            # 官方「程度」:1000 | 2000
+    moi: str = ""             # english | chinese | bilingual
+    terms: list[str] = []
+    excluded: list[str] = []
+    description: str = ""
+    school: str = ""
+    school_name: str = ""
+
+
 class CourseOut(BaseModel):
     id: str
     code: str
@@ -199,6 +216,7 @@ class CourseOut(BaseModel):
     semester: str
     prerequisites: str = "[]"
     description: Optional[str] = None
+    ge: Optional[GECourseInfoOut] = None
 
 
 class UserCourseUpdate(BaseModel):
@@ -212,20 +230,81 @@ class UserCourseOut(BaseModel):
     updated_at: Optional[str] = None
 
 
+# 避坑标签白名单 — course_review_tags.tag 只存这些 key，前端 i18n 映射三语展示。
+REVIEW_TAGS = (
+    "generous_grading",   # 给分好
+    "tough_grading",      # 给分严
+    "heavy_workload",     # 作业多
+    "light_workload",     # 作业少
+    "high_gain",          # 收获大
+    "open_book",          # 开卷考
+    "group_project",      # 小组项目多
+    "attendance_strict",  # 点名严
+)
+
+
 class CourseReviewCreate(BaseModel):
-    rating: int = Field(ge=1, le=5)
+    # 老 5 星兼容保留(T17);三维时代至少传一维,rating 可空
+    rating: Optional[int] = Field(default=None, ge=1, le=5)
+    rating_teaching: Optional[int] = Field(default=None, ge=1, le=5)
+    rating_workload: Optional[int] = Field(default=None, ge=1, le=5)
+    rating_gain: Optional[int] = Field(default=None, ge=1, le=5)
     content: str = Field(min_length=1, max_length=2000)
+    tags: List[str] = Field(default_factory=list)
+
+    @field_validator("tags")
+    @classmethod
+    def tags_whitelist(cls, v):
+        unknown = [t for t in v if t not in REVIEW_TAGS]
+        if unknown:
+            raise ValueError(f"unknown review tags: {unknown}")
+        return list(dict.fromkeys(v))  # 去重保序
+
+    @model_validator(mode="after")
+    def at_least_one_rating(self):
+        # 三维与老 5 星至少传一项,全空直接 422
+        if not any(
+            (self.rating, self.rating_teaching, self.rating_workload, self.rating_gain)
+        ):
+            raise ValueError("at least one rating is required")
+        return self
 
 
 class CourseReviewOut(BaseModel):
     id: int
     course_id: str
     author_id: int
-    rating: int
+    rating: Optional[int] = None
+    rating_teaching: Optional[int] = None
+    rating_workload: Optional[int] = None
+    rating_gain: Optional[int] = None
     content: str
     helpful_count: int = 0
     created_at: Optional[str] = None
     author_nickname: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+
+
+class CourseTagAggregate(BaseModel):
+    tag: str
+    count: int
+    voted: bool = False  # 当前查看者是否已投(未登录恒 False)
+
+
+class CourseReviewTagsOut(BaseModel):
+    course_id: str
+    total_votes: int = 0
+    tags: List[CourseTagAggregate] = Field(default_factory=list)
+
+
+class CourseReviewStatsOut(BaseModel):
+    """三维均分(T15 course-detail 头部);无评分的维度为 None。"""
+    course_id: str
+    review_count: int = 0
+    rating_avg: Optional[float] = None  # 老 5 星均分(兼容展示)
+    teaching_avg: Optional[float] = None
+    workload_avg: Optional[float] = None
+    gain_avg: Optional[float] = None
 
 
 # --- News ---

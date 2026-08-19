@@ -5,7 +5,6 @@
     <view class="brand-lockup">
       <view class="eyebrow">{{text.eyebrow}}</view>
       <view class="app-title">{{text.title}}</view>
-      <view class="subtitle">{{text.subtitle}}</view>
     </view>
     <button class="top-action" bindtap="goCompose">{{text.publish}}</button>
   </view>
@@ -49,11 +48,6 @@
     >
       {{item.label}}
     </view>
-  </view>
-
-  <view wx:if="{{posts.length === 0 && !loading}}" class="empty-state">
-    <view class="empty-title">{{text.emptyTitle}}</view>
-    <view class="empty-copy">{{text.emptyCopy}}</view>
   </view>
 
   <view class="feed-list">

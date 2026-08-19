@@ -1,0 +1,62 @@
+3-credit-unit system
+FTU_ST_BSCHCEF_202607_V3
+Programme Requirements for
+Bachelor of Science with Honours in Computer Engineering
+This 3-credit-unit system programme requirements document is applicable to
+students admitted in 2025 Autumn Term and thereafter.
+1. Programme Requirement – Year 3 Entry
+1.1 To be eligible for the award of the degree of Bachelor of Science with Honours in Computer
+Engineering through Year 3 Entry, a student shall:
+1.1.1 obtain 60 credit-units as prescribed below, of which at least 24 credit-units shall be at 3000-
+level and at least 24 credit-units shall be at 4000-level:
+1.1.1.1 30 credit-units of core courses as listed in Table 1;
+1.1.1.2 18 credit-units of elective courses from Table 3;
+1.1.1.3 an additional 3 credit-units of elective courses from either Table 2 or 3; and
+1.1.1.4 9 credit-units of University Core courses in Table 4;
+and
+1.1.2 attain the CGPA for graduation as prescribed in the Regulations for the award of
+undergraduate degrees.
+Table 1: Core Courses
+Course Code Course Title Credit-units
+COMP 3130SEF Mobile Application Programming 3
+COMP 3500SEF Software Engineering 3
+ELEC 3050SEF Computer Networking 3
+ELEC 3150SEF Routing and Switching Technologies 3
+ELEC 3250SEF Computer and Network Security 3
+ELEC 3470SEF Multimedia Technologies 3
+ELEC 3630SEF Advanced Computer Design 3
+ELEC 4110SEF Final Year Project 6
+ENGG 3280SEF Engineering Professional Practice 3
+Page 1 of 2
+3-credit-unit system
+FTU_ST_BSCHCEF_202607_V3
+Table 2: Elective Courses (Group 1)
+Course Code Course Title Credit-units
+COMP 3510SEF Software Project Management 3
+ELEC 3040SEF Communication Systems 3
+Table 3: Elective Courses (Group 2)
+Course Code Course Title Credit-units
+COMP 4820SEF Data Mining and Analytics 3
+ELEC 4010SEF Professional Placement (Computer Engineering) 3
+ELEC 4060SEF Wireless Networks 3
+ELEC 4210SEF Biomedical Informatics 3
+ELEC 4310SEF Blockchain Technologies 3
+ELEC 4370SEF Digital Signal Processing 3
+ELEC 4380SEF Digital Communications 3
+ELEC 4480SEF IOT Security 3
+ELEC 4710SEF Digital Forensics 3
+TC 4019SEF Quality Management for Science and Technology 3
+Table 4: University Core Courses
+Course Code Course Title Credit-units
+University Core Values
+UNI 1002ABW 2
+大學核心價值
+Social Responsibilities
+UNI 1012ABW 1
+社會責任
+Co-creating with AI: Communication and Teamwork for the
+UNI 2002BEW 3
+Future
+UNI 3002BEW AI, Sustainability, and Entrepreneurial Leadership 3
+July 2026
+Page 2 of 2

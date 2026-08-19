@@ -1,0 +1,54 @@
+<app-header show-back="{{true}}" bind:languagechange="handleLanguageChange" />
+
+<view class="page-shell">
+  <view class="top-bar tight">
+    <view class="brand-lockup">
+      <view class="eyebrow">{{text.eyebrow}}</view>
+      <view class="app-title">{{text.title}}</view>
+      <view class="subtitle">{{guide.updatedLabel || text.subtitle}}</view>
+    </view>
+  </view>
+
+  <!-- 加载失败 → 重试面板 -->
+  <view wx:if="{{loadFail}}" class="gg-panel">
+    <view class="gg-panel-copy">{{text.loadFail}}</view>
+    <view class="gg-retry" bindtap="onRetry">{{text.retry}}</view>
+  </view>
+
+  <block wx:else>
+    <view class="gg-intro">{{text.intro}}</view>
+
+    <!-- A 段：在本应用选好（步骤 1-3，第 3 步红底高亮本专业领域） -->
+    <view class="gg-sec">{{text.secApp}}</view>
+    <view
+      wx:for="{{stepsA}}"
+      wx:for-item="stp"
+      wx:key="key"
+      class="gg-step {{stp.key === 'avoid_own_field' ? 'gg-step-warn' : ''}}"
+    >
+      <view class="gg-step-num {{stp.key === 'avoid_own_field' ? 'gg-step-num-warn' : ''}}">{{index + 1}}</view>
+      <view class="gg-step-main">
+        <view class="gg-step-title">{{stp.title}}</view>
+        <view class="gg-step-detail">{{stp.detail}}</view>
+        <view wx:if="{{stp.key === 'avoid_own_field' && ownFieldLabels.length}}" class="gg-own-fields">
+          <text class="gg-own-label">{{text.ownFieldLabel}}</text>
+          <text wx:for="{{ownFieldLabels}}" wx:for-item="fld" wx:key="*this" class="gg-own-pill">{{fld}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- B 段：去 MyHKMU 正式注册（步骤 4） -->
+    <view class="gg-sec">{{text.secEnrol}}</view>
+    <view wx:if="{{stepB}}" class="gg-step">
+      <view class="gg-step-num">{{stepsA.length + 1}}</view>
+      <view class="gg-step-main">
+        <view class="gg-step-title">{{stepB.title}}</view>
+        <view class="gg-step-detail">{{stepB.detail}}</view>
+      </view>
+    </view>
+
+    <!-- CTA：去选课（复制链接）+ 官方 PDF（复制链接） -->
+    <view class="gg-cta" bindtap="onCopySelect" hover-class="gg-cta-hv">{{text.ctaSelect}}</view>
+    <view class="gg-pdf" bindtap="onCopyPdf" hover-class="gg-pdf-hv">{{text.ctaPdf}}</view>
+  </block>
+</view>

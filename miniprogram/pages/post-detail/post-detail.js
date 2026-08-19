@@ -123,6 +123,15 @@ Page({
     });
   },
 
+  // 分享这篇帖子(右上角「···」→ 转发/复制链接)。path 带 postId 回到该帖。
+  onShareAppMessage() {
+    const post = this.data.post || {};
+    return {
+      title: post.title || "HKMU Campus",
+      path: `/pages/post-detail/post-detail?id=${this.data.postId || ""}`,
+    };
+  },
+
   // 举报这篇帖子(仅非作者可见)。原因走 actionSheet,可选补充说明,
   // 提交 POST /reports。重复举报(后端 UNIQUE 去重 409)→ 标记已举报并提示。
   onReportPost() {

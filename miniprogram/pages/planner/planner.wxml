@@ -1,5 +1,75 @@
 <app-header bind:languagechange="handleLanguageChange" />
 
+<!-- 屏④:新生引导(无 programme 时全屏接管,替代突然弹选专业)。T04 骨架;步骤内容 T05/T06 填 -->
+<view wx:if="{{onboarding.active}}" class="ob-screen">
+  <view class="ob-nav" style="padding-top: {{onboarding.statusBar}}px;">
+    <view class="ob-nav-title">{{text.obTitle}}</view>
+  </view>
+  <scroll-view scroll-y class="ob-scroll">
+    <view class="ob-prog">
+      <view class="ob-prog-seg {{onboarding.step>=1?'on':''}}"></view>
+      <view class="ob-prog-seg {{onboarding.step>=2?'on':''}}"></view>
+      <view class="ob-prog-seg {{onboarding.step>=3?'on':''}}"></view>
+    </view>
+    <block wx:if="{{onboarding.step===1}}">
+      <view class="ob-q">{{text.obStep1Q}}</view>
+      <view class="ob-sub">{{text.obStep1Sub}}</view>
+      <programme-picker
+        mode="inline"
+        selected-code="{{onboarding.programmeCode}}"
+        locale="{{locale}}"
+        bind:select="onObPickProgramme"
+      />
+    </block>
+    <block wx:elif="{{onboarding.step===2}}">
+      <view class="ob-q">{{text.obStep2Q}}</view>
+      <view class="ob-sub">{{text.obStep2Sub}}</view>
+
+      <view class="ob-prev-pick">
+        <view class="ob-prev-pick-label">{{text.obPrevPick}}</view>
+        <view class="ob-prev-pick-val">{{onboarding.programmeName}}</view>
+      </view>
+
+      <view class="ob-field-label">{{text.obYearLabel}}</view>
+      <view class="ob-chips">
+        <view wx:for="{{onboarding.years}}" wx:key="*this"
+              class="ob-chip {{onboarding.year===item?'sel':''}}"
+              data-year="{{item}}" hover-class="ob-chip-hover"
+              bindtap="onObPickYear">{{item}}</view>
+      </view>
+
+      <view class="ob-field-label">{{text.obTermLabel}}</view>
+      <view class="ob-chips">
+        <view class="ob-chip {{onboarding.semester==='autumn'?'sel':''}}"
+              data-sem="autumn" hover-class="ob-chip-hover"
+              bindtap="onObPickSem">{{text.obAutumn}}</view>
+        <view class="ob-chip {{onboarding.semester==='spring'?'sel':''}}"
+              data-sem="spring" hover-class="ob-chip-hover"
+              bindtap="onObPickSem">{{text.obSpring}}</view>
+      </view>
+    </block>
+    <block wx:elif="{{onboarding.step===3}}">
+      <view class="ob-q">{{text.obStep3Q}}</view>
+      <view class="ob-sub">{{text.obStep3Sub}}</view>
+
+      <view class="ob-prev-pick">
+        <view class="ob-prev-pick-label">{{text.obProgrammeLabel}}</view>
+        <view class="ob-prev-pick-val">{{onboarding.programmeName}}</view>
+      </view>
+      <view class="ob-prev-pick">
+        <view class="ob-prev-pick-label">{{text.obTermLabel}}</view>
+        <view class="ob-prev-pick-val">{{onboarding.entryTermDisplay}}</view>
+      </view>
+    </block>
+  </scroll-view>
+  <view class="ob-next">
+    <view class="ob-next-btns">
+      <view wx:if="{{onboarding.step>1}}" class="ob-btn" hover-class="ob-btn-hover" bindtap="onObBack">{{text.obPrev}}</view>
+      <view class="ob-btn pri {{onboarding.canNext?'':'ob-btn-disabled'}}" hover-class="ob-btn-hover" bindtap="onObNext">{{onboarding.step<3 ? text.obNext : text.obGenAction}}</view>
+    </view>
+  </view>
+</view>
+
 <view class="page-shell planner-shell">
   <view class="top-bar tight">
     <view class="brand-lockup">
@@ -9,28 +79,37 @@
     </view>
   </view>
 
-  <!-- Hero：专业名（点击切换）+ 总进度。专业搜索浮层由 hero 触发，默认收起，不再霸屏 -->
+  <!-- Hero：专业名（纯展示）+ 毕业统计。换专业入口移至 profile 页（T03）；首次无专业时由 _maybePromptProgramme 自动弹引导浮层 -->
   <view class="planner-hero {{loggedIn && !comingSoon && viewMode==='planning' ? 'has-score' : ''}}">
-    <view class="planner-hero-info" bindtap="onOpenProgrammeSearch" hover-class="planner-hero-hover">
+    <view class="planner-hero-info">
       <view class="planner-kicker">{{programmeSchool}}</view>
       <view class="planner-title-row">
         <text class="planner-title">{{programmeName}}</text>
-        <text class="planner-title-caret">▾</text>
       </view>
-      <view class="planner-copy">
+      <!-- T08: 距毕业学分 + 进度行(· 毕业年)；无 status 时回退原 copy 分支 -->
+      <block wx:if="{{heroStat}}">
+        <view class="hero-remain">{{heroStat.remainText}}</view>
+        <view class="hero-cr">{{heroStat.progressLine}}</view>
+      </block>
+      <view wx:else class="planner-copy">
         <block wx:if="{{viewMode==='catalogue'}}">{{text.catalogueHeroCopy}}</block>
         <block wx:elif="{{loggedIn && !comingSoon}}">{{creditsSummary}}</block>
         <block wx:elif="{{comingSoon}}">{{text.comingSoonCopy}}</block>
         <block wx:else>{{text.heroCopy}}</block>
       </view>
     </view>
-    <view wx:if="{{loggedIn && !comingSoon && viewMode==='planning'}}" class="planner-score">{{percent}}%</view>
-  </view>
-
-  <!-- 总览/我的课程 切换 -->
-  <view wx:if="{{showTabs}}" class="seg-bar">
-    <view class="seg-item {{activeTab==='overview'?'seg-on':''}}" data-tab="overview" bindtap="onTabChange">{{text.tabOverview}}</view>
-    <view class="seg-item {{activeTab==='courses'?'seg-on':''}}" data-tab="courses" bindtap="onTabChange">{{text.tabCourses}}</view>
+    <!-- T08: conic-gradient 毕业进度环（替代 planner-score 药丸；status 未到时仍回退药丸） -->
+    <view
+      wx:if="{{heroStat}}"
+      class="hero-ring"
+      style="background: conic-gradient(#ffffff {{percent}}%, rgba(255,255,255,0.32) 0)"
+    >
+      <view class="hero-ring-in">
+        <text class="hero-ring-pct">{{percent}}%</text>
+        <text class="hero-ring-lab">{{text.heroRingLabel}}</text>
+      </view>
+    </view>
+    <view wx:elif="{{loggedIn && !comingSoon && viewMode==='planning'}}" class="planner-score">{{percent}}%</view>
   </view>
 
   <!-- 加载中 -->
@@ -41,6 +120,13 @@
   <!-- 课程目录（非完整规划专业：全校 ~106 专业官方课程列表） -->
   <view wx:elif="{{viewMode==='catalogue'}}" class="planner-catalogue">
     <view class="catalogue-disclaimer">{{catalogueDisclaimer}}</view>
+
+    <!-- 停招/无规则专业:GE 通识选课与课评全校通用,不该随专业规则连坐。
+         (规划视图的 seg-bar 只在 planning 分支渲染,目录视图在此补通识入口;
+         点课进 course-detail 即课评) -->
+    <view wx:if="{{loggedIn}}" class="seg-bar">
+      <view class="seg-item seg-on" bindtap="onOpenGePicker">{{text.segGe}} ▸</view>
+    </view>
 
     <view wx:if="{{catalogueLoading}}" class="web-panel">
       <view class="panel-copy">{{text.loading}}</view>
@@ -101,78 +187,144 @@
       <view class="progress-track">
         <view class="progress-fill" style="width: 0%"></view>
       </view>
+      <view wx:if="{{item.hasGePool}}" class="ge-entry" bindtap="onOpenGePicker" hover-class="ge-entry-hover">
+        <text>{{text.geSelectEntry}}</text>
+        <text class="ge-entry-arrow">▸</text>
+      </view>
     </view>
   </view>
 
-  <!-- 已登录：毕业仪表盘 -->
-  <block wx:elif="{{activeTab==='overview'}}">
-    <view class="web-panel">
-      <view class="section-title">{{text.progressTitle}}</view>
-      <view class="credits-summary">{{creditsSummary}}</view>
-      <view class="progress-track progress-track-lg">
-        <view class="progress-fill" style="width: {{percent}}%"></view>
+  <!-- T11+T12: 已登录 — 二级 seg(规划/课程/通识)；通识项点按开 GE 浮层 -->
+  <block wx:elif="{{loggedIn}}">
+    <view class="seg-bar view-seg">
+      <view class="seg-item {{viewSeg==='plan'?'seg-on':''}}" data-tab="plan" bindtap="onViewSegTap">{{text.segPlan}}</view>
+      <view class="seg-item {{viewSeg==='courses'?'seg-on':''}}" data-tab="courses" bindtap="onViewSegTap">{{text.segCourses}}</view>
+      <view class="seg-item" data-tab="ge" bindtap="onViewSegTap">{{text.segGe}} ▸</view>
+    </view>
+
+    <!-- 规划视图：分类竖条 + 建议 + 年份 seg + 该学年两学期课表 -->
+    <block wx:if="{{viewSeg==='plan'}}">
+      <view class="web-panel">
+        <view class="section-title">{{text.categoriesTitle}}</view>
+        <!-- T09: 6 类竖条（2 列网格）；通识格点按开 GE 浮层 -->
+        <view class="cat-grid">
+          <view
+            wx:for="{{categoriesView}}"
+            wx:key="key"
+            class="cat-cell {{item.hasGePool ? 'cat-cell-ge' : ''}}"
+            data-ge="{{item.hasGePool}}"
+            bindtap="onCatCellTap"
+            hover-class="{{item.hasGePool ? 'cat-cell-hover' : 'none'}}"
+          >
+            <view class="cat-bar">
+              <view class="cat-bar-fill cat-{{item.color}}" style="height: {{item.pct}}%"></view>
+            </view>
+            <view class="cat-line">
+              <text class="cat-label">{{item.label}}</text>
+              <text class="cat-cr">{{item.earned}}/{{item.required}}{{item.done ? ' ✓' : ''}}</text>
+            </view>
+            <text wx:if="{{item.hasGePool}}" class="cat-ge-arrow">▸</text>
+          </view>
+        </view>
       </view>
-    </view>
 
-    <view class="web-panel">
-      <view class="section-title">{{text.categoriesTitle}}</view>
-      <view
-        wx:for="{{categoriesView}}"
-        wx:key="key"
-        class="category-row"
-      >
-        <view class="category-head">
-          <text class="category-name">{{item.label}}</text>
-          <text class="category-credits">{{item.earned}}/{{item.required}} cr</text>
-        </view>
-        <view class="progress-track">
-          <view class="progress-fill cat-{{item.color}}" style="width: {{item.pct}}%"></view>
-        </view>
+      <!-- T10: 系统建议卡（"排进下学期"一句话） -->
+      <view wx:if="{{advice}}" class="advice-card">
+        <text class="advice-ic">◆</text>
+        <text class="advice-txt"><text class="advice-strong">{{advice.heading}}</text>{{advice.text}}</text>
       </view>
-    </view>
 
-    <view wx:if="{{recommendations.length}}" class="web-panel">
-      <view class="section-title">{{text.recommendTitle}}</view>
-      <view
-        wx:for="{{recommendations}}"
-        wx:key="course_id"
-        class="course-row"
-      >
-        <view class="course-main">
-          <view class="course-code">{{item.code}}</view>
-          <view class="course-name">{{item.name}} · {{item.credits}}cr</view>
-        </view>
-        <view class="mini-pill green">{{item.categoryLabel}}</view>
+      <!-- 年份 seg：Y1-Y4，当前学年带标记 -->
+      <view class="seg-bar year-seg">
+        <view
+          wx:for="{{yearsView}}"
+          wx:key="n"
+          class="seg-item {{item.active ? 'seg-on' : ''}}"
+          data-year="{{item.n}}"
+          bindtap="onYearTap"
+        >{{item.label}}<text wx:if="{{item.current}}" class="seg-cur">{{text.yearCurrentTag}}</text></view>
       </view>
-    </view>
-  </block>
 
-  <!-- 我的课程:按学年学期分组 + 搜索 + 标记 -->
-  <block wx:elif="{{activeTab==='courses'}}">
-    <view class="web-panel planner-search">
-      <input class="search-input" value="{{searchKeyword}}"
-             placeholder="{{text.searchPlaceholder}}" bindinput="onSearchInput" />
-    </view>
-
-    <block wx:for="{{coursesView.semesters}}" wx:for-item="sem" wx:key="label">
-      <view class="sem-header">{{sem.label}}</view>
-      <view wx:for="{{sem.courses}}" wx:for-item="c" wx:key="courseId"
-            class="course-row course-tap"
-            data-course-id="{{c.courseId}}" data-code="{{c.code}}"
-            bindtap="openCourseDetail">
-        <view class="course-main">
-          <view class="course-code">{{c.code}}</view>
-          <view class="course-name">{{c.name}} · {{c.credits}}cr</view>
-          <view wx:if="{{c.prereqLabel}}" class="prereq-row {{c.prereqsMet?'met':'unmet'}}">{{c.prereqLabel}}</view>
+      <!-- 该学年两学期课表 -->
+      <block wx:for="{{coursesView.semesters}}" wx:for-item="sem" wx:key="label">
+        <view class="term-header">
+          <text class="term-name">{{sem.label}}</text>
+          <text class="term-cr">{{sem.crTotal}} cr</text>
         </view>
-        <view wx:if="{{c.statusKey==='completed'}}" class="mini-pill green">{{c.statusLabel}}</view>
-        <view wx:elif="{{c.statusKey==='in_progress'}}" class="mini-pill amber">{{c.statusLabel}}</view>
+        <view wx:for="{{sem.courses}}" wx:for-item="c" wx:key="courseId"
+              class="course-row course-tap"
+              data-course-id="{{c.courseId}}" data-code="{{c.code}}"
+              bindtap="openCourseDetail">
+          <view class="course-main">
+            <view class="course-code">{{c.code}}</view>
+            <view class="course-name">{{c.name}} · {{c.credits}}cr</view>
+            <view wx:if="{{c.prereqLabel}}" class="prereq-row {{c.prereqsMet?'met':'unmet'}}">{{c.prereqLabel}}</view>
+            <!-- T28 排课台:改学期下拉 + 先修顺序提示(不阻塞)。catch 吞冒泡防开详情 -->
+            <view class="move-line">
+              <picker mode="selector" range="{{coursesView.moveLabels}}" value="{{c.moveIndex}}"
+                      data-course-id="{{c.courseId}}" bindchange="onMoveCourse" catchtap="stopBubble">
+                <view class="move-pill {{c.planned?'move-pill-custom':''}}">
+                  <text>{{c.planned ? c.placementLabel : text.schedMove}}</text><text class="move-caret">▾</text>
+                </view>
+              </picker>
+              <text wx:if="{{c.orderWarn}}" class="order-warn">{{c.orderWarn}}</text>
+            </view>
+          </view>
+          <view wx:if="{{c.statusKey==='completed'}}" class="mini-pill green">{{c.statusLabel}}</view>
+          <view wx:elif="{{c.statusKey==='in_progress'}}" class="mini-pill amber">{{c.statusLabel}}</view>
+        </view>
+        <!-- 批次 2 官方 GE 占位行(对照 advice sheet 的 GE (I)/(II)):点开 GE 选课浮层 -->
+        <view wx:if="{{sem.geSlotCount}}" class="course-row ge-slot-row" bindtap="onOpenGePicker">
+          <view class="course-main">
+            <view class="course-code">GE</view>
+            <view class="course-name">{{text.geSlotTitle}} ×{{sem.geSlotCount}}</view>
+          </view>
+          <view class="mini-pill pink">{{text.geSlotPending}}</view>
+        </view>
+      </block>
+
+      <view wx:if="{{coursesView.empty}}" class="web-panel">
+        <view class="panel-copy">{{text.coursesEmpty}}</view>
       </view>
     </block>
 
-    <view wx:if="{{coursesView.empty}}" class="web-panel">
-      <view class="panel-copy">{{text.coursesEmpty}}</view>
-    </view>
+    <!-- 课程视图：全课程列表（跨学年分组 + 搜索 + 标记） -->
+    <block wx:else>
+      <view class="web-panel planner-search">
+        <input class="search-input" value="{{searchKeyword}}"
+               placeholder="{{text.searchPlaceholder}}" bindinput="onSearchInput" />
+      </view>
+
+      <block wx:for="{{coursesView.semesters}}" wx:for-item="sem" wx:key="label">
+        <view class="sem-header">{{sem.label}}</view>
+        <view wx:for="{{sem.courses}}" wx:for-item="c" wx:key="courseId"
+              class="course-row course-tap"
+              data-course-id="{{c.courseId}}" data-code="{{c.code}}"
+              bindtap="openCourseDetail">
+          <view class="course-main">
+            <view class="course-code">{{c.code}}</view>
+            <view class="course-name">{{c.name}} · {{c.credits}}cr</view>
+            <view wx:if="{{c.prereqLabel}}" class="prereq-row {{c.prereqsMet?'met':'unmet'}}">{{c.prereqLabel}}</view>
+            <!-- T28 排课台:改学期下拉 + 先修顺序提示(不阻塞)。catch 吞冒泡防开详情 -->
+            <view class="move-line">
+              <picker mode="selector" range="{{coursesView.moveLabels}}" value="{{c.moveIndex}}"
+                      data-course-id="{{c.courseId}}" bindchange="onMoveCourse" catchtap="stopBubble">
+                <view class="move-pill {{c.planned?'move-pill-custom':''}}">
+                  <text>{{c.planned ? c.placementLabel : text.schedMove}}</text><text class="move-caret">▾</text>
+                </view>
+              </picker>
+              <text wx:if="{{c.orderWarn}}" class="order-warn">{{c.orderWarn}}</text>
+            </view>
+          </view>
+          <view wx:if="{{c.statusKey==='completed'}}" class="mini-pill green">{{c.statusLabel}}</view>
+          <view wx:elif="{{c.statusKey==='in_progress'}}" class="mini-pill amber">{{c.statusLabel}}</view>
+        </view>
+      </block>
+
+      <view wx:if="{{coursesView.empty}}" class="web-panel">
+        <view class="panel-copy">{{text.coursesEmpty}}</view>
+      </view>
+    </block>
   </block>
 
   <!-- 全屏专业搜索浮层：点 hero 触发。搜索引导 + 按学院分组卡片，选完或 ✕ 返回 -->
@@ -219,5 +371,140 @@
         </view>
       </block>
     </scroll-view>
+  </view>
+
+  <!-- GE 通识选择浮层（屏③）：点通识分类行的"选择"入口触发。复用 ps-overlay 骨架 -->
+  <view wx:if="{{gePicker.open}}" class="ps-overlay ge-overlay" style="top: {{programmeOverlayTop}}px;">
+    <view class="ps-overlay-bar">
+      <view class="ps-overlay-bar-spacer"></view>
+      <text class="ps-overlay-title">{{gePicker.title}}</text>
+      <view class="ps-overlay-close" bindtap="onCloseGePicker">×</view>
+    </view>
+
+    <view wx:if="{{gePicker.loadError}}" class="web-panel ge-panel-msg">
+      <view class="panel-copy">{{gePicker.loadError}}</view>
+    </view>
+
+    <block wx:elif="{{gePicker.loading}}">
+      <view class="web-panel ge-panel-msg">
+        <view class="panel-copy">{{text.loading}}</view>
+      </view>
+    </block>
+
+    <scroll-view wx:else scroll-y enhanced show-scrollbar="{{false}}" class="ge-overlay-list">
+      <view class="ge-note">{{gePicker.ruleNote}}</view>
+      <view class="ge-progress">{{gePicker.progress}}</view>
+
+      <!-- T19: 按领域 / 评分榜 切换 -->
+      <view class="seg-bar ge-mode-seg">
+        <view class="seg-item {{gePicker.mode==='ranking' ? '' : 'seg-on'}}" data-mode="fields" bindtap="onGeModeTap">{{gePicker.tabFields}}</view>
+        <view class="seg-item {{gePicker.mode==='ranking' ? 'seg-on' : ''}}" data-mode="ranking" bindtap="onGeModeTap">{{gePicker.tabRanking}}</view>
+      </view>
+
+      <!-- 评分榜视图（T19 行 + T20 空态） -->
+      <block wx:if="{{gePicker.mode==='ranking'}}">
+        <view wx:if="{{gePicker.rankingLoading}}" class="web-panel ge-panel-msg">
+          <view class="panel-copy">{{text.loading}}</view>
+        </view>
+        <view wx:elif="{{gePicker.rankingEmpty}}" class="ge-rank-empty">
+          <view class="ge-rank-empty-ic">🏆</view>
+          <view class="ge-rank-empty-tx">{{gePicker.rankingEmpty}}</view>
+        </view>
+        <block wx:else>
+          <view
+            wx:for="{{gePicker.rankRows}}"
+            wx:for-item="rk"
+            wx:key="id"
+            class="ge-rank-row"
+            data-id="{{rk.id}}"
+            bindtap="onOpenGeCourse"
+            hover-class="ge-rank-row-hv"
+          >
+            <view class="ge-rank-score">{{rk.score}}</view>
+            <view class="ge-rank-main">
+              <view class="ge-rank-name">{{rk.name}}</view>
+              <view class="ge-rank-dims">{{rk.dimsLine}} · {{rk.countLabel}}</view>
+              <view wx:if="{{rk.tags.length}}" class="ge-rank-tags">
+                <text wx:for="{{rk.tags}}" wx:for-item="tg" wx:key="label" class="ge-rank-tag">{{tg.label}} {{tg.count}}</text>
+              </view>
+            </view>
+          </view>
+        </block>
+      </block>
+
+      <!-- 领域视图（原分组列表） -->
+      <block wx:else>
+        <!-- 搜索框:课码/中英文名跨领域实时过滤(不绑 value,避免重渲染光标跳动) -->
+        <view class="ge-search">
+          <input
+            class="ge-search-input"
+            placeholder="{{gePicker.searchPlaceholder}}"
+            confirm-type="search"
+            bindinput="onGeSearchInput"
+          />
+        </view>
+        <!-- 学期筛选胶囊:全部/秋季/春季/暑期,与搜索叠加(AND);复用年份 seg 样式族 -->
+        <view class="seg-bar ge-term-seg">
+          <view
+            wx:for="{{gePicker.termSegs}}"
+            wx:key="key"
+            class="seg-item {{item.active ? 'seg-on' : ''}}"
+            data-term="{{item.key}}"
+            bindtap="onGeTermTap"
+          >{{item.label}}</view>
+        </view>
+        <view wx:if="{{gePicker.searchEmpty}}" class="ge-rank-empty">
+          <view class="ge-rank-empty-ic">🔍</view>
+          <view class="ge-rank-empty-tx">{{gePicker.searchEmpty}}</view>
+        </view>
+        <view
+          wx:for="{{gePicker.fields}}"
+          wx:for-item="fld"
+          wx:key="name"
+          class="ge-field {{fld.blocked ? 'ge-field-blk' : ''}}"
+        >
+          <view class="ge-field-h">
+            <text class="ge-field-name">{{fld.name}}</text>
+            <text class="ge-field-ct">{{fld.headRight}}</text>
+          </view>
+          <view
+            wx:for="{{fld.courses}}"
+            wx:for-item="c"
+            wx:key="id"
+            class="ge-row {{c.taken ? 'ge-row-taken' : ''}} {{c.blocked ? 'ge-row-blocked' : ''}}"
+            data-id="{{c.id}}"
+            bindtap="onOpenGeCourse"
+            hover-class="ge-row-hv"
+          >
+            <text class="ge-code">{{c.code}}</text>
+            <text class="ge-name">{{c.name}}</text>
+            <text wx:if="{{c.termLabel}}" class="ge-term">{{c.termLabel}}</text>
+            <!-- A 方案:行主体=进详情(看评分/页内标记);行尾「选」钮=一键勾选(catchtap 防冒泡) -->
+            <view
+              wx:if="{{!c.blocked}}"
+              class="ge-pick {{c.taken ? 'ge-pick-on' : ''}}"
+              data-id="{{c.id}}"
+              data-blocked="{{c.blocked}}"
+              catchtap="onToggleGeCourse"
+            >{{c.taken ? '✓' : '+'}}</view>
+            <text wx:else class="ge-mark ge-mark-blk">⊘</text>
+          </view>
+        </view>
+      </block>
+    </scroll-view>
+
+    <!-- T24: footer 常驻 — 选 GEN 教程 + 去 MyHKMU 选课（复制链接） -->
+    <view class="ge-foot">
+      <view class="ge-foot-entry" bindtap="onOpenGeGuide" hover-class="ge-foot-hv">
+        <text class="ge-foot-ic">📖</text>
+        <text class="ge-foot-tx">{{gePicker.guideEntry}}</text>
+        <text class="ge-foot-arrow">›</text>
+      </view>
+      <view wx:if="{{gePicker.selectUrl}}" class="ge-foot-entry" bindtap="onCopyMyhkmuLink" hover-class="ge-foot-hv">
+        <text class="ge-foot-ic">🔗</text>
+        <text class="ge-foot-tx">{{gePicker.selectLabel}}</text>
+        <text class="ge-foot-copy">⧉</text>
+      </view>
+    </view>
   </view>
 </view>
