@@ -5,8 +5,10 @@
 advice_sheets/covers/ 57 份封面文件名一一对应。2026-08-19 双锚收敛验证
 (会话内亲测):桌面指南 PDF pdftotext -layout 后逐表行取首 token
 (形状 [A-Z]{4,9}([0-9]?F[0-9]|[0-9]{1,2})?),得 57 码、零重复、与封面
-文件名零差。指南 PDF 本体不入库,covers/ 为 CI 稳定锚点;封面内文再证
-在招码形态(BSSCHWSJ1/2/3、BSCHCOMPF3、BAPHBMJ1- HAPBMJ1-18 等)。
+文件名零差。covers/ 封面 PDF 重而 gitignore 不入库 → CI 锚点取
+verify/guide_codes.json(入库;本地存在 covers/ 时测试强制两者相等,
+12 月春季版重抓后须同步重生成)。封面内文再证在招码形态
+(BSSCHWSJ1/2/3、BSCHCOMPF3、BAPHBMJ1- HAPBMJ1-18 等)。
 
 批次 3 施工(2026-08-19):
   * BSCHCOMPF3 → BSCHCOMPF 别名(计算 Y3 入学;年份映射批次 2 已灌);
@@ -49,7 +51,9 @@ _GUIDE_CODE_SHAPE = re.compile(r"[A-Z]{4,9}(?:[0-9]F[0-9]|[0-9]{1,2})?")
 
 
 def _covers():
-    return {f[:-4] for f in os.listdir(AS / "covers") if f.endswith(".pdf")}
+    """指南 57 码:入库锚点 verify/guide_codes.json(covers PDF gitignore)。"""
+    doc = json.loads((AS / "verify" / "guide_codes.json").read_text(encoding="utf-8"))
+    return set(doc["guide_codes"])
 
 
 def _guide_mains():
@@ -83,11 +87,21 @@ def _head(xs, n=10):
 def test_covers_anchor_57():
     covers = _covers()
     assert len(covers) == 57, (
-        f"covers/ 应为 57 份指南封面,实得 {len(covers)};对账:桌面指南 PDF 索引表"
-        "(2026-08-19 双锚收敛记录,见本文件 docstring)"
+        f"指南锚点应为 57 码(verify/guide_codes.json),实得 {len(covers)};"
+        "对账:桌面指南 PDF 索引表(2026-08-19 双锚收敛,见 guide_codes.json 注)"
     )
     bad = {c for c in covers if not _GUIDE_CODE_SHAPE.fullmatch(c)}
-    assert not bad, f"封面文件名不符合专业码形状:{_head(bad)}"
+    assert not bad, f"指南码不符合专业码形状:{_head(bad)}"
+    # 本地存在 covers/(gitignore 的官方封面 PDF)时强制与入库锚点相等——
+    # 12 月春季版重抓封面后忘了重生成 guide_codes.json 会在此红
+    covers_dir = AS / "covers"
+    if covers_dir.is_dir():
+        local = {f[:-4] for f in os.listdir(covers_dir) if f.endswith(".pdf")}
+        assert local == covers, (
+            f"本地 covers({len(local)})与入库锚点 guide_codes.json({len(covers)})"
+            f"不一致:多 {_head(local - covers)} 少 {_head(covers - local)};"
+            "重抓封面后须同步重生成 verify/guide_codes.json"
+        )
 
 
 # ── 零缺失:每个指南专业可规划(折叠后 ∈ PROGRAMMES 且非占位) ───────────────
