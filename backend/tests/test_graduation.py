@@ -11,6 +11,7 @@ DB or HTTP client needed. Locks in the fixes for:
 from backend.app.data.programmes import PROGRAMMES
 from backend.app.routers.courses import _category_satisfied, _compute_graduation
 from backend.app.data.ge_courses import GE_COURSES, ge_courses_for
+from backend.app.data.programme_rules_extra import level_rules_for
 
 
 def _row(cid, credits=3, prereqs=None):
@@ -233,9 +234,13 @@ def test_generated_ge_pool_has_pickn():
 def _rule_rows(prog_code):
     """course rows for every rule course, credits as parsed from the PDF
     (RULE_COURSE_CREDITS); DSAI's hand-curated project is 6cr. 变体码别名
-    (J1/F3 等复用主码规则的)查主码的解析学分——别名码本身不在 PDF 里。"""
+    (J1/F3 等复用主码规则的)查主码的解析学分——别名码本身不在 PDF 里。
+    批次 4:WSJ Stream 实体回退 POOL_SEED_CREDITS(advice sheet 行值)与
+    WSJ_EXTRA_CREDITS(GCST3005ABF=6)。"""
     from backend.app.data.programmes import PROGRAMME_ALIASES
     from backend.app.data.programme_rules import RULE_COURSE_CREDITS
+    from backend.app.data.programme_year_map import POOL_SEED_CREDITS
+    from backend.app.data.programme_rules_extra import WSJ_EXTRA_CREDITS
     main = PROGRAMME_ALIASES.get(prog_code, prog_code)
     parsed = RULE_COURSE_CREDITS.get(main, {})
     rows = {}
@@ -245,41 +250,148 @@ def _rule_rows(prog_code):
         for cid in cat["courses"]:
             credits = parsed.get(key, {}).get(cid)
             if credits is None:
+                credits = POOL_SEED_CREDITS.get(cid)
+            if credits is None:
+                credits = WSJ_EXTRA_CREDITS.get(cid)
+            if credits is None:
                 credits = 6 if cid == "COMP4610SEF" else 3
             rows[cid] = _row(cid, credits=credits)
     return rows
 
 
+def _level_of(cid):
+    from backend.app.data.programme_rules_extra import level_of_course
+    return level_of_course(cid)
+
+
 def test_every_programme_can_graduate():
-    """End-to-end over ALL 55 programmes: complete every required course,
-    enough elective credits (credit pool), and pick_n distinct-field unblocked
-    GEs -> every category satisfied and all_satisfied must be True."""
+    """End-to-end over ALL programmes (55 批次3 + 批次4 WSJ 五 Stream):complete
+    every required course, enough elective credits (credit pool), and pick_n
+    distinct-field unblocked GEs -> every category satisfied and all_satisfied
+    must be True.
+
+    批次 4 起毕业判定含全校层级约束(1000≤30 / 3000≥24 / 4000≥24)与 WSJ
+    Stream 的 scoped 层级脚注——选课策略必须层级感知(和真实学生一样):
+      * 学分池按层级降序填(优先喂 3000/4000 下限);
+      * 1000 级预算耗尽时学分池跳过 1000 级候选、GE 优先选 2000 级;
+      * 填完各池下限后若层级下限仍差,从学分池未选课里按层级补足。
+    若某专业在该策略下仍无法满足(如必修池自身超帽),测试红 = 数据问题
+    该挂起的挂起(见 _LEVEL_CAP_SUSPENDED)。"""
     for code, prog in PROGRAMMES.items():
+        if prog.get("coming_soon"):
+            continue
         rows = _rule_rows(code)
         progress = {}
+        uni_rule = next(
+            (r for r in level_rules_for(code) if not r.get("scope_categories")),
+            {},
+        )
+        cap1000 = uni_rule.get("max", {}).get("1000")
+
+        def _earned_at(level):
+            return sum(
+                rows[cid]["credits"]
+                for cid in progress
+                if _level_of(cid) == level
+            )
+
+        # ① 必修池(非学分池)全修(含 pick_n 池:官方表即全修)
+        fixed1000 = 0
         for key, cat in prog["categories"].items():
-            if cat.get("pool") == "ge":
+            if cat.get("pool") in ("ge", "credits"):
                 continue
-            if cat.get("pool") == "credits":
-                earned = 0
-                for cid in cat["courses"]:
-                    if earned >= cat["min_credits"]:
-                        break
-                    progress[cid] = "completed"
-                    earned += rows[cid]["credits"]
-            else:
-                progress.update({cid: "completed" for cid in cat["courses"]})
+            progress.update({cid: "completed" for cid in cat["courses"]})
+            fixed1000 += sum(
+                rows[cid]["credits"]
+                for cid in cat["courses"] if _level_of(cid) == 1000
+            )
+        budget1000 = (cap1000 - fixed1000) if cap1000 is not None else 10**6
+
+        # ② 学分池:层级降序填到 min,1000 级仅在预算内取
+        pools = [(k, c) for k, c in prog["categories"].items()
+                 if c.get("pool") == "credits"]
+        for key, cat in pools:
+            earned = 0
+            for cid in sorted(cat["courses"],
+                              key=lambda c: -_level_of(c)):
+                if earned >= cat["min_credits"]:
+                    break
+                if cid in progress:
+                    continue
+                cr = rows[cid]["credits"]
+                if _level_of(cid) == 1000 and cr > budget1000:
+                    continue
+                progress[cid] = "completed"
+                earned += cr
+                if _level_of(cid) == 1000:
+                    budget1000 -= cr
+            assert earned >= cat["min_credits"], (
+                f"{code}: credit pool {key} 无法在不破 1000 帽的前提下填满"
+                f"({earned}/{cat['min_credits']})——数据或帽子挂起需复核"
+            )
+
+        # ③ GE:预算紧时优先 2000 级(field 互异 + 非本专业领域不变)
         ge_cat = prog["categories"].get("general-ed")
         if ge_cat and ge_cat.get("pool") == "ge":
             need, fields = ge_cat.get("pick_n", 2), set()
-            for c in ge_courses_for(code):
+            ge_sorted = sorted(
+                (c for c in ge_courses_for(code) if not c["blocked"]),
+                key=lambda c: _level_of(c["id"]),
+            )
+            for c in ge_sorted:
                 if len(fields) >= need:
                     break
-                if c["blocked"] or c["field"] in fields:
+                if c["field"] in fields:
+                    continue
+                cr = 3
+                if _level_of(c["id"]) == 1000 and cr > budget1000:
                     continue
                 fields.add(c["field"])
-                rows[c["id"]] = _row(c["id"], credits=3)
+                rows[c["id"]] = _row(c["id"], credits=cr)
                 progress[c["id"]] = "completed"
+                if _level_of(c["id"]) == 1000:
+                    budget1000 -= cr
+            assert len(fields) >= need, f"{code}: GE 领域候选不足"
+
+        # ④ 层级下限补足:3000/4000(全校)差多少,从学分池未选课按层级补
+        for level, floor in sorted(uni_rule.get("min", {}).items()):
+            level = int(level)
+            floor = int(floor)
+            short = floor - _earned_at(level)
+            if short <= 0:
+                continue
+            cands = sorted(
+                (cid for _k, cat in pools for cid in cat["courses"]
+                 if cid not in progress and _level_of(cid) == level),
+                key=lambda c: -rows[c]["credits"],
+            )
+            for cid in cands:
+                if short <= 0:
+                    break
+                progress[cid] = "completed"
+                short -= rows[cid]["credits"]
+            # scoped 脚注(WSJ ME+EA ≥N@4000)同法在其作用域池内补
+            for rule in level_rules_for(code):
+                scope = rule.get("scope_categories")
+                if not scope:
+                    continue
+                for lv, fl in sorted(rule.get("min", {}).items()):
+                    lv, fl = int(lv), int(fl)
+                    scope_ids = {cid for k in scope
+                                 for cid in prog["categories"][k]["courses"]}
+                    got = sum(rows[c]["credits"] for c in progress
+                              if c in scope_ids and _level_of(c) == lv)
+                    short2 = fl - got
+                    for cid in sorted(
+                        (c for c in scope_ids
+                         if c not in progress and _level_of(c) == lv),
+                        key=lambda c: -rows[c]["credits"],
+                    ):
+                        if short2 <= 0:
+                            break
+                        progress[cid] = "completed"
+                        short2 -= rows[cid]["credits"]
+
         cats, total, recs, all_sat = _compute_graduation(prog, rows, progress)
         unsat = [c.key for c in cats if not c.satisfied]
         assert not unsat, f"{code}: categories not satisfied: {unsat}"

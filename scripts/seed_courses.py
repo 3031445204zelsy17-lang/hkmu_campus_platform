@@ -281,6 +281,45 @@ async def seed():
                         print(f"  skip pool-seed {cid}: {e}")
         print(f"  pool-seed inserted: {seed_inserted}")
 
+        # ── 批次 4 规则层课(选课数据修复,programme_rules_extra.py)──────────
+        # MHFA 自修课(NURS1050 英文/中文班,2025/26+ Y1 入学必修):官方 yr
+        # Note/Requirements §1.1.2 从未给学分(不出现在学分表)→ 0 学分是基于
+        # 缺席的推断,见 RULES_EVIDENCE["mhfa-nurs1050"]。GCST3005ABF = GCS
+        # Stream 的 Summer Immersive 单门必修 6cr(Requirements T2)。
+        # 幂等:existing_ids 跳过 + ON CONFLICT DO NOTHING。
+        BATCH4_COURSES = [
+            {"id": "NURS1050NEF", "code": "NURS 1050NEF", "credits": 0,
+             "category": "mhfa", "name": "Mental Health First Aid Training"},
+            {"id": "NURS1050NCF", "code": "NURS 1050NCF", "credits": 0,
+             "category": "mhfa", "name": "Mental Health First Aid Training"},
+            {"id": "GCST3005ABF", "code": "GCST 3005ABF", "credits": 6,
+             "category": "core", "name": "Summer Immersive Programme"},
+            # BUS2001BEF:多份商院 sheet 的 BUS 2000BEF 行 Excluded combination
+            # 列出现(BBAHMGTJ1/BBAHIHAMJ1 p1),官方码但任何目录/年表均无独立
+            # 课行(无课名无学分)→ 0 学分 + 说明名,仅供互斥标记用,不计学分。
+            # 对比:BUS1003/1004BEF 是批次 0 定性的幽灵嫌疑码,不灌(批次 5 人眼)。
+            {"id": "BUS2001BEF", "code": "BUS 2001BEF", "credits": 0,
+             "category": "elective",
+             "name": "Excluded combination of BUS 2000BEF (no official course row)"},
+        ]
+        batch4_inserted = 0
+        for c in BATCH4_COURSES:
+            if c["id"] in existing_ids:
+                continue
+            try:
+                await conn.execute(
+                    """INSERT INTO courses (id, code, name, credits, category, year, semester, prerequisites, description)
+                       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                       ON CONFLICT (id) DO NOTHING""",
+                    c["id"], c["code"], c["name"], c["credits"], c["category"],
+                    1, "any", "[]", f"批次4规则层 · {c['category']}",
+                )
+                existing_ids.add(c["id"])
+                batch4_inserted += 1
+            except Exception as e:
+                print(f"  skip batch4 {c['id']}: {e}")
+        print(f"  batch4 rule courses inserted: {batch4_inserted}")
+
         # 课名回填:裸码课(名字 = 空格化课码,seed T34 的兜底产物)换成官方
         # advice sheet 标题列。只动裸码行,不覆盖任何真名(catalogue/GE/手工表)。
         names_fixed = 0

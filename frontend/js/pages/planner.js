@@ -25,10 +25,30 @@ let _programmeQuery = ""; // programme picker search query (web)
 let _programmeSearchOpen = false; // programme picker dropdown open (web)
 // 变体/系列码 → 主码(批次 3 picker 单入口):旧保存码解析 + 选择器高亮
 let _ALIAS_TO_MAIN = {};
+// 批次 4 规则层(/courses/programmes 的 rule_extras):互斥组合 + MHFA +
+// cohort 学制分界——本地镜像毕业计算与后端 _compute_graduation 同源。
+let _RULE_EXTRAS = { excluded_combinations: [], mhfa_courses: [], mhfa_from_ay: 2025, three_cr_from_ay: 2023 };
+// 当前用户 entry_term("2025-autumn"/"2025-spring";null = 未填,不判 cohort)
+let _entryTerm = null;
 
 /** Fold a variant/admit code (BNHGJ1, BSCHCOMPF3…) to its picker main code. */
 function _resolveProgrammeCode(code) {
   return _ALIAS_TO_MAIN[code] || code;
+}
+
+// ── 批次 4:cohort 解析(镜像后端 programme_rules_extra.cohort_profile)────
+// entry_term("2025-autumn"/"2025-spring")→ 学制 + MHFA 适用。缺失 → 全不判
+// (宁可少判不误判)。秋入学 Y 归属 AY Y/(Y+1),春入学 Y 归属 (Y-1)/Y。
+function _cohortProfile(entryTerm) {
+  const m = /^(\d{4})-(autumn|spring)$/.exec(String(entryTerm || "").trim());
+  if (!m) return { ay: null, creditSystem: null, mhfaRequired: false };
+  const year = parseInt(m[1], 10);
+  const start = m[2] === "autumn" ? year : year - 1;
+  return {
+    ay: `${start}/${start + 1}`,
+    creditSystem: start >= _RULE_EXTRAS.three_cr_from_ay ? "3cr" : "5cr",
+    mhfaRequired: start >= _RULE_EXTRAS.mhfa_from_ay,
+  };
 }
 
 // ── Programmes (fetched from /courses/programmes; backend programmes.py is the single source of truth) ─
@@ -51,6 +71,9 @@ function _adaptProgramme(p) {
     comingSoon: p.coming_soon,
     template: p.template || {},
     categories,
+    // 批次 4:层级学分约束 + 伞形 Stream 子选择器数据
+    levelRules: p.level_rules || {},
+    streams: p.streams || [],
   };
 }
 
@@ -70,6 +93,7 @@ async function _loadProgrammes() {
       _PROGRAMMES[p.code] = _adaptProgramme(p);
     }
     if (data.default_code) _defaultProgrammeCode = data.default_code;
+    if (data.rule_extras) _RULE_EXTRAS = { ..._RULE_EXTRAS, ...data.rule_extras };
     if (cat && Array.isArray(cat.schools)) {
       _CATALOGUE = { schools: cat.schools };
       const m = {};
@@ -111,22 +135,37 @@ const SEMESTER_ORDER = { autumn: 0, spring: 1, summer: 2 };
 const _TAILWIND_COLORS = {
   blue:   "bg-blue-100 text-blue-800",
   purple: "bg-purple-100 text-purple-800",
+  violet: "bg-violet-100 text-violet-800",
   amber:  "bg-amber-100 text-amber-800",
   emerald:"bg-emerald-100 text-emerald-800",
   pink:   "bg-pink-100 text-pink-800",
   indigo: "bg-indigo-100 text-indigo-800",
+  rose:   "bg-rose-100 text-rose-800",
 };
 
 const _FILL_COLORS = {
   blue:   "bg-blue-500",
   purple: "bg-purple-500",
+  violet: "bg-violet-500",
   amber:  "bg-amber-500",
   emerald:"bg-emerald-500",
   pink:   "bg-pink-500",
   indigo: "bg-indigo-500",
+  rose:   "bg-rose-500",
 };
 
-function _getCategoryLabel(catKey) {
+function _getCategoryLabel(catKey, row) {
+  // 批次 4 伪分类:MHFA(cohort 注入)与层级学分约束行(-major 后缀 = 作用域
+  // 在主修/领域选修两池内,如 WSJ Stream 的 ME+EA ≥N@4000 官方脚注)
+  if (catKey === "mhfa") return t("planner.cat_mhfa");
+  if (catKey.startsWith("level-")) {
+    const parts = catKey.split("-");
+    const n = parts[1];
+    if (parts[2] === "major") return t("planner.cat_level_min_major", { n });
+    return t(row && row.cap ? "planner.cat_level_cap" : "planner.cat_level_min", { n });
+  }
+  if (catKey === "major-elective") return t("planner.cat_major_elective");
+  if (catKey === "area-elective") return t("planner.cat_area_elective");
   const key = `planner.cat_${catKey.replace(/-/g, "_").replace(/^cat_/, "")}`;
   // Try known i18n keys
   const known = {
@@ -216,6 +255,28 @@ function _calcCategoryCredits(catKey) {
   };
 }
 
+/** 课码 → 层级千位(镜像后端 level_of_course);无千位数字 → 0 不统计 */
+function _levelOfCourse(courseId) {
+  const m = /(\d{3,4})/.exec(courseId || "");
+  if (!m) return 0;
+  const n = parseInt(m[1], 10);
+  if (n < 1000) return 0;
+  return Math.min(Math.floor(n / 1000), 9) * 1000;
+}
+
+/** 互斥冲突(镜像后端 excluded_conflicts):组内 ≥2 门被标记即冲突,警告不
+ *  拦截。清单 per-sheet,只对 attested 专业生效(当前专业码折叠别名/Stream)。 */
+function _excludedConflicts() {
+  const main = (_ALIAS_TO_MAIN[_programmeCode] || _programmeCode).split("-")[0];
+  const out = [];
+  for (const g of _RULE_EXTRAS.excluded_combinations || []) {
+    if (g.programmes && !g.programmes.includes(main)) continue;
+    const marked = (g.courses || []).filter((c) => _getProgress(c));
+    if (marked.length >= 2) out.push({ courses: g.courses, marked });
+  }
+  return out;
+}
+
 /** Overall graduation progress */
 function _calcGraduationProgress() {
   // De-duplicate totalEarned across categories: a completed course's credits
@@ -232,6 +293,50 @@ function _calcGraduationProgress() {
       }
     }
     categories.push({ key: catKey, ...info, color: cat.color, courses: cat.courses, pickN: cat.pickN });
+  }
+
+  // 批次 4 规则层(镜像后端 _compute_graduation 的伪分类追加):
+  // MHFA(cohort 注入)+ 层级学分约束(5cr 老 cohort 不套 3cr 层约束)
+  const cohort = _cohortProfile(_entryTerm);
+  if (cohort.mhfaRequired && (_RULE_EXTRAS.mhfa_courses || []).length) {
+    const done = _RULE_EXTRAS.mhfa_courses.filter((c) => _getProgress(c) === "completed");
+    categories.push({
+      key: "mhfa", earned: 0, required: 0, completedCount: done.length,
+      totalCourses: _RULE_EXTRAS.mhfa_courses.length, pickN: 1,
+      satisfied: done.length > 0, color: "rose", courses: _RULE_EXTRAS.mhfa_courses,
+      pseudo: true,
+    });
+  }
+  if ((_programme.levelRules || []).length && cohort.creditSystem !== "5cr") {
+    for (const rule of _programme.levelRules) {
+      let agg = completedGlobal;
+      if (rule.scope_categories) {
+        // 作用域规则(WSJ Stream 的 ME+EA 联合脚注):只聚合 scope 池内已完成的课
+        const poolIds = new Set(rule.scope_categories
+          .flatMap((ck) => (_programme.categories[ck] || { courses: [] }).courses));
+        agg = new Map([...completedGlobal].filter(([cid]) => poolIds.has(cid)));
+      }
+      const byLevel = {};
+      for (const [cid, credits] of agg.entries()) {
+        const lvl = _levelOfCourse(cid);
+        if (lvl) byLevel[lvl] = (byLevel[lvl] || 0) + credits;
+      }
+      const suffix = rule.scope_categories ? "-major" : "";
+      for (const [lvl, cap] of Object.entries(rule.max || {})) {
+        const earned = byLevel[lvl] || 0;
+        categories.push({
+          key: `level-${lvl}${suffix}`, earned, required: +cap, completedCount: 0,
+          totalCourses: 0, satisfied: earned <= +cap, color: "rose", cap: true, courses: [],
+        });
+      }
+      for (const [lvl, floor] of Object.entries(rule.min || {})) {
+        const earned = byLevel[lvl] || 0;
+        categories.push({
+          key: `level-${lvl}${suffix}`, earned, required: +floor, completedCount: 0,
+          totalCourses: 0, satisfied: earned >= +floor, color: "indigo", courses: [],
+        });
+      }
+    }
   }
 
   const totalEarned = [...completedGlobal.values()].reduce((a, b) => a + b, 0);
@@ -295,6 +400,34 @@ function _setProgramme(code) {
     _programme = null;
     _catalogueOnly = true;
     _view = "catalogue";
+  }
+  _render();
+}
+
+/** 批次 4:WSJ 类伞形专业的 Stream 细化(BSSCHWSJ → BSSCHWSJ-AGS 等)。
+ *  Stream 限定码持久化为 programme_code(独立规则实体,毕业分档互不相同)。 */
+function _setStream(streamCode) {
+  if (!_PROGRAMMES[streamCode]) return;
+  _programmeCode = streamCode;
+  _programme = _PROGRAMMES[streamCode];
+  _catalogueOnly = false;
+  _view = "overview";
+  localStorage.setItem("hkmu_programme", streamCode);
+  if (isLoggedIn()) {
+    api.put("/users/me", { programme_code: streamCode }).catch(() => {});
+  }
+  _render();
+}
+
+/** 批次 4:cohort 选择(写入 users.entry_term,值形如 "2025-autumn")。
+ *  显式选择,不给默认值——错的入学学年会静默误判 MHFA/学制。 */
+async function _setEntryTerm(term) {
+  if (!isLoggedIn()) return;
+  _entryTerm = term;
+  try {
+    await api.put("/users/me", { entry_term: term });
+  } catch (err) {
+    showToast(err.message, "error");
   }
   _render();
 }
@@ -683,7 +816,9 @@ function _renderProgrammeSelector() {
         const name = known ? programmeName(known, lang) : p.programme_name;
         const row = document.createElement("div");
         row.className = "flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 cursor-pointer";
-        if (p.programme_code === _programmeCode) {
+        // 高亮容忍变体/Stream 限定码(BSSCHWSJ-AGS 折叠回伞码行)
+        if (p.programme_code === _programmeCode
+          || _resolveProgrammeCode(_programmeCode) === p.programme_code) {
           row.classList.add("bg-blue-50", "text-blue-700", "font-semibold");
         }
         const nameSpan = document.createElement("span");
@@ -713,6 +848,99 @@ function _renderProgrammeSelector() {
 
   setTimeout(() => input.focus(), 0); // autofocus after DOM insert
   return wrap;
+}
+
+// ── 批次 4:cohort 选择 + 学制闸横幅 + WSJ Stream 选择器 ────────────────────
+
+/** 入学学年候选(值 = entry_term 的秋季代表值;≤2022/23 桶覆盖 5 学分制) */
+const _COHORT_OPTIONS = [
+  { value: "2022-autumn", label: "2022/23" },
+  { value: "2023-autumn", label: "2023/24" },
+  { value: "2024-autumn", label: "2024/25" },
+  { value: "2025-autumn", label: "2025/26" },
+  { value: "2026-autumn", label: "2026/27" },
+];
+
+/** cohort 选择条:登录后显示(显式选择,不设默认值);5cr 老 cohort 加横幅 */
+function _renderCohortBar(container) {
+  if (!isLoggedIn()) return;
+  const cohort = _cohortProfile(_entryTerm);
+
+  if (!cohort.ay) {
+    // 未填:一条轻提示引导选择(不猜默认)
+    const wrap = document.createElement("div");
+    wrap.className = "mb-4 flex items-center gap-2 justify-center";
+    const label = document.createElement("span");
+    label.className = "text-sm text-white/85";
+    label.textContent = t("planner.cohort_select_label");
+    wrap.appendChild(label);
+    const select = document.createElement("select");
+    select.className = "text-sm bg-white/90 border border-white/40 rounded-full px-3 py-1";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = t("planner.cohort_unset");
+    select.appendChild(placeholder);
+    for (const opt of _COHORT_OPTIONS) {
+      const o = document.createElement("option");
+      o.value = opt.value;
+      o.textContent = opt.label;
+      select.appendChild(o);
+    }
+    select.addEventListener("change", () => {
+      if (select.value) _setEntryTerm(select.value);
+    });
+    wrap.appendChild(select);
+    container.appendChild(wrap);
+    return;
+  }
+
+  const row = document.createElement("div");
+  row.className = "mb-4 flex items-center gap-2 justify-center";
+  const cur = document.createElement("span");
+  cur.className = "text-sm text-white/85";
+  cur.textContent = `${t("planner.cohort_select_label")}: ${cohort.ay}`;
+  row.appendChild(cur);
+  const select = document.createElement("select");
+  select.className = "text-sm bg-white/20 text-white border border-white/40 rounded-full px-3 py-1";
+  for (const opt of _COHORT_OPTIONS) {
+    const o = document.createElement("option");
+    o.value = opt.value;
+    o.textContent = opt.label;
+    // 已存的春入学值(2025-spring = 2024/25 桶)对齐到桶代表值
+    if (opt.value === `${cohort.ay.split("/")[0]}-autumn`) o.selected = true;
+    select.appendChild(o);
+  }
+  select.addEventListener("change", () => {
+    if (select.value) _setEntryTerm(select.value);
+  });
+  row.appendChild(select);
+  container.appendChild(row);
+
+  if (cohort.creditSystem === "5cr") {
+    const notice = document.createElement("div");
+    notice.className = "mb-4 bg-amber-50 border-l-4 border-amber-400 text-amber-900 p-4 rounded-xl text-sm";
+    notice.textContent = t("planner.cohort_5cr_notice", { ay: cohort.ay });
+    container.appendChild(notice);
+  }
+}
+
+/** WSJ 类伞形专业的 Stream 子选择器(伞码下五选一;Stream 已选可换) */
+function _renderStreamSelector(container) {
+  const streams = (_programme && _programme.streams) || [];
+  if (!streams.length || _catalogueOnly) return;
+  const wrap = document.createElement("div");
+  wrap.className = "mb-6 flex flex-wrap gap-2 justify-center";
+  for (const s of streams) {
+    const btn = document.createElement("button");
+    const active = _programmeCode === s.code;
+    btn.className = active
+      ? "bg-white text-blue-700 px-4 py-1.5 rounded-full text-sm font-semibold shadow"
+      : "bg-white/20 text-white border border-white/40 px-4 py-1.5 rounded-full text-sm hover:bg-white/30 transition-colors";
+    btn.textContent = s.name?.[localStorage.getItem("hkmu_lang") || "en"] || s.name?.en || s.key;
+    btn.addEventListener("click", () => _setStream(s.code));
+    wrap.appendChild(btn);
+  }
+  container.appendChild(wrap);
 }
 
 function _renderOverview(container) {
@@ -748,6 +976,10 @@ function _renderOverview(container) {
   selectorWrap.className = "flex justify-center mb-6";
   selectorWrap.appendChild(_renderProgrammeSelector());
   inner.appendChild(selectorWrap);
+
+  // 批次 4:伞形 Stream 子选择器 + cohort 选择/学制闸横幅
+  _renderStreamSelector(inner);
+  _renderCohortBar(inner);
 
   // Title — show localised programme name
   const h1 = document.createElement("h1");
@@ -1017,13 +1249,14 @@ function _renderGraduationDashboard(container, grad) {
   for (const cat of grad.categories) {
     const row = document.createElement("div");
     row.className = "category-progress-row" + (cat.satisfied ? " cat-satisfied" : "");
+    if (cat.key === "mhfa") row.className += " cursor-pointer hover:bg-gray-50 rounded-lg px-2 -mx-2";
 
     const rowHeader = document.createElement("div");
     rowHeader.className = "flex justify-between items-center mb-1";
 
     const catLabel = document.createElement("span");
     catLabel.className = "text-sm font-medium text-gray-700";
-    catLabel.textContent = _getCategoryLabel(cat.key);
+    catLabel.textContent = _getCategoryLabel(cat.key, cat);
     rowHeader.appendChild(catLabel);
 
     const creditLabel = document.createElement("span");
@@ -1036,10 +1269,39 @@ function _renderGraduationDashboard(container, grad) {
 
     row.appendChild(rowHeader);
 
+    if (cat.key === "mhfa") {
+      // 自修课:0 学分,点行即切换「已完成」(MyHKMU 自登记后回来自标)
+      const hint = document.createElement("p");
+      hint.className = "text-xs text-gray-400 mb-1";
+      hint.textContent = t("planner.mhfa_hint");
+      row.appendChild(hint);
+      row.addEventListener("click", () => {
+        const done = (_RULE_EXTRAS.mhfa_courses || []).some((c) => _getProgress(c) === "completed");
+        _updateProgress("NURS1050NEF", done ? "not_started" : "completed");
+      });
+    }
+
     const catPct = cat.required > 0 ? Math.min(100, (cat.earned / cat.required) * 100) : 0;
-    const fillColor = _getCategoryFillColor(cat.key);
+    const fillColor = _FILL_COLORS[cat.color] || _getCategoryFillColor(cat.key);
     row.appendChild(ProgressBar(catPct, null, "sm", fillColor));
     catList.appendChild(row);
+  }
+
+  // 批次 4 互斥冲突提示(警告不拦截:学生可能确有双标的历史课)
+  const conflicts = _excludedConflicts();
+  if (conflicts.length) {
+    const confBox = document.createElement("div");
+    confBox.className = "bg-rose-50 border-l-4 border-rose-400 text-rose-900 p-3 rounded-xl text-sm mb-3";
+    const confTitle = document.createElement("div");
+    confTitle.className = "font-semibold mb-1";
+    confTitle.textContent = t("planner.conflict_title");
+    confBox.appendChild(confTitle);
+    for (const c of conflicts) {
+      const line = document.createElement("div");
+      line.textContent = t("planner.conflict_item", { courses: c.marked.join(" + ") });
+      confBox.appendChild(line);
+    }
+    catList.appendChild(confBox);
   }
 
   overviewRow.appendChild(catList);
@@ -1745,11 +2007,17 @@ async function _loadData() {
       } catch {
         _progress = [];
       }
-      // Load user's programme preference from backend
+      // Load user's programme preference + entry_term (批次 4 cohort 闸) from backend
       try {
         const user = await api.get("/users/me");
+        _entryTerm = user.entry_term || null;
         if (user.programme_code && _PROGRAMMES[user.programme_code]) {
-          _programmeCode = _resolveProgrammeCode(user.programme_code);
+          // WSJ Stream 限定码(BSSCHWSJ-AGS,批次 4)是独立规则实体:精确匹配
+          // 优先,变体码(BNHGJ1 等规则副本)退回主码折叠
+          const exact = _PROGRAMMES[user.programme_code]
+            ? user.programme_code
+            : _resolveProgrammeCode(user.programme_code);
+          _programmeCode = exact;
           _programme = _PROGRAMMES[_programmeCode];
           _catalogueOnly = false;
           localStorage.setItem("hkmu_programme", _programmeCode);
@@ -1783,6 +2051,13 @@ async function _updateProgress(courseId, status) {
       existing.status = status;
     } else {
       _progress.push({ course_id: courseId, status, updated_at: new Date().toISOString() });
+    }
+    // 批次 4:刚标的课若落入互斥组(组内 ≥2 门有状态)→ 即时冲突提示
+    const hit = _excludedConflicts().find((c) => c.marked.includes(courseId));
+    if (hit) {
+      showToast(t("planner.conflict_item", { courses: hit.marked.join(" + ") }), "error");
+      _render();
+      return;
     }
     showToast(t("planner.progress_updated"), "success");
   } catch (err) {
