@@ -24,6 +24,11 @@
 2013SEF terms 已修为 spring;A&SS 15 专业 school 已换伍絜宜新名;seed_courses
 CREDIT_FIXES 裁定 16 门学分(15 门三方一致 + NURS1313NCF 人工裁 6)。相关断言
 均已翻转并加批次 1 锁定测试。
+
+批次 5(2026-08-20)选修导入收尾:全库缺口 DRAM1000ECF/DRAM4244ECF 按目录
+正文条目(3cr/中文班)导入归零;BUS1003BEF/BUS1004BEF 人眼定性为「引用无
+条目」→ 0 学分说明名占位(互斥组 excl-engl1101-bus1003 引用);长尾三类
+白名单的定性依据进 CI 逐门锁死。
 """
 import ast
 import json
@@ -53,18 +58,22 @@ PHANTOM_GE = frozenset({"GEN1064BCF", "GEN1078BCF", "GEN2078BEF"})
 ELECTIVE_CATALOG_N = 451    # 双引擎双锚重数(旧 477 为朴素正则污染值)
 # 有正文条目但官方 TOC 没行的 4 门(PDF 官方自身漏行,人工核过原文)
 ELECTIVE_TOC_OMISSIONS = frozenset({"PSYC3001AEF", "PTH3256ECF", "SCI3101SEF", "SCI3102SEF"})
-# 选修目录里全库(catalogue 表 ∪ 可规划课程宇宙)都没有的 —— 批次 5 导入工作单。
-# 2026-08-19 批次 2 前 = 5 门;批次 2 补池把其中 3 门经官方 advice sheet 提前
-# 带进可规划宇宙(COUN1001AEF→BSSCHPWSJ core、TRAN3603ABF/TRAN4654ABF→
-# BAHLTJ elective),缺口缩到 2。
-_NOT_IN_WHOLE_DB = frozenset({"DRAM1000ECF", "DRAM4244ECF"})
+# 选修目录全库(catalogue 表 ∪ 可规划课程宇宙)缺口:批次 2 前 5 门 →
+# 批次 2 补池经官方 advice sheet 带回 3 门(COUN1001AEF→BSSCHPWSJ core、
+# TRAN3603ABF/TRAN4654ABF→BAHLTJ elective)→ 批次 5(2026-08-20)按目录
+# 正文条目导入最后 2 门后**归零**(人眼核 UG_elective_catalog_3cru.pdf
+# p105-106:DRAM 两门 TOC+正文条目俱全,ECF=中文班;skill.md 收的是 EBF
+# 英文班变体,故字符串级差集此前恰好剩这两门)。
 _BATCH2_BROUGHT_IN = frozenset({"COUN1001AEF", "TRAN3603ABF", "TRAN4654ABF"})
-NOT_IN_WHOLE_DB_NOW = _NOT_IN_WHOLE_DB | _BATCH2_BROUGHT_IN  # 兼容旧引用,= 批次2前全量5门
+_BATCH5_IMPORTED = frozenset({"DRAM1000ECF", "DRAM4244ECF"})
 
 # ── 选修白名单(显式列出,逐门注明理由)─────────────────────────────────────
 # 规则 elective 类目里不在官方选修目录的课 = 白名单全体;两类划分可被
 # test_whitelist_reason_tags_verifiable 机器复核(catalogue 类必须真在 skill.md,
-# rules-only 类必须不在)。批次 5 逐门定性后此清单应收缩。
+# rules-only 类必须不在)。批次 5(2026-08-20)定性收尾:三类各有的机器可核
+# 依据由 test_whitelist_attestation_locked 逐门锁死(RCC / POOL_ADDITIONS),
+# 全部保留、零清理——白名单即「已定性集」,长尾 ⊆ 已定性集由
+# test_elective_pool_subset_of_catalog_or_whitelist 的全等断言保证。
 WHITELIST_CATALOGUE = frozenset({
     # 理由:官方 catalogue(skill.md,生产 catalogue 表之源)有完整条目;属专业
     # advice sheet 选修菜单自设的置换选项,UG 选修目录(3cr 版)不收录。163 门。
@@ -162,6 +171,15 @@ def _seed_ids():
         if isinstance(node, ast.Assign) and getattr(node.targets[0], "id", "") == "COURSES":
             return {c["id"] for c in ast.literal_eval(node.value)}
     return set()
+
+
+def _seed_constant(name):
+    """seed_courses.py 顶层 list 常量的字面值(同 _seed_ids 的 ast-only 口径)。"""
+    tree = ast.parse((REPO / "scripts/seed_courses.py").read_text())
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and getattr(node.targets[0], "id", "") == name:
+            return ast.literal_eval(node.value)
+    return None
 
 
 # ── GE:目录 89(双引擎 × 三锚点) ──────────────────────────────────────────
@@ -336,16 +354,23 @@ def test_whitelist_reason_tags_verifiable():
     )
 
 
-def test_elective_catalog_gap_in_db_locked():
-    """选修目录−全库(catalogue 表 ∪ 可规划宇宙)= 2 门,批次 5 的导入工作单。
+def test_elective_catalog_gap_closed_batch5():
+    """批次 5 后:选修目录−全库(catalogue 表 ∪ 可规划宇宙)= **零**(验收标准
+    批次 5:「对照 UG_elective_catalog_3cru.pdf 差集为零」,纠偏基准 451 门)。
 
-    批次 2(2026-08-19)补池前 = 5 门;补池把 COUN1001AEF/TRAN3603ABF/
-    TRAN4654ABF 经官方 advice sheet 带进 POOL_ADDITIONS → 可规划宇宙,缺口 5→2。
-    批次 2 带入的 3 门必须有映射/补池落点(防静默漂移回 5)。"""
+    历史:批次 2 前 5 门 → 补池带回 3 门 → 批次 5 ELECTIVE_CATALOG_IMPORT 导入
+    DRAM 两门(目录正文真条目,ECF 中文班)后归零。批次 2/5 带入的门必须有
+    落点(防静默漂移回 5/2)。"""
     catalog = set(_load("elec_catalog.json")["poppler_body"])
     seed = _seed_ids()
     assert seed, "seed_courses.py 顶层 COURSES 解析失败(变量被改名?)——修这里别绕过"
-    plannable = _pool_ids() | seed
+    imported = _seed_constant("ELECTIVE_CATALOG_IMPORT")
+    assert imported, "seed_courses.py 顶层 ELECTIVE_CATALOG_IMPORT 解析失败——修这里别绕过"
+    assert {c["id"] for c in imported} == _BATCH5_IMPORTED, (
+        "批次 5 导入清单应恰为 DRAM 两门(人眼核目录原文 p105-106 真条目);"
+        f"实得 {sorted(c['id'] for c in imported)}"
+    )
+    plannable = _pool_ids() | seed | _BATCH5_IMPORTED
     for e in PROGRAMME_RULES.values():
         for v in e["categories"].values():
             plannable.update(v.get("courses", []))
@@ -355,13 +380,74 @@ def test_elective_catalog_gap_in_db_locked():
             plannable.update(cs)
     whole_db = plannable | _skill_md_codes()
     gap = catalog - whole_db
-    assert gap == _NOT_IN_WHOLE_DB, (
-        f"选修目录全库缺口应为 {len(_NOT_IN_WHOLE_DB)} 门(批次 2 后),"
-        f"实得 {len(gap)} 门 {_head(gap)};批次 5 按 _NOT_IN_WHOLE_DB 导入;"
-        "对账:verify/elec_coverage.json"
+    assert not gap, (
+        f"选修目录 451 门全库缺口应归零(批次 5),实得 {len(gap)} 门 {_head(gap)};"
+        "对账:verify/elec_coverage.json(批次0 时点) + seed_courses.ELECTIVE_CATALOG_IMPORT"
     )
     for c in _BATCH2_BROUGHT_IN:
         assert c in plannable, f"{c} 应已被批次 2 补池带入(检查 POOL_ADDITIONS)"
+
+
+def test_bus1003_bus1004_reference_only_locked():
+    """BUS1003BEF/BUS1004BEF「引用无条目」定性锁(批次 5 人眼核原文)。
+
+    依据:UG 选修目录全文只在 ENGL 1101AEF 条目的 Excluded Combination 引用块
+    (p31,带官方双语课名)出现;朴素全文正则 479 集含两码、锚定条目 451 集不含
+    ——与 GEN 幻影同型的引用码,但批次 4 互斥组 excl-engl1101-bus1003 引用了
+    它们,故照 BUS2001BEF 先例以 0 学分说明名占位(seed 不进池、picker 不露)。"""
+    d = _load("elec_catalog.json")
+    body = set(d["poppler_body"])
+    hit = {"BUS1003BEF", "BUS1004BEF"} & body
+    assert not hit, f"BUS1003/1004BEF 无目录正文条目(人眼已核),却进了锚定集:{hit}"
+    placeholders = _seed_constant("BUS_EXCLUSION_PLACEHOLDERS")
+    assert placeholders, "seed_courses.py 顶层 BUS_EXCLUSION_PLACEHOLDERS 解析失败——修这里别绕过"
+    got = {c["id"]: c["credits"] for c in placeholders}
+    assert got == {"BUS1003BEF": 0, "BUS1004BEF": 0}, (
+        f"两码应各灌 1 行 0 学分占位(互斥标记可解析、不计学分),实得 {got}"
+    )
+    # 占位行不得混入任何可规划池(它们不是可修课)
+    from backend.app.data.programme_year_map import POOL_ADDITIONS, PROGRAMME_POOL_SEED
+    pools = _elective_pool()
+    for cats in POOL_ADDITIONS.values():
+        for cs in cats.values():
+            pools.update(cs)
+    for cats in PROGRAMME_POOL_SEED.values():
+        for cs in cats.values():
+            pools.update(cs)
+    leaked = {"BUS1003BEF", "BUS1004BEF"} & pools
+    assert not leaked, f"占位码混入课池(会向学生露出不可修课):{leaked}"
+
+
+def test_whitelist_attestation_locked():
+    """长尾 ⊆ 已定性集(批次 5):三类白名单每门都有机器可核的定性依据。
+
+    长尾(规则 elective 池 − 官方选修目录,批次0 时点 210 门;批次 2 补池后
+    212 门)按依据分三类,CI 逐类锁死:
+      CATALOGUE   ∈ skill.md(catalogue 表静态之源,官方 Programme Requirements
+                  PDF 导出的课程树)——已有 test_whitelist_reason_tags_verifiable
+      RULES_ONLY  ∈ RCC(programme_rules.py 自 Requirements PDF 逐课解析的学分
+                  表)——本测试补锁,逐门须有 (专业, 类目) 佐证行
+      ADVICE_SHEET∈ POOL_ADDITIONS(批次 2 advice sheet 补池落点)
+    """
+    from backend.app.data.programme_rules import RULE_COURSE_CREDITS
+    from backend.app.data.programme_year_map import POOL_ADDITIONS
+
+    rcc_ids = {
+        cid
+        for prog in RULE_COURSE_CREDITS.values()
+        for cat in prog.values()
+        for cid in cat
+    }
+    unattested = sorted(WHITELIST_RULES_ONLY - rcc_ids)
+    assert not unattested, (
+        f"rules-only 类 {len(unattested)} 门在 RCC 无佐证行(Requirements PDF "
+        f"未收,定性依据断链,应清理或重验):{unattested}"
+    )
+    pa_ids = {c for cats in POOL_ADDITIONS.values() for cs in cats.values() for c in cs}
+    missing = sorted(WHITELIST_ADVICE_SHEET - pa_ids)
+    assert not missing, (
+        f"advice-sheet 类 {missing} 不在 POOL_ADDITIONS(批次 2 补池落点丢失)"
+    )
 
 
 # ── 批次 1:学院更名 + 学分裁定 + results/ 禁用 ─────────────────────────────

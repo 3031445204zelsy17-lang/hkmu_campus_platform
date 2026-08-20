@@ -54,6 +54,36 @@ CREDIT_FIXES = {
     "NURS1313NCF": 6,  # 3;官方源矛盾,人工裁定 yr 表
 }
 
+# ── 批次 5 选修目录收尾(选课数据修复,2026-08-20)─────────────────────────────
+# UG 选修目录(3cr 版,verify/elec_catalog.json 双引擎 451 门)全库缺口最后 2 门。
+# 人眼核原文(UG_elective_catalog_3cru.pdf p105-106):两门均有 TOC 行 + 正文
+# 完整条目(學分 3 / 程度 1000·4000 / 授課語言 中文 / 不可兼修 -)→ 真课,按
+# 条目导入。advice sheet / skill.md catalogue / 规则池均不收它们:ECF 后缀 =
+# 中文授课班,skill.md 收的是 EBF 英文班变体(DRAM 1000EBF/4244EBF,与
+# NURS1050NEF/NCF 双班别同构),故此前字符串级差集恰好剩这两门。
+# 目录无学期数据 → semester="any"(GE/BATCH4 同款哨兵);year 走 _level_year。
+ELECTIVE_CATALOG_IMPORT = [
+    {"id": "DRAM1000ECF", "code": "DRAM 1000ECF", "credits": 3,
+     "category": "elective", "name": "Basic Acting for Speech and Reading"},
+    {"id": "DRAM4244ECF", "code": "DRAM 4244ECF", "credits": 3,
+     "category": "elective", "name": "Dramatic Literature From East and West"},
+]
+
+# BUS1003BEF/BUS1004BEF(批次 5 人眼定性,2026-08-20):选修目录全文只在
+# ENGL 1101AEF 条目的 Excluded Combination 引用块出现(p31,带官方双语课名),
+# 无 TOC 行、无正文条目、无学分;朴素正则 479 集含两码、锚定 451 集不含
+# (verify/elec_catalog_check.py 双引擎),「引用无条目」坐实。批次 4 互斥组
+# excl-engl1101-bus1003(BSCHBSBJ)已引用两码 → 照 BUS2001BEF 先例灌 0 学分
+# 说明名占位:仅供互斥标记可解析,不计学分、不进任何池、picker 不露出。
+BUS_EXCLUSION_PLACEHOLDERS = [
+    {"id": "BUS1003BEF", "code": "BUS 1003BEF", "credits": 0, "category": "elective",
+     "name": "Excluded combination of ENGL 1101AEF (no catalog entry; official "
+             "title: Introduction to Business English 基礎商業英語)"},
+    {"id": "BUS1004BEF", "code": "BUS 1004BEF", "credits": 0, "category": "elective",
+     "name": "Excluded combination of ENGL 1101AEF (no catalog entry; official "
+             "title: Essential Business Communications 商業英語傳意概念)"},
+]
+
 COURSES = [
     {"id":"COMP1080SEF","code":"COMP 1080SEF","name":"Introduction to Computer Programming","credits":3,"category":"core","year":1,"semester":"autumn","prerequisites":[],"description":"Fundamental programming concepts using Python."},
     {"id":"IT1020SEF","code":"IT 1020SEF","name":"Computing Fundamentals","credits":3,"category":"core","year":1,"semester":"autumn","prerequisites":[],"description":"Introduction to computer systems, hardware, software, and basic IT concepts."},
@@ -97,6 +127,66 @@ COURSES = [
     {"id":"COMP4600SEF","code":"COMP 4600SEF","name":"Advanced Topics in Data Mining","credits":3,"category":"core","year":4,"semester":"spring","prerequisites":[],"description":"Advanced topics in data mining and knowledge discovery."},
     {"id":"ELEC4710SEF","code":"ELEC 4710SEF","name":"Digital Forensics","credits":3,"category":"elective","year":4,"semester":"spring","prerequisites":[],"description":"Digital forensics investigation techniques."},
 ]
+
+
+def _spaced_code(cid: str) -> str:
+    r"""裸码兜底名:字母与数字之间加空格。三位数码(GIP100BEF)同样成立
+    (批次 5 修复:旧 `\d{4}` 正则漏网,三位码得不到空格、也永远匹配不上
+    课名回填层的 WHERE 模式)。"""
+    return re.sub(r"^([A-Z]{2,5})(\d{3,4})", r"\1 \2", cid)
+
+
+async def apply_existing_row_fixes(conn) -> dict:
+    """存量行修正层(批次 5):对 courses 表已存在的行做三类显式 UPDATE。
+
+    为什么必须有(坑 11/12,azure-deploy-method memory):本脚本所有 INSERT
+    都是 ON CONFLICT DO NOTHING + existing_ids 跳过,v1.11 REST 导入时代的
+    预存行会永远绕过 INSERT 路径的学分/课名裁定 —— prod 曾因此残留 9 门学分
+    错(GIP100/101/200/300/400=0、COUN4008=6、SOCI4004/SOSC2002/POLS4009=3,
+    官方值早已在 ADDITION_CREDITS/POOL_SEED_CREDITS 里)+ 裸码脏名,靠手工
+    UPDATE 收掉。本层让 seed 重跑可重现 prod 终态。
+
+    顺序:补池学分(官方 advice 行众数)→ CREDIT_FIXES(人工裁定)最后跑,
+    与前两本字典无键冲突(CI 可证),若有冲突人工裁定胜。
+    """
+    # 课名回填:裸码课(空格/不空格裸码,或名字混进 Wingdings 私用区字符的
+    # 脏行)换成官方 advice sheet 标题列。只动裸码/脏码行,不覆盖任何真名
+    # (catalogue/GE/手工表)。
+    names_fixed = 0
+    for cid, name in COURSE_NAME_BACKFILL.items():
+        res = await conn.execute(
+            "UPDATE courses SET name = $1 WHERE id = $2"
+            " AND (name ~ $3 OR name ~ $4)",
+            name, cid,
+            r"^[A-Z]{2,5} ?[0-9]{3,4}[A-Z]{3}$",
+            f"[{chr(0xE000)}-{chr(0xF8FF)}]",  # Wingdings 对勾等私用区脏字符(PDF 提取伪影,坑 12)
+        )
+        names_fixed += int(res.split()[-1])
+
+    # 补池学分对存量行显式 UPDATE(批次 5 新增):INSERT 路径早已用这两本
+    # 字典,此前存量行吃不到 → prod 9 门学分残留的根因。
+    pool_credit_fixed = 0
+    for table in (ADDITION_CREDITS, POOL_SEED_CREDITS):
+        for cid, cr in table.items():
+            res = await conn.execute(
+                "UPDATE courses SET credits = $1 WHERE id = $2 AND credits <> $1",
+                cr, cid,
+            )
+            pool_credit_fixed += int(res.split()[-1])
+
+    # CREDIT_FIXES(复核报告第五节,16 门人工裁定)。
+    credit_fixed = 0
+    for cid, cr in CREDIT_FIXES.items():
+        res = await conn.execute(
+            "UPDATE courses SET credits = $1 WHERE id = $2 AND credits <> $1",
+            cr, cid,
+        )
+        credit_fixed += int(res.split()[-1])
+    return {
+        "names_fixed": names_fixed,
+        "pool_credit_fixed": pool_credit_fixed,
+        "credit_fixed": credit_fixed,
+    }
 
 
 async def seed():
@@ -191,7 +281,7 @@ async def seed():
                     if not name:
                         # No official display name anywhere — use the spaced
                         # code so the UI at least shows a stable identifier.
-                        name = re.sub(r"^([A-Z]{2,5})(\d{4})", r"\1 \2", cid)
+                        name = _spaced_code(cid)
                         rules_missing_name += 1
                     try:
                         await conn.execute(
@@ -221,7 +311,7 @@ async def seed():
                         continue
                     name = COURSE_NAME_BACKFILL.get(cid) or catalogue.get(cid, (None, None))[0]
                     if not name:
-                        name = re.sub(r"^([A-Z]{2,5})(\d{4})", r"\1 \2", cid)
+                        name = _spaced_code(cid)
                     credits = ADDITION_CREDITS.get(cid)
                     if credits is None:
                         credits = CREDIT_FIXES.get(cid)
@@ -256,7 +346,7 @@ async def seed():
                         continue
                     name = COURSE_NAME_BACKFILL.get(cid) or catalogue.get(cid, (None, None))[0]
                     if not name:
-                        name = re.sub(r"^([A-Z]{2,5})(\d{4})", r"\1 \2", cid)
+                        name = _spaced_code(cid)
                     credits = POOL_SEED_CREDITS.get(cid)
                     if credits is None:
                         credits = ADDITION_CREDITS.get(cid)
@@ -297,7 +387,8 @@ async def seed():
             # BUS2001BEF:多份商院 sheet 的 BUS 2000BEF 行 Excluded combination
             # 列出现(BBAHMGTJ1/BBAHIHAMJ1 p1),官方码但任何目录/年表均无独立
             # 课行(无课名无学分)→ 0 学分 + 说明名,仅供互斥标记用,不计学分。
-            # 对比:BUS1003/1004BEF 是批次 0 定性的幽灵嫌疑码,不灌(批次 5 人眼)。
+            # 对比:BUS1003/1004BEF 批次 5 人眼定性后同样占位(见文件头
+            # BUS_EXCLUSION_PLACEHOLDERS,依据 Excluded 引用 + 互斥组引用)。
             {"id": "BUS2001BEF", "code": "BUS 2001BEF", "credits": 0,
              "category": "elective",
              "name": "Excluded combination of BUS 2000BEF (no official course row)"},
@@ -320,28 +411,34 @@ async def seed():
                 print(f"  skip batch4 {c['id']}: {e}")
         print(f"  batch4 rule courses inserted: {batch4_inserted}")
 
-        # 课名回填:裸码课(名字 = 空格化课码,seed T34 的兜底产物)换成官方
-        # advice sheet 标题列。只动裸码行,不覆盖任何真名(catalogue/GE/手工表)。
-        names_fixed = 0
-        for cid, name in COURSE_NAME_BACKFILL.items():
-            res = await conn.execute(
-                "UPDATE courses SET name = $1 WHERE id = $2 AND name ~ $3",
-                name, cid, r"^[A-Z]{2,5} [0-9]{4}[A-Z]{3}$",
-            )
-            names_fixed += int(res.split()[-1])
+        # ── 批次 5:选修目录收尾 + 互斥引用占位(见文件头两个常量的依据)──────
+        batch5_inserted = 0
+        for c in ELECTIVE_CATALOG_IMPORT + BUS_EXCLUSION_PLACEHOLDERS:
+            if c["id"] in existing_ids:
+                continue
+            try:
+                await conn.execute(
+                    """INSERT INTO courses (id, code, name, credits, category, year, semester, prerequisites, description)
+                       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                       ON CONFLICT (id) DO NOTHING""",
+                    c["id"], c["code"], c["name"], c["credits"], c["category"],
+                    _level_year(c["id"]), "any", "[]",
+                    "批次5 · UG选修目录条目(3cr 版 p105-106)" if c["credits"]
+                    else "批次5 · Excluded Combination 引用占位(0 学分,不计学分)",
+                )
+                existing_ids.add(c["id"])
+                batch5_inserted += 1
+            except Exception as e:
+                print(f"  skip batch5 {c['id']}: {e}")
+        print(f"  batch5 elective-catalog/placeholder courses inserted: {batch5_inserted}")
 
-        # Existing-row credit corrections: the inserts above are all
-        # ON CONFLICT DO NOTHING, so rows already carrying a polluted credit
-        # (from the old catalogue-first T34) would keep it forever. The
-        # adjudicated table must UPDATE them in place — this is what actually
-        # repairs production on re-seed.
-        credit_fixed = 0
-        for cid, cr in CREDIT_FIXES.items():
-            res = await conn.execute(
-                "UPDATE courses SET credits = $1 WHERE id = $2 AND credits <> $1",
-                cr, cid,
-            )
-            credit_fixed += int(res.split()[-1])
+        # 存量行修正层(批次 5,坑 11/12):裸码课名回填 + 补池学分 + 人工裁定
+        # 学分,见 apply_existing_row_fixes 的 docstring。
+        fixes = await apply_existing_row_fixes(conn)
+        names_fixed = fixes["names_fixed"]
+        credit_fixed = fixes["credit_fixed"]
+        print(f"  existing-row fixes: {fixes['pool_credit_fixed']} pool credits, "
+              f"{names_fixed} names, {credit_fixed} adjudicated credits")
 
         # Create test user
         test_pw = pwd_ctx.hash("test123456")

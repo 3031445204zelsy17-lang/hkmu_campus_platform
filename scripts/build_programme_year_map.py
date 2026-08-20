@@ -25,6 +25,14 @@ results/ 旧 JSON 一律禁用——产自丢行解析器,CI 有断言锁):
   * 课名:码行与 dur/cr/type 尾块之间的标题列(多行标题向前/向后拼接),仅回填
     裸码课(seed 侧判定,不覆盖已有好名)。
 
+批次 5(2026-08-20)新增双系列 cohort 轴:
+  * 系列 = 入学点(plan 尾数字 N = 页眉 "Year N Entry",420/420 文件核对),
+    不是入学年份 —— Y2/Y3 入学(advanced standing)与 Y1 入学是同届不同路径。
+  * PROGRAMME_ENTRY_SERIES 记各专业可用入学点 + 官方 cohort 标签(max-AY);
+    SERIES_YEAR_OVERRIDES 只存「该系列官方修读年 ≠ 默认合并图」的差分课
+    (BEDHACLSJ 系列2 UNI2002BCW=Y3 vs 默认 Y2 等 125 课次/36 专业),
+    per-系列合并口径与默认图相同(非 E 行 > 年小)。
+
 Regenerate: python3 scripts/build_programme_year_map.py
 """
 import collections
@@ -90,6 +98,103 @@ def series_of(plan: str) -> str:
 def read_rows():
     with open(os.path.join(AS, "verify/my_rows.json"), encoding="utf-8") as f:
         return json.load(f)
+
+
+def read_series_labels():
+    """yr/*.pdf 页眉「Admit Cohort: 2026/27 Year N Entry」→ {plan: label}。
+
+    佐证系列尾数字 = 入学点(Year N Entry):420/420 可解析文件逐一吻合
+    (2026-08-20 全库核对;13 份大小写/版式差异文件修正正则后同样吻合)。
+    同一 plan 码的不同 Yr 文件各对应一届入学(Yr1=本学年入、Yr4=三学年前
+    入),取 max-AY 标注 = 「本学年以 N 点入学」的 cohort 标签。
+    """
+    pat_cohort = re.compile(
+        r"Admit\s*Cohort:\s*(20\d{2}/\d{2})\s*Year\s*(\d)\s*entry", re.IGNORECASE)
+    pat_plan = re.compile(r"Acad\.\s*Plan\s*Code:\s*(\S+)")
+    best: dict[str, tuple[int, str]] = {}
+    for fn in sorted(os.listdir(YR)):
+        if not fn.endswith(".pdf"):
+            continue
+        txt = subprocess.run(
+            ["pdftotext", "-layout", "-l", "1", os.path.join(YR, fn), "-"],
+            capture_output=True, text=True,
+        ).stdout
+        mc = pat_cohort.search(txt)
+        mp = pat_plan.search(txt)
+        if not mc or not mp:
+            continue
+        ay, level = mc.group(1), int(mc.group(2))
+        # plan 码取页眉(文件名可带子计划后缀,如 BBAHMGTJ1-HMGTJ1-18_Yr1.pdf)
+        plan = mp.group(1)
+        start = int(ay.split("/")[0])
+        label = f"{ay} Year {level} Entry"
+        if plan not in best or start > best[plan][0]:
+            best[plan] = (start, label)
+    return {p: label for p, (_, label) in best.items()}
+
+
+def build_series_axes(rows, programmes, year_map, labels, aliases=None):
+    """双系列 cohort 轴(批次 5):per-(专业, 入学点系列) 年份差异。
+
+    返回 (PROGRAMME_ENTRY_SERIES, SERIES_YEAR_OVERRIDES):
+      PROGRAMME_ENTRY_SERIES      {主码: {系列: {"entry_level", "label"}}}
+      SERIES_YEAR_OVERRIDES {主码: {系列: {课码: {"year","term"}}}} —— 该系列的
+        官方修读年/学期 ≠ 合并默认图(PROGRAMME_YEAR_MAP)的课,仅存差分。
+    per-系列合并口径与 build_year_map 相同(非 E 行 > 年小;term 取选中行),
+    只是作用域收窄到单系列行。官方语义:系列 = 入学点(J1/J2/J3 = Year 1/2/3
+    Entry,见 read_series_labels),BEDHACLSJ2 类 Y2 入学者在 Y3 才修
+    UNI2002BCW,而默认图(系列 1 口径)给 Y2 —— 批次 2 验收遗留②。
+    """
+    by_plan = collections.defaultdict(list)
+    for r in rows:
+        by_plan[r["plan"]].append(r)
+    prog_plans = collections.defaultdict(set)
+    for plan in by_plan:
+        p = norm_plan(plan, programmes, aliases)
+        if p is not None:
+            prog_plans[p].add(plan)
+
+    series_meta: dict[str, dict] = {}
+    overrides: dict[str, dict] = {}
+    for p, plans in sorted(prog_plans.items()):
+        default = year_map.get(p)
+        if default is None:
+            continue
+        plan_by_series = collections.defaultdict(set)
+        for pl in plans:
+            s = series_of(pl)
+            if s.isdigit():
+                plan_by_series[s].add(pl)
+        meta: dict[str, dict] = {}
+        for s in sorted(plan_by_series):
+            per_course = collections.defaultdict(list)
+            for pl in plan_by_series[s]:
+                for r in by_plan[pl]:
+                    if r.get("yr") is None:
+                        continue
+                    per_course[r["code"]].append((0 if r.get("type") != "E" else 1, r))
+            entry: dict[str, dict] = {}
+            for code, pairs in per_course.items():
+                best_kind = min(k for k, _ in pairs)
+                pool = [r for k, r in pairs if k == best_kind]
+                year = min(r["yr"] for r in pool)
+                same = [r for r in pool if r["yr"] == year]
+                m = TERM.search(same[0].get("term") or "")
+                entry[code] = {
+                    "year": int(year),
+                    "term": SEM.get(m.group(2), "autumn") if m else "autumn",
+                }
+            label = next((labels[pl] for pl in sorted(plan_by_series[s])
+                          if labels.get(pl)), None)
+            meta[s] = {"entry_level": int(s),
+                       "label": label or f"Year {s} Entry"}
+            diff = {c: v for c, v in sorted(entry.items())
+                    if c in default and default[c] != v}
+            if diff:
+                overrides.setdefault(p, {})[s] = diff
+        if meta:
+            series_meta[p] = meta
+    return series_meta, overrides
 
 
 def build_year_map(rows, programmes, aliases=None):
@@ -402,16 +507,18 @@ def build_programme_pool_seed(rows, programmes, year_map, aliases=None):
 
 
 def emit(year_map, ge_slots, titles, additions, credits, unmapped,
-         pool_seed=None, seed_credits=None):
+         pool_seed=None, seed_credits=None, series_meta=None, series_overrides=None):
     def py(v):
         return json.dumps(v, ensure_ascii=False, separators=(", ", ": "))
 
     pool_seed = pool_seed or {}
     seed_credits = seed_credits or {}
+    series_meta = series_meta or {}
+    series_overrides = series_overrides or {}
     L = []
     L.append('"""Auto-generated by scripts/build_programme_year_map.py — DO NOT HAND-EDIT.')
     L.append("")
-    L.append("Per-专业修读年份映射(选课数据修复 · 批次 2/3)。架构动机/建模决策/数据源")
+    L.append("Per-专业修读年份映射(选课数据修复 · 批次 2/3/5)。架构动机/建模决策/数据源")
     L.append("见生成器 docstring;官方依据 = advice sheet PDF(2026/27)+ 复核报告-2026-08-19.md。")
     L.append("")
     L.append("Regenerate: python3 scripts/build_programme_year_map.py")
@@ -421,7 +528,8 @@ def emit(year_map, ge_slots, titles, additions, credits, unmapped,
              f" GE 占位 {sum(len(v) for v in ge_slots.values())} 槽;"
              f" 课名 {len(titles)};补池 {sum(len(c) for v in additions.values() for c in v.values())} 课次"
              f"({len(additions)} 专业);骨架实体种池 {sum(len(c) for v in pool_seed.values() for c in v.values())} 课次"
-             f"({len(pool_seed)} 专业)。未映射 plan:{dict(unmapped) or '无'}。")
+             f"({len(pool_seed)} 专业);系列轴差分 {sum(len(c) for v in series_overrides.values() for c in v.values())} 课次"
+             f"({len(series_overrides)} 专业)。未映射 plan:{dict(unmapped) or '无'}。")
     L.append("")
     L.append('# {专业码: {课码: {"year": 1-4, "term": "autumn|spring|summer"}}};别名码经')
     L.append("# PROGRAMME_ALIASES 归一到主码后在 courses.py 侧解析(模块保持零 import)。")
@@ -478,6 +586,33 @@ def emit(year_map, ge_slots, titles, additions, credits, unmapped,
         L.append(f"    {py(c)}: {seed_credits[c]},")
     L.append("}")
     L.append("")
+    L.append("# 批次 5 双系列 cohort 轴:各专业的入学点系列(页眉 Admit Cohort 佐证,")
+    L.append("# 尾数字 N = Year N Entry,420/420 文件核对)。onboarding 采入学点后,")
+    L.append("# courses._placements_for 按用户 entry_level 取对应系列视图。")
+    L.append("PROGRAMME_ENTRY_SERIES = {")
+    for p in sorted(series_meta):
+        inner = ", ".join(
+            f'{py(s)}: {{"entry_level": {m["entry_level"]}, "label": {py(m["label"])}}}'
+            for s, m in sorted(series_meta[p].items())
+        )
+        L.append(f"    {py(p)}: {{{inner}}},")
+    L.append("}")
+    L.append("")
+    L.append("# 系列年份差分:该入学点系列的官方修读年/学期 ≠ 默认合并图(系列 1 口径)")
+    L.append("# 的课,只存差分(全量 = my_rows.json 按 per-系列同口径重算;CI 有全等锁)。")
+    L.append("# 例:BEDHACLSJ 系列 2(Y2 入学)的 UNI2002BCW 在 Y3,默认图是 Y2。")
+    L.append("SERIES_YEAR_OVERRIDES = {")
+    for p in sorted(series_overrides):
+        parts = []
+        for s, diff in sorted(series_overrides[p].items()):
+            courses = ", ".join(
+                f'{py(c)}: {{"year": {v["year"]}, "term": "{v["term"]}"}}'
+                for c, v in diff.items()
+            )
+            parts.append(f"{py(s)}: {{{courses}}}")
+        L.append(f"    {py(p)}: {{{', '.join(parts)}}},")
+    L.append("}")
+    L.append("")
     return "\n".join(L)
 
 
@@ -490,10 +625,13 @@ def main():
     additions, credits, no_type = build_additions(rows, PROGRAMMES, PROGRAMME_ALIASES)
     pool_seed, seed_credits = build_programme_pool_seed(
         rows, PROGRAMMES, year_map, PROGRAMME_ALIASES)
+    labels = read_series_labels()
+    series_meta, series_overrides = build_series_axes(
+        rows, PROGRAMMES, year_map, labels, PROGRAMME_ALIASES)
 
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(emit(year_map, ge_slots, titles, additions, credits, unmapped,
-                     pool_seed, seed_credits))
+                     pool_seed, seed_credits, series_meta, series_overrides))
 
     print(f"year_map: {len(year_map)} 专业 / {sum(len(v) for v in year_map.values())} 课次")
     print(f"ge_slots: {sum(len(v) for v in ge_slots.values())} 槽 / {len(ge_slots)} 专业")
@@ -501,6 +639,8 @@ def main():
     print(f"additions: {sum(len(c) for v in additions.values() for c in v.values())} 课次 / {len(additions)} 专业")
     print(f"credits: {len(credits)}(GIP 类 0 学分:{sum(1 for v in credits.values() if v == 0)} 门)")
     print(f"pool_seed: {sum(len(c) for v in pool_seed.values() for c in v.values())} 课次 / {len(pool_seed)} 专业 {sorted(pool_seed)}")
+    print(f"series_meta: {len(series_meta)} 专业 / labels {len(labels)} plan 码")
+    print(f"series_overrides: {sum(len(c) for v in series_overrides.values() for c in v.values())} 课次差分 / {len(series_overrides)} 专业")
     print(f"无 type 行(→elective): {no_type}")
     print(f"unmapped plans: {dict(unmapped)}")
     # 抽查:硬错位修复闭环(以 hard 清单为对账锚点,仅报告;断言在测试里)

@@ -32,7 +32,8 @@ async def _require_admin(user: dict) -> None:
 
 
 _USER_COLS = """id, username, nickname, student_id, avatar_url, bio, identity,
-    created_at, email, oauth_provider, programme_code, entry_term, hkmu_verified, invite_code"""
+    created_at, email, oauth_provider, programme_code, entry_term, entry_level,
+    hkmu_verified, invite_code"""
 
 
 def _user_out(row, include_email: bool = True) -> UserOut:
@@ -55,6 +56,7 @@ def _user_out(row, include_email: bool = True) -> UserOut:
         kw["oauth_provider"] = row["oauth_provider"]
     kw["programme_code"] = row.get("programme_code")
     kw["entry_term"] = row.get("entry_term")
+    kw["entry_level"] = row.get("entry_level")
     kw["hkmu_verified"] = row.get("hkmu_verified", False)
     # NOTE: invite_code is intentionally NOT emitted here. It is only exposed
     # via the dedicated /users/me/invite-code endpoint (self only). Returning
@@ -279,6 +281,15 @@ async def update_me(
         updates["programme_code"] = body.programme_code
     if body.entry_term is not None:
         updates["entry_term"] = body.entry_term
+    if body.entry_level is not None:
+        # 批次 5 入学点系列轴:1/2/3 = Year N Entry(advice sheet 页眉);
+        # 值域外的直接 400,不静默落库
+        if body.entry_level not in (1, 2, 3):
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                "entry_level 必须是 1/2/3(入学点 Year 1/2/3 Entry)",
+            )
+        updates["entry_level"] = body.entry_level
 
     if not updates:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "No fields to update")

@@ -255,6 +255,14 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_column THEN NULL;
 END $$;
 
+-- Add entry_level column (批次 5 双系列 cohort 轴) = 入学点 1/2/3,即 advice
+-- sheet 页眉 Year N Entry 口径(Y2/Y3 入学属 advanced standing 路径),NULL =
+-- 未采集,前端与毕业计算降级用默认系列 1 口径,不误判
+DO $$ BEGIN
+    ALTER TABLE users ADD COLUMN entry_level SMALLINT;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
 -- Add three dimension review ratings teaching workload gain for existing DBs
 DO $$ BEGIN
     ALTER TABLE course_reviews ADD COLUMN rating_teaching INTEGER;

@@ -103,6 +103,9 @@ class UserOut(BaseModel):
     oauth_provider: Optional[str] = None
     programme_code: Optional[str] = None
     entry_term: Optional[str] = None
+    # 批次 5 入学点系列轴:1/2/3 = Year N Entry(advice sheet 页眉口径);
+    # None = 未采集。drives graduation-status 的系列化 placements。
+    entry_level: Optional[int] = None
     hkmu_verified: bool = False
     # invite_code intentionally absent — only exposed via /users/me/invite-code (self).
     # Returning another user's invite_code enabled a force-friend vector.
@@ -126,6 +129,9 @@ class UserUpdate(BaseModel):
     avatar_url: Optional[str] = None
     programme_code: Optional[str] = None
     entry_term: Optional[str] = None
+    # 批次 5:入学点 1/2/3(Year N Entry);合法值校验在 router(不在 pydantic
+    # 层做,保证 4xx 带上业务说明文案)。
+    entry_level: Optional[int] = None
 
 
 # --- Posts ---
