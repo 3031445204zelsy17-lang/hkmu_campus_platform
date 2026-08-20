@@ -35,6 +35,25 @@ pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # 2026-08-19 人工裁定取 yr 表的 6。
 # 错值根源:skill.md 的 [学分:N] 标记被 PDF 页码污染(吃进 "Page N of M" 尾数),
 # 经 T34「catalogue 学分优先」传播进 courses 表。
+CREDIT_FIXES = {
+    "TC4019SEF": 3,    # catalogue 错值 4
+    "TC4026SEF": 3,    # 5
+    "CHIN3004ACF": 3,  # 6
+    "CHIN4243ECF": 3,  # 8
+    "CHIN4383ECF": 3,  # 8
+    "COMP4570SEF": 6,  # 2
+    "TC4094SEF": 12,   # 5
+    "CHIN4009ACF": 6,  # 5
+    "CAMD2000AEF": 3,  # 5
+    "CCA4002ACF": 3,   # 5
+    "IDDA2001AEF": 3,  # 6
+    "TRM3013BEF": 3,   # 6
+    "SCI4063SEF": 3,   # 4
+    "ASM4057BEF": 9,   # 6
+    "SPM4098BEF": 9,   # 5
+    "NURS1313NCF": 6,  # 3;官方源矛盾,人工裁定 yr 表
+}
+
 # ── 批次 5 选修目录收尾(选课数据修复,2026-08-20)─────────────────────────────
 # UG 选修目录(3cr 版,verify/elec_catalog.json 双引擎 451 门)全库缺口最后 2 门。
 # 人眼核原文(UG_elective_catalog_3cru.pdf p105-106):两门均有 TOC 行 + 正文
@@ -64,25 +83,6 @@ BUS_EXCLUSION_PLACEHOLDERS = [
      "name": "Excluded combination of ENGL 1101AEF (no catalog entry; official "
              "title: Essential Business Communications 商業英語傳意概念)"},
 ]
-
-CREDIT_FIXES = {
-    "TC4019SEF": 3,    # catalogue 错值 4
-    "TC4026SEF": 3,    # 5
-    "CHIN3004ACF": 3,  # 6
-    "CHIN4243ECF": 3,  # 8
-    "CHIN4383ECF": 3,  # 8
-    "COMP4570SEF": 6,  # 2
-    "TC4094SEF": 12,   # 5
-    "CHIN4009ACF": 6,  # 5
-    "CAMD2000AEF": 3,  # 5
-    "CCA4002ACF": 3,   # 5
-    "IDDA2001AEF": 3,  # 6
-    "TRM3013BEF": 3,   # 6
-    "SCI4063SEF": 3,   # 4
-    "ASM4057BEF": 9,   # 6
-    "SPM4098BEF": 9,   # 5
-    "NURS1313NCF": 6,  # 3;官方源矛盾,人工裁定 yr 表
-}
 
 COURSES = [
     {"id":"COMP1080SEF","code":"COMP 1080SEF","name":"Introduction to Computer Programming","credits":3,"category":"core","year":1,"semester":"autumn","prerequisites":[],"description":"Fundamental programming concepts using Python."},
@@ -127,6 +127,66 @@ COURSES = [
     {"id":"COMP4600SEF","code":"COMP 4600SEF","name":"Advanced Topics in Data Mining","credits":3,"category":"core","year":4,"semester":"spring","prerequisites":[],"description":"Advanced topics in data mining and knowledge discovery."},
     {"id":"ELEC4710SEF","code":"ELEC 4710SEF","name":"Digital Forensics","credits":3,"category":"elective","year":4,"semester":"spring","prerequisites":[],"description":"Digital forensics investigation techniques."},
 ]
+
+
+def _spaced_code(cid: str) -> str:
+    r"""裸码兜底名:字母与数字之间加空格。三位数码(GIP100BEF)同样成立
+    (批次 5 修复:旧 `\d{4}` 正则漏网,三位码得不到空格、也永远匹配不上
+    课名回填层的 WHERE 模式)。"""
+    return re.sub(r"^([A-Z]{2,5})(\d{3,4})", r"\1 \2", cid)
+
+
+async def apply_existing_row_fixes(conn) -> dict:
+    """存量行修正层(批次 5):对 courses 表已存在的行做三类显式 UPDATE。
+
+    为什么必须有(坑 11/12,azure-deploy-method memory):本脚本所有 INSERT
+    都是 ON CONFLICT DO NOTHING + existing_ids 跳过,v1.11 REST 导入时代的
+    预存行会永远绕过 INSERT 路径的学分/课名裁定 —— prod 曾因此残留 9 门学分
+    错(GIP100/101/200/300/400=0、COUN4008=6、SOCI4004/SOSC2002/POLS4009=3,
+    官方值早已在 ADDITION_CREDITS/POOL_SEED_CREDITS 里)+ 裸码脏名,靠手工
+    UPDATE 收掉。本层让 seed 重跑可重现 prod 终态。
+
+    顺序:补池学分(官方 advice 行众数)→ CREDIT_FIXES(人工裁定)最后跑,
+    与前两本字典无键冲突(CI 可证),若有冲突人工裁定胜。
+    """
+    # 课名回填:裸码课(空格/不空格裸码,或名字混进 Wingdings 私用区字符的
+    # 脏行)换成官方 advice sheet 标题列。只动裸码/脏码行,不覆盖任何真名
+    # (catalogue/GE/手工表)。
+    names_fixed = 0
+    for cid, name in COURSE_NAME_BACKFILL.items():
+        res = await conn.execute(
+            "UPDATE courses SET name = $1 WHERE id = $2"
+            " AND (name ~ $3 OR name ~ $4)",
+            name, cid,
+            r"^[A-Z]{2,5} ?[0-9]{3,4}[A-Z]{3}$",
+            f"[{chr(0xE000)}-{chr(0xF8FF)}]",  # Wingdings 对勾等私用区脏字符(PDF 提取伪影,坑 12)
+        )
+        names_fixed += int(res.split()[-1])
+
+    # 补池学分对存量行显式 UPDATE(批次 5 新增):INSERT 路径早已用这两本
+    # 字典,此前存量行吃不到 → prod 9 门学分残留的根因。
+    pool_credit_fixed = 0
+    for table in (ADDITION_CREDITS, POOL_SEED_CREDITS):
+        for cid, cr in table.items():
+            res = await conn.execute(
+                "UPDATE courses SET credits = $1 WHERE id = $2 AND credits <> $1",
+                cr, cid,
+            )
+            pool_credit_fixed += int(res.split()[-1])
+
+    # CREDIT_FIXES(复核报告第五节,16 门人工裁定)。
+    credit_fixed = 0
+    for cid, cr in CREDIT_FIXES.items():
+        res = await conn.execute(
+            "UPDATE courses SET credits = $1 WHERE id = $2 AND credits <> $1",
+            cr, cid,
+        )
+        credit_fixed += int(res.split()[-1])
+    return {
+        "names_fixed": names_fixed,
+        "pool_credit_fixed": pool_credit_fixed,
+        "credit_fixed": credit_fixed,
+    }
 
 
 async def seed():
@@ -221,7 +281,7 @@ async def seed():
                     if not name:
                         # No official display name anywhere — use the spaced
                         # code so the UI at least shows a stable identifier.
-                        name = re.sub(r"^([A-Z]{2,5})(\d{4})", r"\1 \2", cid)
+                        name = _spaced_code(cid)
                         rules_missing_name += 1
                     try:
                         await conn.execute(
@@ -251,7 +311,7 @@ async def seed():
                         continue
                     name = COURSE_NAME_BACKFILL.get(cid) or catalogue.get(cid, (None, None))[0]
                     if not name:
-                        name = re.sub(r"^([A-Z]{2,5})(\d{4})", r"\1 \2", cid)
+                        name = _spaced_code(cid)
                     credits = ADDITION_CREDITS.get(cid)
                     if credits is None:
                         credits = CREDIT_FIXES.get(cid)
@@ -286,7 +346,7 @@ async def seed():
                         continue
                     name = COURSE_NAME_BACKFILL.get(cid) or catalogue.get(cid, (None, None))[0]
                     if not name:
-                        name = re.sub(r"^([A-Z]{2,5})(\d{4})", r"\1 \2", cid)
+                        name = _spaced_code(cid)
                     credits = POOL_SEED_CREDITS.get(cid)
                     if credits is None:
                         credits = ADDITION_CREDITS.get(cid)
@@ -372,28 +432,13 @@ async def seed():
                 print(f"  skip batch5 {c['id']}: {e}")
         print(f"  batch5 elective-catalog/placeholder courses inserted: {batch5_inserted}")
 
-        # 课名回填:裸码课(名字 = 空格化课码,seed T34 的兜底产物)换成官方
-        # advice sheet 标题列。只动裸码行,不覆盖任何真名(catalogue/GE/手工表)。
-        names_fixed = 0
-        for cid, name in COURSE_NAME_BACKFILL.items():
-            res = await conn.execute(
-                "UPDATE courses SET name = $1 WHERE id = $2 AND name ~ $3",
-                name, cid, r"^[A-Z]{2,5} [0-9]{4}[A-Z]{3}$",
-            )
-            names_fixed += int(res.split()[-1])
-
-        # Existing-row credit corrections: the inserts above are all
-        # ON CONFLICT DO NOTHING, so rows already carrying a polluted credit
-        # (from the old catalogue-first T34) would keep it forever. The
-        # adjudicated table must UPDATE them in place — this is what actually
-        # repairs production on re-seed.
-        credit_fixed = 0
-        for cid, cr in CREDIT_FIXES.items():
-            res = await conn.execute(
-                "UPDATE courses SET credits = $1 WHERE id = $2 AND credits <> $1",
-                cr, cid,
-            )
-            credit_fixed += int(res.split()[-1])
+        # 存量行修正层(批次 5,坑 11/12):裸码课名回填 + 补池学分 + 人工裁定
+        # 学分,见 apply_existing_row_fixes 的 docstring。
+        fixes = await apply_existing_row_fixes(conn)
+        names_fixed = fixes["names_fixed"]
+        credit_fixed = fixes["credit_fixed"]
+        print(f"  existing-row fixes: {fixes['pool_credit_fixed']} pool credits, "
+              f"{names_fixed} names, {credit_fixed} adjudicated credits")
 
         # Create test user
         test_pw = pwd_ctx.hash("test123456")
