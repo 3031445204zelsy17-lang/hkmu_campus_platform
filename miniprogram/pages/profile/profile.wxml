@@ -52,6 +52,10 @@
           <view class="profile-row-label">{{text.programmeLabel}}</view>
           <view class="profile-row-value">{{programmeName || text.programmeUnset}} ›</view>
         </view>
+        <view class="profile-row" bindtap="onOpenEntryTermPicker">
+          <view class="profile-row-label">{{text.entryTermLabel}}</view>
+          <view class="profile-row-value">{{entryTermDisplay || text.entryTermUnset}} ›</view>
+        </view>
         <view class="profile-row">
           <view class="profile-row-label">{{text.bioLabel}}</view>
           <view class="profile-row-value">{{user.bioLabel}}</view>
@@ -127,6 +131,36 @@
       <view class="empty-title">{{text.emptyTitle}}</view>
       <view class="action-row">
         <button class="primary-action" bindtap="goToLogin">{{text.loginAction}}</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 入学时间修改浮层（仿 T03 换专业：行触发 → 年份/学期选择 → PUT /users/me） -->
+  <view wx:if="{{entryTermOpen}}" class="et-mask" bindtap="onEntryTermClose">
+    <view class="et-sheet" catchtap="noop">
+      <view class="et-title-row">
+        <text class="et-title">{{text.entryTermTitle}}</text>
+        <view class="et-close" bindtap="onEntryTermClose">×</view>
+      </view>
+      <view class="et-field-label">{{text.entryTermYearLabel}}</view>
+      <view class="et-chips">
+        <view wx:for="{{entryYears}}" wx:key="*this"
+              class="et-chip {{entryPickYear === item ? 'sel' : ''}}"
+              data-year="{{item}}" hover-class="et-chip-hover"
+              bindtap="onEntryPickYear">{{item}}</view>
+      </view>
+      <view class="et-field-label">{{text.entryTermSemLabel}}</view>
+      <view class="et-chips">
+        <view class="et-chip {{entryPickSem === 'autumn' ? 'sel' : ''}}"
+              data-sem="autumn" hover-class="et-chip-hover"
+              bindtap="onEntryPickSem">{{text.entryTermAutumn}}</view>
+        <view class="et-chip {{entryPickSem === 'spring' ? 'sel' : ''}}"
+              data-sem="spring" hover-class="et-chip-hover"
+              bindtap="onEntryPickSem">{{text.entryTermSpring}}</view>
+      </view>
+      <view class="et-actions">
+        <button class="secondary-action" bindtap="onEntryTermClose">{{text.cancelAction}}</button>
+        <button class="primary-action" loading="{{entryTermSaving}}" bindtap="onEntryTermSave">{{text.saveAction}}</button>
       </view>
     </view>
   </view>

@@ -42,6 +42,14 @@ Page({
     sharePath: "", // Phase 5: 预取的邀请分享路径(onShareAppMessage 用)
     pickerOpen: false, // T03: 专业选择浮层开关
     programmeName: "", // T03: 当前专业名（catalogue code→name 映射）
+    // 入学时间修改浮层（仿 T03）：entry_term 形如 "2025-autumn"，planner 的
+    // 当前学年/毕业年/年份 tab 全由它推导
+    entryTermOpen: false,
+    entryTermDisplay: "",
+    entryYears: [],
+    entryPickYear: 0,
+    entryPickSem: "autumn",
+    entryTermSaving: false,
   },
 
   onShow() {
@@ -76,6 +84,7 @@ Page({
       text,
     });
     this._applyProgrammeName(); // 专业名随语言切换重取(中文/英文)
+    this._applyEntryTermDisplay(); // 学期名(秋季/春季)随语言切换重取
   },
 
   onPullDownRefresh() {
@@ -92,6 +101,7 @@ Page({
       joinedAtLabel: user && user.created_at ? formatDate(user.created_at) : "",
       user: user || null,
     });
+    this._applyEntryTermDisplay();
   },
 
   refreshProfile(showLoading = true) {
@@ -367,6 +377,86 @@ Page({
         wx.showToast({ title: (err && err.message) || text.saveFail, icon: "none" });
       });
   },
+
+  // ── 入学时间修改（仿 T03 换专业：行触发 → 浮层选择 → PUT /users/me）──────
+
+  // entry_term "2025-autumn" → "2025 秋季"（随 locale 本地化学期名）。
+  // 格式异常原样展示，缺失 → ""（行值显示 entryTermUnset）。
+  _applyEntryTermDisplay() {
+    const text = this.data.text;
+    const raw = this.data.user && this.data.user.entry_term;
+    const m = /^(\d{4})-(autumn|spring)$/.exec(raw || "");
+    if (!m) {
+      this.setData({ entryTermDisplay: raw || "" });
+      return;
+    }
+    const sem = m[2] === "spring" ? text.entryTermSpring : text.entryTermAutumn;
+    this.setData({ entryTermDisplay: `${m[1]} ${sem}` });
+  },
+
+  onOpenEntryTermPicker() {
+    const cy = new Date().getFullYear();
+    // 候选年份对齐 planner 引导步骤②（cy-3..cy+1）；已存值优先回显
+    const m = /^(\d{4})-(autumn|spring)$/.exec((this.data.user && this.data.user.entry_term) || "");
+    const year = m ? parseInt(m[1], 10) : cy;
+    const sem = m ? m[2] : "autumn";
+    const years = [cy - 3, cy - 2, cy - 1, cy, cy + 1];
+    // 历史值可能落在候选窗口外(如转校生早年入学)→ 补进候选,保证回显可选
+    if (!years.includes(year)) years.unshift(year);
+    this.setData({
+      entryTermOpen: true,
+      entryYears: years,
+      entryPickYear: year,
+      entryPickSem: sem,
+    });
+    this._setPickerTabBarHidden(true);
+  },
+
+  onEntryTermClose() {
+    this.setData({ entryTermOpen: false, entryTermSaving: false });
+    this._setPickerTabBarHidden(false);
+  },
+
+  onEntryPickYear(e) {
+    this.setData({ entryPickYear: parseInt(e.currentTarget.dataset.year, 10) });
+  },
+
+  onEntryPickSem(e) {
+    this.setData({ entryPickSem: e.currentTarget.dataset.sem });
+  },
+
+  onEntryTermSave() {
+    const text = this.data.text;
+    if (this.data.entryTermSaving) return;
+    const entryTerm = `${this.data.entryPickYear}-${this.data.entryPickSem}`;
+    // 值没变 → 直接关,免一次无效 PUT
+    if (entryTerm === ((this.data.user && this.data.user.entry_term) || "")) {
+      this.onEntryTermClose();
+      return;
+    }
+    this.setData({ entryTermSaving: true });
+    request({ method: "PUT", path: "/users/me", data: { entry_term: entryTerm }, auth: true })
+      .then((user) => {
+        // 通知 planner 作废暖路径 user 缓存重拉(否则当前学年/毕业年/年份 tab
+        // 停留旧学期直到冷启动,同 programmeSwitched 的理由)
+        const app = getApp();
+        if (app && app.globalData) app.globalData.entryTermChanged = true;
+        this.setData({ entryTermOpen: false, entryTermSaving: false });
+        this._setPickerTabBarHidden(false);
+        wx.showToast({ title: text.saveSuccess, icon: "success" });
+        if (user && user.entry_term) {
+          this.setData({ user }); // 即时反馈(refreshProfile 兜底同步 storage)
+          this._applyEntryTermDisplay();
+        }
+        return this.refreshProfile(false);
+      })
+      .catch((err) => {
+        this.setData({ entryTermSaving: false });
+        wx.showToast({ title: (err && err.message) || text.saveFail, icon: "none" });
+      });
+  },
+
+  noop() {},
 
   _setPickerTabBarHidden(hidden) {
     const tabBar = typeof this.getTabBar === "function" ? this.getTabBar() : null;

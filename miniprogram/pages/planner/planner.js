@@ -313,6 +313,13 @@ Page({
         this._status = null;
       }
     }
+    // profile 页改入学时间后回切:作废暖路径 user/status 缓存强制重拉(同上,
+    // 暖路径跳过 /users/me,不消费信号则当前学年/毕业年/年份 tab 停留旧学期)
+    if (app && app.globalData && app.globalData.entryTermChanged) {
+      app.globalData.entryTermChanged = false;
+      this._user = null;
+      this._status = null;
+    }
     // 只有首次（无 catalogue）才显示 loading 占位；之后切回都用缓存瞬间渲染
     this._loading = !this._catalogue;
     this._emit();

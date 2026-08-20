@@ -49,3 +49,70 @@
   font-size: var(--fs-link);
   vertical-align: middle;
 }
+
+/* ── 入学时间修改浮层（仿 T03 换专业;chip 视觉对齐 planner 引导 ob-chip）── */
+.et-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 40, 25, 0.45);
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+}
+.et-sheet {
+  width: 100%;
+  background: var(--surface);
+  border-radius: 28rpx 28rpx 0 0;
+  padding: 30rpx 32rpx calc(30rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  box-shadow: var(--shadow-card);
+}
+.et-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18rpx;
+}
+.et-title {
+  font-size: var(--fs-section);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.et-close {
+  font-size: 44rpx;
+  line-height: 1;
+  color: var(--text-secondary);
+  padding: 6rpx 10rpx;
+}
+.et-field-label {
+  font-size: var(--fs-segment);
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin: 18rpx 0 14rpx;
+}
+.et-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+.et-chip {
+  padding: 14rpx 30rpx;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1rpx solid var(--border-soft);
+  color: var(--text-primary);
+  font-size: var(--fs-btn);
+  font-weight: 600;
+}
+.et-chip.sel {
+  background: var(--accent-blue);
+  color: #fffaf0;
+  border-color: var(--accent-blue);
+}
+.et-chip-hover { opacity: 0.86; }
+.et-actions {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 34rpx;
+}
+.et-actions button { flex: 1; }
