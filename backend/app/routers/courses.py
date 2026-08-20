@@ -19,7 +19,10 @@ from ..data.ge_courses import (
     GE_FIELD_ORDER, PROGRAMME_GE_FIELDS, ge_courses_for, ge_course_by_id,
 )
 from ..data.ge_catalog_enrichment import GE_SCHOOL_NAMES
-from ..data.programme_year_map import PROGRAMME_GE_SLOTS, PROGRAMME_YEAR_MAP
+from ..data.programme_year_map import (
+    PROGRAMME_ENTRY_SERIES, PROGRAMME_GE_SLOTS, PROGRAMME_YEAR_MAP,
+    SERIES_YEAR_OVERRIDES,
+)
 from ..data.programme_rules_extra import (
     EXCLUDED_COMBINATIONS, MHFA_COURSES, MHFA_FROM_AY, THREE_CR_FROM_AY,
     cohort_profile, excluded_conflicts, level_of_course, level_rules_for,
@@ -112,6 +115,10 @@ class ProgrammeOut(BaseModel):
     # WSJ 类伞形专业的 Stream 子选择器数据(picker 单入口后的二次细化):
     # [{code, key, name}];非伞形专业为空。
     streams: list[dict] = []
+    # 批次 5 入学点系列轴:{系列: {"entry_level", "label"}}(页眉 Admit Cohort
+    # 佐证,如 "2026/27 Year 2 Entry")。onboarding 采入学点后,前端拿用户
+    # entry_level 对齐 graduation-status 返回的系列化 placements。
+    series: dict[str, dict] = {}
 
 
 class ProgrammeCatalogueOut(BaseModel):
@@ -214,6 +221,11 @@ class GraduationStatusOut(BaseModel):
     # (警告不拦截)。老客户端忽略新字段不受影响。
     cohort: dict = {}
     conflicts: list[dict] = []
+    # 批次 5 入学点系列轴:按用户 entry_level 过滤后的官方修读映射(与
+    # /programmes 的默认 placements 同构,前端直接替换即可)+ 该用户所属
+    # 系列的官方标签(None = 专业无系列数据或用户未填入学点)。
+    placements: dict[str, dict] = {}
+    series: dict | None = None
 
 
 class GECourseOut(BaseModel):
@@ -408,14 +420,38 @@ async def list_courses(
 # NOTE: these single-segment routes MUST be declared before ``GET /{course_id}``,
 # otherwise ``programmes`` / ``graduation-status`` would be captured as a course_id.
 
-def _placements_for(programme_code: str) -> tuple[dict[str, dict], list[dict]]:
+def _placements_for(
+    programme_code: str, entry_level: int | None = None
+) -> tuple[dict[str, dict], list[dict]]:
     """按专业取官方年份映射(批次 2)。别名码归一到主码;WSJ Stream 限定码
     (BSSCHWSJ-AGS,批次 4)回退伞码映射(advice sheet 三套系列全 Stream 共用);
-    未知专业返回空(前端回退 courses 表全局 year/semester)。"""
+    未知专业返回空(前端回退 courses 表全局 year/semester)。
+
+    批次 5 入学点系列轴:entry_level(1/2/3 = Year N Entry,users 表,onboarding
+    采集)非空且该专业有该系列差分时,以该系列的官方修读年覆盖默认合并图
+    (系列 1 口径)。例:BEDHACLSJ 的 Y2 入学者 UNI2002BCW 官方在 Y3,默认图
+    给 Y2(批次 2 验收遗留②)。无该系列数据/entry_level 缺失 → 默认图不动
+    (宁可少判不误判)。"""
     main = PROGRAMME_ALIASES.get(programme_code, programme_code)
     if main not in PROGRAMME_YEAR_MAP:
         main = main.split("-")[0]
-    return PROGRAMME_YEAR_MAP.get(main) or {}, PROGRAMME_GE_SLOTS.get(main) or []
+    placements = PROGRAMME_YEAR_MAP.get(main) or {}
+    if entry_level:
+        diff = SERIES_YEAR_OVERRIDES.get(main, {}).get(str(entry_level)) or {}
+        if diff:
+            placements = {**placements, **diff}
+    return placements, PROGRAMME_GE_SLOTS.get(main) or []
+
+
+def _series_for(programme_code: str, entry_level: int | None) -> dict | None:
+    """用户所属入学点系列的官方元数据(entry_level/label);专业无系列数据
+    或用户未填入学点 → None(前端降级用默认 placements,不误判)。"""
+    if not entry_level:
+        return None
+    main = PROGRAMME_ALIASES.get(programme_code, programme_code)
+    if main not in PROGRAMME_YEAR_MAP:
+        main = main.split("-")[0]
+    return PROGRAMME_ENTRY_SERIES.get(main, {}).get(str(entry_level))
 
 
 def _programme_to_out(code: str, prog: dict) -> ProgrammeOut:
@@ -430,6 +466,9 @@ def _programme_to_out(code: str, prog: dict) -> ProgrammeOut:
         for key, cat in prog.get("categories", {}).items()
     ]
     placements, ge_slots = _placements_for(code)
+    main = PROGRAMME_ALIASES.get(code, code)
+    if main not in PROGRAMME_YEAR_MAP:
+        main = main.split("-")[0]
     return ProgrammeOut(
         code=code,
         name=dict(prog.get("name", {})),
@@ -442,6 +481,7 @@ def _programme_to_out(code: str, prog: dict) -> ProgrammeOut:
         ge_slots=ge_slots,
         level_rules=level_rules_for(code),
         streams=list(prog.get("streams", [])),
+        series=PROGRAMME_ENTRY_SERIES.get(main) or {},
     )
 
 
@@ -852,10 +892,11 @@ async def get_graduation_status(
         # 批次 4:cohort(MHFA/学制闸)始终读用户档案的 entry_term;
         # programme_code 仍按 查询参数 > 档案 > 默认 解析
         row = await db.fetchrow(
-            "SELECT programme_code, entry_term FROM users WHERE id = $1",
+            "SELECT programme_code, entry_term, entry_level FROM users WHERE id = $1",
             user["id"],
         )
         entry_term = row["entry_term"] if row else None
+        entry_level = row["entry_level"] if row else None
         if not code and row:
             code = row["programme_code"]
         prog = get_programme(code)
@@ -896,6 +937,8 @@ async def get_graduation_status(
             percent=0.0,
             categories=[],
             recommendations=[],
+            placements=_placements_for(resolved_code, entry_level)[0],
+            series=_series_for(resolved_code, entry_level),
         )
 
     categories, total_earned, recs, all_satisfied = _compute_graduation(
@@ -915,6 +958,8 @@ async def get_graduation_status(
         all_categories_satisfied=all_satisfied,
         cohort=cohort_profile(entry_term),
         conflicts=excluded_conflicts(progress, resolved_code),
+        placements=_placements_for(resolved_code, entry_level)[0],
+        series=_series_for(resolved_code, entry_level),
     )
 
 
