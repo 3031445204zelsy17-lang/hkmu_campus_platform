@@ -35,6 +35,36 @@ pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # 2026-08-19 人工裁定取 yr 表的 6。
 # 错值根源:skill.md 的 [学分:N] 标记被 PDF 页码污染(吃进 "Page N of M" 尾数),
 # 经 T34「catalogue 学分优先」传播进 courses 表。
+# ── 批次 5 选修目录收尾(选课数据修复,2026-08-20)─────────────────────────────
+# UG 选修目录(3cr 版,verify/elec_catalog.json 双引擎 451 门)全库缺口最后 2 门。
+# 人眼核原文(UG_elective_catalog_3cru.pdf p105-106):两门均有 TOC 行 + 正文
+# 完整条目(學分 3 / 程度 1000·4000 / 授課語言 中文 / 不可兼修 -)→ 真课,按
+# 条目导入。advice sheet / skill.md catalogue / 规则池均不收它们:ECF 后缀 =
+# 中文授课班,skill.md 收的是 EBF 英文班变体(DRAM 1000EBF/4244EBF,与
+# NURS1050NEF/NCF 双班别同构),故此前字符串级差集恰好剩这两门。
+# 目录无学期数据 → semester="any"(GE/BATCH4 同款哨兵);year 走 _level_year。
+ELECTIVE_CATALOG_IMPORT = [
+    {"id": "DRAM1000ECF", "code": "DRAM 1000ECF", "credits": 3,
+     "category": "elective", "name": "Basic Acting for Speech and Reading"},
+    {"id": "DRAM4244ECF", "code": "DRAM 4244ECF", "credits": 3,
+     "category": "elective", "name": "Dramatic Literature From East and West"},
+]
+
+# BUS1003BEF/BUS1004BEF(批次 5 人眼定性,2026-08-20):选修目录全文只在
+# ENGL 1101AEF 条目的 Excluded Combination 引用块出现(p31,带官方双语课名),
+# 无 TOC 行、无正文条目、无学分;朴素正则 479 集含两码、锚定 451 集不含
+# (verify/elec_catalog_check.py 双引擎),「引用无条目」坐实。批次 4 互斥组
+# excl-engl1101-bus1003(BSCHBSBJ)已引用两码 → 照 BUS2001BEF 先例灌 0 学分
+# 说明名占位:仅供互斥标记可解析,不计学分、不进任何池、picker 不露出。
+BUS_EXCLUSION_PLACEHOLDERS = [
+    {"id": "BUS1003BEF", "code": "BUS 1003BEF", "credits": 0, "category": "elective",
+     "name": "Excluded combination of ENGL 1101AEF (no catalog entry; official "
+             "title: Introduction to Business English 基礎商業英語)"},
+    {"id": "BUS1004BEF", "code": "BUS 1004BEF", "credits": 0, "category": "elective",
+     "name": "Excluded combination of ENGL 1101AEF (no catalog entry; official "
+             "title: Essential Business Communications 商業英語傳意概念)"},
+]
+
 CREDIT_FIXES = {
     "TC4019SEF": 3,    # catalogue 错值 4
     "TC4026SEF": 3,    # 5
@@ -297,7 +327,8 @@ async def seed():
             # BUS2001BEF:多份商院 sheet 的 BUS 2000BEF 行 Excluded combination
             # 列出现(BBAHMGTJ1/BBAHIHAMJ1 p1),官方码但任何目录/年表均无独立
             # 课行(无课名无学分)→ 0 学分 + 说明名,仅供互斥标记用,不计学分。
-            # 对比:BUS1003/1004BEF 是批次 0 定性的幽灵嫌疑码,不灌(批次 5 人眼)。
+            # 对比:BUS1003/1004BEF 批次 5 人眼定性后同样占位(见文件头
+            # BUS_EXCLUSION_PLACEHOLDERS,依据 Excluded 引用 + 互斥组引用)。
             {"id": "BUS2001BEF", "code": "BUS 2001BEF", "credits": 0,
              "category": "elective",
              "name": "Excluded combination of BUS 2000BEF (no official course row)"},
@@ -319,6 +350,27 @@ async def seed():
             except Exception as e:
                 print(f"  skip batch4 {c['id']}: {e}")
         print(f"  batch4 rule courses inserted: {batch4_inserted}")
+
+        # ── 批次 5:选修目录收尾 + 互斥引用占位(见文件头两个常量的依据)──────
+        batch5_inserted = 0
+        for c in ELECTIVE_CATALOG_IMPORT + BUS_EXCLUSION_PLACEHOLDERS:
+            if c["id"] in existing_ids:
+                continue
+            try:
+                await conn.execute(
+                    """INSERT INTO courses (id, code, name, credits, category, year, semester, prerequisites, description)
+                       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                       ON CONFLICT (id) DO NOTHING""",
+                    c["id"], c["code"], c["name"], c["credits"], c["category"],
+                    _level_year(c["id"]), "any", "[]",
+                    "批次5 · UG选修目录条目(3cr 版 p105-106)" if c["credits"]
+                    else "批次5 · Excluded Combination 引用占位(0 学分,不计学分)",
+                )
+                existing_ids.add(c["id"])
+                batch5_inserted += 1
+            except Exception as e:
+                print(f"  skip batch5 {c['id']}: {e}")
+        print(f"  batch5 elective-catalog/placeholder courses inserted: {batch5_inserted}")
 
         # 课名回填:裸码课(名字 = 空格化课码,seed T34 的兜底产物)换成官方
         # advice sheet 标题列。只动裸码行,不覆盖任何真名(catalogue/GE/手工表)。
