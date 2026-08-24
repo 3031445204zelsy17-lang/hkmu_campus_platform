@@ -229,6 +229,7 @@ const DICTIONARY = {
       reportSuccess: "\u4e3e\u62a5\u5df2\u63d0\u4ea4\uff0c\u611f\u8c22",
       reportAlready: "\u4f60\u5df2\u4e3e\u62a5\u8fc7\u8fd9\u7bc7\u5185\u5bb9",
       reportFail: "\u4e3e\u62a5\u63d0\u4ea4\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5",
+      shareAction: "\u8f6c\u53d1",
     }),
     courseDetail: Object.assign({}, COMMON_ZH_HANS, {
       headerTitle: "\u8bfe\u7a0b\u8be6\u60c5",
@@ -877,6 +878,7 @@ DICTIONARY["zh-Hant"] = {
     reportSuccess: "\u6aa2\u8209\u5df2\u63d0\u4ea4\uff0c\u611f\u8b1d",
     reportAlready: "\u4f60\u5df2\u6aa2\u8209\u904e\u9019\u7bc7\u5167\u5bb9",
     reportFail: "\u6aa2\u8209\u63d0\u4ea4\u5931\u6557\uff0c\u8acb\u7a0d\u5f8c\u518d\u8a66",
+    shareAction: "\u8f49\u767c",
   }),
   courseDetail: Object.assign({}, COMMON_ZH_HANT, {
     headerTitle: "\u8ab2\u7a0b\u8a73\u60c5",
@@ -1499,6 +1501,7 @@ DICTIONARY.en = {
     reportSuccess: "Report submitted — thanks",
     reportAlready: "You already reported this post",
     reportFail: "Could not submit report, try again",
+    shareAction: "Share",
   }),
   courseDetail: Object.assign({}, COMMON_EN, {
     headerTitle: "Course",

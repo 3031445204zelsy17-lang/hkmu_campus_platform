@@ -31,6 +31,10 @@
               <text class="{{post.likeIconClass}}">{{post.likeIcon}}</text>
               <text class="post-action-count">{{post.likeLabel}}</text>
             </view>
+            <button class="post-action share-action" open-type="share" hover-class="post-action-press" aria-label="{{text.shareAction}}">
+              <text class="social-glyph">↗</text>
+              <text class="post-action-count">{{text.shareAction}}</text>
+            </button>
             <view wx:if="{{user && (post.authorId === user.id || user.isAdmin)}}" class="post-action delete-action" catchtap="onDeletePost" hover-class="post-action-press">
               <text class="social-glyph">🗑</text>
               <text class="post-action-count">{{text.deleteAction}}</text>

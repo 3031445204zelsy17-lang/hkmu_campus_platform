@@ -243,3 +243,11 @@
   color: var(--accent-blue);
   text-align: center;
 }
+
+/* === 转发按钮(post-actions 内原生 button 归一;布局/颜色走全局 .post-action)=== */
+.share-action {
+  width: auto;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1;
+}
