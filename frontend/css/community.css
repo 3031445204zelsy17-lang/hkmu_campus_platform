@@ -497,12 +497,59 @@
 
 [data-page="community"] .comment-input {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
   margin-top: 15px;
 }
 
-[data-page="community"] .comment-input input {
+/* Reply-target chip shown above the input while replying to someone */
+[data-page="community"] .reply-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 3px 6px 3px 12px;
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+[data-page="community"] .reply-chip.hidden {
+  display: none;
+}
+
+[data-page="community"] .reply-chip-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-page="community"] .reply-chip-cancel {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+}
+
+[data-page="community"] .reply-chip-cancel:hover {
+  color: var(--text-primary);
+}
+
+[data-page="community"] .comment-input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+[data-page="community"] .comment-input-row input {
   flex: 1;
+  min-width: 0;
   padding: 10px 15px;
   border: 1px solid var(--border-color);
   border-radius: 20px;
@@ -510,12 +557,12 @@
   background: var(--bg-card);
 }
 
-[data-page="community"] .comment-input input:focus {
+[data-page="community"] .comment-input-row input:focus {
   outline: none;
   border-color: var(--border-focus);
 }
 
-[data-page="community"] .comment-input button {
+[data-page="community"] .comment-send {
   background-color: var(--color-primary-dark);
   color: var(--text-on-primary);
   border: none;
@@ -524,15 +571,69 @@
   font-size: 14px;
   cursor: pointer;
   transition: background-color 0.2s;
+  flex-shrink: 0;
 }
 
-[data-page="community"] .comment-input button:hover {
+[data-page="community"] .comment-send:hover {
   background-color: var(--color-primary-dark);
 }
 
-[data-page="community"] .comment-input button:disabled {
+[data-page="community"] .comment-send:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ── Comment replies (second layer) ─────────────────────────── */
+
+[data-page="community"] .comment-replies {
+  margin-top: 8px;
+  padding-left: 10px;
+  border-left: 2px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+[data-page="community"] .comment-reply-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+[data-page="community"] .comment-reply p {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+[data-page="community"] .reply-hint {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+[data-page="community"] .comment-reply-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+
+[data-page="community"] .comment-reply-btn:hover {
+  color: var(--color-primary-dark);
+}
+
+[data-page="community"] .comment-img {
+  margin-top: 6px;
+  max-width: 240px;
+  max-height: 240px;
+  border-radius: 10px;
+  object-fit: cover;
+  display: block;
+  border: 1px solid var(--border-color);
 }
 
 /* ── Glass Button Component ───────────────────────────────────────── */
@@ -711,8 +812,8 @@
   [data-page="community"] .post-content p { font-size: 14px; line-height: 1.5; }
   [data-page="community"] .post-actions { gap: 15px; padding: 8px 0; }
   [data-page="community"] .action-btn { font-size: 13px; padding: 4px 8px; }
-  [data-page="community"] .comment-input input { padding: 8px 12px; font-size: 13px; }
-  [data-page="community"] .comment-input button { padding: 0 16px; font-size: 13px; }
+  [data-page="community"] .comment-input-row input { padding: 8px 12px; font-size: 13px; }
+  [data-page="community"] .comment-send { padding: 0 16px; font-size: 13px; }
   [data-page="community"] .category-tab { padding: 6px 14px; font-size: 13px; }
 }
 
@@ -770,13 +871,13 @@
     padding: 8px 12px;
     min-height: 44px;
   }
-  [data-page="community"] .comment-input {
-    flex-direction: column;
-  }
-  [data-page="community"] .comment-input button {
-    width: 100%;
-    padding: 10px;
+  [data-page="community"] .comment-send {
     min-height: 44px;
+    padding: 0 16px;
+  }
+  [data-page="community"] .img-upload-compact-btn {
+    width: 44px;
+    height: 44px;
   }
   [data-page="community"] .comment-avatar,
   [data-page="community"] .comment-avatar-fallback {
@@ -859,6 +960,63 @@
 }
 .img-upload-remove:hover {
   background: #ef4444;
+}
+
+/* Compact variant (inline surfaces like the comment box): round pick button
+   + small thumbnail instead of the full drop zone. */
+.img-upload-wrap.compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.img-upload-compact-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid #cbd5e1;
+  background: rgba(255,255,255,0.5);
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.2s;
+}
+.img-upload-compact-btn:hover {
+  border-color: #3b82f6;
+}
+.img-upload-compact-btn.uploading {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.img-upload-preview.compact {
+  display: none; /* empty until has-image */
+  position: relative;
+  margin-top: 0;
+  width: 44px;
+  height: 44px;
+}
+.img-upload-preview.compact.has-image {
+  display: block;
+}
+.img-upload-preview.compact .img-upload-preview-img {
+  width: 44px;
+  height: 44px;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.img-upload-preview.compact .img-upload-remove {
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  line-height: 18px;
 }
 
 /* ── LostFound Card with Image ─────────────────────────────────────── */
