@@ -196,11 +196,37 @@
   flex-shrink: 0;
   width: 64rpx;
   height: 64rpx;
-  line-height: 64rpx;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
   background: var(--segmented-bg);
-  font-size: 30rpx;
+}
+
+/* === SVG 线性图标(与 web 端 heroicons 风格对齐,替换 emoji)=== */
+/* 动作栏图标:绿 #2E7D52,与 ♥/↗ 字形和计数同色 */
+.svg-glyph {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+}
+
+.icon-trash {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20stroke%3D%22%232E7D52%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M14.74%209l-.346%209m-4.788%200L9.26%209m9.968-3.21c.342.052.682.107%201.022.166m-1.022-.165L18.16%2019.673a2.25%202.25%200%2001-2.244%202.077H8.084a2.25%202.25%200%2001-2.244-2.077L4.772%205.79m14.456%200a48.108%2048.108%200%2000-3.478-.397m-12%20.562c.34-.059.68-.114%201.022-.165m0%200a48.11%2048.11%200%20013.478-.397m7.5%200v-.916c0-1.18-.91-2.164-2.09-2.201a51.964%2051.964%200%2000-3.32%200c-1.18.037-2.09%201.022-2.09%202.201v.916m7.5%200a48.667%2048.667%200%2000-7.5%200%22%2F%3E%3C%2Fsvg%3E");
+}
+
+.icon-flag {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20stroke%3D%22%232E7D52%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M3%203v1.5M3%2021v-6m0%200l2.77-.693a9%209%200%20016.208.682l.108.054a9%209%200%20006.086.71l3.114-.732a48.524%2048.524%200%2001-.005-10.499l-3.11.732a9%209%200%2001-6.085-.711l-.108-.054a9%209%200%2000-6.208-.682L3%204.5M3%2015V4.5%22%2F%3E%3C%2Fsvg%3E");
+}
+
+/* 评论输入栏相机:次级灰 #6B7280 */
+.icon-camera {
+  width: 36rpx;
+  height: 36rpx;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20stroke%3D%22%236B7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M6.827%206.175A2.31%202.31%200%20015.186%207.23c-.38.054-.757.112-1.134.175C2.999%207.58%202.25%208.507%202.25%209.574V18a2.25%202.25%200%20002.25%202.25h15A2.25%202.25%200%200021.75%2018V9.574c0-1.067-.75-1.994-1.802-2.169a47.865%2047.865%200%2000-1.134-.175%202.31%202.31%200%2001-1.64-1.055l-.822-1.316a2.192%202.192%200%2000-1.736-1.039%2048.774%2048.774%200%2000-5.232%200%202.192%202.192%200%2000-1.736%201.039l-.821%201.316z%22%2F%3E%3Cpath%20d%3D%22M16.5%2012.75a4.5%204.5%200%2011-9%200%204.5%204.5%200%20019%200zM18.75%2010.5h.008v.008h-.008V10.5z%22%2F%3E%3C%2Fsvg%3E");
 }
 
 .comment-textarea {
@@ -242,4 +268,12 @@
   font-size: var(--fs-feed-meta);
   color: var(--accent-blue);
   text-align: center;
+}
+
+/* === 转发按钮(post-actions 内原生 button 归一;布局/颜色走全局 .post-action)=== */
+.share-action {
+  width: auto;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1;
 }

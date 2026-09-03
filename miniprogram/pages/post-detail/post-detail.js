@@ -137,13 +137,29 @@ Page({
     });
   },
 
-  // 分享这篇帖子(右上角「···」→ 转发/复制链接)。path 带 postId 回到该帖。
+  // 分享这篇帖子:页内「转发」按钮(open-type=share)与右上角「···」菜单共用。
+  // 标题:帖子标题(超长截断)→ 无标题退正文摘要 → 再退品牌名,统一带品牌后缀。
+  // 有图带 imageUrl(卡片 5:4 裁切);无图省略,由微信自动截取当前页面。
   onShareAppMessage() {
     const post = this.data.post || {};
-    return {
-      title: post.title || "HKMU Campus",
-      path: `/pages/post-detail/post-detail?id=${this.data.postId || ""}`,
+    let base = String(post.title || "").trim();
+    if (!base) {
+      const content = String(post.content || "").trim().replace(/\s+/g, " ");
+      base = content.length > 30 ? `${content.slice(0, 30)}…` : content;
+    }
+    if (base.length > 40) {
+      base = `${base.slice(0, 40).trim()}…`;
+    }
+    const share = {
+      title: base ? `${base} · HKMU Campus` : "HKMU Campus",
+      path: this.data.postId
+        ? `/pages/post-detail/post-detail?id=${this.data.postId}`
+        : "/pages/home/home",
     };
+    if (post.imageUrl) {
+      share.imageUrl = post.imageUrl;
+    }
+    return share;
   },
 
   // 举报这篇帖子(仅非作者可见)。原因走 actionSheet,可选补充说明,

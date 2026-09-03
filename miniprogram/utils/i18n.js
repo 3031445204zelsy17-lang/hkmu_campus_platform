@@ -211,6 +211,7 @@ const DICTIONARY = {
       reply: "\u56de\u590d",
       replyPlaceholder: "\u56de\u590d {name}...",
       cancelReply: "\u53d6\u6d88\u56de\u590d",
+      commentImageAction: "\u6dfb\u52a0\u56fe\u7247",
       loginPrompt: "\u767b\u5f55\u540e\u53c2\u4e0e\u7559\u8a00",
       deleteAction: "\u5220\u9664",
       deleteConfirm: "\u786e\u5b9a\u5220\u9664\u4f60\u7684\u8fd9\u7bc7\u5185\u5bb9\u5417?\u8fd9\u6761\u64cd\u4f5c\u65e0\u6cd5\u64a4\u9500\u3002",
@@ -229,6 +230,7 @@ const DICTIONARY = {
       reportSuccess: "\u4e3e\u62a5\u5df2\u63d0\u4ea4\uff0c\u611f\u8c22",
       reportAlready: "\u4f60\u5df2\u4e3e\u62a5\u8fc7\u8fd9\u7bc7\u5185\u5bb9",
       reportFail: "\u4e3e\u62a5\u63d0\u4ea4\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5",
+      shareAction: "\u8f6c\u53d1",
     }),
     courseDetail: Object.assign({}, COMMON_ZH_HANS, {
       headerTitle: "\u8bfe\u7a0b\u8be6\u60c5",
@@ -859,6 +861,7 @@ DICTIONARY["zh-Hant"] = {
     reply: "\u56de\u8986",
     replyPlaceholder: "\u56de\u8986 {name}...",
     cancelReply: "\u53d6\u6d88\u56de\u8986",
+    commentImageAction: "\u6dfb\u52a0\u5716\u7247",
     loginPrompt: "\u767b\u5165\u5f8c\u53c3\u8207\u7559\u8a00",
     deleteAction: "\u522a\u9664",
     deleteConfirm: "\u78ba\u5b9a\u522a\u9664\u4f60\u7684\u9019\u7bc7\u5167\u5bb9\u55ce?\u9019\u689d\u64cd\u4f5c\u7121\u6cd5\u64a4\u92b7\u3002",
@@ -877,6 +880,7 @@ DICTIONARY["zh-Hant"] = {
     reportSuccess: "\u6aa2\u8209\u5df2\u63d0\u4ea4\uff0c\u611f\u8b1d",
     reportAlready: "\u4f60\u5df2\u6aa2\u8209\u904e\u9019\u7bc7\u5167\u5bb9",
     reportFail: "\u6aa2\u8209\u63d0\u4ea4\u5931\u6557\uff0c\u8acb\u7a0d\u5f8c\u518d\u8a66",
+    shareAction: "\u8f49\u767c",
   }),
   courseDetail: Object.assign({}, COMMON_ZH_HANT, {
     headerTitle: "\u8ab2\u7a0b\u8a73\u60c5",
@@ -1481,6 +1485,7 @@ DICTIONARY.en = {
     reply: "Reply",
     replyPlaceholder: "Reply to {name}...",
     cancelReply: "Cancel reply",
+    commentImageAction: "Add image",
     loginPrompt: "Sign in to join the discussion",
     deleteAction: "Delete",
     deleteConfirm: "Delete this post? This cannot be undone.",
@@ -1499,6 +1504,7 @@ DICTIONARY.en = {
     reportSuccess: "Report submitted — thanks",
     reportAlready: "You already reported this post",
     reportFail: "Could not submit report, try again",
+    shareAction: "Share",
   }),
   courseDetail: Object.assign({}, COMMON_EN, {
     headerTitle: "Course",

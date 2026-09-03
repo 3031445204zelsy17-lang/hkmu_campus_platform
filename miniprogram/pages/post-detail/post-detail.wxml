@@ -31,12 +31,16 @@
               <text class="{{post.likeIconClass}}">{{post.likeIcon}}</text>
               <text class="post-action-count">{{post.likeLabel}}</text>
             </view>
+            <button class="post-action share-action" open-type="share" hover-class="post-action-press" aria-label="{{text.shareAction}}">
+              <text class="social-glyph">↗</text>
+              <text class="post-action-count">{{text.shareAction}}</text>
+            </button>
             <view wx:if="{{user && (post.authorId === user.id || user.isAdmin)}}" class="post-action delete-action" catchtap="onDeletePost" hover-class="post-action-press">
-              <text class="social-glyph">🗑</text>
+              <view class="social-glyph svg-glyph icon-trash" />
               <text class="post-action-count">{{text.deleteAction}}</text>
             </view>
             <view wx:if="{{user && post.authorId !== user.id && !reportSubmitted}}" class="post-action report-action" catchtap="onReportPost" hover-class="post-action-press">
-              <text class="social-glyph">🚩</text>
+              <view class="social-glyph svg-glyph icon-flag" />
               <text class="post-action-count">{{text.reportAction}}</text>
             </view>
           </view>
@@ -102,7 +106,9 @@
           show-confirm-bar="{{false}}"
           bindinput="updateDraft"
         />
-        <view class="composer-image-btn" catchtap="chooseCommentImage">📷</view>
+        <view class="composer-image-btn" catchtap="chooseCommentImage" aria-label="{{text.commentImageAction}}">
+          <view class="icon-camera" />
+        </view>
         <view class="comment-send {{submitting ? 'is-busy' : ''}}" catchtap="submitComment">{{text.commentSend}}</view>
       </view>
     </view>
