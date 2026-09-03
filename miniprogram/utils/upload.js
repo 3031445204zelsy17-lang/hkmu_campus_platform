@@ -6,7 +6,11 @@ const { getSession } = require("./request");
 // 上传前用 offscreen canvas 按用途缩放 + jpg 压缩:头像 200px,配图 750px。
 // 压缩任一环节失败 → resolve 原图(降级,绝不阻断上传)。
 function _maxDimFor(moduleName) {
-  return moduleName === "avatars" ? 200 : 750;
+  if (moduleName === "avatars") {
+    return 200;
+  }
+  // 评论图内联展示且后端只存 360/640 两档,客户端压到 480 省上传流量
+  return moduleName === "comments" ? 480 : 750;
 }
 
 function compressImage(filePath, maxDim, quality) {

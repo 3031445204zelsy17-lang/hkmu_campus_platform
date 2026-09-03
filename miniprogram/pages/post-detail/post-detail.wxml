@@ -50,31 +50,61 @@
       <view wx:if="{{commentsLoading}}" class="comment-status">{{text.commentLoading}}</view>
       <block wx:else>
         <view wx:if="{{comments.length === 0}}" class="comment-status">{{text.commentEmpty}}</view>
-        <view wx:for="{{comments}}" wx:key="id" class="comment-item" bindlongpress="onReportComment" data-id="{{item.id}}">
+        <view wx:for="{{comments}}" wx:key="id" wx:for-index="idx" class="comment-item" bindlongpress="onReportComment" data-id="{{item.id}}">
           <view class="comment-avatar" data-author-id="{{item.authorId}}" catchtap="openDM">
-            <image wx:if="{{item.authorAvatar}}" src="{{item.authorAvatar}}" mode="aspectFill" binderror="onCommentAvatarError" data-idx="{{index}}" />
+            <image wx:if="{{item.authorAvatar}}" src="{{item.authorAvatar}}" mode="aspectFill" binderror="onCommentAvatarError" data-idx="{{idx}}" />
             <text wx:else>{{item.authorInitial}}</text>
           </view>
           <view class="comment-main">
             <view class="comment-author">{{item.authorName}}</view>
             <view class="comment-content">{{item.content}}</view>
-            <view class="comment-meta">{{item.createdAtLabel}}</view>
+            <image wx:if="{{item.imageUrl}}" class="comment-image" src="{{item.imageUrl}}" mode="widthFix" catchtap="previewCommentImage" data-url="{{item.imageUrl}}" />
+            <view class="comment-meta">
+              <text>{{item.createdAtLabel}}</text>
+              <text class="comment-reply-btn" catchtap="startReply" data-id="{{item.id}}" data-name="{{item.authorName}}">{{text.reply}}</text>
+            </view>
+
+            <view wx:if="{{item.replies.length}}" class="comment-replies">
+              <view wx:for="{{item.replies}}" wx:for-item="reply" wx:key="id" class="comment-reply-item" bindlongpress="onReportComment" data-id="{{reply.id}}">
+                <view class="comment-reply-head">
+                  <text class="comment-reply-author">{{reply.authorName}}</text>
+                  <text wx:if="{{reply.replyToName && reply.replyToName !== item.authorName}}" class="comment-reply-hint">{{text.reply}} @{{reply.replyToName}}</text>
+                </view>
+                <view wx:if="{{reply.content}}" class="comment-reply-content">{{reply.content}}</view>
+                <image wx:if="{{reply.imageUrl}}" class="comment-image" src="{{reply.imageUrl}}" mode="widthFix" catchtap="previewCommentImage" data-url="{{reply.imageUrl}}" />
+                <view class="comment-meta">
+                  <text>{{reply.createdAtLabel}}</text>
+                  <text class="comment-reply-btn" catchtap="startReply" data-id="{{reply.id}}" data-name="{{reply.authorName}}">{{text.reply}}</text>
+                </view>
+              </view>
+            </view>
           </view>
         </view>
       </block>
     </view>
 
     <view wx:if="{{user}}" class="comment-composer detail-composer">
-      <textarea
-        class="comment-textarea"
-        placeholder="{{text.commentPlaceholder}}"
-        value="{{draft}}"
-        maxlength="500"
-        auto-height
-        show-confirm-bar="{{false}}"
-        bindinput="updateDraft"
-      />
-      <view class="comment-send {{submitting ? 'is-busy' : ''}}" catchtap="submitComment">{{text.commentSend}}</view>
+      <view wx:if="{{replyTarget}}" class="composer-reply-bar">
+        <text class="composer-reply-text">{{text.reply}} @{{replyTarget.name}}</text>
+        <text class="composer-reply-cancel" catchtap="cancelReply">✕</text>
+      </view>
+      <view wx:if="{{commentImage}}" class="composer-image-wrap">
+        <image class="composer-image-preview" src="{{commentImage}}" mode="aspectFill" />
+        <text class="composer-image-remove" catchtap="removeCommentImage">✕</text>
+      </view>
+      <view class="composer-row">
+        <textarea
+          class="comment-textarea"
+          placeholder="{{text.commentPlaceholder}}"
+          value="{{draft}}"
+          maxlength="500"
+          auto-height
+          show-confirm-bar="{{false}}"
+          bindinput="updateDraft"
+        />
+        <view class="composer-image-btn" catchtap="chooseCommentImage">📷</view>
+        <view class="comment-send {{submitting ? 'is-busy' : ''}}" catchtap="submitComment">{{text.commentSend}}</view>
+      </view>
     </view>
     <view wx:else class="login-prompt" catchtap="goLogin">{{text.loginPrompt}}</view>
   </block>
