@@ -181,18 +181,30 @@ class PostOut(BaseModel):
 # --- Comments ---
 
 class CommentCreate(BaseModel):
-    content: str = Field(min_length=1, max_length=2000)
+    # content becomes optional when an image is attached (image-only comment);
+    # the posts router enforces "content or image_url, at least one"
+    content: Optional[str] = Field(None, max_length=2000)
+    parent_id: Optional[int] = None  # reply target; always hoisted to a top-level comment
+    image_url: Optional[str] = None  # must reference our own uploads bucket (moderation path)
 
 
 class CommentOut(BaseModel):
     id: int
     post_id: int
     author_id: int
-    content: str
+    content: str = ""
     likes_count: int = 0
+    parent_id: Optional[int] = None
+    reply_to_nickname: Optional[str] = None  # "回复 @xxx" display hint for replies
+    image_url: Optional[str] = None
+    # two-layer tree: top-level comments carry their replies, replies carry []
+    replies: Optional[List["CommentOut"]] = None
     created_at: Optional[str] = None
     author_nickname: Optional[str] = None
     author_avatar: Optional[str] = None
+
+
+CommentOut.model_rebuild()  # resolve the self-referential `replies` forward ref
 
 
 # --- Courses ---

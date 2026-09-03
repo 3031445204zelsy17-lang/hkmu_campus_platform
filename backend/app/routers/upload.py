@@ -19,7 +19,7 @@ from ..services.storage_service import validate_image, upload_image_variants, re
 
 router = APIRouter(prefix="/upload", tags=["upload"])
 
-_VALID_MODULES = {"lostfound", "posts", "avatars", "news", "courses"}
+_VALID_MODULES = {"lostfound", "posts", "avatars", "news", "courses", "comments"}
 
 
 @router.post("")

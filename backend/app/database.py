@@ -91,6 +91,9 @@ CREATE TABLE IF NOT EXISTS comments (
     author_id INTEGER NOT NULL REFERENCES users(id),
     content TEXT NOT NULL,
     likes_count INTEGER DEFAULT 0,
+    parent_id INTEGER REFERENCES comments(id) ON DELETE CASCADE,
+    reply_to_user_id INTEGER REFERENCES users(id),
+    image_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -282,6 +285,26 @@ DO $$ BEGIN
     ALTER TABLE posts ADD COLUMN image_url TEXT;
 EXCEPTION WHEN duplicate_column THEN NULL;
 END $$;
+
+-- Add two-level reply columns to comments (safe for existing DBs)
+-- parent_id always points at a TOP-LEVEL comment (replying to a reply is
+-- hoisted to the same top-level thread by the API) so the tree is exactly
+-- two layers. reply_to_user_id keeps the immediate target for display.
+DO $$ BEGIN
+    ALTER TABLE comments ADD COLUMN parent_id INTEGER REFERENCES comments(id) ON DELETE CASCADE;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+DO $$ BEGIN
+    ALTER TABLE comments ADD COLUMN reply_to_user_id INTEGER REFERENCES users(id);
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
+-- Add image_url column for comment images (safe for existing DBs)
+DO $$ BEGIN
+    ALTER TABLE comments ADD COLUMN image_url TEXT;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+CREATE INDEX IF NOT EXISTS idx_comments_parent ON comments(parent_id);
 
 -- Add lang column for news. UNIQUE(lang, source_url) index is created by
 -- sync_news.py (not here) to avoid failing on legacy seed rows that share

@@ -46,6 +46,9 @@ _EXT_MAP = {
 # 640 default + 1280 retina.
 _MODULE_SIZES = {
     "avatars": (96, 192),
+    # comment images render inline and small — tighter caps than feed images
+    # keep the Supabase free-tier storage budget sustainable
+    "comments": (360, 640),
     "posts": (640, 1280),
     "lostfound": (640, 1280),
     "news": (640, 1280),
@@ -57,7 +60,7 @@ _DEFAULT_SIZES = (640, 1280)
 # loads by default). Feed-friendly so the default load is already small; the
 # 2x variant is reached via srcset. Avatars default to the larger size so a
 # profile header (up to ~96px, 2x = 192) stays sharp without srcset.
-_MAIN_LABEL = {"avatars": "192"}
+_MAIN_LABEL = {"avatars": "192", "comments": "360"}
 _MAIN_DEFAULT = "640"
 
 # Pipeline version embedded in avatar paths so a processing change (resize /
@@ -90,6 +93,19 @@ def validate_image(content_type: str, size: int) -> str | None:
     if size > MAX_FILE_SIZE:
         return f"File too large (max {MAX_FILE_SIZE // (1024*1024)} MB)"
     return None
+
+
+def is_module_image_url(url: str | None) -> bool:
+    """True iff ``url`` points inside our own uploads bucket.
+
+    The ONLY way to create such URLs is POST /upload, which runs the
+    img_sec_check gate before storing — so accepting bucket URLs exclusively
+    (comment image_url etc.) keeps moderation the single attachment path and
+    blocks foreign/arbitrary image URLs that were never scanned.
+    """
+    return isinstance(url, str) and url.startswith(
+        f"{SUPABASE_URL}/storage/v1/object/public/{BUCKET}/"
+    )
 
 
 async def read_bounded(file) -> bytes:

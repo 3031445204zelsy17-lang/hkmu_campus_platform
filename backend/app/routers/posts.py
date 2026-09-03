@@ -13,6 +13,7 @@ from ..services.auth_service import get_current_user, oauth2_scheme
 from ..services.rate_limiter import check_rate_limit
 from ..services.content_security import audit_user_text, SCENE_FORUM, SCENE_COMMENT
 from ..services.cache import TTLCache
+from ..services.storage_service import is_module_image_url
 
 _optional_oauth2 = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
@@ -26,7 +27,34 @@ _POST_COLS = """p.id, p.author_id, p.title, p.content, p.category,
     p.image_url, p.created_at, p.updated_at"""
 
 _COMMENT_COLS = """c.id, c.post_id, c.author_id, c.content,
-    c.likes_count, c.created_at"""
+    c.likes_count, c.parent_id, c.image_url, c.created_at"""
+
+# Shared re-fetch shape for a single comment (create_comment return value):
+# reply_to_nickname comes via a LEFT JOIN so replies can render "回复 @xxx".
+_COMMENT_FETCH = f"""SELECT {_COMMENT_COLS}, u.nickname AS author_nickname,
+    u.avatar_url AS author_avatar, rtu.nickname AS reply_to_nickname
+    FROM comments c
+    JOIN users u ON u.id = c.author_id
+    LEFT JOIN users rtu ON rtu.id = c.reply_to_user_id"""
+
+
+def _comment_row_to_out(row, replies: list | None = None) -> CommentOut:
+    """Map a comment SELECT row to CommentOut (guards optional JOIN columns,
+    mirroring _post_row_to_out's defensive style)."""
+    return CommentOut(
+        id=row["id"],
+        post_id=row["post_id"],
+        author_id=row["author_id"],
+        content=row["content"],
+        likes_count=row["likes_count"],
+        parent_id=row["parent_id"],
+        reply_to_nickname=(row["reply_to_nickname"] if "reply_to_nickname" in row.keys() else None),
+        image_url=row["image_url"] if "image_url" in row.keys() else None,
+        replies=replies or [],
+        created_at=_fmt_ts(row["created_at"]),
+        author_nickname=row["author_nickname"],
+        author_avatar=row["author_avatar"],
+    )
 
 
 # Anonymous (no-viewer) list_posts responses are identical across clients —
@@ -433,37 +461,53 @@ async def list_comments(
 
         offset = (page - 1) * page_size
 
+        # total counts EVERY comment (top-level + replies) so it stays in sync
+        # with posts.comments_count, which create_comment bumps for both.
         total = (await db.fetchrow(
             "SELECT COUNT(*) AS cnt FROM comments WHERE post_id = $1", post_id
         ))["cnt"]
 
+        # Two-layer tree (评论→回复, WeChat/小红书 style): page over TOP-LEVEL
+        # comments only, then fetch all replies of that page's parents in one
+        # batched query. id tiebreaker keeps same-second rows deterministic.
         rows = await db.fetch(
             f"""SELECT {_COMMENT_COLS}, u.nickname AS author_nickname, u.avatar_url AS author_avatar
                FROM comments c
                JOIN users u ON u.id = c.author_id
-               WHERE c.post_id = $1
-               ORDER BY c.created_at ASC
+               WHERE c.post_id = $1 AND c.parent_id IS NULL
+               ORDER BY c.created_at ASC, c.id ASC
                LIMIT $2 OFFSET $3""",
             post_id, page_size, offset,
         )
 
+        top_total = (await db.fetchrow(
+            "SELECT COUNT(*) AS cnt FROM comments WHERE post_id = $1 AND parent_id IS NULL",
+            post_id,
+        ))["cnt"]
+
+        replies_by_parent: dict[int, list] = {}
+        top_ids = [r["id"] for r in rows]
+        if top_ids:
+            placeholders = ",".join(f"${i+1}" for i in range(len(top_ids)))
+            reply_rows = await db.fetch(
+                f"""{_COMMENT_FETCH}
+                    WHERE c.parent_id IN ({placeholders})
+                    ORDER BY c.created_at ASC, c.id ASC""",
+                *top_ids,
+            )
+            for rr in reply_rows:
+                replies_by_parent.setdefault(rr["parent_id"], []).append(
+                    _comment_row_to_out(rr),
+                )
+
         items = [
-            CommentOut(
-                id=r["id"],
-                post_id=r["post_id"],
-                author_id=r["author_id"],
-                content=r["content"],
-                likes_count=r["likes_count"],
-                created_at=_fmt_ts(r["created_at"]),
-                author_nickname=r["author_nickname"],
-                author_avatar=r["author_avatar"],
-            ).model_dump()
+            _comment_row_to_out(r, replies_by_parent.get(r["id"])).model_dump()
             for r in rows
         ]
 
     return PaginatedResponse(
         items=items, total=total, page=page,
-        page_size=page_size, has_next=(offset + page_size) < total,
+        page_size=page_size, has_next=(offset + page_size) < top_total,
     )
 
 
@@ -479,19 +523,49 @@ async def create_comment(
 ):
     check_rate_limit(f"comment:{user['id']}", max_requests=15, window_seconds=60)
 
+    content = (body.content or "").strip()
+
+    # Image-only comments are allowed, but the image must live in our own
+    # uploads bucket — POST /upload is the only creator of those URLs and it
+    # always runs the img_sec_check gate, so a foreign URL (never scanned)
+    # cannot be attached here.
+    if body.image_url and not is_module_image_url(body.image_url):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid image URL")
+    if not content and not body.image_url:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Comment cannot be empty")
+
     async with get_db() as db:
         exists = await db.fetchval("SELECT id FROM posts WHERE id = $1", post_id)
         if not exists:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Post not found")
 
-        await audit_user_text(user, body.content, SCENE_COMMENT)
+        # Reply resolution: replying to a REPLY hoists to that reply's
+        # top-level parent, so parent_id in the DB always references a
+        # top-level comment (strict two layers). reply_to_user_id keeps the
+        # immediate target's author for the "回复 @xxx" display.
+        parent_id: int | None = None
+        reply_to_user_id: int | None = None
+        if body.parent_id:
+            parent = await db.fetchrow(
+                "SELECT id, post_id, author_id, parent_id FROM comments WHERE id = $1",
+                body.parent_id,
+            )
+            if not parent or parent["post_id"] != post_id:
+                raise HTTPException(status.HTTP_404_NOT_FOUND, "Comment not found")
+            parent_id = parent["parent_id"] or parent["id"]
+            reply_to_user_id = parent["author_id"]
+
+        if content:
+            await audit_user_text(user, content, SCENE_COMMENT)
         now = datetime.now(timezone.utc)
 
         async with db.transaction():
             new_row = await db.fetchrow(
-                """INSERT INTO comments (post_id, author_id, content, created_at)
-                   VALUES ($1, $2, $3, $4) RETURNING id""",
-                post_id, user["id"], body.content, now,
+                """INSERT INTO comments (post_id, author_id, content, parent_id,
+                                          reply_to_user_id, image_url, created_at)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id""",
+                post_id, user["id"], content, parent_id, reply_to_user_id,
+                body.image_url, now,
             )
             comment_id = new_row["id"]
             await db.execute(
@@ -499,21 +573,6 @@ async def create_comment(
                 post_id,
             )
 
-        r = await db.fetchrow(
-            f"""SELECT {_COMMENT_COLS}, u.nickname AS author_nickname, u.avatar_url AS author_avatar
-               FROM comments c
-               JOIN users u ON u.id = c.author_id
-               WHERE c.id = $1""",
-            comment_id,
-        )
+        r = await db.fetchrow(f"{_COMMENT_FETCH} WHERE c.id = $1", comment_id)
 
-    return CommentOut(
-        id=r["id"],
-        post_id=r["post_id"],
-        author_id=r["author_id"],
-        content=r["content"],
-        likes_count=r["likes_count"],
-        created_at=_fmt_ts(r["created_at"]),
-        author_nickname=r["author_nickname"],
-        author_avatar=r["author_avatar"],
-    )
+    return _comment_row_to_out(r)
