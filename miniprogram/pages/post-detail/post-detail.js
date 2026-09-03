@@ -5,11 +5,15 @@ const { formatDate, getInitial } = require("../../utils/format");
 const { normalizePost, resolveUrl, bumpPostsRevision } = require("../../utils/post");
 const { openDMWith } = require("../../utils/dm");
 const { PAGE_SIZE } = require("../../utils/config");
+const { uploadImage } = require("../../utils/upload");
 const report = require("../../utils/report");
 
 // Map a backend CommentOut row into the view shape used by post-detail.wxml.
 // (Moved here from community.js as part of Phase 1 ⑦ — community now links to
 // this page instead of rendering comments inline.)
+// Two-layer comment tree: top-level rows carry normalized `replies`; backend
+// guarantees replies themselves always have an empty replies list, so the
+// recursion below naturally stops at layer two.
 function normalizeComment(comment, text) {
   const authorName = comment.author_nickname || text.defaultAuthor;
 
@@ -21,6 +25,11 @@ function normalizeComment(comment, text) {
     authorAvatar: resolveUrl(comment.author_avatar),
     content: String(comment.content || "").trim(),
     createdAtLabel: formatDate(comment.created_at) || text.justNow,
+    replyToName: comment.reply_to_nickname || "",
+    imageUrl: comment.image_url ? resolveUrl(comment.image_url) : "",
+    replies: Array.isArray(comment.replies)
+      ? comment.replies.map((reply) => normalizeComment(reply, text))
+      : [],
   };
 }
 
@@ -37,6 +46,11 @@ Page({
     commentsLoading: true,
     draft: "",
     submitting: false,
+    // 回复态:null 或 { id, name } —— 指向被回复的评论/回复(后端会把
+    // 回复回复上提到顶级线程,parent_id 只需传点击目标)
+    replyTarget: null,
+    // 评论配图:本地临时路径,提交时才上传(与 compose 页发帖同款流程)
+    commentImage: "",
     locale: getLocale(),
     text: getTexts("postDetail"),
     user: null,
@@ -348,6 +362,59 @@ Page({
     this.setData({ draft: event.detail.value });
   },
 
+  // 点任意评论/回复的「回复」→ 进入回复态(输入栏上方出现提示条)
+  startReply(event) {
+    if (!this.data.user) {
+      wx.navigateTo({ url: "/pages/login/login" });
+      return;
+    }
+    const id = Number(event.currentTarget.dataset.id);
+    const name = event.currentTarget.dataset.name || "";
+    if (!id) return;
+    this.setData({ replyTarget: { id, name } });
+  },
+
+  cancelReply() {
+    this.setData({ replyTarget: null });
+  },
+
+  chooseCommentImage() {
+    if (!this.data.user) {
+      wx.navigateTo({ url: "/pages/login/login" });
+      return;
+    }
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ["image"],
+      sourceType: ["album", "camera"],
+      sizeType: ["compressed"],
+      success: (res) => {
+        const file = res.tempFiles && res.tempFiles[0];
+        if (file) {
+          this.setData({ commentImage: file.tempFilePath });
+        }
+      },
+    });
+  },
+
+  removeCommentImage() {
+    this.setData({ commentImage: "" });
+  },
+
+  // 点评论图放大;urls 收集本页全部评论图,可左右滑动浏览
+  previewCommentImage(event) {
+    const current = event.currentTarget.dataset.url;
+    const urls = [];
+    (this.data.comments || []).forEach((c) => {
+      if (c.imageUrl) urls.push(c.imageUrl);
+      (c.replies || []).forEach((r) => {
+        if (r.imageUrl) urls.push(r.imageUrl);
+      });
+    });
+    if (!urls.length || !urls.includes(current)) return;
+    wx.previewImage({ current, urls });
+  },
+
   submitComment() {
     if (!this.data.user) {
       wx.navigateTo({ url: "/pages/login/login" });
@@ -355,53 +422,81 @@ Page({
     }
 
     const content = (this.data.draft || "").trim();
-    if (!content || this.data.submitting) {
+    const imageTempPath = this.data.commentImage;
+    // 文字和图片至少有一样(纯图评论允许)
+    if ((!content && !imageTempPath) || this.data.submitting) {
       return;
     }
 
     this.setData({ submitting: true });
 
-    request({
-      method: "POST",
-      path: `/posts/${this.data.postId}/comments`,
-      data: { content },
-      auth: true,
-    })
-      .then((comment) => {
-        const rawComments = this.data.rawComments.concat(comment);
-        // Keep the post's comment count label in sync with the new total.
-        const rawPost = Object.assign({}, this.data.rawPost, {
-          comments_count: Math.max(
-            0,
-            Number(this.data.rawPost.comments_count || 0) + 1,
-          ),
-        });
+    const finalize = (imageUrl) => {
+      const data = {
+        content: content || null,
+        image_url: imageUrl,
+      };
+      if (this.data.replyTarget) {
+        data.parent_id = this.data.replyTarget.id;
+      }
 
-        this.setData({
-          rawComments,
-          comments: rawComments.map((item) => normalizeComment(item, this.data.text)),
-          commentsTotal: this.data.commentsTotal + 1,
-          rawPost,
-          post: normalizePost(rawPost, this.data.text),
-          draft: "",
-          submitting: false,
-        });
-
-        // Bump feed revision:返回列表时刷新评论数(home/community 都受益)
-        bumpPostsRevision({ type: "comment", postId: this.data.postId });
-
-        wx.showToast({
-          title: this.data.text.commentSent,
-          icon: "success",
-        });
+      request({
+        method: "POST",
+        path: `/posts/${this.data.postId}/comments`,
+        data,
+        auth: true,
       })
-      .catch((error) => {
-        this.setData({ submitting: false });
-        wx.showToast({
-          title: (error && error.message) || this.data.text.actionFail,
-          icon: "none",
+        .then(() => {
+          // Keep the post's comment count label in sync with the new total.
+          const rawPost = Object.assign({}, this.data.rawPost, {
+            comments_count: Math.max(
+              0,
+              Number(this.data.rawPost.comments_count || 0) + 1,
+            ),
+          });
+
+          this.setData({
+            rawPost,
+            post: normalizePost(rawPost, this.data.text),
+            draft: "",
+            commentImage: "",
+            replyTarget: null,
+            submitting: false,
+          });
+
+          // 重新拉取评论(两层树结构,直接 append 拼不进 replies)
+          this.loadComments();
+
+          // Bump feed revision:返回列表时刷新评论数(home/community 都受益)
+          bumpPostsRevision({ type: "comment", postId: this.data.postId });
+
+          wx.showToast({
+            title: this.data.text.commentSent,
+            icon: "success",
+          });
+        })
+        .catch((error) => {
+          this.setData({ submitting: false });
+          wx.showToast({
+            title: (error && error.message) || this.data.text.actionFail,
+            icon: "none",
+          });
         });
-      });
+    };
+
+    if (imageTempPath) {
+      // 先上传拿公开 URL 再建评论(失败则保留已选图,用户可重试)
+      uploadImage({ filePath: imageTempPath, module: "comments" })
+        .then((url) => finalize(url))
+        .catch((error) => {
+          this.setData({ submitting: false });
+          wx.showToast({
+            title: (error && error.message) || this.data.text.actionFail,
+            icon: "none",
+          });
+        });
+    } else {
+      finalize(null);
+    }
   },
 
   goLogin() {

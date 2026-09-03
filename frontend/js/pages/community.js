@@ -852,44 +852,8 @@ async function _loadComments(postId) {
 
     section.innerHTML = "";
 
-    data.items.forEach((c) => {
-      const row = document.createElement("div");
-      row.className = "comment";
-
-      // Avatar
-      if (c.author_avatar) {
-        const img = document.createElement("img");
-        img.className = "comment-avatar";
-        img.src = c.author_avatar;
-        img.alt = (c.author_nickname || "?")[0].toUpperCase();
-        img.onerror = () => img.replaceWith(_commentAvatarFallback(c));
-        row.appendChild(img);
-      } else {
-        row.appendChild(_commentAvatarFallback(c));
-      }
-
-      const body = document.createElement("div");
-      body.className = "comment-content";
-
-      const meta = document.createElement("div");
-      const nameSpan = document.createElement("span");
-      nameSpan.className = "comment-author";
-      nameSpan.textContent = c.author_nickname;
-      meta.appendChild(nameSpan);
-
-      const timeSpan = document.createElement("span");
-      timeSpan.className = "comment-time";
-      timeSpan.textContent = _timeAgo(c.created_at);
-      meta.appendChild(timeSpan);
-      body.appendChild(meta);
-
-      const text = document.createElement("p");
-      text.textContent = c.content;
-      body.appendChild(text);
-
-      row.appendChild(body);
-      section.appendChild(row);
-    });
+    // Two-layer tree: items are top-level comments, each carrying replies[]
+    data.items.forEach((c) => section.appendChild(_CommentRow(c, postId)));
 
     if (data.items.length === 0) {
       const empty = document.createElement("p");
@@ -920,34 +884,226 @@ async function _loadComments(postId) {
   }
 }
 
+// ── Comment tree components (two-layer: 评论 → 回复) ─────────────────────────
+
+// Reply-target state per open comment section: postId -> {id, name} | null.
+// The 回复 button on any comment/reply sets it; the input's chip reflects it
+// and submit sends it as parent_id (backend hoists reply-to-reply to the
+// top-level thread).
+const _replyTargets = {};
+
+function _setReplyTarget(postId, comment) {
+  _replyTargets[postId] = comment
+    ? { id: comment.id, name: comment.author_nickname || t("community.anonymous") }
+    : null;
+  _syncReplyChip(postId);
+}
+
+function _syncReplyChip(postId) {
+  const section = document.getElementById(`comments-${postId}`);
+  if (!section) return;
+  const chip = section.querySelector(".reply-chip");
+  if (!chip) return;
+  const target = _replyTargets[postId];
+  chip.classList.toggle("hidden", !target);
+  if (target) {
+    chip.querySelector(".reply-chip-text").textContent =
+      t("community.replying_to", { name: target.name });
+  }
+  const input = section.querySelector(".comment-input-row input");
+  if (input) {
+    input.placeholder = target
+      ? t("community.reply_placeholder", { name: target.name })
+      : t("community.write_comment");
+  }
+}
+
+// Text + optional image of a comment/reply. Image links to its 2x variant.
+function _commentBodyContent(comment) {
+  const frag = document.createDocumentFragment();
+
+  if (comment.content) {
+    const text = document.createElement("p");
+    text.textContent = comment.content;
+    frag.appendChild(text);
+  }
+
+  if (comment.image_url) {
+    const link = document.createElement("a");
+    link.href = comment.image_url.replace(/@360\.([a-z]+)$/, "@640.$1");
+    link.target = "_blank";
+    link.rel = "noopener";
+    const img = document.createElement("img");
+    img.src = comment.image_url;
+    img.srcset = responsiveSrcset(comment.image_url, { oneX: 360, twoX: 640 });
+    img.className = "comment-img";
+    img.alt = "";
+    img.loading = "lazy";
+    link.appendChild(img);
+    frag.appendChild(link);
+  }
+
+  return frag;
+}
+
+function _replyButton(postId, comment) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "comment-reply-btn";
+  btn.textContent = t("community.reply");
+  btn.addEventListener("click", () => {
+    _setReplyTarget(postId, comment);
+    const input = document.querySelector(`#comments-${postId} .comment-input-row input`);
+    if (input) input.focus();
+  });
+  return btn;
+}
+
+function _CommentRow(c, postId) {
+  const row = document.createElement("div");
+  row.className = "comment";
+
+  // Avatar
+  if (c.author_avatar) {
+    const img = document.createElement("img");
+    img.className = "comment-avatar";
+    img.src = c.author_avatar;
+    img.alt = (c.author_nickname || "?")[0].toUpperCase();
+    img.onerror = () => img.replaceWith(_commentAvatarFallback(c));
+    row.appendChild(img);
+  } else {
+    row.appendChild(_commentAvatarFallback(c));
+  }
+
+  const body = document.createElement("div");
+  body.className = "comment-content";
+
+  const meta = document.createElement("div");
+  const nameSpan = document.createElement("span");
+  nameSpan.className = "comment-author";
+  nameSpan.textContent = c.author_nickname;
+  meta.appendChild(nameSpan);
+
+  const timeSpan = document.createElement("span");
+  timeSpan.className = "comment-time";
+  timeSpan.textContent = _timeAgo(c.created_at);
+  meta.appendChild(timeSpan);
+
+  meta.appendChild(_replyButton(postId, c));
+  body.appendChild(meta);
+
+  body.appendChild(_commentBodyContent(c));
+
+  if (Array.isArray(c.replies) && c.replies.length) {
+    const repliesWrap = document.createElement("div");
+    repliesWrap.className = "comment-replies";
+    c.replies.forEach((r) => repliesWrap.appendChild(_ReplyRow(r, c, postId)));
+    body.appendChild(repliesWrap);
+  }
+
+  row.appendChild(body);
+  return row;
+}
+
+function _ReplyRow(r, topLevel, postId) {
+  const row = document.createElement("div");
+  row.className = "comment-reply";
+
+  const meta = document.createElement("div");
+  meta.className = "comment-reply-meta";
+
+  const nameSpan = document.createElement("span");
+  nameSpan.className = "comment-author";
+  nameSpan.textContent = r.author_nickname;
+  meta.appendChild(nameSpan);
+
+  // "回复 @xxx" hint — only when replying to someone other than the thread
+  // starter (a direct reply to the top comment doesn't need the label)
+  if (r.reply_to_nickname && r.reply_to_nickname !== topLevel.author_nickname) {
+    const hint = document.createElement("span");
+    hint.className = "reply-hint";
+    hint.textContent = `${t("community.reply")} @${r.reply_to_nickname}`;
+    meta.appendChild(hint);
+  }
+
+  const timeSpan = document.createElement("span");
+  timeSpan.className = "comment-time";
+  timeSpan.textContent = _timeAgo(r.created_at);
+  meta.appendChild(timeSpan);
+
+  meta.appendChild(_replyButton(postId, r));
+
+  row.appendChild(meta);
+  row.appendChild(_commentBodyContent(r));
+  return row;
+}
+
 function _renderCommentInput(section, postId) {
   const form = document.createElement("div");
   form.className = "comment-input";
+
+  // Reply-target chip (visible while replying to someone)
+  const chip = document.createElement("div");
+  chip.className = "reply-chip hidden";
+  const chipText = document.createElement("span");
+  chipText.className = "reply-chip-text";
+  const chipCancel = document.createElement("button");
+  chipCancel.type = "button";
+  chipCancel.className = "reply-chip-cancel";
+  chipCancel.textContent = "✕";
+  chipCancel.title = t("community.cancel_reply");
+  chipCancel.setAttribute("aria-label", t("community.cancel_reply"));
+  chipCancel.addEventListener("click", () => _setReplyTarget(postId, null));
+  chip.appendChild(chipText);
+  chip.appendChild(chipCancel);
+  form.appendChild(chip);
+
+  const row = document.createElement("div");
+  row.className = "comment-input-row";
 
   const input = document.createElement("input");
   input.type = "text";
   input.placeholder = t("community.write_comment");
   input.setAttribute("aria-label", t("community.write_comment"));
 
+  const imageUploader = createImageUploader({ module: "comments", compact: true });
+
   const btn = document.createElement("button");
+  btn.className = "comment-send";
   btn.textContent = t("community.send");
   btn.disabled = true;
 
-  input.addEventListener("input", () => {
-    btn.disabled = !input.value.trim();
-  });
+  // Send is enabled with text OR an attached image (image-only comments OK)
+  const refreshSend = () => {
+    btn.disabled = !(input.value.trim() || imageUploader.getUrl());
+  };
+  input.addEventListener("input", refreshSend);
+  form.addEventListener("img-upload-change", refreshSend);
 
   btn.addEventListener("click", async () => {
     const content = input.value.trim();
-    if (!content) return;
+    const imageUrl = imageUploader.getUrl();
+    const target = _replyTargets[postId];
+    if (!content && !imageUrl) return;
     btn.disabled = true;
     btn.textContent = "...";
 
     try {
-      await api.post(`/posts/${postId}/comments`, { content });
+      await api.post(`/posts/${postId}/comments`, {
+        content: content || null,
+        image_url: imageUrl,
+        parent_id: target ? target.id : null,
+      });
       input.value = "";
+      imageUploader.setUrl(null);
+      _setReplyTarget(postId, null);
       showToast(t("community.comment_posted"), "success");
-      track("comment_created", { post_id: postId, page_context: "community" });
+      track("comment_created", {
+        post_id: postId,
+        page_context: "community",
+        is_reply: !!target,
+        has_image: !!imageUrl,
+      });
       const post = _state.posts.find((p) => p.id === postId);
       if (post) post.comments_count++;
       const card = document.querySelector(`[data-post-id="${postId}"]`);
@@ -960,14 +1116,19 @@ function _renderCommentInput(section, postId) {
     } catch (err) {
       showToast(err.message, "error");
     } finally {
-      btn.disabled = false;
       btn.textContent = t("community.send");
+      refreshSend();
     }
   });
 
-  form.appendChild(input);
-  form.appendChild(btn);
+  row.appendChild(input);
+  row.appendChild(imageUploader.el);
+  row.appendChild(btn);
+  form.appendChild(row);
   section.appendChild(form);
+
+  // Restore chip/placeholder if a reply target survived a re-render
+  _syncReplyChip(postId);
 }
 
 // ── Post Editor Modal ────────────────────────────────────────────────────────

@@ -87,10 +87,54 @@
   color: var(--text-secondary);
 }
 
+/* === Comment replies (two-layer tree) === */
+.comment-replies {
+  margin-top: 14rpx;
+  padding-left: 18rpx;
+  border-left: 4rpx solid var(--divider);
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.comment-reply-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10rpx;
+  flex-wrap: wrap;
+}
+.comment-reply-author {
+  font-size: var(--fs-feed-meta);
+  font-weight: 650;
+  color: var(--text-primary);
+}
+.comment-reply-hint {
+  font-size: var(--fs-link);
+  color: var(--text-secondary);
+}
+.comment-reply-content {
+  margin-top: 4rpx;
+  font-size: var(--fs-feed-body);
+  line-height: 1.5;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+.comment-reply-btn {
+  margin-left: 16rpx;
+  color: var(--text-secondary);
+}
+
+.comment-image {
+  margin-top: 10rpx;
+  width: 320rpx;
+  border-radius: var(--radius-card-md);
+}
+
 /* === Composer === */
 .detail-composer {
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  align-items: stretch;
   gap: 16rpx;
   margin: 24rpx 0 0;
   padding: 20rpx 24rpx;
@@ -98,6 +142,65 @@
   background: var(--surface);
   border: 1rpx solid var(--border-soft);
   box-shadow: var(--shadow-card);
+}
+
+.composer-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 16rpx;
+}
+
+/* 回复态提示条:回复 @xxx ✕ */
+.composer-reply-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10rpx 20rpx;
+  border-radius: var(--radius-pill);
+  background: var(--segmented-bg);
+  font-size: var(--fs-link);
+  color: var(--text-secondary);
+}
+.composer-reply-cancel {
+  padding: 4rpx 12rpx;
+  color: var(--text-secondary);
+  font-size: var(--fs-link);
+}
+
+/* 已选评论图预览(提交时才上传) */
+.composer-image-wrap {
+  position: relative;
+  width: 128rpx;
+  height: 128rpx;
+}
+.composer-image-preview {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: var(--radius-card-md);
+}
+.composer-image-remove {
+  position: absolute;
+  top: -12rpx;
+  right: -12rpx;
+  width: 40rpx;
+  height: 40rpx;
+  line-height: 40rpx;
+  text-align: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #FFFFFF;
+  font-size: 22rpx;
+}
+
+.composer-image-btn {
+  flex-shrink: 0;
+  width: 64rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  text-align: center;
+  border-radius: 50%;
+  background: var(--segmented-bg);
+  font-size: 30rpx;
 }
 
 .comment-textarea {
