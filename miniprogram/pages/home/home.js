@@ -267,9 +267,9 @@ Page({
     });
   },
 
-  // 首页评论图标 → 跳帖子详情(与 community.openDetail 同一入口;
-  // 此前是 UI 预览遗留的「即将接入」toast,用户反馈点不开评论区)
-  openComments(event) {
+  // 首页帖子卡片/评论图标 → 跳帖子详情(与 community.openDetail 同一入口)。
+  // 卡片整体可点与 community 页对齐——此前首页只有评论图标能进,点卡片本体无响应。
+  openDetail(event) {
     const id = event.currentTarget.dataset.id;
     if (!id) {
       return;
