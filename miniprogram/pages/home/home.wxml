@@ -50,7 +50,7 @@
           <image wx:if="{{item.authorAvatar}}" src="{{item.authorAvatar}}" mode="aspectFill" binderror="onAvatarError" data-idx="{{index}}" />
           <view wx:else>{{item.authorInitial}}</view>
         </view>
-        <view class="feed-main">
+        <view class="feed-main" data-id="{{item.id}}" catchtap="openDetail">
           <view class="feed-author-row">
             <view>
               <view class="feed-author">{{item.authorName}}</view>
@@ -66,7 +66,7 @@
               <text class="{{item.likeIconClass}}">{{item.likeIcon}}</text>
               <text class="post-action-count">{{item.likeLabel}}</text>
             </view>
-            <view class="post-action comment-action" data-id="{{item.id}}" catchtap="openComments" hover-class="post-action-press">
+            <view class="post-action comment-action" data-id="{{item.id}}" catchtap="openDetail" hover-class="post-action-press">
               <view class="post-comment-icon">
                 <view class="post-comment-bubble"></view>
                 <view class="post-comment-tail"></view>
