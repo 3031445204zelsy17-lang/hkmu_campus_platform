@@ -20,9 +20,9 @@
   ],
   "window": {
     "navigationBarTitleText": "HKMU Campus",
-    "navigationBarBackgroundColor": "#F7FAF6",
+    "navigationBarBackgroundColor": "#F2F6F1",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#F7FAF6",
+    "backgroundColor": "#F2F6F1",
     "backgroundTextStyle": "dark",
     "navigationStyle": "custom"
   },

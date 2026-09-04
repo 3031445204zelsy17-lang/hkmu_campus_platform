@@ -13,8 +13,8 @@
   box-shadow:
     0 12rpx 34rpx rgba(24, 56, 34, 0.095),
     inset 0 2rpx 0 rgba(255, 255, 255, 0.76);
-  backdrop-filter: blur(36rpx);
-  -webkit-backdrop-filter: blur(36rpx);
+  /* 同 custom-tab-bar：背景几乎不透明，模糊看不出来，但会给这个 fixed 元素单开
+     合成层，每次进页面都要重新合成，切页时会闪。 */
   box-sizing: border-box;
 }
 

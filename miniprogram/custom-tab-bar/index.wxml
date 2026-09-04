@@ -16,11 +16,7 @@
       class="tabbar-item {{displaySelected == index ? 'is-active' : ''}} {{dragging && displaySelected == index ? 'is-drag-target' : ''}} {{pressedIndex == index ? 'is-pressed' : ''}}"
       data-index="{{index}}"
     >
-      <view class="tabbar-icon icon-{{item.key}}">
-        <view class="icon-piece piece-a"></view>
-        <view class="icon-piece piece-b"></view>
-        <view class="icon-piece piece-c"></view>
-      </view>
+      <view class="tabbar-icon icon-{{item.key}}"></view>
       <view wx:if="{{item.key === 'messages' && unread > 0}}" class="tabbar-badge">{{unread > 99 ? '99+' : unread}}</view>
       <view class="tabbar-label">{{item.text}}</view>
     </view>

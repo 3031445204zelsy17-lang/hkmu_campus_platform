@@ -6,10 +6,15 @@
   <view wx:if="{{user}}">
     <!-- 视图模式 -->
     <view wx:if="{{!editing}}" class="profile-card">
-      <view class="avatar large">
-        <image wx:if="{{user.avatar_url}}" src="{{user.avatar_url}}" mode="aspectFill" />
-        <view wx:else>{{user.initial}}</view>
+      <!-- 头像压在封面下缘，编辑入口右对齐同一行，避免它占掉一个主按钮位 -->
+      <view class="profile-topline">
+        <view class="avatar large">
+          <image wx:if="{{user.avatar_url}}" src="{{user.avatar_url}}" mode="aspectFill" />
+          <view wx:else>{{user.initial}}</view>
+        </view>
+        <button class="edit-chip" bindtap="enterEdit">{{text.editAction}}</button>
       </view>
+
       <view class="profile-name">
         {{user.displayName}}
         <view wx:if="{{user.hkmu_verified}}" class="verified-badge">{{text.hkmuVerifiedBadge}}</view>
@@ -30,13 +35,13 @@
 
       <view class="action-row">
         <button class="primary-action" bindtap="goCompose">{{text.composeAction}}</button>
-        <button class="secondary-action" bindtap="enterEdit">{{text.editAction}}</button>
+        <button class="secondary-action" open-type="share">{{text.inviteAction}}</button>
       </view>
 
-      <!-- Phase 5: 社交冷启动(同校验证 + 邀请好友)-->
-      <view class="action-row">
-        <button wx:if="{{!user.hkmu_verified}}" class="secondary-action" bindtap="startBindEmail">{{text.bindEmailAction}}</button>
-        <button class="secondary-action" open-type="share">{{text.inviteAction}}</button>
+      <!-- Phase 5 同校验证：降级成可点提示条，未验证时才出现 -->
+      <view wx:if="{{!user.hkmu_verified}}" class="verify-notice" bindtap="startBindEmail">
+        <view>{{text.bindEmailAction}}</view>
+        <view class="verify-notice-chevron">›</view>
       </view>
 
       <view class="profile-list">
@@ -70,7 +75,7 @@
         </view>
       </view>
 
-      <view class="action-row">
+      <view class="action-row profile-logout">
         <button class="danger-action" bindtap="logout">{{text.logoutAction}}</button>
       </view>
     </view>

@@ -1,5 +1,145 @@
-/* Profile edit mode — page-level styles only, all via tokens.wxss var().
-   View-mode styling lives in app.wxss (profile-card / avatar / action-row …). */
+/* Profile page — page-level styles only, all via tokens.wxss var().
+   Base classes (profile-card / avatar / profile-list / action-row …) come from
+   app.wxss L6; this file overrides the header layout and spacing rhythm. */
+
+/* ── 视图模式：封面 + 头像 ── */
+
+/* -36rpx = 抵消 page-shell 的 --pad-shell 内边距，三边都抵消封面才真正出血。
+   旧值 -24rpx 比内边距小，左右各留了一道白边（见 app.wxss L508）。
+   这里不用 calc(-1 * var(--pad-shell))：负 margin 直接写字面值更稳。 */
+.profile-cover {
+  height: 224rpx;
+  margin: -36rpx -36rpx 0;
+  border-radius: 0 0 var(--radius-card-lg) var(--radius-card-lg);
+}
+
+/* 左右内边距归零，让内容跟 page-shell 对齐；否则叠上 app.wxss L977 的 28rpx
+   会比封面窄一截。 */
+.profile-card {
+  margin-top: -68rpx;
+  padding: 0 0 32rpx;
+}
+
+.profile-topline {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.profile-topline .avatar.large {
+  border: 8rpx solid var(--surface);
+  box-shadow: var(--shadow-avatar);
+}
+
+.edit-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64rpx;
+  padding: 0 30rpx;
+  border: 1rpx solid var(--border-hair);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--green-deep);
+  font-size: var(--fs-link);
+  font-weight: 600;
+  line-height: 1.3;
+  box-shadow: var(--shadow-btn-secondary);
+}
+
+/* ── 视图模式：身份区 ── */
+
+.profile-name {
+  margin-top: 24rpx;
+  font-size: 40rpx;
+  line-height: 1.25;
+}
+
+.profile-handle {
+  margin-top: 8rpx;
+  font-size: var(--fs-feed-meta);
+}
+
+.profile-bio {
+  margin-top: 14rpx;
+  font-size: var(--fs-body);
+  line-height: 1.6;
+}
+
+.profile-stats {
+  gap: 16rpx;
+  margin-top: 30rpx;
+}
+
+/* min-width:0 —— flex 子项默认不肯缩到内容宽度以下，不加这行 value 的
+   text-overflow 不会生效（provider 值可长到 wechat_miniprogram）。 */
+.profile-stat {
+  min-width: 0;
+  padding: 22rpx 24rpx;
+  border-radius: var(--radius-entry);
+}
+
+.profile-stat-value {
+  overflow: hidden;
+  font-size: 29rpx;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.profile-stat-label {
+  margin-top: 6rpx;
+  font-size: var(--fs-pill);
+}
+
+.action-row {
+  margin-top: 24rpx;
+}
+
+/* 同校验证从第 4 个胶囊按钮降级成一条提示，主次分明（主按钮只留“发资讯”） */
+.verify-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  min-height: 88rpx;
+  margin-top: 18rpx;
+  padding: 0 28rpx;
+  border: 1rpx solid var(--border-hair);
+  border-radius: var(--radius-entry);
+  background: var(--pill-green-bg);
+  color: var(--green-deep);
+  font-size: var(--fs-btn);
+  font-weight: 600;
+}
+
+.verify-notice:active {
+  opacity: var(--press-opacity);
+}
+
+.verify-notice-chevron {
+  color: var(--accent-green);
+  font-size: 30rpx;
+  line-height: 1;
+}
+
+/* 内边距归零，让分隔线通到卡片两端（行自带 padding），观感更像原生设置页 */
+.profile-list {
+  margin-top: 30rpx;
+  padding: 0;
+}
+
+.profile-row {
+  align-items: center;
+  padding: 28rpx;
+}
+
+.profile-logout {
+  margin-top: 36rpx;
+}
+
+/* ── 编辑模式 ── */
 
 .avatar-edit-block {
   display: flex;

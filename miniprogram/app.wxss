@@ -2084,6 +2084,23 @@ button:active,
   line-height: 68rpx;
 }
 
+/* .action-row 是 flex + align-items:stretch，行内最高的按钮决定行高。primary 只有
+   68rpx 而 secondary/danger 还带着 L0 的 padding:22rpx（合计 112rpx），被拉伸的
+   primary 仍按 line-height:68rpx 排字，文字就贴在顶部而非居中。统一改成
+   flex 居中 + 同一 padding，行高再变也不会跑偏。 */
+.primary-action,
+.secondary-action,
+.danger-action,
+.wechat-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 88rpx;
+  padding: 0 28rpx;
+  font-size: var(--fs-btn);
+  line-height: 1.3;
+}
+
 .search-dock {
   min-height: 84rpx;
   margin: 0 36rpx 18rpx;

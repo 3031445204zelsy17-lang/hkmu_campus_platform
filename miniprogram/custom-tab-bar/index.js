@@ -104,7 +104,16 @@ Component({
   },
 
   methods: {
+    // 每个页面 onShow 都会经 syncTabBar 调到这里。getTabBarItems 每次返回新数组，
+    // 无条件 setData 会让 wx:for 整组重建 5 个 item（图标 + 文案），切 tab 时闪一下。
+    // 语言没变就只重新量胶囊位置。
     applyLocale(locale = getLocale()) {
+      if (this._appliedLocale === locale) {
+        this.measureCapsule(this.data.displaySelected);
+        return;
+      }
+
+      this._appliedLocale = locale;
       this.setData({
         list: getTabBarItems(locale),
       }, () => this.measureCapsule(this.data.displaySelected));

@@ -5,6 +5,40 @@ const {
   setLocale,
 } = require("../../utils/i18n");
 
+// 量测一次，缓存在模块级。若放在 attached() 里 setData，首帧会先按默认值
+// （statusBarHeight 24 / rightReserve 0）排版，下一帧才跳到真实值 —— 标题栏、
+// 语言开关和下方 headerHeight 占位块同时位移，就是进页面/切 tab 时看到的那一下闪。
+// 模块加载发生在 App.onLaunch 之后，此处调 wx 同步接口是安全的；顺带让五个 tab
+// 页共用同一份结果，不必各自重量一遍。
+function measureHeaderMetrics() {
+  // wx.getSystemInfoSync 已废弃 → wx.getWindowInfo（本项目只用到 statusBarHeight / windowWidth，字段名相同）
+  const info = wx.getWindowInfo();
+  const statusBarHeight = info.statusBarHeight || 24;
+  let navBarHeight = 56;
+  let rightReserve = 96;
+
+  if (wx.getMenuButtonBoundingClientRect) {
+    const menu = wx.getMenuButtonBoundingClientRect();
+    if (menu && menu.height && menu.top) {
+      navBarHeight = Math.max(menu.height + (menu.top - statusBarHeight) * 2, 56);
+    }
+    if (menu && menu.left && info.windowWidth) {
+      rightReserve = Math.max(info.windowWidth - menu.left + 12, 96);
+    }
+  }
+
+  return {
+    headerHeight: statusBarHeight + navBarHeight,
+    languageRight: rightReserve + 8,
+    navBarHeight,
+    rightReserve,
+    statusBarHeight,
+    titleRight: rightReserve + 112,
+  };
+}
+
+const HEADER_METRICS = measureHeaderMetrics();
+
 Component({
   properties: {
     title: {
@@ -19,44 +53,18 @@ Component({
     },
   },
 
-  data: {
-    headerHeight: 104,
+  data: Object.assign({
     languageOptions: LANGUAGE_OPTIONS,
-    languageRight: 108,
     locale: getLocale(),
-    navBarHeight: 56,
-    rightReserve: 0,
-    statusBarHeight: 24,
-    titleRight: 224,
-  },
+  }, HEADER_METRICS),
 
   lifetimes: {
     attached() {
-      // wx.getSystemInfoSync 已废弃 → wx.getWindowInfo（本项目只用到 statusBarHeight / windowWidth，字段名相同）
-      const info = wx.getWindowInfo();
-      const statusBarHeight = info.statusBarHeight || 24;
-      let navBarHeight = 56;
-      let rightReserve = 96;
-
-      if (wx.getMenuButtonBoundingClientRect) {
-        const menu = wx.getMenuButtonBoundingClientRect();
-        if (menu && menu.height && menu.top) {
-          navBarHeight = Math.max(menu.height + (menu.top - statusBarHeight) * 2, 56);
-        }
-        if (menu && menu.left && info.windowWidth) {
-          rightReserve = Math.max(info.windowWidth - menu.left + 12, 96);
-        }
+      // 尺寸已在 data 里就位，这里只补语言：locale 可能在模块加载后被切过。
+      const locale = getLocale();
+      if (locale !== this.data.locale) {
+        this.setData({ locale });
       }
-
-      this.setData({
-        headerHeight: statusBarHeight + navBarHeight,
-        languageRight: rightReserve + 8,
-        locale: getLocale(),
-        navBarHeight,
-        rightReserve,
-        statusBarHeight,
-        titleRight: rightReserve + 112,
-      });
     },
   },
 
