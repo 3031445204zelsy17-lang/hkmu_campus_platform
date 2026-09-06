@@ -14,6 +14,7 @@
 
     <view class="privacy-section-title">{{text.sectionCollect}}</view>
     <view class="privacy-body">{{text.itemAccount}}</view>
+    <view class="privacy-body">{{text.itemOpenid}}</view>
     <view class="privacy-body">{{text.itemVerify}}</view>
     <view class="privacy-body">{{text.itemUsage}}</view>
     <view class="privacy-body">{{text.itemContent}}</view>
