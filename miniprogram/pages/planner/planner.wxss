@@ -940,6 +940,15 @@
   font-weight: 600;
   white-space: nowrap;
 }
+/* GE 本学年不开课(terms=[] 的 16 门,批次1 入池):灰徽标 + 未选时降不透明度;
+   已修过(taken)绿底优先不降透明,「+」照常可标记 */
+.ge-term-off {
+  background: rgba(120, 120, 128, 0.12);
+  color: var(--text-secondary);
+}
+.ge-row-off {
+  opacity: 0.55;
+}
 .ge-search-input {
   background: #ffffff;
   border: 1rpx solid var(--border-hair);
