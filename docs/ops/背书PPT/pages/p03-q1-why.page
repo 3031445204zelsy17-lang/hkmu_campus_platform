@@ -1,0 +1,216 @@
+pageType: content
+background:
+  type: solid
+  color: "#FFFFFF"
+elements:
+  - elementId: kicker
+    elementType: text
+    bounds: [72, 44, 600, 20]
+    content:
+      style: "$kicker"
+      wrap: false
+      align: [left, middle]
+      text: Q1 · 为什么做
+  - elementId: title
+    elementType: text
+    bounds: [72, 70, 1000, 44]
+    content:
+      style: "$pageTitle"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>两个真实痛点,两个对应解法</strong></p>
+  - elementId: title-bar
+    elementType: shape
+    bounds: [72, 126, 64, 4]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: col-head-l
+    elementType: text
+    bounds: [72, 162, 300, 26]
+    content:
+      fontSize: 16
+      color: "$secondary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>痛点</strong></p>
+  - elementId: col-head-r
+    elementType: text
+    bounds: [656, 162, 300, 26]
+    content:
+      fontSize: 16
+      color: "$secondary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>解法</strong></p>
+  - elementId: card-l1
+    elementType: shape
+    bounds: [72, 196, 520, 148]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+  - elementId: card-l1-bar
+    elementType: shape
+    bounds: [72, 196, 4, 148]
+    shapeName: rect
+    fill: {type: solid, color: "$primary"}
+  - elementId: card-l1-title
+    elementType: text
+    bounds: [96, 216, 470, 28]
+    content:
+      fontSize: 20
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>沟通信息分散,不沉淀</strong></p>
+  - elementId: card-l1-desc
+    elementType: text
+    bounds: [96, 252, 460, 66]
+    content:
+      fontSize: 15
+      color: "$secondary"
+      fontFamily: "MiSans"
+      lineHeight: 1.5
+      align: [left, top]
+      text: 消息散在各种临时微信群:新生找不到、搜不到、毕业即带走
+  - elementId: card-l2
+    elementType: shape
+    bounds: [72, 368, 520, 148]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+  - elementId: card-l2-bar
+    elementType: shape
+    bounds: [72, 368, 4, 148]
+    shapeName: rect
+    fill: {type: solid, color: "$primary"}
+  - elementId: card-l2-title
+    elementType: text
+    bounds: [96, 388, 470, 28]
+    content:
+      fontSize: 20
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>选课信息分散,难规划</strong></p>
+  - elementId: card-l2-desc
+    elementType: text
+    bounds: [96, 424, 460, 66]
+    content:
+      fontSize: 15
+      color: "$secondary"
+      fontFamily: "MiSans"
+      lineHeight: 1.5
+      align: [left, top]
+      text: 官方信息散在多份 PDF:学生很难算清「离毕业还差什么」
+  - elementId: arrow-1
+    elementType: icon
+    bounds: [604, 252, 40, 40]
+    iconName: "fas:arrow-right"
+    fill: {type: solid, color: "$accent"}
+  - elementId: arrow-2
+    elementType: icon
+    bounds: [604, 424, 40, 40]
+    iconName: "fas:arrow-right"
+    fill: {type: solid, color: "$accent"}
+  - elementId: card-r1
+    elementType: shape
+    bounds: [656, 196, 552, 148]
+    shapeName: rect
+    fill: {type: solid, color: "$blueSoft"}
+  - elementId: card-r1-bar
+    elementType: shape
+    bounds: [656, 196, 4, 148]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: card-r1-title
+    elementType: text
+    bounds: [680, 216, 500, 28]
+    content:
+      fontSize: 20
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>公开讨论区</strong></p>
+  - elementId: card-r1-desc
+    elementType: text
+    bounds: [680, 252, 500, 66]
+    content:
+      fontSize: 15
+      color: "$secondary"
+      fontFamily: "MiSans"
+      lineHeight: 1.5
+      align: [left, top]
+      text: 课程、校园生活、失物招领、二手信息——可搜索、可沉淀、可传承
+  - elementId: card-r2
+    elementType: shape
+    bounds: [656, 368, 552, 148]
+    shapeName: rect
+    fill: {type: solid, color: "$blueSoft"}
+  - elementId: card-r2-bar
+    elementType: shape
+    bounds: [656, 368, 4, 148]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: card-r2-title
+    elementType: text
+    bounds: [680, 388, 500, 28]
+    content:
+      fontSize: 20
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>选课规划工具</strong></p>
+  - elementId: card-r2-desc
+    elementType: text
+    bounds: [680, 424, 500, 66]
+    content:
+      fontSize: 15
+      color: "$secondary"
+      fontFamily: "MiSans"
+      lineHeight: 1.5
+      align: [left, top]
+      text: 55 个专业毕业规则结构化,支持四年规划,对照官方 advice sheet 逐条核验
+  - elementId: bottom-strip
+    elementType: shape
+    bounds: [72, 560, 1136, 72]
+    shapeName: rect
+    fill: {type: solid, color: "$primary"}
+  - elementId: bottom-strip-text
+    elementType: text
+    bounds: [72, 560, 1136, 72]
+    content:
+      fontSize: 18
+      color: "#FFFFFF"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: 平台由学生自主开发、免费、无商业目的;希望未来能在学校指导下长期持续运营
+  - elementId: footer-left
+    elementType: text
+    bounds: [72, 682, 500, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [left, middle]
+      text: HKMU Campus Platform · 学生自主开发
+  - elementId: footer-right
+    elementType: text
+    bounds: [1080, 682, 128, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [right, middle]
+      text: 03 / 13

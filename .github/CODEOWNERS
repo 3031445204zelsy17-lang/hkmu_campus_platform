@@ -23,6 +23,9 @@
 # 国际化
 /frontend/js/utils/i18n.js @3031445204zelsy17-lang
 
+# iOS App
+/frontend/ios-app/ @3031445204zelsy17-lang
+
 # 失物招领
 /backend/app/routers/lostfound.py @3031445204zelsy17-lang
 /frontend/js/pages/lostfound.js @3031445204zelsy17-lang

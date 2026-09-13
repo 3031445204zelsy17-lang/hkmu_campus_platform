@@ -108,6 +108,7 @@ python scripts/dev.py
 | 部署与运维 | — | — | 司徒 |
 | 首页设计 | — | `js/pages/home.js` | 司徒 |
 | 国际化 | — | `js/utils/i18n.js` | SYF |
+| iOS App | — | `ios-app/` | SYF |
 | 失物招领 | `routers/lostfound.py` | `js/pages/lostfound.js` | SYF |
 | 私信系统 | `routers/messages.py`, `services/websocket_manager.py` | `js/pages/messaging.js` | SYF |
 | 校园新闻 | `routers/news.py` | `js/pages/news.js` | SYF |

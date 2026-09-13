@@ -1,0 +1,215 @@
+pageType: content
+background:
+  type: solid
+  color: "#FFFFFF"
+elements:
+  - elementId: kicker
+    elementType: text
+    bounds: [72, 44, 600, 20]
+    content:
+      style: "$kicker"
+      wrap: false
+      align: [left, middle]
+      text: Q4 · 现状数据
+  - elementId: title
+    elementType: text
+    bounds: [72, 70, 1000, 44]
+    content:
+      style: "$pageTitle"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>现状:如实呈现,不夸大</strong></p>
+  - elementId: title-bar
+    elementType: shape
+    bounds: [72, 126, 64, 4]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: stat1-card
+    elementType: shape
+    bounds: [72, 200, 263, 230]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+  - elementId: stat1-num
+    elementType: text
+    bounds: [96, 232, 215, 64]
+    content:
+      fontSize: 52
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>310</strong></p>
+  - elementId: stat1-label
+    elementType: text
+    bounds: [96, 308, 215, 26]
+    content:
+      fontSize: 17
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>累计用户</strong></p>
+  - elementId: stat1-note
+    elementType: text
+    bounds: [96, 342, 215, 60]
+    content:
+      style: "$small"
+      lineHeight: 1.45
+      align: [left, top]
+      text: 上线以来,真实注册用户
+  - elementId: stat2-card
+    elementType: shape
+    bounds: [363, 200, 263, 230]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+  - elementId: stat2-num
+    elementType: text
+    bounds: [387, 232, 215, 64]
+    content:
+      fontSize: 52
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>5-12</strong></p>
+  - elementId: stat2-label
+    elementType: text
+    bounds: [387, 308, 215, 26]
+    content:
+      fontSize: 17
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>日活(个位数)</strong></p>
+  - elementId: stat2-note
+    elementType: text
+    bounds: [387, 342, 215, 60]
+    content:
+      style: "$small"
+      lineHeight: 1.45
+      align: [left, top]
+      text: 冷启动期,如实呈现
+  - elementId: stat3-card
+    elementType: shape
+    bounds: [654, 200, 263, 230]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+  - elementId: stat3-num
+    elementType: text
+    bounds: [678, 232, 215, 64]
+    content:
+      fontSize: 52
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>3 次</strong></p>
+  - elementId: stat3-label
+    elementType: text
+    bounds: [678, 308, 215, 26]
+    content:
+      fontSize: 17
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>人均日打开</strong></p>
+  - elementId: stat3-note
+    elementType: text
+    bounds: [678, 342, 215, 60]
+    content:
+      style: "$small"
+      lineHeight: 1.45
+      align: [left, top]
+      text: 留存用户粘性,来的都算真用
+  - elementId: stat4-card
+    elementType: shape
+    bounds: [945, 200, 263, 230]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+  - elementId: stat4-num
+    elementType: text
+    bounds: [969, 232, 215, 64]
+    content:
+      fontSize: 52
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>7/7</strong></p>
+  - elementId: stat4-label
+    elementType: text
+    bounds: [969, 308, 215, 26]
+    content:
+      fontSize: 17
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>开学问卷回收</strong></p>
+  - elementId: stat4-note
+    elementType: text
+    bounds: [969, 342, 215, 60]
+    content:
+      style: "$small"
+      lineHeight: 1.45
+      align: [left, top]
+      text: 7 份问卷全部有效,持续回收中
+  - elementId: framework-strip
+    elementType: shape
+    bounds: [72, 490, 1136, 80]
+    shapeName: rect
+    fill: {type: solid, color: "$blueSoft"}
+  - elementId: framework-strip-bar
+    elementType: shape
+    bounds: [72, 490, 4, 80]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: framework-text
+    elementType: text
+    bounds: [72, 490, 1136, 80]
+    content:
+      fontSize: 20
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>冷启动期 · 高粘性 · 零弃用 —— 9 月开学选课季,是明确的增长窗口</strong></p>
+  - elementId: source-note
+    elementType: text
+    bounds: [72, 596, 1136, 20]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [center, middle]
+      text: 数据来源:微信小程序后台与开学问卷,截至 2026-09-03
+  - elementId: footer-left
+    elementType: text
+    bounds: [72, 682, 500, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [left, middle]
+      text: HKMU Campus Platform · 学生自主开发
+  - elementId: footer-right
+    elementType: text
+    bounds: [1080, 682, 128, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [right, middle]
+      text: 06 / 13

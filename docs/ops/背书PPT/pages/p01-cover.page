@@ -1,0 +1,73 @@
+pageType: cover
+background:
+  type: gradient
+  gradientType: linear
+  angle: 135
+  stops:
+    - {position: 0, color: "$primary"}
+    - {position: 1, color: "$primaryDeep"}
+elements:
+  - elementId: deco-ring-1
+    elementType: shape
+    bounds: [880, 20, 360, 360]
+    shapeName: donut
+    adjustments: [4000]
+    fill: {type: solid, color: "#FFFFFF0D"}
+  - elementId: deco-ring-2
+    elementType: shape
+    bounds: [940, 380, 300, 300]
+    shapeName: donut
+    adjustments: [5000]
+    fill: {type: solid, color: "#FFFFFF08"}
+  - elementId: deco-dot
+    elementType: shape
+    bounds: [900, 540, 14, 14]
+    shapeName: ellipse
+    fill: {type: solid, color: "$accent"}
+  - elementId: brand
+    elementType: text
+    bounds: [110, 80, 500, 22]
+    content:
+      fontSize: 14
+      color: "#FFFFFF80"
+      fontFamily: "MiSans"
+      letterSpacing: 4
+      wrap: false
+      align: [left, middle]
+      text: HKMU CAMPUS PLATFORM
+  - elementId: main-title
+    elementType: text
+    bounds: [110, 256, 760, 84]
+    content:
+      fontSize: 60
+      color: "#FFFFFF"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>HKMU Campus Platform</strong></p>
+  - elementId: title-bar
+    elementType: shape
+    bounds: [114, 362, 72, 6]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: sub-title
+    elementType: text
+    bounds: [110, 392, 800, 36]
+    content:
+      fontSize: 24
+      color: "#D8E4F2"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: 由学生自主开发的一站式校园平台
+  - elementId: meta
+    elementType: text
+    bounds: [110, 612, 760, 24]
+    content:
+      fontSize: 15
+      color: "#9FB4CF"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: 汇报人:SYF    |    2026 年 9 月 5 日    |    官方背书申请汇报
