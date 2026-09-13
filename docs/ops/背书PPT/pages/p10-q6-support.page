@@ -1,0 +1,173 @@
+pageType: content
+background:
+  type: solid
+  color: "#FFFFFF"
+elements:
+  - elementId: kicker
+    elementType: text
+    bounds: [72, 44, 600, 20]
+    content:
+      style: "$kicker"
+      wrap: false
+      align: [left, middle]
+      text: Q6 · 希望的支持
+  - elementId: title
+    elementType: text
+    bounds: [72, 70, 1000, 44]
+    content:
+      style: "$pageTitle"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>支持优先级:渠道,比资金更有价值</strong></p>
+  - elementId: title-bar
+    elementType: shape
+    bounds: [72, 126, 64, 4]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: rank-1
+    elementType: text
+    bounds: [72, 210, 56, 60]
+    content:
+      fontSize: 24
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>01</strong></p>
+  - elementId: bar-1
+    elementType: shape
+    bounds: [150, 210, 830, 60]
+    shapeName: rect
+    fill: {type: solid, color: "$primary"}
+  - elementId: bar-1-text
+    elementType: text
+    bounds: [178, 210, 770, 60]
+    content:
+      fontSize: 18
+      color: "#FFFFFF"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>官方信任与渠道</strong> · 现阶段最优先</p>
+  - elementId: rank-2
+    elementType: text
+    bounds: [72, 294, 56, 60]
+    content:
+      fontSize: 24
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>02</strong></p>
+  - elementId: bar-2
+    elementType: shape
+    bounds: [150, 294, 670, 60]
+    shapeName: rect
+    fill: {type: solid, color: "#31588F"}
+  - elementId: bar-2-text
+    elementType: text
+    bounds: [178, 294, 610, 60]
+    content:
+      fontSize: 18
+      color: "#FFFFFF"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>法务复核</strong> · 用户协议专业把关</p>
+  - elementId: rank-3
+    elementType: text
+    bounds: [72, 378, 56, 60]
+    content:
+      fontSize: 24
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>03</strong></p>
+  - elementId: bar-3
+    elementType: shape
+    bounds: [150, 378, 510, 60]
+    shapeName: rect
+    fill: {type: solid, color: "#4E79AC"}
+  - elementId: bar-3-text
+    elementType: text
+    bounds: [178, 378, 450, 60]
+    content:
+      fontSize: 18
+      color: "#FFFFFF"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>新生触达渠道</strong> · 迎新场景</p>
+  - elementId: rank-4
+    elementType: text
+    bounds: [72, 462, 56, 60]
+    content:
+      fontSize: 24
+      color: "$secondary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>04</strong></p>
+  - elementId: bar-4
+    elementType: shape
+    bounds: [150, 462, 350, 60]
+    shapeName: rect
+    fill: {type: solid, color: "$blueSoft"}
+  - elementId: bar-4-text
+    elementType: text
+    bounds: [178, 462, 300, 60]
+    content:
+      fontSize: 18
+      color: "$secondary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: 资金 · 暂不需要
+  - elementId: bottom-note-bar
+    elementType: shape
+    bounds: [72, 576, 1136, 64]
+    shapeName: rect
+    fill: {type: solid, color: "$blueSoft"}
+  - elementId: bottom-note-accent
+    elementType: shape
+    bounds: [72, 576, 4, 64]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: bottom-note
+    elementType: text
+    bounds: [72, 576, 1136, 64]
+    content:
+      fontSize: 20
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>对现阶段而言,一条迎新渠道,比一笔资金更有价值</strong></p>
+  - elementId: footer-left
+    elementType: text
+    bounds: [72, 682, 500, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [left, middle]
+      text: HKMU Campus Platform · 学生自主开发
+  - elementId: footer-right
+    elementType: text
+    bounds: [1080, 682, 128, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [right, middle]
+      text: 10 / 13

@@ -1,0 +1,183 @@
+pageType: content
+background:
+  type: solid
+  color: "#FFFFFF"
+elements:
+  - elementId: kicker
+    elementType: text
+    bounds: [72, 44, 600, 20]
+    content:
+      style: "$kicker"
+      wrap: false
+      align: [left, middle]
+      text: Q2 · 面向群体
+  - elementId: title
+    elementType: text
+    bounds: [72, 70, 1000, 44]
+    content:
+      style: "$pageTitle"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>只服务 HKMU 在读学生,不面向公众</strong></p>
+  - elementId: title-bar
+    elementType: shape
+    bounds: [72, 126, 64, 4]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: lead
+    elementType: text
+    bounds: [72, 158, 1136, 30]
+    content:
+      style: "$body"
+      fontSize: 19
+      wrap: false
+      align: [center, middle]
+      text: 平台只对 HKMU 在读学生开放,无校外运营内容
+  - elementId: card-1
+    elementType: shape
+    bounds: [212, 214, 400, 196]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+  - elementId: card-1-icon
+    elementType: icon
+    bounds: [388, 244, 48, 48]
+    iconName: "fas:book-open-reader"
+    fill: {type: solid, color: "$primary"}
+  - elementId: card-1-title
+    elementType: text
+    bounds: [212, 308, 400, 32]
+    content:
+      fontSize: 22
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>本科生</strong></p>
+  - elementId: card-1-sub
+    elementType: text
+    bounds: [212, 346, 400, 24]
+    content:
+      style: "$small"
+      fontSize: 14
+      wrap: false
+      align: [center, middle]
+      text: 本科在读学生
+  - elementId: card-2
+    elementType: shape
+    bounds: [668, 214, 400, 196]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+  - elementId: card-2-icon
+    elementType: icon
+    bounds: [844, 244, 48, 48]
+    iconName: "fas:user-graduate"
+    fill: {type: solid, color: "$primary"}
+  - elementId: card-2-title
+    elementType: text
+    bounds: [668, 308, 400, 32]
+    content:
+      fontSize: 22
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>研究生</strong></p>
+  - elementId: card-2-sub
+    elementType: text
+    bounds: [668, 346, 400, 24]
+    content:
+      style: "$small"
+      fontSize: 14
+      wrap: false
+      align: [center, middle]
+      text: 硕士、博士在读学生
+  - elementId: chip-1
+    elementType: shape
+    bounds: [172, 470, 280, 110]
+    shapeName: rect
+    fill: {type: solid, color: "#FFFFFF"}
+    border: {style: solid, width: 1, color: "$line"}
+  - elementId: chip-1-icon
+    elementType: icon
+    bounds: [200, 502, 30, 30]
+    iconName: "fas:ban"
+    fill: {type: solid, color: "$secondary"}
+  - elementId: chip-1-text
+    elementType: text
+    bounds: [244, 486, 190, 62]
+    content:
+      fontSize: 16
+      color: "$text"
+      fontFamily: "MiSans"
+      lineHeight: 1.4
+      align: [left, middle]
+      text: |
+        <p><strong>不面向公众</strong></p>
+        <p><span style="font-size:12px; color:$secondary">仅校内学生使用</span></p>
+  - elementId: chip-2
+    elementType: shape
+    bounds: [500, 470, 280, 110]
+    shapeName: rect
+    fill: {type: solid, color: "#FFFFFF"}
+    border: {style: solid, width: 1, color: "$line"}
+  - elementId: chip-2-icon
+    elementType: icon
+    bounds: [528, 502, 30, 30]
+    iconName: "fas:ban"
+    fill: {type: solid, color: "$secondary"}
+  - elementId: chip-2-text
+    elementType: text
+    bounds: [572, 486, 190, 62]
+    content:
+      fontSize: 16
+      color: "$text"
+      fontFamily: "MiSans"
+      lineHeight: 1.4
+      align: [left, middle]
+      text: |
+        <p><strong>无校外运营</strong></p>
+        <p><span style="font-size:12px; color:$secondary">内容仅限校园话题</span></p>
+  - elementId: chip-3
+    elementType: shape
+    bounds: [828, 470, 280, 110]
+    shapeName: rect
+    fill: {type: solid, color: "#FFFFFF"}
+    border: {style: solid, width: 1, color: "$line"}
+  - elementId: chip-3-icon
+    elementType: icon
+    bounds: [856, 502, 30, 30]
+    iconName: "fas:ban"
+    fill: {type: solid, color: "$secondary"}
+  - elementId: chip-3-text
+    elementType: text
+    bounds: [900, 486, 190, 62]
+    content:
+      fontSize: 16
+      color: "$text"
+      fontFamily: "MiSans"
+      lineHeight: 1.4
+      align: [left, middle]
+      text: |
+        <p><strong>无商业目的</strong></p>
+        <p><span style="font-size:12px; color:$secondary">免费,不接广告</span></p>
+  - elementId: footer-left
+    elementType: text
+    bounds: [72, 682, 500, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [left, middle]
+      text: HKMU Campus Platform · 学生自主开发
+  - elementId: footer-right
+    elementType: text
+    bounds: [1080, 682, 128, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [right, middle]
+      text: 04 / 13

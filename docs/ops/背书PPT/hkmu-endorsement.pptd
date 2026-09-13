@@ -1,0 +1,46 @@
+title: HKMU Campus Platform · 官方背书汇报
+size: [1280, 720]
+theme:
+  colors:
+    primary: "#163B6E"
+    primaryDeep: "#0E2A50"
+    blueSoft: "#E9F1FA"
+    accent: "#1FA383"
+    bgSoft: "#F6F9FD"
+    text: "#22314A"
+    secondary: "#5D6F88"
+    line: "#D9E3EF"
+  textStyles:
+    pageTitle:
+      fontSize: 30
+      color: "$primary"
+      fontFamily: "MiSans"
+    kicker:
+      fontSize: 13
+      color: "$accent"
+      fontFamily: "MiSans"
+      letterSpacing: 3
+    body:
+      fontSize: 18
+      color: "$text"
+      fontFamily: "MiSans"
+      lineHeight: 1.55
+    small:
+      fontSize: 13
+      color: "$secondary"
+      fontFamily: "MiSans"
+      lineHeight: 1.4
+pages:
+  - pages/p01-cover.page
+  - pages/p02-toc.page
+  - pages/p03-q1-why.page
+  - pages/p04-q2-users.page
+  - pages/p05-q3-privacy.page
+  - pages/p06-q4-data.page
+  - pages/p07-q4-growth.page
+  - pages/p08-q5-arch.page
+  - pages/p09-q6-plan.page
+  - pages/p10-q6-support.page
+  - pages/p11-q7-asks.page
+  - pages/p12-timeline.page
+  - pages/p13-final.page

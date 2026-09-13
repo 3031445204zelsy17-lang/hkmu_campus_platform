@@ -1,0 +1,162 @@
+pageType: content
+background:
+  type: solid
+  color: "#FFFFFF"
+elements:
+  - elementId: kicker
+    elementType: text
+    bounds: [72, 44, 600, 20]
+    content:
+      style: "$kicker"
+      wrap: false
+      align: [left, middle]
+      text: 时间窗口
+  - elementId: title
+    elementType: text
+    bounds: [72, 70, 1100, 44]
+    content:
+      style: "$pageTitle"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>选课高峰在开学前两周,全年仅此一次</strong></p>
+  - elementId: title-bar
+    elementType: shape
+    bounds: [72, 126, 64, 4]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: lead
+    elementType: text
+    bounds: [72, 168, 1136, 32]
+    content:
+      style: "$body"
+      fontSize: 19
+      wrap: false
+      align: [center, middle]
+      text: 选课 add/drop 高峰集中在开学前两周——是全年最大的需求窗口
+  - elementId: tl-line
+    elementType: shape
+    bounds: [160, 400, 960, 0]
+    shapeName: straightConnector1
+    border: {style: solid, width: 2, color: "$line"}
+  - elementId: node-1
+    elementType: shape
+    bounds: [232, 392, 16, 16]
+    shapeName: ellipse
+    fill: {type: solid, color: "$primary"}
+  - elementId: node-1-label
+    elementType: text
+    bounds: [140, 348, 200, 28]
+    content:
+      fontSize: 17
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>现在 · 9 月初</strong></p>
+  - elementId: node-1-sub
+    elementType: text
+    bounds: [140, 424, 200, 24]
+    content:
+      style: "$small"
+      fontSize: 13
+      wrap: false
+      align: [center, middle]
+      text: 恳请背书流程启动
+  - elementId: node-2
+    elementType: shape
+    bounds: [622, 382, 36, 36]
+    shapeName: ellipse
+    fill: {type: solid, color: "$accent"}
+  - elementId: node-2-label
+    elementType: text
+    bounds: [500, 296, 280, 32]
+    content:
+      fontSize: 22
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>开学 · 选课高峰</strong></p>
+  - elementId: node-2-sub1
+    elementType: text
+    bounds: [500, 332, 280, 24]
+    content:
+      fontSize: 14
+      color: "$secondary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: 开学前两周,需求最集中
+  - elementId: node-2-sub2
+    elementType: text
+    bounds: [500, 436, 280, 24]
+    content:
+      fontSize: 14
+      color: "$accent"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>需求窗口,全年仅此一次</strong></p>
+  - elementId: node-3
+    elementType: shape
+    bounds: [1032, 392, 16, 16]
+    shapeName: ellipse
+    fill: {type: solid, color: "$line"}
+  - elementId: node-3-label
+    elementType: text
+    bounds: [940, 348, 200, 28]
+    content:
+      fontSize: 17
+      color: "$secondary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>窗口之后</strong></p>
+  - elementId: node-3-sub
+    elementType: text
+    bounds: [940, 424, 200, 24]
+    content:
+      style: "$small"
+      fontSize: 13
+      wrap: false
+      align: [center, middle]
+      text: 错过再等一年
+  - elementId: ask-bar
+    elementType: shape
+    bounds: [72, 540, 1136, 80]
+    shapeName: rect
+    fill: {type: solid, color: "$primary"}
+  - elementId: ask-bar-text
+    elementType: text
+    bounds: [72, 540, 1136, 80]
+    content:
+      fontSize: 20
+      color: "#FFFFFF"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>恳请学校在两周内,明确背书流程与时间预期</strong></p>
+  - elementId: footer-left
+    elementType: text
+    bounds: [72, 682, 500, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [left, middle]
+      text: HKMU Campus Platform · 学生自主开发
+  - elementId: footer-right
+    elementType: text
+    bounds: [1080, 682, 128, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [right, middle]
+      text: 12 / 13

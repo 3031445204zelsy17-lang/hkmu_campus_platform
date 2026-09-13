@@ -1,0 +1,224 @@
+pageType: content
+background:
+  type: solid
+  color: "#FFFFFF"
+elements:
+  - elementId: kicker
+    elementType: text
+    bounds: [72, 44, 600, 20]
+    content:
+      style: "$kicker"
+      wrap: false
+      align: [left, middle]
+      text: Q6 · 规划与成本
+  - elementId: title
+    elementType: text
+    bounds: [72, 70, 1000, 44]
+    content:
+      style: "$pageTitle"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>节奏清晰:服务先行,不申请资金</strong></p>
+  - elementId: title-bar
+    elementType: shape
+    bounds: [72, 126, 64, 4]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: short-head
+    elementType: text
+    bounds: [72, 186, 400, 28]
+    content:
+      fontSize: 18
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>短期 · 本学期</strong></p>
+  - elementId: short-i1-dot
+    elementType: shape
+    bounds: [76, 238, 8, 8]
+    shapeName: ellipse
+    fill: {type: solid, color: "$accent"}
+  - elementId: short-i1
+    elementType: text
+    bounds: [100, 226, 600, 32]
+    content:
+      fontSize: 17
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: 选课季服务保障(全年最大需求窗口)
+  - elementId: short-i2-dot
+    elementType: shape
+    bounds: [76, 278, 8, 8]
+    shapeName: ellipse
+    fill: {type: solid, color: "$accent"}
+  - elementId: short-i2
+    elementType: text
+    bounds: [100, 266, 600, 32]
+    content:
+      fontSize: 17
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: 订阅消息召回沉默用户
+  - elementId: short-i3-dot
+    elementType: shape
+    bounds: [76, 318, 8, 8]
+    shapeName: ellipse
+    fill: {type: solid, color: "$accent"}
+  - elementId: short-i3
+    elementType: text
+    bounds: [100, 306, 600, 32]
+    content:
+      fontSize: 17
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: 匿名课评(正用问卷验证需求)
+  - elementId: short-i4-dot
+    elementType: shape
+    bounds: [76, 358, 8, 8]
+    shapeName: ellipse
+    fill: {type: solid, color: "$accent"}
+  - elementId: short-i4
+    elementType: text
+    bounds: [100, 346, 600, 32]
+    content:
+      fontSize: 17
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: 小程序与网页版双端功能对齐
+  - elementId: mid-divider
+    elementType: shape
+    bounds: [72, 412, 640, 0]
+    shapeName: straightConnector1
+    border: {style: solid, width: 1, color: "$line"}
+  - elementId: mid-head
+    elementType: text
+    bounds: [72, 438, 400, 28]
+    content:
+      fontSize: 18
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>中期</strong></p>
+  - elementId: mid-i1-dot
+    elementType: shape
+    bounds: [76, 490, 8, 8]
+    shapeName: ellipse
+    fill: {type: solid, color: "$accent"}
+  - elementId: mid-i1
+    elementType: text
+    bounds: [100, 478, 600, 32]
+    content:
+      fontSize: 17
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: iOS 版(技术评估已完成)
+  - elementId: mid-i2-dot
+    elementType: shape
+    bounds: [76, 530, 8, 8]
+    shapeName: ellipse
+    fill: {type: solid, color: "$accent"}
+  - elementId: mid-i2
+    elementType: text
+    bounds: [100, 518, 600, 32]
+    content:
+      fontSize: 17
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: 课表工具(问卷验证中)
+  - elementId: cost-card
+    elementType: shape
+    bounds: [760, 186, 448, 366]
+    shapeName: rect
+    fill: {type: solid, color: "$primary"}
+  - elementId: cost-label
+    elementType: text
+    bounds: [800, 226, 368, 24]
+    content:
+      fontSize: 15
+      color: "#B9CCE4"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: 运营成本
+  - elementId: cost-num
+    elementType: text
+    bounds: [800, 262, 368, 60]
+    content:
+      fontSize: 40
+      color: "#FFFFFF"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>≈ 15 美元 / 月</strong></p>
+  - elementId: cost-note
+    elementType: text
+    bounds: [800, 340, 368, 64]
+    content:
+      fontSize: 15
+      color: "#D8E4F2"
+      fontFamily: "MiSans"
+      lineHeight: 1.6
+      align: [left, top]
+      text: 服务器等全部运营成本极低,可由学生自付
+  - elementId: cost-badge
+    elementType: shape
+    bounds: [800, 452, 200, 52]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: cost-badge-text
+    elementType: text
+    bounds: [800, 452, 200, 52]
+    content:
+      fontSize: 18
+      color: "#FFFFFF"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>不申请资金</strong></p>
+  - elementId: bottom-note
+    elementType: text
+    bounds: [72, 588, 1136, 40]
+    content:
+      fontSize: 16
+      color: "$secondary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: 规划全部围绕学生真实需求推进,成本极低、风险可控
+  - elementId: footer-left
+    elementType: text
+    bounds: [72, 682, 500, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [left, middle]
+      text: HKMU Campus Platform · 学生自主开发
+  - elementId: footer-right
+    elementType: text
+    bounds: [1080, 682, 128, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [right, middle]
+      text: 09 / 13

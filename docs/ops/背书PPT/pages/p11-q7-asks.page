@@ -1,0 +1,220 @@
+pageType: content
+background:
+  type: solid
+  color: "#FFFFFF"
+elements:
+  - elementId: kicker
+    elementType: text
+    bounds: [72, 44, 600, 20]
+    content:
+      style: "$kicker"
+      wrap: false
+      align: [left, middle]
+      text: Q7 · 阻碍与请求
+  - elementId: title
+    elementType: text
+    bounds: [72, 70, 1000, 44]
+    content:
+      style: "$pageTitle"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>四个阻碍,第一件只有学校能解决</strong></p>
+  - elementId: title-bar
+    elementType: shape
+    bounds: [72, 126, 64, 4]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: card-1
+    elementType: shape
+    bounds: [72, 186, 556, 168]
+    shapeName: rect
+    fill: {type: solid, color: "#FFFFFF"}
+    border: {style: solid, width: 2, color: "$accent"}
+  - elementId: card-1-num
+    elementType: text
+    bounds: [96, 206, 40, 28]
+    content:
+      fontSize: 20
+      color: "$accent"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>①</strong></p>
+  - elementId: card-1-title
+    elementType: text
+    bounds: [140, 206, 460, 28]
+    content:
+      fontSize: 19
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>非官方身份的信任缺口</strong></p>
+  - elementId: card-1-desc
+    elementType: text
+    bounds: [140, 240, 460, 52]
+    content:
+      fontSize: 15
+      color: "$secondary"
+      fontFamily: "MiSans"
+      lineHeight: 1.5
+      align: [left, top]
+      text: 学生「不敢发、不敢信」,是冷启动的第一障碍
+  - elementId: card-1-badge
+    elementType: shape
+    bounds: [140, 304, 190, 32]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: card-1-badge-text
+    elementType: text
+    bounds: [140, 304, 190, 32]
+    content:
+      fontSize: 13
+      color: "#FFFFFF"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: 官方背书可直接解决
+  - elementId: card-2
+    elementType: shape
+    bounds: [652, 186, 556, 168]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+  - elementId: card-2-num
+    elementType: text
+    bounds: [676, 206, 40, 28]
+    content:
+      fontSize: 20
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>②</strong></p>
+  - elementId: card-2-title
+    elementType: text
+    bounds: [720, 206, 460, 28]
+    content:
+      fontSize: 19
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>新生触达渠道</strong></p>
+  - elementId: card-2-desc
+    elementType: text
+    bounds: [720, 240, 460, 52]
+    content:
+      fontSize: 15
+      color: "$secondary"
+      fontFamily: "MiSans"
+      lineHeight: 1.5
+      align: [left, top]
+      text: 往年仅靠同学个人分享,触达不到每年入学的新生
+  - elementId: card-3
+    elementType: shape
+    bounds: [72, 378, 556, 168]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+  - elementId: card-3-num
+    elementType: text
+    bounds: [96, 398, 40, 28]
+    content:
+      fontSize: 20
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>③</strong></p>
+  - elementId: card-3-title
+    elementType: text
+    bounds: [140, 398, 460, 28]
+    content:
+      fontSize: 19
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>法务复核</strong></p>
+  - elementId: card-3-desc
+    elementType: text
+    bounds: [140, 432, 460, 52]
+    content:
+      fontSize: 15
+      color: "$secondary"
+      fontFamily: "MiSans"
+      lineHeight: 1.5
+      align: [left, top]
+      text: 用户协议需要专业把关,恳请学校法务支持
+  - elementId: card-4
+    elementType: shape
+    bounds: [652, 378, 556, 168]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+  - elementId: card-4-num
+    elementType: text
+    bounds: [676, 398, 40, 28]
+    content:
+      fontSize: 20
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>④</strong></p>
+  - elementId: card-4-title
+    elementType: text
+    bounds: [720, 398, 460, 28]
+    content:
+      fontSize: 19
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>内容治理协同</strong></p>
+  - elementId: card-4-desc
+    elementType: text
+    bounds: [720, 432, 460, 52]
+    content:
+      fontSize: 15
+      color: "$secondary"
+      fontFamily: "MiSans"
+      lineHeight: 1.5
+      align: [left, top]
+      text: 平台已合规运营,愿意配合学校建立监督机制
+  - elementId: bottom-note
+    elementType: text
+    bounds: [72, 586, 1136, 40]
+    content:
+      fontSize: 17
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>其中第一项,正是官方背书能直接解决的</strong></p>
+  - elementId: footer-left
+    elementType: text
+    bounds: [72, 682, 500, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [left, middle]
+      text: HKMU Campus Platform · 学生自主开发
+  - elementId: footer-right
+    elementType: text
+    bounds: [1080, 682, 128, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [right, middle]
+      text: 11 / 13

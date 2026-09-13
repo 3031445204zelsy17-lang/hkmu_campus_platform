@@ -1,0 +1,73 @@
+pageType: final
+background:
+  type: gradient
+  gradientType: linear
+  angle: 135
+  stops:
+    - {position: 0, color: "$primary"}
+    - {position: 1, color: "$primaryDeep"}
+elements:
+  - elementId: deco-ring-1
+    elementType: shape
+    bounds: [24, 460, 240, 240]
+    shapeName: donut
+    adjustments: [4000]
+    fill: {type: solid, color: "#FFFFFF0A"}
+  - elementId: deco-ring-2
+    elementType: shape
+    bounds: [980, 420, 260, 260]
+    shapeName: donut
+    adjustments: [5000]
+    fill: {type: solid, color: "#FFFFFF08"}
+  - elementId: deco-dot
+    elementType: shape
+    bounds: [360, 180, 14, 14]
+    shapeName: ellipse
+    fill: {type: solid, color: "$accent"}
+  - elementId: kicker
+    elementType: text
+    bounds: [440, 190, 400, 24]
+    content:
+      fontSize: 14
+      color: "#8FB8DF"
+      fontFamily: "MiSans"
+      letterSpacing: 4
+      wrap: false
+      align: [center, middle]
+      text: THANK YOU · 感谢聆听
+  - elementId: main-line
+    elementType: text
+    bounds: [140, 250, 1000, 130]
+    content:
+      color: "#FFFFFF"
+      fontFamily: "MiSans"
+      lineHeight: 1.5
+      align: [center, middle]
+      text: |
+        <p><span style="font-size:26px; color:#D8E4F2">学生自建 · 合规运营 · 数据核验</span></p>
+        <p style="margin-top:16px"><span style="font-size:42px"><strong>等待一个官方认可的机会</strong></span></p>
+  - elementId: accent-bar
+    elementType: shape
+    bounds: [604, 412, 72, 6]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: thanks
+    elementType: text
+    bounds: [440, 452, 400, 30]
+    content:
+      fontSize: 18
+      color: "#D8E4F2"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: 感谢聆听,恳请指导
+  - elementId: meta
+    elementType: text
+    bounds: [340, 600, 600, 24]
+    content:
+      fontSize: 14
+      color: "#9FB4CF"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: HKMU Campus Platform · 汇报人:SYF · 2026-09-05

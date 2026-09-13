@@ -1,0 +1,216 @@
+pageType: content
+background:
+  type: solid
+  color: "#FFFFFF"
+elements:
+  - elementId: kicker
+    elementType: text
+    bounds: [72, 44, 600, 20]
+    content:
+      style: "$kicker"
+      wrap: false
+      align: [left, middle]
+      text: Q3 · 隐私与合规
+  - elementId: title
+    elementType: text
+    bounds: [72, 70, 1000, 44]
+    content:
+      style: "$pageTitle"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>隐私与合规:五项已落地,一项恳请复核</strong></p>
+  - elementId: title-bar
+    elementType: shape
+    bounds: [72, 126, 64, 4]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: row1-icon
+    elementType: icon
+    bounds: [96, 200, 32, 32]
+    iconName: "fas:circle-check"
+    fill: {type: solid, color: "$accent"}
+  - elementId: row1-title
+    elementType: text
+    bounds: [148, 188, 380, 56]
+    content:
+      fontSize: 19
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>隐私政策与用户协议已上线</strong></p>
+  - elementId: row1-desc
+    elementType: text
+    bounds: [560, 188, 640, 56]
+    content:
+      fontSize: 15
+      color: "$secondary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: 平台内可随时查阅,注册即明确告知
+  - elementId: row1-line
+    elementType: shape
+    bounds: [96, 252, 1112, 0]
+    shapeName: straightConnector1
+    border: {style: solid, width: 1, color: "$line"}
+  - elementId: row2-icon
+    elementType: icon
+    bounds: [96, 266, 32, 32]
+    iconName: "fas:circle-check"
+    fill: {type: solid, color: "$accent"}
+  - elementId: row2-title
+    elementType: text
+    bounds: [148, 254, 380, 56]
+    content:
+      fontSize: 19
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>数据最小化收集</strong></p>
+  - elementId: row2-desc
+    elementType: text
+    bounds: [560, 254, 640, 56]
+    content:
+      fontSize: 15
+      color: "$secondary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: 不收集身份证、手机号、位置信息
+  - elementId: row2-line
+    elementType: shape
+    bounds: [96, 318, 1112, 0]
+    shapeName: straightConnector1
+    border: {style: solid, width: 1, color: "$line"}
+  - elementId: row3-icon
+    elementType: icon
+    bounds: [96, 332, 32, 32]
+    iconName: "fas:circle-check"
+    fill: {type: solid, color: "$accent"}
+  - elementId: row3-title
+    elementType: text
+    bounds: [148, 320, 380, 56]
+    content:
+      fontSize: 19
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>内容审核全场景接入</strong></p>
+  - elementId: row3-desc
+    elementType: text
+    bounds: [560, 320, 640, 56]
+    content:
+      fontSize: 15
+      color: "$secondary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: 微信官方 imgSecCheck 机器审核 + 人工举报双通道
+  - elementId: row3-line
+    elementType: shape
+    bounds: [96, 384, 1112, 0]
+    shapeName: straightConnector1
+    border: {style: solid, width: 1, color: "$line"}
+  - elementId: row4-icon
+    elementType: icon
+    bounds: [96, 398, 32, 32]
+    iconName: "fas:circle-check"
+    fill: {type: solid, color: "$accent"}
+  - elementId: row4-title
+    elementType: text
+    bounds: [148, 386, 380, 56]
+    content:
+      fontSize: 19
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>举报与反馈机制</strong></p>
+  - elementId: row4-desc
+    elementType: text
+    bounds: [560, 386, 640, 56]
+    content:
+      fontSize: 15
+      color: "$secondary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: 已建成并在平台内运行,问题内容可一键举报
+  - elementId: row4-line
+    elementType: shape
+    bounds: [96, 450, 1112, 0]
+    shapeName: straightConnector1
+    border: {style: solid, width: 1, color: "$line"}
+  - elementId: row5-icon
+    elementType: icon
+    bounds: [96, 464, 32, 32]
+    iconName: "fas:circle-check"
+    fill: {type: solid, color: "$accent"}
+  - elementId: row5-title
+    elementType: text
+    bounds: [148, 452, 380, 56]
+    content:
+      fontSize: 19
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>域名已完成 ICP 备案</strong></p>
+  - elementId: row5-desc
+    elementType: text
+    bounds: [560, 452, 640, 56]
+    content:
+      fontSize: 15
+      color: "$secondary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: 合规运营的基础设施前提已具备
+  - elementId: bottom-bar
+    elementType: shape
+    bounds: [72, 556, 1136, 76]
+    shapeName: rect
+    fill: {type: solid, color: "$primary"}
+  - elementId: bottom-bar-icon
+    elementType: icon
+    bounds: [128, 578, 32, 32]
+    iconName: "fas:scale-balanced"
+    fill: {type: solid, color: "#FFFFFF"}
+  - elementId: bottom-bar-text
+    elementType: text
+    bounds: [180, 556, 1000, 76]
+    content:
+      fontSize: 19
+      color: "#FFFFFF"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>用户协议愿提交学校法务复核,并按反馈修订。</strong></p>
+  - elementId: footer-left
+    elementType: text
+    bounds: [72, 682, 500, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [left, middle]
+      text: HKMU Campus Platform · 学生自主开发
+  - elementId: footer-right
+    elementType: text
+    bounds: [1080, 682, 128, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [right, middle]
+      text: 05 / 13

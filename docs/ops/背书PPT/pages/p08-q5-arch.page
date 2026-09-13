@@ -1,0 +1,274 @@
+pageType: content
+background:
+  type: solid
+  color: "#FFFFFF"
+elements:
+  - elementId: kicker
+    elementType: text
+    bounds: [72, 44, 600, 20]
+    content:
+      style: "$kicker"
+      wrap: false
+      align: [left, middle]
+      text: Q5 · 技术架构
+  - elementId: title
+    elementType: text
+    bounds: [72, 70, 1000, 44]
+    content:
+      style: "$pageTitle"
+      wrap: false
+      align: [left, middle]
+      text: |
+        <p><strong>全部自主搭建,无第三方套壳</strong></p>
+  - elementId: title-bar
+    elementType: shape
+    bounds: [72, 126, 64, 4]
+    shapeName: rect
+    fill: {type: solid, color: "$accent"}
+  - elementId: lead
+    elementType: text
+    bounds: [72, 140, 800, 22]
+    content:
+      style: "$small"
+      fontSize: 14
+      wrap: false
+      align: [left, middle]
+      text: 学生 → 双端入口 → 自主后端 → 数据与内容审核,链路清晰可控
+  - elementId: box-user
+    elementType: shape
+    bounds: [72, 300, 170, 110]
+    shapeName: rect
+    fill: {type: solid, color: "$primary"}
+  - elementId: box-user-text
+    elementType: text
+    bounds: [72, 300, 170, 110]
+    content:
+      fontSize: 18
+      color: "#FFFFFF"
+      fontFamily: "MiSans"
+      lineHeight: 1.5
+      align: [center, middle]
+      text: |
+        <p><strong>用户</strong></p>
+        <p><span style="font-size:14px; color:#C9D8EA">HKMU 学生</span></p>
+  - elementId: arrow-u2f
+    elementType: shape
+    bounds: [250, 355, 32, 0]
+    shapeName: straightConnector1
+    arrow: [null, "arrow"]
+    border: {style: solid, width: 2, color: "$secondary"}
+  - elementId: box-front
+    elementType: shape
+    bounds: [290, 275, 250, 160]
+    shapeName: rect
+    fill: {type: solid, color: "#FFFFFF"}
+    border: {style: solid, width: 2, color: "$primary"}
+  - elementId: box-front-title
+    elementType: text
+    bounds: [290, 295, 250, 28]
+    content:
+      fontSize: 18
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>双端入口</strong></p>
+  - elementId: box-front-sub
+    elementType: text
+    bounds: [290, 330, 250, 80]
+    content:
+      fontSize: 15
+      color: "$secondary"
+      fontFamily: "MiSans"
+      lineHeight: 1.6
+      align: [center, top]
+      text: |
+        <p>微信小程序</p>
+        <p>网页版(PWA)</p>
+  - elementId: arrow-f2b
+    elementType: shape
+    bounds: [548, 355, 44, 0]
+    shapeName: straightConnector1
+    arrow: [null, "arrow"]
+    border: {style: solid, width: 2, color: "$secondary"}
+  - elementId: box-back
+    elementType: shape
+    bounds: [600, 275, 270, 160]
+    shapeName: rect
+    fill: {type: solid, color: "$blueSoft"}
+    border: {style: solid, width: 2, color: "$primary"}
+  - elementId: box-back-title
+    elementType: text
+    bounds: [600, 295, 270, 28]
+    content:
+      fontSize: 18
+      color: "$primary"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [center, middle]
+      text: |
+        <p><strong>后端服务</strong></p>
+  - elementId: box-back-sub
+    elementType: text
+    bounds: [600, 330, 270, 84]
+    content:
+      fontSize: 15
+      color: "$secondary"
+      fontFamily: "MiSans"
+      lineHeight: 1.6
+      align: [center, top]
+      text: |
+        <p>FastAPI · Python</p>
+        <p>业务逻辑自主开发</p>
+  - elementId: arrow-b2d1
+    elementType: shape
+    bounds: [870, 233, 100, 122]
+    shapeName: straightConnector1
+    flip: [false, true]
+    arrow: [null, "arrow"]
+    border: {style: solid, width: 2, color: "$secondary"}
+  - elementId: arrow-b2d2
+    elementType: shape
+    bounds: [870, 355, 100, 0]
+    shapeName: straightConnector1
+    arrow: [null, "arrow"]
+    border: {style: solid, width: 2, color: "$secondary"}
+  - elementId: arrow-b2d3
+    elementType: shape
+    bounds: [870, 355, 100, 126]
+    shapeName: straightConnector1
+    arrow: [null, "arrow"]
+    border: {style: solid, width: 2, color: "$secondary"}
+  - elementId: box-d1
+    elementType: shape
+    bounds: [970, 185, 238, 96]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+    border: {style: solid, width: 1, color: "$line"}
+  - elementId: box-d1-text
+    elementType: text
+    bounds: [970, 185, 238, 96]
+    content:
+      fontSize: 16
+      color: "$primary"
+      fontFamily: "MiSans"
+      lineHeight: 1.5
+      align: [center, middle]
+      text: |
+        <p><strong>数据库</strong></p>
+        <p><span style="font-size:13px; color:$secondary">Supabase · PostgreSQL</span></p>
+  - elementId: box-d2
+    elementType: shape
+    bounds: [970, 309, 238, 96]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+    border: {style: solid, width: 1, color: "$line"}
+  - elementId: box-d2-text
+    elementType: text
+    bounds: [970, 309, 238, 96]
+    content:
+      fontSize: 16
+      color: "$primary"
+      fontFamily: "MiSans"
+      lineHeight: 1.5
+      align: [center, middle]
+      text: |
+        <p><strong>文件存储</strong></p>
+        <p><span style="font-size:13px; color:$secondary">Supabase Storage · 头像等</span></p>
+  - elementId: box-d3
+    elementType: shape
+    bounds: [970, 433, 238, 96]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+    border: {style: solid, width: 1, color: "$line"}
+  - elementId: box-d3-text
+    elementType: text
+    bounds: [970, 433, 238, 96]
+    content:
+      fontSize: 16
+      color: "$primary"
+      fontFamily: "MiSans"
+      lineHeight: 1.5
+      align: [center, middle]
+      text: |
+        <p><strong>内容审核</strong></p>
+        <p><span style="font-size:13px; color:$secondary">微信 imgSecCheck · 全场景</span></p>
+  - elementId: chip-1
+    elementType: shape
+    bounds: [72, 585, 360, 56]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+  - elementId: chip-1-icon
+    elementType: icon
+    bounds: [96, 601, 24, 24]
+    iconName: "fas:code-branch"
+    fill: {type: solid, color: "$primary"}
+  - elementId: chip-1-text
+    elementType: text
+    bounds: [132, 585, 288, 56]
+    content:
+      fontSize: 15
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: GitHub 版本管理 + CI 自动化测试
+  - elementId: chip-2
+    elementType: shape
+    bounds: [452, 585, 340, 56]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+  - elementId: chip-2-icon
+    elementType: icon
+    bounds: [476, 601, 24, 24]
+    iconName: "fas:cloud"
+    fill: {type: solid, color: "$primary"}
+  - elementId: chip-2-text
+    elementType: text
+    bounds: [512, 585, 268, 56]
+    content:
+      fontSize: 15
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: Azure 云服务器,稳定运行
+  - elementId: chip-3
+    elementType: shape
+    bounds: [812, 585, 396, 56]
+    shapeName: rect
+    fill: {type: solid, color: "$bgSoft"}
+  - elementId: chip-3-icon
+    elementType: icon
+    bounds: [836, 601, 24, 24]
+    iconName: "fas:database"
+    fill: {type: solid, color: "$primary"}
+  - elementId: chip-3-text
+    elementType: text
+    bounds: [872, 585, 324, 56]
+    content:
+      fontSize: 15
+      color: "$text"
+      fontFamily: "MiSans"
+      wrap: false
+      align: [left, middle]
+      text: Supabase 数据库与文件存储
+  - elementId: footer-left
+    elementType: text
+    bounds: [72, 682, 500, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [left, middle]
+      text: HKMU Campus Platform · 学生自主开发
+  - elementId: footer-right
+    elementType: text
+    bounds: [1080, 682, 128, 18]
+    content:
+      style: "$small"
+      fontSize: 12
+      wrap: false
+      align: [right, middle]
+      text: 08 / 13
