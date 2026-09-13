@@ -1,0 +1,230 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f5f7fb;
+  color: #172033;
+}
+
+.demo-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px;
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.today-widget {
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 3 / 4;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  background: #08111f;
+  box-shadow: 0 22px 54px rgba(15, 23, 42, 0.18);
+  color: white;
+}
+
+.today-slide {
+  position: absolute;
+  inset: 0;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.36s ease, transform 0.36s ease;
+  background: linear-gradient(160deg, #0f766e, #2563eb);
+}
+
+.today-slide.active {
+  opacity: 1;
+  transform: translateX(0);
+  z-index: 2;
+}
+
+.today-slide.news {
+  background: linear-gradient(160deg, #0f766e, #2563eb);
+}
+
+.today-slide.schedule {
+  background: linear-gradient(160deg, #1d4ed8, #7c3aed);
+}
+
+.today-slide.club {
+  background: linear-gradient(160deg, #b45309, #be123c);
+}
+
+.today-slide::after {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  right: -80px;
+  top: -70px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.today-top,
+.today-body,
+.today-bottom {
+  position: relative;
+  z-index: 1;
+}
+
+.today-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.today-label {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 8px 11px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.today-time {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.today-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.today-body h2 {
+  font-size: 30px;
+  line-height: 1.1;
+  font-weight: 800;
+  margin: 0 0 12px;
+}
+
+.today-body p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.today-detail {
+  margin-top: 22px;
+  display: grid;
+  gap: 10px;
+}
+
+.today-row {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.today-row-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.today-row strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.today-row span {
+  display: block;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+}
+
+.today-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.today-action {
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 13px;
+  background: white;
+  color: #1d4ed8;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.today-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.today-dot {
+  width: 8px;
+  height: 8px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.32);
+  cursor: pointer;
+  transition: width 0.2s ease, background 0.2s ease;
+}
+
+.today-dot.active {
+  width: 24px;
+  background: white;
+}
+
+.demo-notes {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+}
+
+.demo-notes h1 {
+  margin: 0 0 10px;
+  font-size: 34px;
+  line-height: 1.12;
+}
+
+.demo-notes p,
+.demo-notes li {
+  color: #64748b;
+  line-height: 1.65;
+}
+
+@media (max-width: 860px) {
+  .demo-page {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+}
