@@ -1,5 +1,6 @@
 const { request } = require("../../utils/request");
 const { getTexts } = require("../../utils/i18n");
+const { searchFold } = require("../../utils/search");
 
 // 小程序 locale → programmes.name 字典 key（复刻 planner.js）
 const LOCALE_NAME_KEY = {
@@ -144,6 +145,17 @@ Component({
               has_full_planning: !!p.has_full_planning || knownFull,
               school: p.school || (known && known.school) || "",
               name,
+              // 搜索匹配串(构建时归一化):三语名+代码+别名+学院全量。与 planner._emit
+              // 同步修复:任一界面语言下英/简/繁都可命中(旧版只有当前 locale 单一
+              // 名字进匹配串,搜 data 搜不到 DSAI;且这里连别名码都没进)
+              search: searchFold([
+                p.programme_name, p.name_zh_cn, p.name_zh_tw,
+                known && known.name && known.name.en,
+                known && known.name && known.name["zh-CN"],
+                known && known.name && known.name["zh-TW"],
+                p.programme_code, (p.alias_codes || []).join(" "),
+                p.school, known && known.school,
+              ].filter(Boolean).join(" ")),
               badge: (p.has_full_planning || knownFull) ? text.catalogueTagFull
                 : (p.discontinued ? text.catalogueTagDiscontinued : ""),
             });
@@ -156,6 +168,11 @@ Component({
             has_full_planning: !p.coming_soon,
             school: p.school || "",
             name: localizeName(p.name, locale),
+            // 同上:三语名+代码+学院全量进匹配串(回退载荷 name 是 {en,zh-CN,zh-TW} 字典)
+            search: searchFold([
+              p.name && p.name.en, p.name && p.name["zh-CN"], p.name && p.name["zh-TW"],
+              p.code, p.school,
+            ].filter(Boolean).join(" ")),
             badge: p.coming_soon ? "" : text.catalogueTagFull,
           });
         });
@@ -163,19 +180,17 @@ Component({
       return list;
     },
 
-    // 搜索过滤 + 按学院分组（复刻 planner._emit line 678-698）
+    // 搜索过滤 + 按学院分组（复刻 planner._emit）。查询词 searchFold 归一化后与
+    // 构建期预归一化的 search 串匹配:简/繁/全角/大小写互通,三语名均可命中
     _rebuild() {
-      const pq = (this.data.query || "").trim().toLowerCase();
+      const pq = searchFold(this.data.query);
       const sel = this.properties.selectedCode;
       const groups = [];
       let empty = false;
       if (this._pickerList.length) {
         const gmap = new Map();
         for (const p of this._pickerList) {
-          if (pq) {
-            const hay = `${p.name} ${p.code} ${p.school || ""}`.toLowerCase();
-            if (!hay.includes(pq)) continue;
-          }
+          if (pq && !(p.search || "").includes(pq)) continue;
           if (!gmap.has(p.school)) gmap.set(p.school, []);
           gmap.get(p.school).push({
             code: p.code,
