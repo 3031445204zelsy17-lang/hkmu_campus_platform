@@ -1075,6 +1075,9 @@ Page({
             taken: progress[c.id] === "completed",
             blocked: !!c.blocked,
             termLabel: (c.terms || []).map((t) => this._geTermLabel(t, text)).join("·"),
+            // 批次1 补池的 16 门本学年不开课(terms=[]):灰徽标+未选时降不透明度;
+            // 仍可搜索(课码/中英文名)、可标记已完成(修过的课要能标,如 GEN1021AEF)
+            notOffered: !(c.terms || []).length,
           })),
         };
       })
@@ -1083,6 +1086,7 @@ Page({
       progress: fillTemplate(text.geProgress, { taken, need }),
       taken,
       fields,
+      notOfferedLabel: text.geNotOffered,
       searchPlaceholder: text.geSearchPlaceholder,
       searchEmpty: ((kw || tf) && !fields.length) ? text.geSearchEmpty : "",
       termSegs: ["", "autumn", "spring", "summer"].map((k) => ({
