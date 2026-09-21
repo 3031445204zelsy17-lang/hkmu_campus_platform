@@ -1,22 +1,62 @@
-# ═══ 代码归属 — 谁的模块谁审;共享文件两人都审 ═══
-# 改本文件 = 改分工,本身也要走 PR
-# 依据: module-registry v2.0;2026-09-21 确认 司徒=ryanST888,同学账号不入表
-# 注意: 路径写错会静默失效——改完路径务必 ls 验一遍
-# 提醒: 目前是"软档"(自动请求审阅);要变"必须点头才能合并"需在仓库设置开
-#       Require review from Code Owners(动司徒的合并节奏,开之前跟他打好招呼)
+# HKMU Campus Platform — 模块所有权
+# 由 scripts/sync-ownership.sh 从 module-registry.json 自动生成
+# 改归属=改 module-registry.json 再跑本脚本;手改本文件会被下次生成覆盖
+# 当前为软档(自动请求审阅);要强制需仓库设置开 Require review from Code Owners
+# 路径写错会静默失效——改 registry 路径后 ls 验一遍
 
-# ── 司徒的模块 ──
-/frontend/js/pages/home.js          @ryanST888
+# 学术规划
+/backend/app/routers/courses.py @3031445204zelsy17-lang
+/frontend/js/pages/planner.js @3031445204zelsy17-lang
 
-# ── 共享基础(动这里 = 两人都自动被请求) ──
-/.github/                           @3031445204zelsy17-lang @ryanST888
-/CLAUDE.md                          @3031445204zelsy17-lang @ryanST888
-/scripts/                           @3031445204zelsy17-lang @ryanST888
-/backend/app/main.py                @3031445204zelsy17-lang @ryanST888
-/backend/app/database.py            @3031445204zelsy17-lang @ryanST888
-/backend/app/models.py              @3031445204zelsy17-lang @ryanST888
-/backend/app/config.py              @3031445204zelsy17-lang @ryanST888
-/frontend/js/app.js                 @3031445204zelsy17-lang @ryanST888
-/frontend/js/router.js              @3031445204zelsy17-lang @ryanST888
-/frontend/js/api.js                 @3031445204zelsy17-lang @ryanST888
-/frontend/js/components/            @3031445204zelsy17-lang @ryanST888
+# 认证系统
+/backend/app/routers/auth.py @3031445204zelsy17-lang
+/backend/app/services/auth_service.py @3031445204zelsy17-lang
+
+# 社区论坛
+/backend/app/routers/posts.py @3031445204zelsy17-lang
+/frontend/js/pages/community.js @3031445204zelsy17-lang
+
+# 部署与运维
+
+# 首页设计
+/frontend/js/pages/home.js @ryanST888
+
+# 国际化
+/frontend/js/utils/i18n.js @3031445204zelsy17-lang
+
+# iOS App
+/frontend/ios-app/ @3031445204zelsy17-lang
+
+# 失物招领
+/backend/app/routers/lostfound.py @3031445204zelsy17-lang
+/frontend/js/pages/lostfound.js @3031445204zelsy17-lang
+
+# 私信系统
+/backend/app/routers/messages.py @3031445204zelsy17-lang
+/backend/app/services/websocket_manager.py @3031445204zelsy17-lang
+/frontend/js/pages/messages.js @3031445204zelsy17-lang
+
+# 校园新闻
+/backend/app/routers/news.py @3031445204zelsy17-lang
+/frontend/js/pages/news.js @3031445204zelsy17-lang
+
+# 宣传网站
+
+# 测试
+
+# 用户管理
+/backend/app/routers/users.py @3031445204zelsy17-lang
+/frontend/js/pages/profile.js @3031445204zelsy17-lang
+
+# 共享基础 — 需要全员 review
+/backend/app/main.py @3031445204zelsy17-lang @ryanST888
+/backend/app/database.py @3031445204zelsy17-lang @ryanST888
+/backend/app/models.py @3031445204zelsy17-lang @ryanST888
+/backend/app/config.py @3031445204zelsy17-lang @ryanST888
+/frontend/js/app.js @3031445204zelsy17-lang @ryanST888
+/frontend/js/router.js @3031445204zelsy17-lang @ryanST888
+/frontend/js/api.js @3031445204zelsy17-lang @ryanST888
+/frontend/js/components/ @3031445204zelsy17-lang @ryanST888
+
+# 默认
+* @3031445204zelsy17-lang @ryanST888

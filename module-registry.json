@@ -23,25 +23,6 @@
         "部署",
         "宣传"
       ]
-    },
-    {
-      "name": "霍梓涵",
-      "github": "BKPNC",
-      "role": "Researcher",
-      "tags": [
-        "调研",
-        "合规",
-        "问卷"
-      ]
-    },
-    {
-      "name": "潘",
-      "github": "panbaian8-svg",
-      "role": "Operator",
-      "tags": [
-        "运营",
-        "内容"
-      ]
     }
   ],
   "modules": {
@@ -51,10 +32,7 @@
         "routers/auth.py",
         "services/auth_service.py"
       ],
-      "frontend": [
-        "js/auth.js",
-        "js/pages/auth.js"
-      ],
+      "frontend": [],
       "owner": "SYF",
       "github": "3031445204zelsy17-lang",
       "tasks": [
@@ -136,7 +114,7 @@
         "routers/courses.py"
       ],
       "frontend": [
-        "js/pages/academic.js"
+        "js/pages/planner.js"
       ],
       "owner": "SYF",
       "github": "3031445204zelsy17-lang",
@@ -170,7 +148,7 @@
         "services/websocket_manager.py"
       ],
       "frontend": [
-        "js/pages/messaging.js"
+        "js/pages/messages.js"
       ],
       "owner": "SYF",
       "github": "3031445204zelsy17-lang",
@@ -422,10 +400,10 @@
       "config.py"
     ],
     "frontend": [
-      "app.js",
-      "router.js",
-      "api.js",
-      "components/"
+      "js/app.js",
+      "js/router.js",
+      "js/api.js",
+      "js/components/"
     ]
   },
   "rules": {
