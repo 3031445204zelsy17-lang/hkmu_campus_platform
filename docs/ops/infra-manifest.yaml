@@ -1,0 +1,40 @@
+# ═══ 期望状态清单(点货单) ═══
+# 这是"我的云上应该存在什么"的唯一权威文件。
+# 执行层多出来的/少的,以本文件为准喊出来 —— 改这里=改计划(走计划评审);改执行不算改计划。
+# 配套点货脚本: python3 scripts/infra_audit.py  (动云前/每周跑)
+# 本文件入 git,git log 就是执行台账。
+
+_meta:
+  保鲜期: 2026-12-01          # 到这天必须重验本清单(对表一次)
+  重验触发器:
+    - 学生订阅迁移完成时(方案: docs/ops/云迁移方案-学生订阅过渡-20260921.md)
+    - 学校收购落地时
+    - 任何新月账单超成本上限时
+  月成本上限_usd: 25          # 两个订阅当月合计实际花费
+  上次点货: 2026-09-21
+
+subscriptions:
+  - name: Azure subscription 1
+    id: 00f0a84b-eda8-4470-8fc2-1b59ca856c72
+    期望类型含: PayAsYouGo      # quotaId 子串匹配;2026-09-14 实锚
+    期望资源数: 7               # 见下 resources;迁移后应为 0(空壳回滚位)
+    备注: 当前生产所在
+  - name: Azure for Students
+    id: 617aff7e-66c5-4df2-8203-0227b9a8d957
+    期望类型含: Student
+    期望资源数: 0               # 迁移后生产迁入(仅限允许区: 欧洲五区)
+    备注: $100 额度/357天在账(2026-09-06 激活)
+
+# ── 期望存在的资源(当前阶段=迁移前,PAYG 上的精简栈) ──
+resources:
+  - {type: Microsoft.Web/sites,                    name: hkmu-campus-sea,     sub: 00f0a84b}
+  - {type: Microsoft.Web/serverfarms,              name: hkmu-plan-sea,       sub: 00f0a84b}
+  - {type: Microsoft.ContainerRegistry/registries, name: hkmucampusreg,       sub: 00f0a84b}
+
+# ── 允许存在但不算违规(监控类,账单 $0/近零) ──
+可选_模式:
+  - {type: microsoft.insights/components,            name含: hkmu-campus-sea-ai}
+  - {type: microsoft.operationalinsights/workspaces, name含: ""}                # LA workspace 均可
+  - {type: microsoft.insights/actiongroups,          name含: ""}                # Smart Detection 等自动物
+
+# 除上述外,任何资源都是"计划外",点货必须点名
