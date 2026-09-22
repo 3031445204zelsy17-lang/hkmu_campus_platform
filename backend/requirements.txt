@@ -10,7 +10,7 @@ python-dotenv==1.0.1
 google-auth==2.37.0
 requests==2.32.3
 httpx==0.28.1
-feedparser>=6.0.8
+feedparser>=6.0.12
 aiosmtplib==3.0.2
 pywebpush>=2.0.0
 Pillow>=10.2.0
