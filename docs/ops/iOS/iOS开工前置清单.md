@@ -9,7 +9,7 @@
 
 | # | 任务 | 为什么必须本人 | 什么时候要 | 估时 | 状态 |
 |---|------|--------------|-----------|------|------|
-| H1 | **批准分支整理**(路线图 3 个 commit 从 PR#78 分支搬回 main + 散落 docs 入库) | 动 main 需你点头 | 今天,B1 前 | 你 1 分钟点头,AI 代跑 | ☐ |
+| H1 | **批准分支整理**(路线图 3 个 commit 从 PR#78 分支搬回 main + 散落 docs 入库) | 动 main 需你点头 | 今天,B1 前 | 你 1 分钟点头,AI 代跑 | ✅ 2026-09-13 批准并执行(PR#79 已合,main=498257f) |
 | H2 | **群内知会共享文件** | B3/B4/B5 会动 `content_security.py`/`database.py`/`auth.py`,协作规范要求通知所有人 | B 阶段开工当天,一句话即可 | 1 分钟 | ☐ |
 | H3 | **Expo / EAS 账号注册**(expo.dev,免费) | 账号是你的,AI 不能替你注册 | 阶段二 A1 前(约 1-2 天后) | 10 分钟 | ☐ |
 | H4 | **Apple Developer 注册**(个人,~¥688/年 或 USD 99,见 §四) | 需你的 Apple ID + 真实身份 + 支付;审核 1-2 天,新号偶有风控,提前量要留足 | 最晚阶段四(TestFlight 签名)前——即 A 阶段过半时;建议本周就注册 | 30 分钟提交 + 等 1-2 天 | ☐ |
@@ -22,8 +22,8 @@
 
 | # | 任务 | 交付物 | 状态 |
 |---|------|--------|------|
-| C1 | 分支整理执行(H1 批准后):`feature/docs-roadmap` ← cherry-pick 3 个路线图 commit + untracked docs 入库 → PR → main | main 上能读到路线图;PR 链接 | ☐ |
-| C2 | 从干净 main 切 `feature/ios-backend-compliance`,开工 B1 | B1 代码 + 单测绿 | ☐ |
+| C1 | 分支整理执行(H1 批准后):`feature/docs-roadmap` ← cherry-pick 3 个路线图 commit + untracked docs 入库 → PR → main | main 上能读到路线图;PR 链接 | ✅ PR#79(51 文件,CI 三绿,2026-09-13 merged) |
+| C2 | 从干净 main 切 `feature/ios-backend-compliance`,开工 B1 | B1 代码 + 单测绿 | 🚧 分支已建(自 main 498257f),B1 待开工 |
 | C3 | 时效项核实(§四,子代理今日回填) | 本清单 §四表 | 🚧 |
 | C4 | L2 主备自评样本(30 条三语,含违规/正常/边缘)给你拍板用 | 样本表 + 两通道各自结果 | ☐ |
 | C5 | 资源台账初版(§五) | 本清单 §五表 | ✅(初版) |

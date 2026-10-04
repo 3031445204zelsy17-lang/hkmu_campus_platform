@@ -28,6 +28,40 @@
 
 ---
 
+## 0a. 保鲜期与开工前提(2026-09-29 按 `docs/ops/计划模板.md` 回填;project-start 抄本节做 G2 门禁)
+
+**保鲜期至 2026-10-15**(A 阶段开工周)。踩中任一触发器须重验本节再动工:
+
+1. Expo SDK 58 转 stable(A1 前必重验技术面)
+2. Apple 开发者注册被拒/风控(影响阶段四时间轴)
+3. 学校线反馈回流且触及功能面(范围变更)
+4. EAS 免费额度/政策变更
+5. B 阶段实际工期超 5 天(A 段时间轴整体后移)
+
+**前提清单(2026-09-29 当场验证)**:
+
+| # | 前提 | 验证命令 | 结果 |
+|---|---|---|---|
+| P1 | B1 工作分支 = main 且无落后 | `git rev-list --count feature/ios-backend-compliance..origin/main` | ✅ 0(main=498257f) |
+| P2 | pytest 基线全绿 | `DATABASE_URL="postgresql:///campus?host=localhost" python -m pytest backend/tests -q` | ✅ 216 passed / 1 failed=**本地脏数据噪音**(96 个历史 hkmu_verified 挤出 suggest LIMIT 50;空库复验该文件 6/6 过,双法收敛);CI 以干净库为准 |
+| P3 | 词表上游可达(konsheng MIT) | `curl -sI https://github.com/konsheng/Sensitive-lexicon` | ✅ 200(GitHub + raw 双源) |
+| P4 | prod 审核开关 = true(B3 kill-switch 依赖) | `az webapp config appsettings list -g <rg> -n hkmu-campus-sea --query "[?name=='ENABLE_CONTENT_MODERATION'].value"` | ⚠️ 09-29 VPN 挡 az 查询失败;以 09-11 az 实查 true 为准,**B3 部署前必须复验**(az 卡→热点/换港日节点,坑见 memory vpn-azure-https-block) |
+| P5 | Expo SDK 57 仍为 stable | expo.dev/changelog(webReader `no_cache:true`,坑见 memory webreader-cache-stale-500) | ✅ 58 仅 beta(09-15 出,stable 按节奏约 10 月中后);**A1 用 57 结论不变**;新坑:Expo Go 09-03 起跑项目需登录(H3 提前到 A1 当天) |
+| P6 | 本地 PG 就绪(测试配方) | `pg_isready -h localhost -p 5432` | ✅(campus 库在;`.env` 的 /tmp2 socket 是死的,永远用 env 覆盖) |
+
+**四道闸对接(长任务流程挂点,执行 SOP 不变)**:
+
+| 闸 | 在本计划的落点 |
+|---|---|
+| G1 挑刺 | B 行任务表级已完成(2026-09-11 Codex 17 findings→CC 逐条,见 §1 头注);**A 阶段任务表开工前补一轮同级挑刺**(挂 B 阶段完结时做,现在做会过保鲜期) |
+| G2 开工门禁 | P1-P6 全 ✅(P4 按 ⚠️ 规则:部署前复验)才开 B1;A1 前保鲜期未到/重验通过 |
+| G3 CI | pytest 门禁已有(基线 217 项),每任务行 PR 全绿才合;本地跑法见 memory local-pytest-postgres-recipe |
+| G4 点货 | 每月对账=前置清单 §五资源台账;动云资源前后跑 `python3 scripts/infra_audit.py`(云迁移期适用) |
+
+**行内执行 SOP(保留,vibe-coding)**:每个任务行 = 一个 prompt(任务→模块→文件→约束→验收);验收空着不开工;做完当场勾选 + commit 再开下一行;每周 30 分钟挂账三选一——详见前置清单 §六。
+
+---
+
 ## 1. 阶段一:后端前置合规(不依赖 iOS 决策,现存风险修复)
 
 **分支** `feature/ios-backend-compliance` · **工期** vibe 2-3 天(B9 占增量;2026-09-11 双工具复核后上调)· **CI** pytest 门禁全绿(本地跑法见 memory:brew postgres env 覆盖)
@@ -103,3 +137,10 @@
 | 0 → TestFlight 可装 | ~2-3 周 | ~1.5-2 周 |
 | 0 → 外区过审 | **~3-4.5 周** | **~2.5-3 周** |
 | 国区(阶段 2,挂起) | ~3-4 个月,等企业主体+备案 | — |
+
+## 8. 变更日志
+
+- **2026-09-07** 建档:栈/路线/登录/审核选型定案(收口自技术栈评估 + 上架路线对比)
+- **2026-09-11** 双工具复核:Codex 17 findings → CC 逐条验(7 采纳/2 半成立/1 对现状不成立),B2 结果格/B3 入口统一/B4 匿名拉黑/B5 防重放/B6 归属/B9 账号删除升级;缺页 6 条挂账
+- **2026-09-13** 任务表升级随 C2 分支落地(自 main 498257f 切出,PR#79 已合)
+- **2026-09-29** 按 `docs/ops/计划模板.md`(09-21 生效)回填 §0a 保鲜期+前提清单+本日志;前提当场验证(P1-P3/P5/P6 ✅,P4 ⚠️ 部署前复验);基线刷新 217 项(216 passed+1 环境噪音,空库复验双法收敛);时效刷新:SDK 58 仍 beta,Expo Go 09-03 起需登录(H3 时点提前)
