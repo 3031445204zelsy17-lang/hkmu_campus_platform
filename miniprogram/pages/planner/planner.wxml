@@ -491,7 +491,7 @@
             wx:for="{{fld.courses}}"
             wx:for-item="c"
             wx:key="id"
-            class="ge-row {{c.taken ? 'ge-row-taken' : ''}} {{c.blocked ? 'ge-row-blocked' : ''}}"
+            class="ge-row {{c.taken ? 'ge-row-taken' : ''}} {{c.blocked ? 'ge-row-blocked' : ''}} {{c.notOffered && !c.taken ? 'ge-row-off' : ''}}"
             data-id="{{c.id}}"
             bindtap="onOpenGeCourse"
             hover-class="ge-row-hv"
@@ -499,6 +499,9 @@
             <text class="ge-code">{{c.code}}</text>
             <text class="ge-name">{{c.name}}</text>
             <text wx:if="{{c.termLabel}}" class="ge-term">{{c.termLabel}}</text>
+            <!-- 本学年不开课(terms=[],批次1 补池 16 门):灰徽标;已修过(taken)
+                 不降透明,绿色状态优先,「+」仍可标记 -->
+            <text wx:elif="{{c.notOffered}}" class="ge-term ge-term-off">{{gePicker.notOfferedLabel}}</text>
             <!-- A 方案:行主体=进详情(看评分/页内标记);行尾「选」钮=一键勾选(catchtap 防冒泡) -->
             <view
               wx:if="{{!c.blocked}}"

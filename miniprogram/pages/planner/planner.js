@@ -3,6 +3,7 @@ const { request } = require("../../utils/request");
 const { getLocale, getTexts } = require("../../utils/i18n");
 const { syncTabBar } = require("../../utils/tabbar");
 const { localizeField } = require("../../utils/gefields");
+const { searchFold } = require("../../utils/search");
 
 // 小程序 locale → programmes.name 的字典 key
 const LOCALE_NAME_KEY = {
@@ -311,6 +312,13 @@ Page({
         this._userProgrammeCode = switched;
         this._status = null;
       }
+    }
+    // profile 页改入学时间后回切:作废暖路径 user/status 缓存强制重拉(同上,
+    // 暖路径跳过 /users/me,不消费信号则当前学年/毕业年/年份 tab 停留旧学期)
+    if (app && app.globalData && app.globalData.entryTermChanged) {
+      app.globalData.entryTermChanged = false;
+      this._user = null;
+      this._status = null;
     }
     // 只有首次（无 catalogue）才显示 loading 占位；之后切回都用缓存瞬间渲染
     this._loading = !this._catalogue;
@@ -1041,7 +1049,7 @@ Page({
         taken++;
       }
     }
-    const kw = String(this._geKeyword || "").trim().toLowerCase();
+    const kw = searchFold(this._geKeyword);
     const tf = this._geTermFilter || "";  // 学期筛选:autumn|spring|summer,空=全部
     const fields = order
       .filter((f) => byField.has(f))
@@ -1053,12 +1061,12 @@ Page({
           fCourses = fCourses.filter((c) => (c.terms || []).includes(tf));
         }
         if (kw) {
-          // 搜索:课码/英文名/中文名/开课学期跨领域过滤(中文原样 contains)
+          // 搜索:课码/英文名/中文名/开课学期跨领域过滤。匹配串与查询词(kw 已
+          // searchFold)双侧归一化,简体输入可命中繁体中文名,反之亦然
           fCourses = fCourses.filter((c) => {
-            if (String(c.code || "").toLowerCase().includes(kw) ||
-                String(c.name_en || "").toLowerCase().includes(kw) ||
-                String(c.name_zh || "").includes(kw)) return true;
-            return (c.terms || []).some((t) => this._geTermLabel(t, text).toLowerCase().includes(kw));
+            const hay = searchFold([c.code, c.name_en, c.name_zh].filter(Boolean).join(" "));
+            if (hay.includes(kw)) return true;
+            return (c.terms || []).some((t) => searchFold(this._geTermLabel(t, text)).includes(kw));
           });
         }
         return {
@@ -1075,6 +1083,9 @@ Page({
             taken: progress[c.id] === "completed",
             blocked: !!c.blocked,
             termLabel: (c.terms || []).map((t) => this._geTermLabel(t, text)).join("·"),
+            // 批次1 补池的 16 门本学年不开课(terms=[]):灰徽标+未选时降不透明度;
+            // 仍可搜索(课码/中英文名)、可标记已完成(修过的课要能标,如 GEN1021AEF)
+            notOffered: !(c.terms || []).length,
           })),
         };
       })
@@ -1083,6 +1094,7 @@ Page({
       progress: fillTemplate(text.geProgress, { taken, need }),
       taken,
       fields,
+      notOfferedLabel: text.geNotOffered,
       searchPlaceholder: text.geSearchPlaceholder,
       searchEmpty: ((kw || tf) && !fields.length) ? text.geSearchEmpty : "",
       termSegs: ["", "autumn", "spring", "summer"].map((k) => ({
@@ -1200,6 +1212,18 @@ Page({
             name,
             // 同专业在招变体/系列码(BSCHCOMPF3、BSSCHWSJ1…):单入口后靠它可搜
             aliases: (p.alias_codes || []).join(" "),
+            // 搜索匹配串(构建时一次性 searchFold 归一化):英/简/繁三语名+代码+
+            // 别名+学院全量拼入。修复两类漏搜:①中文界面下英文名进不了匹配串
+            // (搜 data 搜不到 DSAI——恰是有人工中文名的 4 个专业);②简繁码位
+            // 不同互不命中。缺的字段 filter(Boolean) 跳过,94 个无中文名专业无感。
+            search: searchFold([
+              p.programme_name, p.name_zh_cn, p.name_zh_tw,
+              known && known.name && known.name.en,
+              known && known.name && known.name["zh-CN"],
+              known && known.name && known.name["zh-TW"],
+              p.programme_code, (p.alias_codes || []).join(" "),
+              p.school, known && known.school,
+            ].filter(Boolean).join(" ")),
             // 完整规划挂徽章;停招专业挂灰标;其余不挂
             badge: (p.has_full_planning || knownFull) ? text.catalogueTagFull
               : (p.discontinued ? text.catalogueTagDiscontinued : ""),
@@ -1212,6 +1236,11 @@ Page({
         has_full_planning: !p.coming_soon,
         school: p.school || "",
         name: localizeName(p.name, locale),
+        // 同上:三语名+代码+学院全量进匹配串(回退载荷 name 是 {en,zh-CN,zh-TW} 字典)
+        search: searchFold([
+          p.name && p.name.en, p.name && p.name["zh-CN"], p.name && p.name["zh-TW"],
+          p.code, p.school,
+        ].filter(Boolean).join(" ")),
         badge: p.coming_soon ? "" : text.catalogueTagFull,
       }));
     }
@@ -1235,16 +1264,15 @@ Page({
     const entry = pickerList[idx];
 
     // 专业搜索过滤 + 按学院分组（picker 已改为搜索列表）
-    const pq = (this._programmeQuery || "").trim().toLowerCase();
+    // 查询词 searchFold 归一化后与 picker 构建时预归一化的 search 串匹配:
+    // 简/繁/全角/大小写互通,且任一界面语言下三种语言名都可命中
+    const pq = searchFold(this._programmeQuery);
     const searchGroups = [];
     let programmeSearchEmpty = false;
     if (pickerList.length) {
       const gmap = new Map();
       for (const p of pickerList) {
-        if (pq) {
-          const hay = `${p.name} ${p.code} ${p.aliases || ""} ${p.school || ""}`.toLowerCase();
-          if (!hay.includes(pq)) continue;
-        }
+        if (pq && !(p.search || "").includes(pq)) continue;
         if (!gmap.has(p.school)) gmap.set(p.school, []);
         gmap.get(p.school).push({
           code: p.code,
