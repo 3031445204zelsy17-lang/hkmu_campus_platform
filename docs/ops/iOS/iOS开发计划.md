@@ -1,146 +1,160 @@
 # HKMU Campus · iOS 开发计划(执行版)
 
-> **活文档** · 建版 2026-09-07 · 栈/路线/登录/审核选型已全部定案,本文档是唯一执行入口
-> 决策依据(只读存档,不再更新):
-> - `docs/ops/iOS/iOS端技术栈评估.md`(2026-07-31,四栈对比,同目录)
-> - `docs/ops/iOS/iOS上架路线对比-外区vs国区-20260907.md`(路线/标准/红档核实/周期,同目录)
+> **活文档** · 建版 2026-09-07 · **2026-11-02 按免年费开发决策改版**(见 §8)
+> 决策依据:
+> - **2026-11-02 车道与付费边界**(当前生效):`~/.agents/context/ios-first-development.md`(本地跨工具记录)——iOS 优先于 MU Agent、当前不付 Apple 年费、功能基线=线上小程序
+> - 2026-09-07 栈/登录/审核选型(只读存档,仍有效):`docs/ops/iOS/iOS端技术栈评估.md`(2026-07-31)+ `iOS上架路线对比-外区vs国区-20260907.md`(同目录)
 >
 > 驱动方式:按团队 vibe-coding SOP,每个任务行 = 一个 prompt(任务→模块→文件→约束→验收标准),人审后下一行。
 
 ---
 
-## 0. 决策快照(全部已定,除非标注)
+## 0. 决策快照(2026-11-02 改版后)
 
 | 决策项 | 结论 | 依据 |
 |---|---|---|
-| 技术栈 | **RN + Expo**(EAS 云构建免 Mac) | 7-31 评估 |
-| 路线 | **A TestFlight → B 外区正式**(同一套产物);C 国区挂起阶段 2 | 9-07 对比 §3-4 |
-| 登录 | **邮箱(带验证,已有)+ Google + Apple 三件套**;社交登录邮箱视为已验证;须加单 OAuth 槽防覆盖守卫 | 9-07 用户定 + §9.2 |
+| 技术栈 | **RN + Expo** | 7-31 评估(不变) |
+| 推进路线 🔄 | **免年费开发优先**:先完成业务迁移 + 本地模拟器构建验收;付费能力与分发(TestFlight/上架/APNs 端到端/自有 Sign in with Apple)整体延期至付费后另行验收 | 11-02 决策(替代 9-07"A TestFlight→B 外区正式"主线,该路线降级为付费后阶段,见 §5) |
+| 功能基线 🆕 | **当前线上已发布的小程序版本**(版本号/对应提交待核实后冻结 §4 对齐验收表);不以仓库未发布功能为准 | 11-02 决策 |
+| 小程序状态 🆕 | 冻结现状:不新增功能、不安排新版发布;公共后端改动必须兼容线上小程序 | 11-02 决策 |
+| 移植形态 🆕 | 独立 iOS 客户端复用现有后端 REST;**WebView 包装不算完成移植;不以 Expo web 预览或 Expo Go 单独替代自有原生构建验收** | 11-02 决策 |
+| 登录 | 邮箱(带验证,已有)+ Google + Apple 三件套;社交登录邮箱视为已验证;须加单 OAuth 槽防覆盖守卫。**Apple 后端验签(B5)照做;真机/自有应用联调标"待付费后验证"** | 9-07 用户定 + §9.2 + 11-02 边界 |
 | 内容审核 | **L1 词库+OpenCC → L2 双活(OpenAI 免费 + 阿里国际站 SG)fail-closed**;微信用户继续 imgSecCheck | 9-07 arch-check §9.3 |
-| 校名 5.2.1 | **首审按去官方化准备**:中性名候选 ×2-3 + 描述声明学生独立开发 + 去校徽素材;主任背书信到手后作加强证据 | §9.4 |
+| 校名 5.2.1 | 首审按去官方化准备(付费后提审时用):中性名候选 ×2-3 + 学生独立开发声明 + 去校徽;主任背书信作加强证据 | §9.4 |
 | 图片上传 | 照抄现有 `/upload` 代理链,**后端零改** | §9.1 |
-| 推送 | expo-notifications + APNs(唯一原生面) | — |
-| 私信 | 先轮询(复用 web 方案),真 WS 后续试 | — |
+| 私信 | 先轮询(复用 web 已验证方案),真 WS 后续试 | 不变 |
+| 后续衔接 🆕 | 阶段一(iOS 对齐线上小程序)完成后 → **MU Agent 同时接入 iOS 与网页**(同一 Agent 后端,两端各自聊天体验,同一组场景验收);小程序不纳入 Agent 首轮 | 11-02 决策 |
 
-**待定(不阻塞开工)**:① L2 主备顺序(30 条三语样本自评后定,或直接拍)② 阶段 0 假设验证跑不跑(1 周零成本,建议跑)。
+**待定(不阻塞开工)**:① L2 主备顺序(30 条三语样本自评后定,或直接拍)。原待定②"阶段 0 假设验证"服务于 TestFlight 投放话术,归入付费后阶段。
 
-**开工日刷新清单(半天,时效项)**:✅ 2026-09-11 已核(SDK 57 / EAS 15 次 iOS 构建每月、模拟器构建不需 Apple 号 / Xcode 26.6 镜像已有 / OpenAI moderation 免费但账号须绑卡 / Apple 国区 ¥688、区域与上架解耦)——详见 `docs/ops/iOS/iOS开工前置清单.md` §四。
+## 0a. 保鲜期与开工前提(2026-11-02 刷新;project-start 抄本节做 G2 门禁)
 
----
+> ⚠️ **原保鲜期 2026-10-15 已过**,本节所有时效性结论作废,须整节重验后才能开工(G2)。以下 P1-P6 结果为 2026-09-29 时点快照,仅作重验对照。
 
-## 0a. 保鲜期与开工前提(2026-09-29 按 `docs/ops/计划模板.md` 回填;project-start 抄本节做 G2 门禁)
-
-**保鲜期至 2026-10-15**(A 阶段开工周)。踩中任一触发器须重验本节再动工:
-
-1. Expo SDK 58 转 stable(A1 前必重验技术面)
-2. Apple 开发者注册被拒/风控(影响阶段四时间轴)
-3. 学校线反馈回流且触及功能面(范围变更)
-4. EAS 免费额度/政策变更
-5. B 阶段实际工期超 5 天(A 段时间轴整体后移)
-
-**前提清单(2026-09-29 当场验证)**:
-
-| # | 前提 | 验证命令 | 结果 |
+| # | 前提 | 验证命令 | 结果(09-29 时点,已过期) |
 |---|---|---|---|
-| P1 | B1 工作分支 = main 且无落后 | `git rev-list --count feature/ios-backend-compliance..origin/main` | ✅ 0(main=498257f) |
-| P2 | pytest 基线全绿 | `DATABASE_URL="postgresql:///campus?host=localhost" python -m pytest backend/tests -q` | ✅ 216 passed / 1 failed=**本地脏数据噪音**(96 个历史 hkmu_verified 挤出 suggest LIMIT 50;空库复验该文件 6/6 过,双法收敛);CI 以干净库为准 |
-| P3 | 词表上游可达(konsheng MIT) | `curl -sI https://github.com/konsheng/Sensitive-lexicon` | ✅ 200(GitHub + raw 双源) |
-| P4 | prod 审核开关 = true(B3 kill-switch 依赖) | `az webapp config appsettings list -g <rg> -n hkmu-campus-sea --query "[?name=='ENABLE_CONTENT_MODERATION'].value"` | ⚠️ 09-29 VPN 挡 az 查询失败;以 09-11 az 实查 true 为准,**B3 部署前必须复验**(az 卡→热点/换港日节点,坑见 memory vpn-azure-https-block) |
-| P5 | Expo SDK 57 仍为 stable | expo.dev/changelog(webReader `no_cache:true`,坑见 memory webreader-cache-stale-500) | ✅ 58 仅 beta(09-15 出,stable 按节奏约 10 月中后);**A1 用 57 结论不变**;新坑:Expo Go 09-03 起跑项目需登录(H3 提前到 A1 当天) |
-| P6 | 本地 PG 就绪(测试配方) | `pg_isready -h localhost -p 5432` | ✅(campus 库在;`.env` 的 /tmp2 socket 是死的,永远用 env 覆盖) |
+| P1 | B1 工作分支 = main 且无落后 | `git rev-list --count feature/ios-backend-compliance..origin/main` | ✅ 当时 0(main=498257f) |
+| P2 | pytest 基线全绿 | `DATABASE_URL="postgresql:///campus?host=localhost" python -m pytest backend/tests -q` | ✅ 216 passed / 1 failed=本地脏数据噪音(空库复验收敛) |
+| P3 | 词表上游可达(konsheng MIT) | `curl -sI https://github.com/konsheng/Sensitive-lexicon` | ✅ 200 |
+| P4 | prod 审核开关 = true(B3 kill-switch 依赖) | `az webapp config appsettings list …` | ⚠️ 09-29 VPN 挡;以 09-11 实查 true 为准,**B3 部署前必须复验** |
+| P5 | Expo SDK 57 仍为 stable | expo.dev/changelog(webReader `no_cache:true`) | ✅ 当时 58 仅 beta;**11-02 已近 58 转稳窗口,A1 前必重验** |
+| P6 | 本地 PG 就绪(测试配方) | `pg_isready -h localhost -p 5432` | ✅(`.env` /tmp2 socket 是死的,永远用 env 覆盖) |
 
-**四道闸对接(长任务流程挂点,执行 SOP 不变)**:
+**2026-11-02 开工前三件事**(来自 11-02 决策记录,进度):
 
-| 闸 | 在本计划的落点 |
-|---|---|
-| G1 挑刺 | B 行任务表级已完成(2026-09-11 Codex 17 findings→CC 逐条,见 §1 头注);**A 阶段任务表开工前补一轮同级挑刺**(挂 B 阶段完结时做,现在做会过保鲜期) |
-| G2 开工门禁 | P1-P6 全 ✅(P4 按 ⚠️ 规则:部署前复验)才开 B1;A1 前保鲜期未到/重验通过 |
-| G3 CI | pytest 门禁已有(基线 217 项),每任务行 PR 全绿才合;本地跑法见 memory local-pytest-postgres-recipe |
-| G4 点货 | 每月对账=前置清单 §五资源台账;动云资源前后跑 `python3 scripts/infra_audit.py`(云迁移期适用) |
+1. **核实线上小程序版本号、发布时间及对应代码提交 → 冻结 §4 逐功能验收表**(历史 checklist 写过 1.10,不据此定版)——⬜ 未做,**本阶段开工的第一件事**
+2. 对账后端与旧计划实际状态(不照抄旧任务状态)——✅ **2026-11-02 已核**:`progress.json` 两 readiness(B1-B9/A1-A11)**全部 pending**;`ios-app/` 不存在;`backend/app/services/` 无 moderation_local/apple_service。代码零开工,纸面即真实。
+3. 重验版本与环境:旧保鲜期已过,SDK/EAS/词表上游/prod 开关全须按 P1-P6 重跑——⬜ 未做。**环境已知项**:本机有 Xcode、Node/npm;`simctl list runtimes` 返回空,**iOS 模拟器运行时未装**(该命令已触发 Xcode 组件初始化,未下载运行时)。
 
-**行内执行 SOP(保留,vibe-coding)**:每个任务行 = 一个 prompt(任务→模块→文件→约束→验收);验收空着不开工;做完当场勾选 + commit 再开下一行;每周 30 分钟挂账三选一——详见前置清单 §六。
+**验收总口径(11-02 定,全 A 阶段通用)**:
+
+- 独立 iOS 模拟器构建运行,连接**真实可用后端**;核心业务流程逐项验证并**留证据**(截图/录屏/记录)。
+- 业务正确性对齐**线上小程序版本**;登录体系、系统权限、分享等平台差异**逐项记录映射表**,不要求复制微信 API。
+- 免费路径:模拟器验收为主;有免费 Apple Account + 本人设备时可补 **Personal Team 真机测试**(7 天签名到期重装不算产品缺陷;与 EAS 云真机构建不是同一条签名路径)。
+- **不以 Expo web 预览或 Expo Go 单独替代自有 iOS 原生构建验收**。
+- 付费能力(SWIWApple 自有应用联调、APNs/Expo 推送端到端、TestFlight、上架)可写代码,**未真联调部分一律标"待付费后验证",不记已完成**。
+
+**四道闸对接(不变)**:G1 = B 行已做(9-11),**A 阶段任务表开工前补一轮同级挑刺**;G2 = 本节三件事全闭环 + P1-P6 重验通过才开 B1/A1;G3 = pytest 门禁全绿;G4 = 每月对账前置清单 §五 + `scripts/infra_audit.py`。
 
 ---
 
 ## 1. 阶段一:后端前置合规(不依赖 iOS 决策,现存风险修复)
 
-**分支** `feature/ios-backend-compliance` · **工期** vibe 2-3 天(B9 占增量;2026-09-11 双工具复核后上调)· **CI** pytest 门禁全绿(本地跑法见 memory:brew postgres env 覆盖)
+**分支** `feature/ios-backend-compliance` · **状态**:⬜ 全部 pending(2026-11-02 对账核实,零开工)· **CI** pytest 门禁全绿(本地跑法见 memory:brew postgres env 覆盖)
 
-> **2026-09-11 双工具复核**(Codex 17 findings → CC 对码逐条验):可见 11 条中 7 条成立采纳、2 条半成立(方向对事实有偏)、1 条对现状不成立(prod 开关 az 实查为 true)。修订已并入下表;**缺页 6 条(原文 #3/4/9/10/14/15)待补粘后续验**。
+> B 任务是后端合规与上架硬要求的工程本体,付费延期只是**上架验收**时点,不影响本阶段施工。
+> **2026-09-11 双工具复核**(Codex 17 findings → CC 对码逐条验):可见 11 条中 7 条成立采纳、2 条半成立、1 条对现状不成立。修订已并入下表;**缺页 6 条(#3/4/9/10/14/15)待补粘后续验**。
 
 | # | 任务 | 模块/文件 | 约束 | 验收标准 |
 |---|---|---|---|---|
 | B1 | L1 本地审核引擎 | 新 `backend/app/services/moderation_local.py`;词表 `backend/app/resources/sensitive_words*.txt`(konsheng MIT 裁剪版,不入全量 GFW 表) | OpenCC t2s 归一 → Aho-Corasick/trie 匹配;进程内零网络;启动加载一次;命中返回类别 | 单测:繁体变体命中简体词表;正常校园帖零误杀样本通过 |
 | B2 | L2 远程审核双活 | 新 `backend/app/services/moderation_remote.py` | OpenAI moderation + 阿里国际站 SG 两 client;**结果格(9-11 复核定)**:≥1 个有效 pass **且 0 个 block/review** 才放行;pass+provider 超时→放行;block/review+超时→拦截;全部不可用(含未配置)→503 fail-closed;超时 10s(沿用 stable_token 教训);key 走 env,无 key 的 provider 记 unavailable 不炸 | mock 单测覆盖**六路**:正常放行/命中拦截/单挂放行/双挂 503/**pass+超时放行/拒绝+超时拦截**;真实 key 冒烟一条 |
-| B3 | 统一审核闸门接入 | `services/content_security.py` 的 `audit_user_text`/`audit_user_image` 两公共入口 + `routers/auth.py`(注册昵称补审) | **分流在两个入口统一做**(按服务端身份判定,已接的 8 个 router 自动全覆盖:posts/lostfound/news/courses/users/messages/feedback/upload);微信文字 msg_sec_check/图片 img_sec_check 不动;非微信走 L1+L2;缺身份数据不放行;**注册/OAuth 初始昵称补审**(auth.py 现零调用点);编辑走合并后内容再审;**>2500 字完整分段审或拒**(微信 `content[:2500]` 截断不再裸放尾部);kill-switch `ENABLE_CONTENT_MODERATION=false` 全局直放——保留但 iOS 提审前必须 true(prod 现状 true,2026-09-11 az 实查);日志挂 hkmu 家族 stdout handler | 邮箱用户发违规词帖→拦截(现在会成功=bug 修复);违规注册昵称被拒;编辑把违规词塞进旧帖被拦;**尾部超长违规内容被拦**;正常帖不受影响;既有 159 测试基线不红 |
-| B4 | 用户拉黑 API | `database.py`(blocks 表,DDL 注释**无分号无引号**)+ `routers/users.py` 端点 | POST/DELETE /users/me/blocks + GET 列表;**过滤面(9-11 复核)**:feed/顶层评论/**评论回复批量查询/引用帖摘要/详情直达/课评/新闻评论/失物/用户搜索推荐**——读取入口接入当前查看者,分页前统一过滤,计数同步;被屏蔽父评论与「回复@某人」展示规则定案;**匿名帖拉黑走 post_id**:服务端解析作者,查看者不接触 author_id(现状 `posts.py:123-127` 匿名对非 admin/本人置 null,按 user_id 拉不了匿名者);私信会话过滤被拉黑者 | 单测:拉黑后 feed 不见其帖、私信不可再发,取消恢复;**匿名帖可拉黑且生效;回复/引用/搜索面不见被拉黑者** |
-| B5 | Sign in with Apple | `routers/auth.py` 新 `POST /auth/apple` + 新 `services/apple_service.py` | 照 Google handler 三步模板;JWKS(`appleid.apple.com/auth/keys`)+RS256 验签,校验 iss/aud(=env 配置**精确值**白名单)/exp;**nonce 或 jti 单次消费**(防 identity token 重放);**sub 为唯一稳定账号键**(relay 邮箱不可依赖;`email_verified` 严格解析,字符串 `"false"` 不当已验证;合法无邮箱身份放行);name 仅首次授权给,缺失兜底 `nickname`;并发首次登录唯一冲突回读;**防覆盖守卫全登录口共用(Google/Apple/邮箱)**:匹配到已有其他 provider 不静默覆盖,且单 OAuth 槽未扩展前不提供完成不了的绑定引导;**必须带 tests(现状 OAuth 零覆盖)** | 单测:合法 token 建号/登录、错 aud 拒、已有 Google 账号邮箱匹配不覆盖、**同一 token 重放第二次被拒、无 email 声明可建号(sub 键)** |
-| B6 | 推送 token 骨架 | `database.py`(push_tokens 表)+ `routers/users.py` 注册端点 | 存 expo token + platform + user_id;此阶段只入库,不触发;**token 归属三规则(9-11 复核)**:登出即失效、换账号原子迁移(同设备 A→B 切换 token 归 B 不串推)、注销连带清空(接 B9) | 单测注册/去重 + **同设备 A 登出→B 登录后 token 归属切换正确** |
+| B3 | 统一审核闸门接入 | `services/content_security.py` 的 `audit_user_text`/`audit_user_image` 两公共入口 + `routers/auth.py`(注册昵称补审) | **分流在两个入口统一做**(已接 8 router 自动全覆盖);微信 msg/img_sec_check 不动;非微信走 L1+L2;缺身份数据不放行;**注册/OAuth 初始昵称补审**;编辑走合并后内容再审;**>2500 字完整分段审或拒**;kill-switch `ENABLE_CONTENT_MODERATION=false` 全局直放(iOS 提审前必须 true,prod 09-11 实查 true,**部署前复验**);日志挂 hkmu 家族 stdout handler | 邮箱用户发违规词帖→拦截(现在会成功=bug 修复);违规注册昵称被拒;编辑塞违规词被拦;尾部超长违规内容被拦;正常帖不受影响;既有测试基线不红 |
+| B4 | 用户拉黑 API | `database.py`(blocks 表,DDL 注释**无分号无引号**)+ `routers/users.py` 端点 | POST/DELETE /users/me/blocks + GET 列表;**过滤面**:feed/顶层评论/评论回复批量/引用帖摘要/详情直达/课评/新闻评论/失物/用户搜索推荐——读取入口接入当前查看者,分页前统一过滤,计数同步;被屏蔽父评论与「回复@某人」展示规则定案;**匿名帖拉黑走 post_id**(服务端解析作者,查看者不接触 author_id);私信会话过滤被拉黑者 | 单测:拉黑后 feed 不见其帖、私信不可再发,取消恢复;**匿名帖可拉黑且生效;回复/引用/搜索面不见被拉黑者** |
+| B5 | Sign in with Apple | `routers/auth.py` 新 `POST /auth/apple` + 新 `services/apple_service.py` | 照 Google handler 三步模板;JWKS+RS256 验签,校验 iss/aud(=env 精确值白名单)/exp;**nonce 或 jti 单次消费**(防重放);**sub 为唯一稳定账号键**(relay 邮箱不可依赖;`email_verified` 严格解析,字符串 `"false"` 不当已验证;合法无邮箱身份放行);name 仅首次授权给,缺失兜底 `nickname`;并发首次登录唯一冲突回读;**防覆盖守卫全登录口共用**;**必须带 tests(现状 OAuth 零覆盖)** | 单测:合法 token 建号/登录、错 aud 拒、已有 Google 账号邮箱匹配不覆盖、**同一 token 重放第二次被拒、无 email 声明可建号(sub 键)**。真机/自有应用联调属付费后验证(A3 注) |
+| B6 | 推送 token 骨架 | `database.py`(push_tokens 表)+ `routers/users.py` 注册端点 | 存 expo token + platform + user_id;此阶段只入库,不触发;**token 归属三规则**:登出即失效、换账号原子迁移、注销连带清空(接 B9) | 单测注册/去重 + **同设备 A 登出→B 登录后 token 归属切换正确** |
 | B7 | 小修 | `routers/posts.py`/`lostfound.py`/`users.py` | post/失物 create 的 `image_url` 补 `is_module_image_url` 桶校验(对齐评论);删 users.py 旧头像注释 | 单测:外链 image_url 被拒 |
 | B8 | 官方联系方式(运营) | 商店材料/协议页 | 占位邮箱换官方邮箱 | 页面可见真实邮箱 |
-| B9 | **账号删除(注销)**(9-11 复核新增,App Store 5.1.1(v) 硬要求) | `routers/users.py` 新 DELETE 端点 + 数据处置;与 `docs/ops/隐私合规-差距与路线图-20260906.md` §3.1 注销政策合并施工 | **提供账号注册的 App 必须 App 内可发起删除**;流程:App 内发起→身份确认→异步处置(公开内容按政策删除或匿名化、私信删、会话/推送 token 全失效)→回执;Apple 登录账号须同时撤销 Apple 凭证(token revocation);时限与保留期按隐私路线图 §3.1 法务复核稿 | 单测:注销后 JWT 全失效、push token 清空、公开内容按策略处置、Apple token 撤销调用发出;重复注销幂等 |
+| B9 | **账号删除(注销)**(App Store 5.1.1(v) 硬要求) | `routers/users.py` 新 DELETE 端点 + 数据处置;与 `docs/ops/隐私合规-差距与路线图-20260906.md` §3.1 合并施工 | App 内发起→身份确认→异步处置(公开内容按政策删除或匿名化、私信删、会话/推送 token 全失效)→回执;Apple 登录账号须同时撤销 Apple 凭证;时限与保留期按隐私路线图 §3.1 法务复核稿;iOS 侧发起 UI 在 A10 做 | 单测:注销后 JWT 全失效、push token 清空、公开内容按策略处置、Apple token 撤销调用发出;重复注销幂等 |
 
 ## 2. 阶段二:RN 骨架 + 登录 + 核心三件套
 
-**分支** `feature/ios-app` · **工期** vibe 3-4 天 · 新顶层目录 `ios-app/`(React Native/Expo,**独立于 frontend/,共享的只有后端 REST**)
+**分支** `feature/ios-app` · **状态**:⬜ 全部 pending(2026-11-02 对账核实)· 新顶层目录 `ios-app/`(RN/Expo,**独立于 frontend/,共享的只有后端 REST**)
+**验收基准(11-02 改)**:功能面对齐**线上小程序**(以 §4 冻结表为准),不再以 web 未发布功能为准;实现手法(轮询方案/上传链等)照旧复用 web 已验证代码。
 
 | # | 任务 | 要点 | 验收 |
 |---|---|---|---|
-| A1 | Expo 工程初始化 | Expo Router + 导航骨架 + 主题(对齐现有蓝绿视觉)+ **i18n 三语(直接复用现有翻译 JSON)** | Expo web 预览可切三语言 |
-| A2 | api 层 + JWT | fetch 封装(指 Azure SEA base)+ `expo-secure-store` 存 token + 401 单例 refresh(对齐 web `api.js` 模式) | 登录态跨启动保持 |
-| A3 | 登录三件套 | 邮箱+密码(验证提示)/ Google(expo Google Sign-In,后端 `/auth/google` 复用)/ Apple(expo-apple-authentication → `/auth/apple`) | 三路登录真机可用;`/auth/config` 门控 Google 显示 |
-| A4 | 资讯流+社区列表 | home/community 两列表页,复用 REST | 下拉刷新/分页/图片懒加载正常 |
-| A5 | 帖子详情+评论 | 含评论回复(2026-09-03 上线的能力) | 发评论/回复/匿名逻辑与 web 一致 |
-| A6 | 发布器 | 图片选取+压缩(expo-image-manipulator 对齐 web 尺寸档)→ `FormData POST /upload?module=` → 发帖 | 发图文帖全链路;审核拦截的错误态展示 |
+| A1 | Expo 工程初始化 | Expo Router + 导航骨架 + 主题(对齐蓝绿视觉)+ **i18n 三语(直接复用现有翻译 JSON)**;SDK 版本以 0a-P5 重验结果为准 | 自有 iOS 构建(模拟器)可跑,三语言可切;⚠️ Expo web 预览仅作工程自检,不算阶段验收 |
+| A2 | api 层 + JWT | fetch 封装(指 Azure SEA base)+ `expo-secure-store` 存 token + 401 单例 refresh(对齐 web `api.js` 模式) | 登录态跨启动保持(模拟器冷启复验) |
+| A3 | 登录三件套 | 邮箱+密码(验证提示)/ Google(expo Google Sign-In→`/auth/google` 复用)/ Apple(expo-apple-authentication→`/auth/apple`,B5) | 邮箱/Google 模拟器可用;`/auth/config` 门控 Google 显示;**Apple 按免费路径能测多少测多少(模拟器测试局限见 Expo 文档),自有应用真机联调标"待付费后验证"** |
+| A4 | 资讯流+社区列表 | home/community 两列表页,复用 REST | 下拉刷新/分页/图片懒加载正常,行为对齐线上小程序对应页 |
+| A5 | 帖子详情+评论 | 含评论回复(2026-09-03 上线的能力) | 发评论/回复/匿名逻辑**与线上小程序一致** |
+| A6 | 发布器 | 图片选取+压缩(expo-image-manipulator 对齐现有尺寸档)→ `FormData POST /upload?module=` → 发帖 | 发图文帖全链路;审核拦截的错误态展示 |
 
-## 3. 阶段三:全量页面 + 推送(planner 是关键路径)
+## 3. 阶段三:全量页面 + 推送骨架(planner 是关键路径)
 
-**分支** 同上续 · **工期** vibe 4-6 天
+**分支** 同上续 · **状态**:⬜ 全部 pending
 
 | # | 任务 | 要点 | 验收 |
 |---|---|---|---|
-| A7 | 失物/新闻/课评 | 三套列表-详情(失物含发布) | 对齐 web 功能面 |
-| A8 | 私信 | **先 3s 增量轮询**(直接搬 web 已验证方案:page1+seenIds 过滤);会话列表+聊天页 | 双机实测消息自动刷新 |
-| A9 | **Planner(拆三步)** | A9a 专业级联选择器(107 专业)/ A9b 三语搜索(searchFold 归一逻辑复用后端已有,前端对齐)/ A9c 学分池+毕业规则展示(REST 复用) | 三语搜索命中/学分池计算与 web 一致 |
-| A10 | profile/设置/协议页 | 协议文本用 2026-09-06 修订版;举报入口(FR4 后端复用) | 全功能可达 |
-| A11 | 推送接通 | expo-notifications;后端在评论被回复/收到私信时触发(消费 B6 token 表);EAS 凭证配置 | 真机收到离线推送 |
+| A7 | 失物/新闻/课评 | 三套列表-详情(失物含发布) | **对齐线上小程序功能面**(§4 冻结表) |
+| A8 | 私信 | **3s 增量轮询**(直接搬 web 已验证方案:page1+seenIds 过滤);会话列表+聊天页 | 双端实测消息自动刷新(模拟器双实例,或含 Personal Team 真机) |
+| A9 | **Planner(拆三步)** | A9a 专业级联选择器(107 专业)/ A9b 三语搜索(searchFold 归一逻辑复用后端已有)/ A9c 学分池+毕业规则展示(REST 复用) | 三语搜索命中/学分池计算与后端·web 结果一致 |
+| A10 | profile/设置/协议页/**注销入口** | 协议文本用 2026-09-06 修订版;举报入口(FR4 后端复用);**B9 注销的 App 内发起 UI**(5.1.1(v)) | 全功能可达;注销流程发起走通到后端回执 |
+| A11 | 推送骨架(11-02 改) | expo-notifications 接入 + 后端在评论被回复/收到私信时触发(消费 B6 token 表)+ 本地通知 | 触发链路代码完成且单测过;**APNs/EAS 离线推送端到端标"待付费后验证"(§5),不记完成** |
 
-## 4. 阶段四:TestFlight(路线 A)
+## 4. 对齐验收表(🆕 11-02 新增骨架,待开工前一件事①冻结)
 
-**工期** vibe 2-3 天 + 审核
-- EAS Build(iOS,免 Mac)+ 云签名 + 上传 TestFlight;Beta 审核(松)
-- 种子用户 = 香港同学若干;**先跑 §0 假设验证的结论决定投放话术**
-- 测试自动化配方:`Expo web 预览秒级走查 + Codex build-ios-apps 模拟器视觉验证`(等价 miniprogram-automator 的角色,先搭再用)
+> 冻结流程:核实线上小程序版本号/发布时间/对应提交 → 逐分类核对线上行为 → 本表定稿并 commit,此后作为 A 阶段唯一功能基线。**未冻结不开 A1。**
 
-## 5. 阶段五:外区提审(路线 B)
+| 分类 | 线上版本行为(待填) | 平台差异映射(微信→iOS,待填) | 核对状态 |
+|---|---|---|---|
+| 首页/社区 | | | ⬜ |
+| 发帖与评论回复 | | | ⬜ |
+| 图片(上传/展示/压缩档) | | | ⬜ |
+| 私信 | | | ⬜ |
+| 选课规划与毕业进度 | | | ⬜ |
+| 课程评价与 GE | | | ⬜ |
+| 新闻 | | | ⬜ |
+| 失物招领 | | | ⬜ |
+| 个人页/设置/协议/反馈 | | | ⬜ |
+| 登录与三语 | | | ⬜ |
 
-**工期** 材料 0.5 天 + 首审 2-7 天(备 3-4 周长尾)
+## 5. 付费后阶段(💳 2026-11-02 起延期;原阶段四/五全量保留,不删)
 
-- [ ] App 中性名定稿(去官方化,备 2-3 候选)+ 描述声明"学生独立开发、与校方无隶属"
-- [ ] 隐私标签(App Privacy 如实填:邮箱/openid 映射、图片、遥测)
-- [ ] 截图 + **审核测试账号**(微信 4.5 教训:必填,`hkmu_review` 同思路建 iOS 侧)
-- [ ] UGC 六件套自查:①过滤(B1-B3)②举报(FR4)③拉黑(B4)④联系方式(B8)⑤年龄分级(17+)⑥**账号删除(B9,5.1.1(v))**
-- [ ] 5.2.1 预案:如被拒 → 提供主任背书信(如已到手)/ Resolution Center 英文说明独立非官方性质
-- [ ] 上架区域:香港(+其他外区),**排除中国大陆**
+**触发条件**:用户决定支付 Apple Developer 年费后启动。此前本节内容可预备材料,不排期、不验收。
+
+**待付费后验证清单(免费阶段做过的代码在此补真联调)**:
+- [ ] 自有应用 Sign in with Apple 端到端(A3 尾巴)
+- [ ] APNs/Expo 推送离线端到端(A11 尾巴;EAS 云真机构建与 Personal Team 签名路径区分)
+- [ ] TestFlight 分发(原阶段四):EAS Build 云签名上传;Beta 审核;种子用户=香港同学;先跑假设验证结论定投放话术;自动化配方=Expo web 走查 + Codex build-ios-apps 模拟器视觉验证
+- [ ] 外区提审(原阶段五):中性名定稿/隐私标签/截图+审核测试账号/UGC 六件套自查(①过滤 B1-B3 ②举报 FR4 ③拉黑 B4 ④联系 B8 ⑤17+ ⑥**账号删除 B9**)/5.2.1 预案(主任背书信+Resolution Center 说明)/上架区域=香港+外区、排除中国大陆
+- [ ] 国区(阶段 2,继续挂起):~3-4 个月,等企业主体+备案
 
 ## 6. 协作与登记
 
-- 后端模块全部在 SYF 名下(courses/auth/messages 等 owner),无跨人协调;`module-registry.json` 增补 `iOS App` 模块(owner: SYF)后跑 `sync-ownership.sh`
+- 后端模块全部在 SYF 名下,无跨人协调;`module-registry.json` 增补 `iOS App` 模块(owner: SYF)后跑 `sync-ownership.sh`
 - commit 格式:`[ios] feat/fix: 描述`;共享基础文件(content_security.py/database.py/auth.py)改动群内知会
 - 每阶段完结:更新本文档勾选状态 + progress.json
+- **小程序冻结期**:iOS 期间不改小程序功能、不发新版;公共后端改动须回归验证线上小程序不受影响
 
-## 7. 里程碑速查
+## 7. 里程碑速查(11-02 按"免费/付费"重排)
 
-| 里程碑 | vibe·现实档 | vibe·全职档 |
+| 里程碑 | 范围 | 旧口径工期(参考) |
 |---|---|---|
-| 后端合规就绪(B1-B9) | 2-3 天 | 1.5 天 |
-| 0 → TestFlight 可装 | ~2-3 周 | ~1.5-2 周 |
-| 0 → 外区过审 | **~3-4.5 周** | **~2.5-3 周** |
-| 国区(阶段 2,挂起) | ~3-4 个月,等企业主体+备案 | — |
+| 免费开发 · 后端合规就绪(B1-B9) | 本计划 §1 | 2-3 天 |
+| 免费开发 · iOS 业务迁移+模拟器验收(A1-A11) | §2+§3,对齐 §4 冻结表 | 7-10 天 |
+| **免费阶段完成 = "开发完成"**(付费能力有明确待办,≠上线) | §0a 验收总口径 | — |
+| 付费后 · TestFlight 可装 | §5 | ~1 周(含 Beta 审核) |
+| 付费后 · 外区过审 | §5 | ~3-4.5 周(备长尾) |
+| 后续 · MU Agent 双端接入 | 另见 MU-Agent 文档 | — |
+
+> **排期口径**:按会话数(45min/会话,AI 写码、人只验收;禁止人力工时口径,见 memory vibe-scheduling-session-units)。此前粗估 iOS 全程≈32 会话(未按免费/付费拆分);§4 冻结表定稿后重分解排期。上表天数是旧口径,仅供量级参考。
 
 ## 8. 变更日志
 
 - **2026-09-07** 建档:栈/路线/登录/审核选型定案(收口自技术栈评估 + 上架路线对比)
 - **2026-09-11** 双工具复核:Codex 17 findings → CC 逐条验(7 采纳/2 半成立/1 对现状不成立),B2 结果格/B3 入口统一/B4 匿名拉黑/B5 防重放/B6 归属/B9 账号删除升级;缺页 6 条挂账
 - **2026-09-13** 任务表升级随 C2 分支落地(自 main 498257f 切出,PR#79 已合)
-- **2026-09-29** 按 `docs/ops/计划模板.md`(09-21 生效)回填 §0a 保鲜期+前提清单+本日志;前提当场验证(P1-P3/P5/P6 ✅,P4 ⚠️ 部署前复验);基线刷新 217 项(216 passed+1 环境噪音,空库复验双法收敛);时效刷新:SDK 58 仍 beta,Expo Go 09-03 起需登录(H3 时点提前)
+- **2026-09-29** 按 `docs/ops/计划模板.md` 回填 §0a 保鲜期+前提清单+本日志;前提当场验证(P4 ⚠️ 部署前复验);基线 217 项;SDK 58 仍 beta
+- **2026-11-02** 按 `~/.agents/context/ios-first-development.md` 改版(用户确认"iOS 优先、免年费开发、基线=线上小程序")。**被替代的历史决定**:①路线"A TestFlight→B 外区正式"由当前主线降级为 §5 付费后阶段;②A 阶段验收基线由"对齐 web"改为"对齐线上已发布小程序";③A3 Apple 真机联调、A11 推送端到端改为"待付费后验证"。**新增**:§0 功能基线/小程序冻结/移植形态/后续衔接四行;§0a 验收总口径+开工前三件事(②对账已完成:B/A 全 pending 零开工);§4 对齐验收表骨架;§5 付费后清单(原阶段四/五内容全保留);§7 里程碑按免费/付费重排+会话数口径注记。**仍未变**:技术栈、B1-B9 任务本体、L1/L2 审核选型、图片/私信方案。
