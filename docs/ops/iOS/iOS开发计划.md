@@ -27,24 +27,26 @@
 
 **待定(不阻塞开工)**:① L2 主备顺序(30 条三语样本自评后定,或直接拍)。原待定②"阶段 0 假设验证"服务于 TestFlight 投放话术,归入付费后阶段。
 
-## 0a. 保鲜期与开工前提(2026-11-02 刷新;project-start 抄本节做 G2 门禁)
+## 0a. 保鲜期与开工前提(✅ 2026-11-02 全量重验完成;project-start 抄本节做 G2 门禁)
 
-> ⚠️ **原保鲜期 2026-10-15 已过**,本节所有时效性结论作废,须整节重验后才能开工(G2)。以下 P1-P6 结果为 2026-09-29 时点快照,仅作重验对照。
+> **保鲜期至 2026-11-16**(重验后两周,覆盖 B1 开工窗)。触发器(踩中任一须重验本节):① SDK 59 出 beta/58 出现重大回归 ② Apple 开发者政策变动 ③ 学校线反馈触及功能面 ④ EAS 免费额度变更 ⑤ main 分支结构变化(合并/重切)。
 
-| # | 前提 | 验证命令 | 结果(09-29 时点,已过期) |
+| # | 前提 | 验证命令 | 结果(2026-11-02 实测) |
 |---|---|---|---|
-| P1 | B1 工作分支 = main 且无落后 | `git rev-list --count feature/ios-backend-compliance..origin/main` | ✅ 当时 0(main=498257f) |
-| P2 | pytest 基线全绿 | `DATABASE_URL="postgresql:///campus?host=localhost" python -m pytest backend/tests -q` | ✅ 216 passed / 1 failed=本地脏数据噪音(空库复验收敛) |
+| P1 | B1 工作分支基线干净 | `git rev-list --count feature/ios-backend-compliance..origin/main` | ✅ 0 落后;**⚠️ 但 origin/main 停在 498257f(9-13)**——9 月后工作(对齐机制/iOS 计划)全在 `feature/infra-alignment` 未合。**B1 开工动作:先走 PR 合 infra-alignment→main,再重切 compliance 分支** |
+| P2 | pytest 基线全绿 | `DATABASE_URL="postgresql:///campus?host=localhost" python -m pytest backend/tests -q` | ✅ 216 passed / 1 failed=test_users_perms suggest,**与 9-29 失败项完全相同**(本地脏数据噪音,9-29 已空库复验双法收敛;两时点一致) |
 | P3 | 词表上游可达(konsheng MIT) | `curl -sI https://github.com/konsheng/Sensitive-lexicon` | ✅ 200 |
-| P4 | prod 审核开关 = true(B3 kill-switch 依赖) | `az webapp config appsettings list …` | ⚠️ 09-29 VPN 挡;以 09-11 实查 true 为准,**B3 部署前必须复验** |
-| P5 | Expo SDK 57 仍为 stable | expo.dev/changelog(webReader `no_cache:true`) | ✅ 当时 58 仅 beta;**11-02 已近 58 转稳窗口,A1 前必重验** |
-| P6 | 本地 PG 就绪(测试配方) | `pg_isready -h localhost -p 5432` | ✅(`.env` /tmp2 socket 是死的,永远用 env 覆盖) |
+| P4 | prod 审核开关 = true(B3 kill-switch 依赖) | `az webapp config appsettings list …` | ⚠️ **az 凭据过期**(grant 9-14 签发已失效):用户跑 `! az login` 后,**B3 部署前必须复验**(以 09-11 实查 true 为暂准);不阻塞 B1/B2 |
+| P5 | Expo SDK 基线 | expo.dev/changelog + npm dist-tags(no_cache) | ✅ **SDK 58 已 stable(2026-10-15 转正**,58.0.22 patch 滚动至 10-31;RN 0.88/React 19.3/iOS 27 支持)——**A1 基线 57→58**;SDK 57 仍在收 patch(10-21)无 EOL 声明,锁旧无必要;**Expo Go 登录要求仅限实体 iOS 真机**(CLI 与 Go 同账号),**模拟器不受影响**;初始化用 `npx create-expo@latest`(create-expo-app@5.0.0 起成 shim,默认模板=58.0.31;锁旧可 `--template blank@57`→sdk-57 dist-tag) |
+| P6 | 本地 PG 就绪(测试配方) | `pg_isready -h localhost -p 5432` | ✅ accepting(`.env` /tmp2 socket 是死的,永远用 env 覆盖) |
 
-**2026-11-02 开工前三件事**(来自 11-02 决策记录,进度):
+**2026-11-02 开工前三件事——全部完成 ✅**:
 
-1. **核实线上小程序版本号、发布时间及对应代码提交 → 冻结 §4 逐功能验收表**——✅ **2026-11-02 完成并实证定稿**:线上=**1.168,发布 2026-08-20 17:51:55**(mp 后台实证);代码锚点=8-20 上传工作区(git 参考 `f889646`+先行项 `5a054b2`);首轮"v1.10/be9a237"推断被实证推翻,教训记 §4.0。逐页细冻(§4.1 末流程)=A1 前最后一道
-2. 对账后端与旧计划实际状态(不照抄旧任务状态)——✅ **2026-11-02 已核**:`progress.json` 两 readiness(B1-B9/A1-A11)**全部 pending**;`ios-app/` 不存在;`backend/app/services/` 无 moderation_local/apple_service。代码零开工,纸面即真实。**线上后端=prod=main backend HEAD(`c710de9`,2026-09-03 两层回复+评论图 API)**
-3. 重验版本与环境:旧保鲜期已过,SDK/EAS/词表上游/prod 开关全须按 P1-P6 重跑——⬜ 未做。**环境已知项**:本机有 Xcode、Node/npm;`simctl list runtimes` 返回空,**iOS 模拟器运行时未装**(该命令已触发 Xcode 组件初始化,未下载运行时)
+1. 线上版本锚定+验收表冻结:线上=**1.168(2026-08-20 17:51 发布)**,锚点=8-20 工作区(`f889646`+`5a054b2` 先行),实证定稿见 §4.0/§4.1;逐页细冻(19 页走查)=A1 前最后一道
+2. 对账实际状态:B1-B9/A1-A11 **全 pending 零开工**;线上后端=prod=main backend HEAD(`c710de9`,2026-09-03 两层回复+评论图 API)
+3. 环境重验(本表 P1-P6 + 下行环境清单)
+
+**环境清单(2026-11-02 实测)**:Xcode 16.4 ✅ · Node v22.22.2/npm 10.9.7 ✅ · **iOS 18.6 模拟器运行时已装**(iPhone 16 Pro/Pro Max/16e 可用,`xcodebuild -downloadPlatform iOS` 完成)✅ · watchman 未装(A1 时 `brew install watchman`,非阻塞)· az 需重新登录(P4)· EAS 免费 **15 iOS builds/月不变**(expo.dev/pricing 11-02 实拉)。
 
 **验收总口径(11-02 定,全 A 阶段通用)**:
 
@@ -84,7 +86,7 @@
 
 | # | 任务 | 要点 | 验收 |
 |---|---|---|---|
-| A1 | Expo 工程初始化 | Expo Router + 导航骨架 + 主题(对齐蓝绿视觉)+ **i18n 三语(直接复用现有翻译 JSON)**;SDK 版本以 0a-P5 重验结果为准 | 自有 iOS 构建(模拟器)可跑,三语言可切;⚠️ Expo web 预览仅作工程自检,不算阶段验收 |
+| A1 | Expo 工程初始化 | Expo Router + 导航骨架 + 主题(对齐蓝绿视觉)+ **i18n 三语(直接复用现有翻译 JSON)**;**SDK 58**(11-02 P5 定,58 已 stable;`npx create-expo@latest` 初始化) | 自有 iOS 构建(模拟器,18.6/iPhone 16)可跑,三语言可切;⚠️ Expo web 预览仅作工程自检,不算阶段验收 |
 | A2 | api 层 + JWT | fetch 封装(指 Azure SEA base)+ `expo-secure-store` 存 token + 401 单例 refresh(对齐 web `api.js` 模式) | 登录态跨启动保持(模拟器冷启复验) |
 | A3 | 登录三件套 | 邮箱+密码(验证提示)/ Google(expo Google Sign-In→`/auth/google` 复用)/ Apple(expo-apple-authentication→`/auth/apple`,B5) | 邮箱/Google 模拟器可用;`/auth/config` 门控 Google 显示;**Apple 按免费路径能测多少测多少(模拟器测试局限见 Expo 文档),自有应用真机联调标"待付费后验证"** |
 | A4 | 资讯流+社区列表 | home/community 两列表页,复用 REST | 下拉刷新/分页/图片懒加载正常,行为对齐线上小程序对应页 |
@@ -176,3 +178,4 @@
 - **2026-11-02** 按 `~/.agents/context/ios-first-development.md` 改版(用户确认"iOS 优先、免年费开发、基线=线上小程序")。**被替代的历史决定**:①路线"A TestFlight→B 外区正式"由当前主线降级为 §5 付费后阶段;②A 阶段验收基线由"对齐 web"改为"对齐线上已发布小程序";③A3 Apple 真机联调、A11 推送端到端改为"待付费后验证"。**新增**:§0 功能基线/小程序冻结/移植形态/后续衔接四行;§0a 验收总口径+开工前三件事(②对账已完成:B/A 全 pending 零开工);§4 对齐验收表骨架;§5 付费后清单(原阶段四/五内容全保留);§7 里程碑按免费/付费重排+会话数口径注记。**仍未变**:技术栈、B1-B9 任务本体、L1/L2 审核选型、图片/私信方案。
 - **2026-11-02(二)** 开工前①首轮锚定(纯 git 时序):线上=v1.10≈`be9a237`——**当日即被用户微信侧实证推翻**,见下条。
 - **2026-11-02(三)** 用户实证(mp 后台+手机三抽查)定稿:线上=**1.168,2026-08-20 17:51:55 发布**;8-17 被拒→中性化整改→重提过审的时间链闭合;代码锚点=8-20 工作区(`f889646`+评论回复先行项);**§4.0/§4.1 全表重写**(8 月中批次 GE/排课台/停招徽标/两修复/v1.11 批次/中性化全部在线上;iOS 不抄的缩水为 9-03/9-04 三项:emoji 图标化/分享卡优化/个人页改版);A5 恢复两层回复;首轮教训(单方法未配独立锚点/commit≠功能完成时点)记 §4.0;细冻基底改 f889646+5a054b2 双参考。
+- **2026-11-02(四)** 开工前③环境重验完成(P1-P6+环境清单,子代理双锚检索 Expo 四项):**SDK 58 已 stable(10-15)→A1 基线 57→58**(`npx create-expo@latest`,create-expo-app 已成 shim);EAS 免费 15 iOS/月不变;**Expo Go 登录仅限实体 iOS 真机,模拟器不受影响**;iOS 18.6 模拟器运行时+设备模板已装;pytest 216+1 与 9-29 完全一致;遗留:P4 az 凭据过期(用户 `az login` 后 B3 前复验)、infra-alignment 待合 main 后重切 compliance 分支(P1)、watchman A1 时补。保鲜期刷新至 **11-16**;开工前三件事①②③全 ✅,G2 仅剩 §4 逐页细冻(A1 前)。
