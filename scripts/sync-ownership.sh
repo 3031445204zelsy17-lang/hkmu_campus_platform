@@ -147,6 +147,9 @@ mkdir -p "$REPO_ROOT/.github"
 {
     echo "# HKMU Campus Platform — 模块所有权"
     echo "# 由 scripts/sync-ownership.sh 从 module-registry.json 自动生成"
+    echo "# 改归属=改 module-registry.json 再跑本脚本;手改本文件会被下次生成覆盖"
+    echo "# 当前为软档(自动请求审阅);要强制需仓库设置开 Require review from Code Owners"
+    echo "# 路径写错会静默失效——改 registry 路径后 ls 验一遍"
     echo ""
 
     for module in $(jq -r '.modules | keys[]' "$REGISTRY"); do

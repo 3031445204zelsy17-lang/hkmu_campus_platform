@@ -18,6 +18,30 @@
     "B-排课台",
     "C-全专业"
   ],
+  "ios_compliance_readiness": [
+    {"id": "B1", "name": "L1 本地审核引擎(moderation_local.py + 词表)", "status": "pending", "dependencies": []},
+    {"id": "B2", "name": "L2 远程审核双活(OpenAI+阿里 SG, fail-closed)", "status": "pending", "dependencies": ["B1"]},
+    {"id": "B3", "name": "统一审核闸门接入(audit_user_text/image + 注册昵称补审)", "status": "pending", "dependencies": ["B1", "B2"]},
+    {"id": "B4", "name": "用户拉黑 API(blocks 表 + 九过滤面 + 匿名帖 post_id)", "status": "pending", "dependencies": []},
+    {"id": "B5", "name": "Sign in with Apple(JWKS 验签 + 防重放 + 防覆盖守卫)", "status": "pending", "dependencies": []},
+    {"id": "B6", "name": "推送 token 骨架(push_tokens 表 + 归属三规则)", "status": "pending", "dependencies": []},
+    {"id": "B7", "name": "小修(image_url 桶校验对齐评论)", "status": "pending", "dependencies": []},
+    {"id": "B8", "name": "官方联系方式(占位邮箱换官方)", "status": "pending", "dependencies": []},
+    {"id": "B9", "name": "账号删除(DELETE 端点 + Apple token 撤销 + 幂等)", "status": "pending", "dependencies": ["B6"]}
+  ],
+  "ios_app_readiness": [
+    {"id": "A1", "name": "Expo 工程初始化(SDK57 + Expo Router + i18n 三语)", "status": "pending", "dependencies": []},
+    {"id": "A2", "name": "api 层 + JWT(secure-store + 401 refresh)", "status": "pending", "dependencies": ["A1"]},
+    {"id": "A3", "name": "登录三件套(邮箱/Google/Apple 真机)", "status": "pending", "dependencies": ["A2", "B5"]},
+    {"id": "A4", "name": "资讯流+社区列表", "status": "pending", "dependencies": ["A2"]},
+    {"id": "A5", "name": "帖子详情+评论回复", "status": "pending", "dependencies": ["A4"]},
+    {"id": "A6", "name": "发布器(图片压缩+上传链)", "status": "pending", "dependencies": ["A4"]},
+    {"id": "A7", "name": "失物/新闻/课评三套列表详情", "status": "pending", "dependencies": ["A4"]},
+    {"id": "A8", "name": "私信(3s 增量轮询,搬 web 方案)", "status": "pending", "dependencies": ["A2"]},
+    {"id": "A9", "name": "Planner 三步(级联选择器/三语搜索/学分池)", "status": "pending", "dependencies": ["A2"]},
+    {"id": "A10", "name": "profile/设置/协议页(09-06 修订版+举报入口)", "status": "pending", "dependencies": ["A2"]},
+    {"id": "A11", "name": "推送接通(expo-notifications 消费 B6)", "status": "pending", "dependencies": ["A3", "B6"]}
+  ],
   "tasks": [
     {
       "id": "T01",

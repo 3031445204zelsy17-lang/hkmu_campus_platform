@@ -252,3 +252,6 @@ scripts/out/hkmu_pr/pdfs/
 # 官方 advice sheet 原始 PDF(重,不入库;目录 PDF 与 results JSON 入库)
 docs/ops/选课选课/advice_sheets/covers/
 docs/ops/选课选课/advice_sheets/yr/
+
+# 迁移期密钥快照(绝不入库)
+docs/ops/.appsettings_snapshot_*.json

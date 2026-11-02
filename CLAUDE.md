@@ -102,20 +102,20 @@ python scripts/dev.py
 
 | 模块 | 后端文件 | 前端文件 | 负责人 |
 |------|----------|----------|--------|
-| 学术规划 | `routers/courses.py` | `js/pages/academic.js` | SYF |
-| 认证系统 | `routers/auth.py`, `services/auth_service.py` | `js/auth.js`, `js/pages/auth.js` | SYF |
+| 学术规划 | `routers/courses.py` | `js/pages/planner.js` | SYF |
+| 认证系统 | `routers/auth.py`, `services/auth_service.py` | — | SYF |
 | 社区论坛 | `routers/posts.py` | `js/pages/community.js` | SYF |
 | 部署与运维 | — | — | 司徒 |
 | 首页设计 | — | `js/pages/home.js` | 司徒 |
 | 国际化 | — | `js/utils/i18n.js` | SYF |
 | iOS App | — | `ios-app/` | SYF |
 | 失物招领 | `routers/lostfound.py` | `js/pages/lostfound.js` | SYF |
-| 私信系统 | `routers/messages.py`, `services/websocket_manager.py` | `js/pages/messaging.js` | SYF |
+| 私信系统 | `routers/messages.py`, `services/websocket_manager.py` | `js/pages/messages.js` | SYF |
 | 校园新闻 | `routers/news.py` | `js/pages/news.js` | SYF |
 | 宣传网站 | — | — | 司徒 |
 | 测试 | — | — | 司徒 |
 | 用户管理 | `routers/users.py` | `js/pages/profile.js` | SYF |
-| 共享基础 | `main.py`, `database.py`, `models.py`, `config.py` | `app.js`, `router.js`, `api.js`, `components/` | 所有人（改前通知） |
+| 共享基础 | `main.py`, `database.py`, `models.py`, `config.py` | `js/app.js`, `js/router.js`, `js/api.js`, `js/components/` | 所有人（改前通知） |
 
 ### 协作规则
 
